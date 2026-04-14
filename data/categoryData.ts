@@ -218,3 +218,39 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
     ],
   },
 ];
+
+// ── Store Types (Stores mode) ──────────────────────────────────
+// Shown as a 2-column large-card grid when discovery mode = "stores".
+// Each card represents a category of physical local stores.
+export interface StoreType {
+  key:   string;
+  label: string;
+  icon:  string;   // Ionicons glyph
+  color: string;   // card image-area background
+  sub:   string;   // short descriptor shown on card
+}
+
+export const STORE_TYPES: StoreType[] = [
+  { key: "grocery_store",    label: "Grocery Store",              icon: "basket-outline",          color: "#DCFCE7", sub: "Supermarkets & Kirana"    },
+  { key: "convenience",      label: "Convenience Store",          icon: "storefront-outline",      color: "#DBEAFE", sub: "General & Daily Needs"    },
+  { key: "fashion_store",    label: "Fashion Store",              icon: "shirt-outline",           color: "#FCE7F3", sub: "Clothing & Apparel"       },
+  { key: "jewellery",        label: "Jewellery Store",            icon: "diamond-outline",         color: "#FEF3C7", sub: "Gold, Silver & More"      },
+  { key: "food_bev",         label: "Food & Beverages",           icon: "restaurant-outline",      color: "#FFEDD5", sub: "Restaurants & Cafes"      },
+  { key: "icecream_store",   label: "Ice Cream Stores",           icon: "ice-cream-outline",       color: "#FCE7F3", sub: "Parlours & Dessert Shops" },
+  { key: "pharmacy_store",   label: "Medical & Pharmacy",         icon: "medkit-outline",          color: "#FEE2E2", sub: "Chemists & Clinics"       },
+  { key: "fitness_store",    label: "Fitness & Protein Store",    icon: "barbell-outline",         color: "#CCFBF1", sub: "Supplements & Gyms"       },
+  { key: "personal_care",    label: "Personal Care",              icon: "person-outline",          color: "#EDE9FE", sub: "Salons & Spas"            },
+  { key: "beauty_store",     label: "Beauty Care",                icon: "flower-outline",          color: "#FCE7F3", sub: "Cosmetics & Skin Care"    },
+  { key: "mobile_store",     label: "Mobile & Accessories",       icon: "phone-portrait-outline",  color: "#DBEAFE", sub: "Phones, Cases & More"     },
+  { key: "computer_store",   label: "Computer & Laptop Elec.",    icon: "laptop-outline",          color: "#EDE9FE", sub: "Laptops & Peripherals"    },
+  { key: "home_elec",        label: "Home & Kitchen Elec.",       icon: "tv-outline",              color: "#FEF3C7", sub: "Appliances & Gadgets"     },
+  { key: "repair_service",   label: "Repair & Installation",      icon: "construct-outline",       color: "#FFEDD5", sub: "Fix It Experts"           },
+  { key: "hardware_store",   label: "Hardware & Tools",           icon: "hammer-outline",          color: "#F3F4F6", sub: "Build & DIY"              },
+  { key: "furniture_store",  label: "Furniture & Furnishings",    icon: "bed-outline",             color: "#FEF3C7", sub: "Home & Office"            },
+  { key: "sports_toys",      label: "Sports & Toys",              icon: "football-outline",        color: "#CCFBF1", sub: "Play & Fitness"           },
+  { key: "books_store",      label: "Books & Stationery",         icon: "book-outline",            color: "#DBEAFE", sub: "Read & Write"             },
+  { key: "eyewear",          label: "Eye Wear & Sunglasses",      icon: "glasses-outline",         color: "#EDE9FE", sub: "Specs & Shades"           },
+  { key: "watches",          label: "Watches",                    icon: "watch-outline",           color: "#FEF3C7", sub: "Luxury & Casual"          },
+  { key: "vehicle",          label: "Vehicle Showrooms",          icon: "car-outline",             color: "#F3F4F6", sub: "Cars, Bikes & EVs"        },
+  { key: "others_stall",     label: "Others — Stall",             icon: "storefront-outline",      color: "#F9FAFB", sub: "Street & Pop-up Stores"   },
+];
