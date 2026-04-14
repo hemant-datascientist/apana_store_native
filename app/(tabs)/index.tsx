@@ -1,16 +1,11 @@
 // ============================================================
 // HOME SCREEN — Apana Store (Customer App)
 //
-// Orchestrates the full home experience:
-//   HomeHeader      — location + live stores count
-//   HomeSearchBar   — hamburger + search pill + action icons
-//   DiscoveryToggle — Products ↔ Stores mode switch
-//   CategoryScroll  — horizontal category filter bar
-//   [Feed]          — products or stores grid (coming soon)
-//
-// The top hero section (header through categories) always uses
-// HEADER_BG (deep dark navy), regardless of light/dark theme.
-// The feed below uses the app's standard background color.
+// Layout (top → bottom):
+//   Dark navy hero  — HomeHeader + HomeSearchBar + DiscoveryToggle
+//   Themed feed     — CategoryScroll (icon pills)
+//                   → BannerCarousel (auto-scroll promo)
+//                   → TrendingSection ("Trending in Pune")
 //
 // Data: GET /customer/home — replace mocks from homeData.ts
 // ============================================================
@@ -25,6 +20,8 @@ import {
   MOCK_LOCATION,
   STORES_LIVE_COUNT,
   CATEGORIES,
+  BANNERS,
+  TRENDING_ITEMS,
   HEADER_BG,
   DiscoveryMode,
 } from "../../data/homeData";
@@ -32,6 +29,8 @@ import HomeHeader      from "../../components/home/HomeHeader";
 import HomeSearchBar   from "../../components/home/HomeSearchBar";
 import DiscoveryToggle from "../../components/home/DiscoveryToggle";
 import CategoryScroll  from "../../components/home/CategoryScroll";
+import BannerCarousel  from "../../components/home/BannerCarousel";
+import TrendingSection from "../../components/home/TrendingSection";
 
 export default function HomeScreen() {
   const { colors } = useTheme();
@@ -44,7 +43,7 @@ export default function HomeScreen() {
     <View style={styles.root}>
       <StatusBar barStyle="light-content" backgroundColor={HEADER_BG} />
 
-      {/* ── Hero header (dark navy — always) ── */}
+      {/* ── Dark navy hero ── */}
       <SafeAreaView style={[styles.hero, { backgroundColor: HEADER_BG }]} edges={["top"]}>
 
         <HomeHeader
@@ -57,30 +56,44 @@ export default function HomeScreen() {
           value={search}
           onChangeText={setSearch}
           mode={mode}
-          onMenuPress={()   => Alert.alert("Menu", "Drawer coming soon.")}
-          onMicPress={()    => Alert.alert("Voice", "Voice search coming soon.")}
+          onMenuPress={()   => Alert.alert("Menu",          "Drawer coming soon.")}
+          onMicPress={()    => Alert.alert("Voice",         "Voice search coming soon.")}
           onBellPress={()   => Alert.alert("Notifications", "Notifications coming soon.")}
-          onScanPress={()   => Alert.alert("Scanner", "Barcode scanner coming soon.")}
-          onLocatePress={() => Alert.alert("Locate", "GPS locate coming soon.")}
+          onScanPress={()   => Alert.alert("Scanner",       "Barcode scanner coming soon.")}
+          onLocatePress={() => Alert.alert("Locate",        "GPS locate coming soon.")}
         />
 
         <DiscoveryToggle mode={mode} onChange={setMode} />
 
+      </SafeAreaView>
+
+      {/* ── Themed feed ── */}
+      <ScrollView
+        style={[styles.feed, { backgroundColor: colors.background }]}
+        contentContainerStyle={styles.feedContent}
+        showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={[0]}
+      >
+        {/* Sticky category scroll — index 0 */}
         <CategoryScroll
           categories={CATEGORIES}
           activeKey={category}
           onSelect={setCategory}
         />
 
-      </SafeAreaView>
+        {/* Banners */}
+        <BannerCarousel
+          banners={BANNERS}
+          onPress={b => Alert.alert(b.title, b.subtitle)}
+        />
 
-      {/* ── Feed area (themed background) ── */}
-      <ScrollView
-        style={[styles.feed, { backgroundColor: colors.background }]}
-        contentContainerStyle={styles.feedContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Products / stores grid coming soon */}
+        {/* Trending in Pune */}
+        <TrendingSection
+          city={MOCK_LOCATION.area}
+          items={TRENDING_ITEMS}
+          onPress={item => Alert.alert(item.name, `${item.category} · ${item.area}`)}
+        />
+
       </ScrollView>
 
     </View>
@@ -88,10 +101,8 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  hero: {
-    // Dark navy hero — no flex: 1 so it wraps its content
-  },
+  root:        { flex: 1 },
+  hero:        {},
   feed:        { flex: 1 },
-  feedContent: { paddingBottom: 120, paddingTop: 16, minHeight: 400 },
+  feedContent: { paddingBottom: 32 },
 });
