@@ -104,11 +104,13 @@ export default function TabsLayout() {
           shadowRadius:    12,
           shadowOffset:    { width: 0, height: -3 },
         },
-        // Height = usable area after paddingTop so icons stay inside bar
+        // stretch → icon wrapper fills full cell width so width:'100%'
+        // on the tab View resolves to the real screenWidth/5 value,
+        // preventing "Category" / "Profile" from truncating.
         tabBarItemStyle: {
           height:          TAB_HEIGHT - TAB_PAD_TOP,
           paddingVertical: 0,
-          alignItems:      "center",
+          alignItems:      "stretch",
           justifyContent:  "center",
         },
       }}
