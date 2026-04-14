@@ -1,11 +1,13 @@
 // ============================================================
 // HOME SCREEN — Apana Store (Customer App)
 //
-// Layout (top → bottom):
-//   Dark navy hero  — HomeHeader + HomeSearchBar + DiscoveryToggle
-//   Themed feed     — CategoryScroll (icon pills)
-//                   → BannerCarousel (auto-scroll promo)
-//                   → TrendingSection ("Trending in Pune")
+// Products mode:
+//   Hero  — HomeHeader + HomeSearchBar + DiscoveryToggle + CategoryScroll
+//   Feed  — BannerCarousel → TrendingSection
+//
+// Stores mode:
+//   Hero  — HomeHeader + HomeSearchBar + DiscoveryToggle + StoreDiscoveryTabs
+//   Feed  — StoreFilterBar → (stores feed coming soon)
 //
 // Data: GET /customer/home — replace mocks from homeData.ts
 // ============================================================
@@ -25,19 +27,30 @@ import {
   HEADER_BG,
   DiscoveryMode,
 } from "../../data/homeData";
-import HomeHeader      from "../../components/home/HomeHeader";
-import HomeSearchBar   from "../../components/home/HomeSearchBar";
-import DiscoveryToggle from "../../components/home/DiscoveryToggle";
-import CategoryScroll  from "../../components/home/CategoryScroll";
-import BannerCarousel  from "../../components/home/BannerCarousel";
-import TrendingSection from "../../components/home/TrendingSection";
+import HomeHeader          from "../../components/home/HomeHeader";
+import HomeSearchBar       from "../../components/home/HomeSearchBar";
+import DiscoveryToggle     from "../../components/home/DiscoveryToggle";
+import CategoryScroll      from "../../components/home/CategoryScroll";
+import BannerCarousel      from "../../components/home/BannerCarousel";
+import TrendingSection     from "../../components/home/TrendingSection";
+import StoreDiscoveryTabs, { StoreTab } from "../../components/home/StoreDiscoveryTabs";
+import StoreFilterBar,     { StoreFilters } from "../../components/home/StoreFilterBar";
 
 export default function HomeScreen() {
   const { colors } = useTheme();
 
+  // Products mode state
   const [search,   setSearch]   = useState("");
   const [mode,     setMode]     = useState<DiscoveryMode>("products");
   const [category, setCategory] = useState("all");
+
+  // Stores mode state
+  const [storeTab, setStoreTab] = useState<StoreTab>("nearby");
+  const [filters,  setFilters]  = useState<StoreFilters>({
+    nearest:  true,
+    liveOnly: true,
+    topRated: false,
+  });
 
   return (
     <View style={styles.root}>
@@ -65,11 +78,19 @@ export default function HomeScreen() {
 
         <DiscoveryToggle mode={mode} onChange={setMode} />
 
-        <CategoryScroll
-          categories={CATEGORIES}
-          activeKey={category}
-          onSelect={setCategory}
-        />
+        {/* Products → CategoryScroll | Stores → StoreDiscoveryTabs */}
+        {mode === "products" ? (
+          <CategoryScroll
+            categories={CATEGORIES}
+            activeKey={category}
+            onSelect={setCategory}
+          />
+        ) : (
+          <StoreDiscoveryTabs
+            activeTab={storeTab}
+            onChange={setStoreTab}
+          />
+        )}
 
       </SafeAreaView>
 
@@ -78,19 +99,34 @@ export default function HomeScreen() {
         style={[styles.feed, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.feedContent}
         showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={[0]}
       >
-        {/* Banners */}
-        <BannerCarousel
-          banners={BANNERS}
-          onPress={b => Alert.alert(b.title, b.subtitle)}
-        />
+        {/* Sticky: filter bar (stores) or blank spacer (products) */}
+        {mode === "stores" ? (
+          <StoreFilterBar
+            filters={filters}
+            onFilterChange={setFilters}
+            onFilterPress={() => Alert.alert("Filter", "Filter sheet coming soon.")}
+            onSortPress={()   => Alert.alert("Sort",   "Sort options coming soon.")}
+          />
+        ) : (
+          <View />
+        )}
 
-        {/* Trending in Pune */}
-        <TrendingSection
-          city={MOCK_LOCATION.area}
-          items={TRENDING_ITEMS}
-          onPress={item => Alert.alert(item.name, `${item.category} · ${item.area}`)}
-        />
+        {/* Products feed */}
+        {mode === "products" && (
+          <>
+            <BannerCarousel
+              banners={BANNERS}
+              onPress={b => Alert.alert(b.title, b.subtitle)}
+            />
+            <TrendingSection
+              city={MOCK_LOCATION.area}
+              items={TRENDING_ITEMS}
+              onPress={item => Alert.alert(item.name, `${item.category} · ${item.area}`)}
+            />
+          </>
+        )}
 
       </ScrollView>
 
