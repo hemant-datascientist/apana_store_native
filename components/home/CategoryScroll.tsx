@@ -1,12 +1,13 @@
 // ============================================================
-// CATEGORY SCROLL — Apana Store (Customer App)
+// CATEGORY SCROLL — Apana Store
 //
-// Horizontal scroll of product categories — sits in the
-// themed feed area (white/light bg), NOT in the dark hero.
+// Horizontal scroll of store/product categories.
+// Each item: icon (above) + label (below), vertically stacked.
 //
-// Each item: small rounded icon square (colored bg) + label.
-// Active:   primary-colored icon + colored bg + semiBold label
-// Inactive: subText icon + border-colored bg + regular label
+// Active:   white icon + white bold label + subtle underline dot
+// Inactive: semi-transparent white icon + regular muted label
+//
+// Sits at the bottom of the dark hero header section.
 // ============================================================
 
 import React from "react";
@@ -16,25 +17,20 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../theme/typography";
 import { Category } from "../../data/homeData";
-import useTheme from "../../theme/useTheme";
 
 interface CategoryScrollProps {
-  categories: Category[];
-  activeKey:  string;
-  onSelect:   (key: string) => void;
+  categories:    Category[];
+  activeKey:     string;
+  onSelect:      (key: string) => void;
 }
 
-export default function CategoryScroll({
-  categories, activeKey, onSelect,
-}: CategoryScrollProps) {
-  const { colors } = useTheme();
-
+export default function CategoryScroll({ categories, activeKey, onSelect }: CategoryScrollProps) {
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.list}
-      style={[styles.scroll, { backgroundColor: colors.card, borderBottomColor: colors.border }]}
+      style={styles.scroll}
     >
       {categories.map(cat => {
         const active = cat.key === activeKey;
@@ -45,38 +41,32 @@ export default function CategoryScroll({
             onPress={() => onSelect(cat.key)}
             activeOpacity={0.7}
           >
-            {/* Icon circle */}
-            <View style={[
-              styles.iconWrap,
-              {
-                backgroundColor: active
-                  ? colors.primary + "18"
-                  : colors.border + "80",
-              },
-            ]}>
-              <Ionicons
-                name={cat.icon as any}
-                size={20}
-                color={active ? colors.primary : colors.subText}
-              />
-            </View>
+            {/* Icon */}
+            <Ionicons
+              name={cat.icon as any}
+              size={24}
+              color={active ? "#fff" : "rgba(255,255,255,0.60)"}
+            />
 
             {/* Label */}
             <Text
-              numberOfLines={1}
               style={[
                 styles.label,
                 {
-                  color:      active ? colors.primary : colors.subText,
+                  color:      active ? "#fff" : "rgba(255,255,255,0.60)",
                   fontFamily: active
                     ? typography.fontFamily.semiBold
                     : typography.fontFamily.regular,
                   fontSize: typography.size.xs,
                 },
               ]}
+              numberOfLines={1}
             >
               {cat.label}
             </Text>
+
+            {/* Active indicator dot */}
+            {active && <View style={styles.activeDot} />}
           </TouchableOpacity>
         );
       })}
@@ -86,28 +76,30 @@ export default function CategoryScroll({
 
 const styles = StyleSheet.create({
   scroll: {
-    borderBottomWidth: 1,
+    borderTopWidth:  1,
+    borderTopColor:  "rgba(255,255,255,0.10)",
   },
   list: {
     paddingHorizontal: 10,
-    paddingVertical:    10,
-    gap:               6,
+    paddingVertical:   12,
+    gap: 4,
   },
   item: {
     alignItems:     "center",
-    gap:             5,
-    paddingHorizontal: 6,
-    minWidth:        58,
-  },
-  iconWrap: {
-    width:          42,
-    height:         42,
-    borderRadius:   12,
-    alignItems:     "center",
     justifyContent: "center",
+    gap:            5,
+    paddingHorizontal: 12,
+    minWidth: 62,
   },
   label: {
-    textAlign:     "center",
+    textAlign: "center",
     letterSpacing: 0.1,
+  },
+  activeDot: {
+    width:           4,
+    height:          4,
+    borderRadius:    2,
+    backgroundColor: "#fff",
+    marginTop:       2,
   },
 });

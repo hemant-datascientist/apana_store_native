@@ -65,6 +65,12 @@ export default function HomeScreen() {
 
         <DiscoveryToggle mode={mode} onChange={setMode} />
 
+        <CategoryScroll
+          categories={CATEGORIES}
+          activeKey={category}
+          onSelect={setCategory}
+        />
+
       </SafeAreaView>
 
       {/* ── Themed feed ── */}
@@ -72,15 +78,7 @@ export default function HomeScreen() {
         style={[styles.feed, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.feedContent}
         showsVerticalScrollIndicator={false}
-        stickyHeaderIndices={[0]}
       >
-        {/* Sticky category scroll — index 0 */}
-        <CategoryScroll
-          categories={CATEGORIES}
-          activeKey={category}
-          onSelect={setCategory}
-        />
-
         {/* Banners */}
         <BannerCarousel
           banners={BANNERS}
