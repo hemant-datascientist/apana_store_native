@@ -35,6 +35,7 @@ import BannerCarousel      from "../../components/home/BannerCarousel";
 import TrendingSection     from "../../components/home/TrendingSection";
 import StoreDiscoveryTabs, { StoreTab } from "../../components/home/StoreDiscoveryTabs";
 import StoreFilterBar,     { StoreFilters } from "../../components/home/StoreFilterBar";
+import MenuDrawer                           from "../../components/home/MenuDrawer";
 
 export default function HomeScreen() {
   const { colors } = useTheme();
@@ -43,6 +44,9 @@ export default function HomeScreen() {
   const [search,   setSearch]   = useState("");
   const [mode,     setMode]     = useState<DiscoveryMode>("products");
   const [category, setCategory] = useState("all");
+
+  // Drawer state
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Stores mode state
   const [storeTab, setStoreTab] = useState<StoreTab>("nearby");
@@ -69,7 +73,7 @@ export default function HomeScreen() {
           value={search}
           onChangeText={setSearch}
           mode={mode}
-          onMenuPress={()   => Alert.alert("Menu",          "Drawer coming soon.")}
+          onMenuPress={() => setDrawerOpen(true)}
           onMicPress={()    => Alert.alert("Voice",         "Voice search coming soon.")}
           onBellPress={()   => Alert.alert("Notifications", "Notifications coming soon.")}
           onScanPress={()   => Alert.alert("Scanner",       "Barcode scanner coming soon.")}
@@ -93,6 +97,13 @@ export default function HomeScreen() {
         )}
 
       </SafeAreaView>
+
+      {/* ── Menu drawer ── */}
+      <MenuDrawer
+        visible={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        onSelect={key => Alert.alert("Menu", `"${key}" coming soon.`)}
+      />
 
       {/* ── Themed feed ── */}
       <ScrollView
