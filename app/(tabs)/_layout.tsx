@@ -8,7 +8,7 @@
 //   Cart     — bag/cart icon
 //   Profile  — person icon
 //
-// Active:   primary color icon + bold label
+// Active:   primary color icon + semiBold label
 // Inactive: subText color icon + regular label
 // All tabs same height, same icon size — no elevation or special shapes.
 // ============================================================
@@ -21,8 +21,9 @@ import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import IndiaMapIcon from "../../components/shared/IndiaMapIcon";
 
-// ── Icon size — consistent across all tabs ─────────────────────
-const ICON_SIZE = 24;
+// ── Dimensions ────────────────────────────────────────────────
+const ICON_SIZE  = 22;   // icon height in dp
+const TAB_HEIGHT = 60;   // tab bar visible height (excl. safe area)
 
 // ── Ionicons tab icon ──────────────────────────────────────────
 function TabIcon({
@@ -43,14 +44,14 @@ function TabIcon({
         size={ICON_SIZE}
         color={color}
       />
-      <Text style={[
-        styles.label,
-        {
+      <Text
+        numberOfLines={1}
+        style={[styles.label, {
           color,
           fontFamily: focused ? typography.fontFamily.semiBold : typography.fontFamily.regular,
-          fontSize: typography.size.xs,
-        },
-      ]}>
+          fontSize:   10,
+        }]}
+      >
         {label}
       </Text>
     </View>
@@ -62,14 +63,14 @@ function BharatTabIcon({ focused, color }: { focused: boolean; color: string }) 
   return (
     <View style={styles.tab}>
       <IndiaMapIcon size={ICON_SIZE} color={color} />
-      <Text style={[
-        styles.label,
-        {
+      <Text
+        numberOfLines={1}
+        style={[styles.label, {
           color,
           fontFamily: focused ? typography.fontFamily.semiBold : typography.fontFamily.regular,
-          fontSize: typography.size.xs,
-        },
-      ]}>
+          fontSize:   10,
+        }]}
+      >
         Bharat
       </Text>
     </View>
@@ -87,20 +88,28 @@ export default function TabsLayout() {
         headerShown:             false,
         tabBarActiveTintColor:   colors.primary,
         tabBarInactiveTintColor: colors.subText,
+        tabBarShowLabel:         false,
         tabBarStyle: {
           backgroundColor: colors.card,
           borderTopColor:  colors.border,
           borderTopWidth:  1,
-          height:          62 + insets.bottom,
+          height:          TAB_HEIGHT + insets.bottom,
           paddingBottom:   insets.bottom,
-          paddingTop:      6,
+          paddingTop:      0,
           elevation:       12,
           shadowColor:     "#000",
           shadowOpacity:   0.08,
           shadowRadius:    12,
           shadowOffset:    { width: 0, height: -3 },
         },
-        tabBarShowLabel: false,
+        // Give each tab item the full usable height so the
+        // icon + label both render inside the bar without clipping.
+        tabBarItemStyle: {
+          height:          TAB_HEIGHT,
+          paddingVertical: 0,
+          alignItems:      "center",
+          justifyContent:  "center",
+        },
       }}
     >
       {/* 1 — Home */}
@@ -161,10 +170,12 @@ const styles = StyleSheet.create({
   tab: {
     alignItems:     "center",
     justifyContent: "center",
-    gap:            3,
-    paddingTop:     2,
+    gap:            4,
   },
   label: {
-    letterSpacing: 0.2,
+    textAlign:     "center",
+    letterSpacing: 0.1,
+    // Width cap prevents text from ever wrapping — tabs are ~screenWidth/5
+    maxWidth:      72,
   },
 });
