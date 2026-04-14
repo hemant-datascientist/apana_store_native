@@ -22,8 +22,8 @@ import { typography } from "../../theme/typography";
 import IndiaMapIcon from "../../components/shared/IndiaMapIcon";
 
 // ── Dimensions ────────────────────────────────────────────────
-const ICON_SIZE   = 22;  // icon height in dp
-const TAB_HEIGHT  = 60;  // tab bar visible height (excl. safe area)
+const ICON_SIZE   = 24;  // icon height in dp
+const TAB_HEIGHT  = 72;  // tab bar visible height (excl. safe area)
 const TAB_PAD_TOP = 10;  // gap between top border and icon content
 
 // ── Ionicons tab icon ──────────────────────────────────────────
@@ -169,6 +169,10 @@ export default function TabsLayout() {
 // ── Styles ────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   tab: {
+    // width: '100%' is critical — without it the View shrinks to icon width
+    // (~24dp) and clips the label text. Full width lets Text use the whole
+    // tab cell (≈screenWidth/5) so "Category" and "Profile" never truncate.
+    width:          "100%",
     alignItems:     "center",
     justifyContent: "center",
     gap:            4,
@@ -176,7 +180,5 @@ const styles = StyleSheet.create({
   label: {
     textAlign:     "center",
     letterSpacing: 0.1,
-    // No maxWidth — the tab cell (screenWidth/5) naturally bounds the text.
-    // numberOfLines={1} on every label prevents wrapping.
   },
 });
