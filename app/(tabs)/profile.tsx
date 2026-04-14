@@ -12,7 +12,7 @@
 // Data: GET /customer/profile — replace mocks from profileData.ts
 // ============================================================
 
-import React from "react";
+import React, { useState } from "react";
 import {
   View, ScrollView, StyleSheet, Alert, TouchableOpacity, Text,
 } from "react-native";
@@ -28,16 +28,22 @@ import {
   MOCK_RIDER,
   SETTING_GROUPS,
 } from "../../data/profileData";
-import ProfileHeader        from "../../components/profile/ProfileHeader";
-import ProfileStats         from "../../components/profile/ProfileStats";
-import FavouriteStores      from "../../components/profile/FavouriteStores";
-import PartnerCard          from "../../components/profile/PartnerCard";
+import ProfileHeader         from "../../components/profile/ProfileHeader";
+import ProfileStats          from "../../components/profile/ProfileStats";
+import FavouriteStores       from "../../components/profile/FavouriteStores";
+import PartnerCard           from "../../components/profile/PartnerCard";
 import ProfileSettingSection from "../../components/profile/ProfileSettingSection";
+import AppearanceModal       from "../../components/profile/AppearanceModal";
 
 export default function ProfileScreen() {
   const { colors } = useTheme();
+  const [appearanceVisible, setAppearanceVisible] = useState(false);
 
   function handleSetting(key: string) {
+    if (key === "appearance") {
+      setAppearanceVisible(true);
+      return;
+    }
     Alert.alert("Coming Soon", `"${key}" feature is on the way.`);
   }
 
@@ -78,6 +84,12 @@ export default function ProfileScreen() {
             onPress={handleSetting}
           />
         ))}
+
+        {/* ── Appearance modal ── */}
+        <AppearanceModal
+          visible={appearanceVisible}
+          onClose={() => setAppearanceVisible(false)}
+        />
 
         {/* ── Logout ── */}
         <View style={styles.logoutWrap}>
