@@ -1,16 +1,16 @@
 // ============================================================
 // TABS LAYOUT — Apana Store (Customer App)
 //
-// Five primary tabs:
-//   Home     — Nearby stores, featured collections, personalized feed
-//   Category — Browse by store category (Grocery, Pharmacy, etc.)
-//   Bharat   — India Map (CENTER HERO TAB): live local discovery,
-//              store pins, LIVE inventory, occupancy, barcode scan
-//   Cart     — Multi-store cart + route optimizer
-//   Profile  — Account, saved stores, privacy, support
+// Five primary tabs — all identical flat style (icon + label):
+//   Home     — house icon
+//   Category — grid icon
+//   Bharat   — India outline SVG (IndiaMapIcon) — center tab
+//   Cart     — bag/cart icon
+//   Profile  — person icon
 //
-// The Bharat tab is the center hero — visually elevated with a
-// filled Apana Blue circle badge, like a discovery FAB in the bar.
+// Active:   primary color icon + bold label
+// Inactive: subText color icon + regular label
+// All tabs same height, same icon size — no elevation or special shapes.
 // ============================================================
 
 import { Tabs } from "expo-router";
@@ -19,11 +19,12 @@ import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
+import IndiaMapIcon from "../../components/shared/IndiaMapIcon";
 
-// ── Tab bar dimensions ─────────────────────────────────────────
-const TAB_HEIGHT = 62;
+// ── Icon size — consistent across all tabs ─────────────────────
+const ICON_SIZE = 24;
 
-// ── Regular tab icon ───────────────────────────────────────────
+// ── Ionicons tab icon ──────────────────────────────────────────
 function TabIcon({
   name,
   label,
@@ -36,62 +37,39 @@ function TabIcon({
   color: string;
 }) {
   return (
-    <View style={styles.iconWrapper}>
+    <View style={styles.tab}>
       <Ionicons
         name={focused ? name : (`${name}-outline` as keyof typeof Ionicons.glyphMap)}
-        size={22}
+        size={ICON_SIZE}
         color={color}
       />
-      <Text
-        style={[
-          styles.iconLabel,
-          {
-            color,
-            fontFamily: focused
-              ? typography.fontFamily.semiBold
-              : typography.fontFamily.regular,
-            fontSize: typography.size.xs,
-          },
-        ]}
-      >
+      <Text style={[
+        styles.label,
+        {
+          color,
+          fontFamily: focused ? typography.fontFamily.semiBold : typography.fontFamily.regular,
+          fontSize: typography.size.xs,
+        },
+      ]}>
         {label}
       </Text>
     </View>
   );
 }
 
-// ── Bharat center hero tab ─────────────────────────────────────
-// Elevated circle badge — stands out as the discovery focal point
-function BharatTabIcon({ focused }: { focused: boolean }) {
-  const { colors } = useTheme();
+// ── Bharat tab — India SVG icon, same flat style ───────────────
+function BharatTabIcon({ focused, color }: { focused: boolean; color: string }) {
   return (
-    <View style={styles.bharatWrapper}>
-      {/* Elevated circle */}
-      <View
-        style={[
-          styles.bharatCircle,
-          {
-            backgroundColor: colors.primary,
-            shadowColor: colors.primary,
-            // Subtle glow when active
-            opacity: focused ? 1 : 0.85,
-          },
-        ]}
-      >
-        <Ionicons name="map" size={26} color="#fff" />
-      </View>
-      <Text
-        style={[
-          styles.bharatLabel,
-          {
-            color:      colors.primary,
-            fontFamily: focused
-              ? typography.fontFamily.bold
-              : typography.fontFamily.semiBold,
-            fontSize: typography.size.xs,
-          },
-        ]}
-      >
+    <View style={styles.tab}>
+      <IndiaMapIcon size={ICON_SIZE} color={color} />
+      <Text style={[
+        styles.label,
+        {
+          color,
+          fontFamily: focused ? typography.fontFamily.semiBold : typography.fontFamily.regular,
+          fontSize: typography.size.xs,
+        },
+      ]}>
         Bharat
       </Text>
     </View>
@@ -113,19 +91,19 @@ export default function TabsLayout() {
           backgroundColor: colors.card,
           borderTopColor:  colors.border,
           borderTopWidth:  1,
-          height:          TAB_HEIGHT + insets.bottom,
+          height:          62 + insets.bottom,
           paddingBottom:   insets.bottom,
           paddingTop:      6,
-          elevation:       14,
+          elevation:       12,
           shadowColor:     "#000",
-          shadowOpacity:   0.09,
-          shadowRadius:    14,
+          shadowOpacity:   0.08,
+          shadowRadius:    12,
           shadowOffset:    { width: 0, height: -3 },
         },
         tabBarShowLabel: false,
       }}
     >
-      {/* ── 1. Home ── */}
+      {/* 1 — Home */}
       <Tabs.Screen
         name="index"
         options={{
@@ -135,7 +113,7 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* ── 2. Category ── */}
+      {/* 2 — Category */}
       <Tabs.Screen
         name="category"
         options={{
@@ -145,15 +123,17 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* ── 3. Bharat (CENTER HERO) ── */}
+      {/* 3 — Bharat (India Map) */}
       <Tabs.Screen
         name="bharat"
         options={{
-          tabBarIcon: ({ focused }) => <BharatTabIcon focused={focused} />,
+          tabBarIcon: ({ focused, color }) => (
+            <BharatTabIcon focused={focused} color={color} />
+          ),
         }}
       />
 
-      {/* ── 4. Cart ── */}
+      {/* 4 — Cart */}
       <Tabs.Screen
         name="cart"
         options={{
@@ -163,7 +143,7 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* ── 5. Profile ── */}
+      {/* 5 — Profile */}
       <Tabs.Screen
         name="profile"
         options={{
@@ -178,37 +158,13 @@ export default function TabsLayout() {
 
 // ── Styles ────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  // Regular tab
-  iconWrapper: {
-    alignItems: "center",
+  tab: {
+    alignItems:     "center",
     justifyContent: "center",
-    gap: 2,
-    paddingTop: 2,
+    gap:            3,
+    paddingTop:     2,
   },
-  iconLabel: {
+  label: {
     letterSpacing: 0.2,
-  },
-
-  // Bharat center tab
-  bharatWrapper: {
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 3,
-    // Lift the circle above the tab bar top edge
-    marginTop: -20,
-  },
-  bharatCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  bharatLabel: {
-    letterSpacing: 0.3,
   },
 });
