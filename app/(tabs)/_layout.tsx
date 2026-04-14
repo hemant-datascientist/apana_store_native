@@ -22,8 +22,9 @@ import { typography } from "../../theme/typography";
 import IndiaMapIcon from "../../components/shared/IndiaMapIcon";
 
 // ── Dimensions ────────────────────────────────────────────────
-const ICON_SIZE  = 22;   // icon height in dp
-const TAB_HEIGHT = 60;   // tab bar visible height (excl. safe area)
+const ICON_SIZE   = 22;  // icon height in dp
+const TAB_HEIGHT  = 60;  // tab bar visible height (excl. safe area)
+const TAB_PAD_TOP = 10;  // gap between top border and icon content
 
 // ── Ionicons tab icon ──────────────────────────────────────────
 function TabIcon({
@@ -95,17 +96,17 @@ export default function TabsLayout() {
           borderTopWidth:  1,
           height:          TAB_HEIGHT + insets.bottom,
           paddingBottom:   insets.bottom,
-          paddingTop:      0,
+          // TAB_PAD_TOP pushes icons away from the top separator line
+          paddingTop:      TAB_PAD_TOP,
           elevation:       12,
           shadowColor:     "#000",
           shadowOpacity:   0.08,
           shadowRadius:    12,
           shadowOffset:    { width: 0, height: -3 },
         },
-        // Give each tab item the full usable height so the
-        // icon + label both render inside the bar without clipping.
+        // Height = usable area after paddingTop so icons stay inside bar
         tabBarItemStyle: {
-          height:          TAB_HEIGHT,
+          height:          TAB_HEIGHT - TAB_PAD_TOP,
           paddingVertical: 0,
           alignItems:      "center",
           justifyContent:  "center",
@@ -175,7 +176,7 @@ const styles = StyleSheet.create({
   label: {
     textAlign:     "center",
     letterSpacing: 0.1,
-    // Width cap prevents text from ever wrapping — tabs are ~screenWidth/5
-    maxWidth:      72,
+    // No maxWidth — the tab cell (screenWidth/5) naturally bounds the text.
+    // numberOfLines={1} on every label prevents wrapping.
   },
 });
