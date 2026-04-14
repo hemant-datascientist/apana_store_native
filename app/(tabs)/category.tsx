@@ -1,15 +1,15 @@
 // ============================================================
-// ORDERS SCREEN — Apana Store (Customer App)
+// CATEGORY SCREEN — Apana Store (Customer App)
 //
 // Planned features:
-//   - Order history (Pickup, Delivery, Ride)
-//   - Real-time active order tracking
-//   - Scan history (barcode lookup log)
-//   - Collaborative task history ("Mummy & Son" tasks)
-//   - Digital handshake QR verification records
-//   - Re-order shortcuts
+//   - Category grid: Grocery, Pharmacy, Electronics, Fashion,
+//     Food & Beverage, Beauty, Sports, Home & Kitchen, and more
+//   - Tapping a category → filtered store list for that type
+//   - Sub-category drill-down (e.g. Grocery → Fruits, Dairy…)
+//   - Category-level deals and offers banner
+//   - Search bar at top for quick category jump
 //
-// Replace placeholder with full implementation.
+// Data: GET /categories — category tree with store counts
 // ============================================================
 
 import React from "react";
@@ -19,20 +19,20 @@ import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 
-export default function OrdersScreen() {
+export default function CategoryScreen() {
   const { colors } = useTheme();
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
       <View style={styles.center}>
         <View style={[styles.iconCircle, { backgroundColor: colors.primary + "15" }]}>
-          <Ionicons name="receipt-outline" size={40} color={colors.primary} />
+          <Ionicons name="grid-outline" size={40} color={colors.primary} />
         </View>
         <Text style={[styles.title, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.xl }]}>
-          Orders
+          Categories
         </Text>
         <Text style={[styles.sub, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.sm }]}>
-          Order history, ride history, scan history, and active tracking coming soon
+          Grocery, Pharmacy, Electronics, Fashion, Food, Beauty, Sports, Home & more — coming soon.
         </Text>
       </View>
     </SafeAreaView>

@@ -2,13 +2,15 @@
 // HOME SCREEN — Apana Store (Customer App)
 //
 // Planned features:
-//   - Dual-mode toggle: "Find Stores" ↔ "Find Products"
-//   - Map view: category pins, LIVE status, occupancy dots,
-//     "Closing Soon" alerts, barcode scanner
-//   - Nearby stores grid
-//   - Featured collections
+//   - Personalized greeting + location header
+//   - Active order / in-progress task banner
+//   - Nearby stores horizontal scroll (by distance)
+//   - Featured collections / deals
+//   - Recently visited stores
+//   - Collaborative task feed (shared lists)
+//   - D2C Marketplace highlights
 //
-// Replace placeholder with full implementation.
+// Data: GET /customer/home — personalized feed
 // ============================================================
 
 import React from "react";
@@ -31,7 +33,7 @@ export default function HomeScreen() {
           Home
         </Text>
         <Text style={[styles.sub, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.sm }]}>
-          Map discovery + Find Stores / Find Products coming soon
+          Personalized feed, nearby stores, active orders, and featured collections coming soon.
         </Text>
       </View>
     </SafeAreaView>
