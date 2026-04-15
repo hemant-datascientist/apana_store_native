@@ -98,7 +98,7 @@ export default function HomeScreen() {
           onMenuPress={() => setDrawerOpen(true)}
           onMicPress={()    => Alert.alert("Voice",         "Voice search coming soon.")}
           onBellPress={()   => Alert.alert("Notifications", "Notifications coming soon.")}
-          onScanPress={()   => Alert.alert("Scanner",       "Barcode scanner coming soon.")}
+          onScanPress={()   => router.push("/scanner")}
           onLocatePress={() => Alert.alert("Locate",        "GPS locate coming soon.")}
         />
 

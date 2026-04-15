@@ -43,6 +43,8 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         {/* Store Live statistics screen */}
         <Stack.Screen name="store-live" />
+        {/* Barcode / QR scanner screen */}
+        <Stack.Screen name="scanner" />
       </Stack>
     </ThemeProvider>
   );
