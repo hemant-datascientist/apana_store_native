@@ -37,15 +37,34 @@ import TrendingSection     from "../../components/home/TrendingSection";
 import StoreDiscoveryTabs, { StoreTab } from "../../components/home/StoreDiscoveryTabs";
 import StoreFilterBar,     { StoreFilters } from "../../components/home/StoreFilterBar";
 import MenuDrawer                           from "../../components/home/MenuDrawer";
+import NearbyStoresFeed                    from "../../components/home/stores/NearbyStoresFeed";
+import WholesaleStoresFeed                 from "../../components/home/stores/WholesaleStoresFeed";
+import B2CStoresFeed                       from "../../components/home/stores/B2CStoresFeed";
+import ServiceStoresFeed                   from "../../components/home/stores/ServiceStoresFeed";
 
 export default function HomeScreen() {
-  const { colors } = useTheme();
-  const router     = useRouter();
+  const { colors, setCategoryPrimary } = useTheme();
+  const router                         = useRouter();
 
   // Products mode state
   const [search,   setSearch]   = useState("");
   const [mode,     setMode]     = useState<DiscoveryMode>("products");
   const [category, setCategory] = useState("all");
+
+  function handleCategorySelect(key: string) {
+    setCategory(key);
+    const cat = CATEGORIES.find(c => c.key === key);
+    // "all" or missing → restore brand color; otherwise apply category color
+    setCategoryPrimary(
+      !cat || cat.color === "primary" ? null : cat.color
+    );
+  }
+
+  // Hero background: category color when one is active, else default dark navy
+  const activeCategory = CATEGORIES.find(c => c.key === category);
+  const heroBg = activeCategory && activeCategory.color !== "primary"
+    ? activeCategory.color
+    : HEADER_BG;
 
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -60,10 +79,10 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor={HEADER_BG} />
+      <StatusBar barStyle="light-content" backgroundColor={heroBg} />
 
       {/* ── Dark navy hero ── */}
-      <SafeAreaView style={[styles.hero, { backgroundColor: HEADER_BG }]} edges={["top"]}>
+      <SafeAreaView style={[styles.hero, { backgroundColor: heroBg }]} edges={["top"]}>
 
         <HomeHeader
           location={MOCK_LOCATION}
@@ -90,7 +109,7 @@ export default function HomeScreen() {
           <CategoryScroll
             categories={CATEGORIES}
             activeKey={category}
-            onSelect={setCategory}
+            onSelect={handleCategorySelect}
           />
         ) : (
           <StoreDiscoveryTabs
@@ -115,8 +134,8 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         stickyHeaderIndices={[0]}
       >
-        {/* Sticky: filter bar (stores) or blank spacer (products) */}
-        {mode === "stores" ? (
+        {/* Sticky: filter bar — stores (except map_view) or blank spacer */}
+        {mode === "stores" && storeTab !== "map_view" ? (
           <StoreFilterBar
             filters={filters}
             onFilterChange={setFilters}
@@ -140,6 +159,26 @@ export default function HomeScreen() {
               onPress={item => Alert.alert(item.name, `${item.category} · ${item.area}`)}
             />
           </>
+        )}
+
+        {/* Stores feed — Nearby tab */}
+        {mode === "stores" && storeTab === "nearby" && (
+          <NearbyStoresFeed />
+        )}
+
+        {/* Stores feed — Wholesale tab */}
+        {mode === "stores" && storeTab === "wholesale" && (
+          <WholesaleStoresFeed />
+        )}
+
+        {/* Stores feed — B2C tab */}
+        {mode === "stores" && storeTab === "b2c" && (
+          <B2CStoresFeed />
+        )}
+
+        {/* Stores feed — Service Based tab */}
+        {mode === "stores" && storeTab === "service_based" && (
+          <ServiceStoresFeed />
         )}
 
       </ScrollView>

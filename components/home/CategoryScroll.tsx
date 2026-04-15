@@ -4,7 +4,7 @@
 // Horizontal scroll of store/product categories.
 // Each item: icon (above) + label (below), vertically stacked.
 //
-// Active:   white icon + white bold label + subtle underline dot
+// Active:   white icon + white bold label + white underline dot
 // Inactive: semi-transparent white icon + regular muted label
 //
 // Sits at the bottom of the dark hero header section.
@@ -19,9 +19,9 @@ import { typography } from "../../theme/typography";
 import { Category } from "../../data/homeData";
 
 interface CategoryScrollProps {
-  categories:    Category[];
-  activeKey:     string;
-  onSelect:      (key: string) => void;
+  categories: Category[];
+  activeKey:  string;
+  onSelect:   (key: string) => void;
 }
 
 export default function CategoryScroll({ categories, activeKey, onSelect }: CategoryScrollProps) {
@@ -85,14 +85,14 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   item: {
-    alignItems:     "center",
-    justifyContent: "center",
-    gap:            5,
+    alignItems:        "center",
+    justifyContent:    "center",
+    gap:               5,
     paddingHorizontal: 12,
-    minWidth: 62,
+    minWidth:          62,
   },
   label: {
-    textAlign: "center",
+    textAlign:     "center",
     letterSpacing: 0.1,
   },
   activeDot: {

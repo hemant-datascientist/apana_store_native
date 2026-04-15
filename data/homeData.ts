@@ -30,26 +30,28 @@ export type DiscoveryMode = "products" | "stores";
 export interface Category {
   key:   string;
   label: string;
-  icon:  string; // Ionicons glyph name
+  icon:  string;   // Ionicons glyph name
+  color: string;   // Brand color — used for active icon/label. "primary" = app primary.
 }
 
 export const CATEGORIES: Category[] = [
-  { key: "all",         label: "All Items",       icon: "apps-outline"                   },
-  { key: "grocery",     label: "Grocery",          icon: "basket-outline"                 },
-  { key: "fashion",     label: "Fashion",          icon: "shirt-outline"                  },
-  { key: "mobiles",     label: "Mobiles",          icon: "phone-portrait-outline"         },
-  { key: "electronics", label: "Electronics",      icon: "headset-outline"                },
-  { key: "appliances",  label: "Appliances",       icon: "tv-outline"                     },
-  { key: "beauty",      label: "Beauty",           icon: "flower-outline"                 },
-  { key: "sports",      label: "Sports",           icon: "football-outline"               },
-  { key: "home",        label: "Home",             icon: "home-outline"                   },
-  { key: "pharmacy",    label: "Pharmacy",         icon: "medkit-outline"                 },
-  { key: "food",        label: "Food & Drink",     icon: "restaurant-outline"             },
-  { key: "books",       label: "Books",            icon: "book-outline"                   },
-  { key: "icecream",    label: "Ice Cream",        icon: "ice-cream-outline"              },
-  { key: "furniture",   label: "Furniture",        icon: "bed-outline"                    },
-  { key: "hardware",    label: "Hardware & Tools", icon: "hammer-outline"                 },
-  { key: "misc",        label: "Miscellaneous",    icon: "ellipsis-horizontal-circle-outline" },
+  // key              label                icon                                    color
+  { key: "all",         label: "All Items",       icon: "apps-outline",                        color: "primary"  },
+  { key: "grocery",     label: "Grocery",          icon: "basket-outline",                      color: "#026451"  },
+  { key: "fashion",     label: "Fashion",          icon: "shirt-outline",                       color: "#660033"  },
+  { key: "mobiles",     label: "Mobiles",          icon: "phone-portrait-outline",              color: "#0437B1"  },
+  { key: "electronics", label: "Electronics",      icon: "headset-outline",                     color: "#5F75B1"  },
+  { key: "appliances",  label: "Appliances",       icon: "tv-outline",                          color: "#2C5282"  },
+  { key: "beauty",      label: "Beauty",           icon: "flower-outline",                      color: "#402A62"  },
+  { key: "sports",      label: "Sports",           icon: "football-outline",                    color: "#B45309"  },
+  { key: "home",        label: "Home",             icon: "home-outline",                        color: "#7C4438"  },
+  { key: "pharmacy",    label: "Pharmacy",         icon: "medkit-outline",                      color: "#1D4746"  },
+  { key: "food",        label: "Food & Drink",     icon: "restaurant-outline",                  color: "#6F4C81"  },
+  { key: "books",       label: "Books",            icon: "book-outline",                        color: "#933A00"  },
+  { key: "icecream",    label: "Ice Cream",        icon: "ice-cream-outline",                   color: "#803E96"  },
+  { key: "furniture",   label: "Furniture",        icon: "bed-outline",                         color: "#6D4924"  },
+  { key: "hardware",    label: "Hardware & Tools", icon: "hammer-outline",                      color: "#374151"  },
+  { key: "misc",        label: "Miscellaneous",    icon: "ellipsis-horizontal-circle-outline",  color: "#4A4A6A"  },
   // Miscellaneous covers: Pet Shop, Pet Food, Baby Care, Toys,
   // Stationery, Auto Parts, Garden, Musical Instruments, Art & Craft,
   // Travel Accessories, Gifting, and any other niche categories.
@@ -57,8 +59,8 @@ export const CATEGORIES: Category[] = [
 
 // ── Hero header background ────────────────────────────────────
 // Deep dark navy — always constant (not theme-dependent).
-// Related to Apana Blue (#0F4C81) but darker for header contrast.
-export const HEADER_BG = "#0B2D5C";
+// Darker than the primary brand color for strong header contrast.
+export const HEADER_BG = "#091E4A";
 
 // ── Banners ───────────────────────────────────────────────────
 export interface Banner {

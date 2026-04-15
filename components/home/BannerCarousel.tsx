@@ -15,6 +15,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Banner } from "../../data/homeData";
 import { typography } from "../../theme/typography";
+import useTheme from "../../theme/useTheme";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 const CARD_H = 160;
@@ -27,7 +28,8 @@ interface BannerCarouselProps {
 }
 
 export default function BannerCarousel({ banners, onPress }: BannerCarouselProps) {
-  const scrollRef  = useRef<ScrollView>(null);
+  const { colors }          = useTheme();
+  const scrollRef           = useRef<ScrollView>(null);
   const [active, setActive] = useState(0);
 
   // Auto-scroll every 3 s
@@ -105,7 +107,7 @@ export default function BannerCarousel({ banners, onPress }: BannerCarouselProps
             key={i}
             style={[
               styles.dot,
-              { backgroundColor: i === active ? "#0F4C81" : "#CBD5E1" },
+              { backgroundColor: i === active ? colors.primary : "#CBD5E1" },
               i === active && styles.dotActive,
             ]}
           />

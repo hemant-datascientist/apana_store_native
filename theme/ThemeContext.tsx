@@ -30,6 +30,8 @@ type ThemeType = {
   setThemeMode: (mode: ThemeMode) => void;
   brand: BrandType;
   setBrand: (brand: BrandType) => void;
+  /** Override primary with a category color. Pass null to restore brand color. */
+  setCategoryPrimary: (color: string | null) => void;
 };
 
 // ── Context ────────────────────────────────────────────────────
@@ -42,8 +44,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemTheme = useColorScheme();
 
   // Customer app defaults to "apanaBlue" (#0F4C81)
-  const [themeMode, setThemeModeState] = useState<ThemeMode>("system");
-  const [brand,     setBrandState]     = useState<BrandType>("apanaBlue");
+  const [themeMode,       setThemeModeState]    = useState<ThemeMode>("system");
+  const [brand,           setBrandState]        = useState<BrandType>("apanaBlue");
+  // Transient override — set when a category is selected, cleared on "All Items"
+  const [categoryPrimary, setCategoryPrimary]   = useState<string | null>(null);
 
   // Prevents UI flicker before persisted values are restored
   const [loaded, setLoaded] = useState(false);
@@ -77,15 +81,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     themeMode === "light" ? false :
     systemTheme === "dark";
 
-  // ── Merge base colors with active brand primary ──
-  const base   = isDark ? darkBaseColors : lightBaseColors;
-  const colors = { ...base, primary: brandColors[brand] };
+  // ── Merge base colors with active primary ──
+  // Category selection temporarily overrides the brand primary.
+  const base    = isDark ? darkBaseColors : lightBaseColors;
+  const primary = categoryPrimary ?? brandColors[brand];
+  const colors  = { ...base, primary };
 
   // Block render until storage is restored (prevents flicker)
   if (!loaded) return null;
 
   return (
-    <ThemeContext.Provider value={{ colors, isDark, themeMode, setThemeMode, brand, setBrand }}>
+    <ThemeContext.Provider value={{ colors, isDark, themeMode, setThemeMode, brand, setBrand, setCategoryPrimary }}>
       {children}
     </ThemeContext.Provider>
   );
