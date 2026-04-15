@@ -16,16 +16,24 @@ import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 
 interface TrendingSectionProps {
-  city:    string;
-  items:   TrendingItem[];
-  onPress: (item: TrendingItem) => void;
+  city:     string;
+  items:    TrendingItem[];
+  onPress:  (item: TrendingItem) => void;
+  /** Override the section title. If omitted, shows "Trending in {city}". */
+  title?:   string;
+  /** Override the section icon. If omitted, shows the flame icon. */
+  icon?:    string;
 }
 
 const CARD_W   = 130;
 const IMG_H    = 100;
 
-export default function TrendingSection({ city, items, onPress }: TrendingSectionProps) {
+export default function TrendingSection({ city, items, onPress, title, icon }: TrendingSectionProps) {
   const { colors } = useTheme();
+
+  const sectionTitle = title ?? `Trending in ${city}`;
+  const sectionIcon  = icon  ?? "flame";
+  const iconColor    = icon  ? colors.primary : "#F97316";
 
   return (
     <View style={styles.section}>
@@ -33,9 +41,9 @@ export default function TrendingSection({ city, items, onPress }: TrendingSectio
       {/* Section header */}
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <Ionicons name="flame" size={18} color="#F97316" />
+          <Ionicons name={sectionIcon as any} size={18} color={iconColor} />
           <Text style={[styles.title, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.md }]}>
-            Trending in {city}
+            {sectionTitle}
           </Text>
         </View>
         <TouchableOpacity activeOpacity={0.7}>

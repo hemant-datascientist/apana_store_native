@@ -41,6 +41,8 @@ import NearbyStoresFeed                    from "../../components/home/stores/Ne
 import WholesaleStoresFeed                 from "../../components/home/stores/WholesaleStoresFeed";
 import B2CStoresFeed                       from "../../components/home/stores/B2CStoresFeed";
 import ServiceStoresFeed                   from "../../components/home/stores/ServiceStoresFeed";
+import { CATEGORY_FEEDS }                  from "../../data/categoryFeedData";
+import GroceryFeed                         from "../../components/home/grocery/GroceryFeed";
 
 export default function HomeScreen() {
   const { colors, setCategoryPrimary } = useTheme();
@@ -146,8 +148,8 @@ export default function HomeScreen() {
           <View />
         )}
 
-        {/* Products feed */}
-        {mode === "products" && (
+        {/* Products feed — "All Items" */}
+        {mode === "products" && category === "all" && (
           <>
             <BannerCarousel
               banners={BANNERS}
@@ -160,6 +162,29 @@ export default function HomeScreen() {
             />
           </>
         )}
+
+        {/* Products feed — Grocery (custom layout) */}
+        {mode === "products" && category === "grocery" && (
+          <GroceryFeed />
+        )}
+
+        {/* Products feed — specific category (generic layout) */}
+        {mode === "products" && category !== "all" && category !== "grocery" && CATEGORY_FEEDS[category] && (
+          <>
+            <BannerCarousel
+              banners={CATEGORY_FEEDS[category].banners}
+              onPress={b => Alert.alert(b.title, b.subtitle)}
+            />
+            <TrendingSection
+              city={MOCK_LOCATION.area}
+              items={CATEGORY_FEEDS[category].items}
+              title={CATEGORY_FEEDS[category].sectionTitle}
+              icon={CATEGORY_FEEDS[category].sectionIcon}
+              onPress={item => Alert.alert(item.name, `${item.category} · ${item.area}`)}
+            />
+          </>
+        )}
+
 
         {/* Stores feed — Nearby tab */}
         {mode === "stores" && storeTab === "nearby" && (
