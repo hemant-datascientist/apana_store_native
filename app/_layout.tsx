@@ -41,6 +41,8 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         {/* Main tab group — the primary customer experience */}
         <Stack.Screen name="(tabs)" />
+        {/* Store Live statistics screen */}
+        <Stack.Screen name="store-live" />
       </Stack>
     </ThemeProvider>
   );

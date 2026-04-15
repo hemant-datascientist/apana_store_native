@@ -17,6 +17,7 @@ import {
   View, ScrollView, StyleSheet, StatusBar, Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import useTheme from "../../theme/useTheme";
 import {
   MOCK_LOCATION,
@@ -39,6 +40,7 @@ import MenuDrawer                           from "../../components/home/MenuDraw
 
 export default function HomeScreen() {
   const { colors } = useTheme();
+  const router     = useRouter();
 
   // Products mode state
   const [search,   setSearch]   = useState("");
@@ -67,6 +69,7 @@ export default function HomeScreen() {
           location={MOCK_LOCATION}
           storesLive={STORES_LIVE_COUNT}
           onLocationPress={() => Alert.alert("Change Location", "Area selector coming soon.")}
+          onStoreLivePress={() => router.push("/store-live")}
         />
 
         <HomeSearchBar

@@ -15,12 +15,13 @@ import { typography } from "../../theme/typography";
 import { UserLocation } from "../../data/homeData";
 
 interface HomeHeaderProps {
-  location:       UserLocation;
-  storesLive:     number;
+  location:        UserLocation;
+  storesLive:      number;
   onLocationPress: () => void;
+  onStoreLivePress?: () => void;
 }
 
-export default function HomeHeader({ location, storesLive, onLocationPress }: HomeHeaderProps) {
+export default function HomeHeader({ location, storesLive, onLocationPress, onStoreLivePress }: HomeHeaderProps) {
   return (
     <View style={styles.row}>
 
@@ -36,13 +37,13 @@ export default function HomeHeader({ location, storesLive, onLocationPress }: Ho
         <Ionicons name="chevron-down" size={16} color="#fff" />
       </TouchableOpacity>
 
-      {/* ── Stores Live badge ── */}
-      <View style={styles.liveBadge}>
+      {/* ── Stores Live badge (tappable → Store Live screen) ── */}
+      <TouchableOpacity style={styles.liveBadge} onPress={onStoreLivePress} activeOpacity={0.75}>
         <View style={styles.liveDot} />
         <Text style={[styles.liveText, { fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
           Stores Live – {storesLive.toLocaleString("en-IN")}
         </Text>
-      </View>
+      </TouchableOpacity>
 
     </View>
   );
