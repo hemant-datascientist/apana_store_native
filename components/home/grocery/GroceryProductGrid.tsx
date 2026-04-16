@@ -5,6 +5,9 @@
 // Each card: image placeholder (icon on colored bg) + name + price.
 // Replace icon/bg with <Image source={{ uri: product.imageUrl }}
 // when backend delivers real product images.
+//
+// Uses explicit row chunking (groups of 3) instead of flexWrap
+// to guarantee exactly 3 cards per row on all screen sizes.
 // ============================================================
 
 import React from "react";
@@ -23,10 +26,22 @@ const { width: SW } = Dimensions.get("window");
 const H_PAD         = 16;
 const COL_GAP       = 8;
 const COLS          = 3;
-const CARD_W        = (SW - H_PAD * 2 - COL_GAP * (COLS - 1)) / COLS;
-const IMG_H         = CARD_W;   // square image
+// Floor to whole pixel — avoids sub-pixel overflow that breaks 3-col layout
+const CARD_W        = Math.floor((SW - H_PAD * 2 - COL_GAP * (COLS - 1)) / COLS);
+const IMG_H         = CARD_W;   // square image area
+
+// Split array into chunks of N
+function chunk<T>(arr: T[], size: number): T[][] {
+  const result: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+  return result;
+}
 
 export default function GroceryProductGrid({ section }: GroceryProductGridProps) {
+  const rows = chunk(section.products, COLS);
+
   return (
     <View style={styles.root}>
 
@@ -45,10 +60,24 @@ export default function GroceryProductGrid({ section }: GroceryProductGridProps)
         </TouchableOpacity>
       </View>
 
-      {/* ── 3-column product grid ── */}
+      {/* ── Rows of 3 ── */}
       <View style={styles.grid}>
-        {section.products.map(product => (
-          <ProductCard key={product.id} product={product} accentColor={section.iconColor} />
+        {rows.map((row, rowIdx) => (
+          <View key={rowIdx} style={styles.row}>
+            {row.map(product => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                accentColor={section.iconColor}
+              />
+            ))}
+            {/* Ghost cards to keep alignment when last row is incomplete */}
+            {row.length < COLS &&
+              Array(COLS - row.length).fill(null).map((_, i) => (
+                <View key={`ghost-${i}`} style={[styles.card, styles.cardGhost, { width: CARD_W }]} />
+              ))
+            }
+          </View>
         ))}
       </View>
 
@@ -105,7 +134,7 @@ function ProductCard({ product, accentColor }: ProductCardProps) {
 
 const styles = StyleSheet.create({
   root: {
-    marginTop:    20,
+    marginTop:         20,
     paddingHorizontal: H_PAD,
   },
 
@@ -124,10 +153,14 @@ const styles = StyleSheet.create({
   headerTitle: {},
   seeAll:      {},
 
-  // Grid
+  // Grid (outer container)
   grid: {
+    gap: COL_GAP,
+  },
+
+  // Each row of 3
+  row: {
     flexDirection: "row",
-    flexWrap:      "wrap",
     gap:           COL_GAP,
   },
 
@@ -138,12 +171,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderWidth:     1,
     borderColor:     "#F3F4F6",
-    // Shadow
     shadowColor:     "#000",
     shadowOffset:    { width: 0, height: 1 },
     shadowOpacity:   0.06,
     shadowRadius:    4,
     elevation:       2,
+  },
+  cardGhost: {
+    // Invisible — just holds space in incomplete last row
+    backgroundColor: "transparent",
+    borderColor:     "transparent",
+    elevation:       0,
   },
 
   imgArea: {
