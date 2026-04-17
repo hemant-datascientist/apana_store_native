@@ -54,6 +54,7 @@ export default function RootLayout() {
           <Stack.Screen name="sell-ondc" />
           <Stack.Screen name="product-finder" />
           <Stack.Screen name="store-qr" />
+          <Stack.Screen name="favourite" />
         </Stack>
       </LocationProvider>
     </ThemeProvider>

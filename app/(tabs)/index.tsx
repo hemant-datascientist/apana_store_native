@@ -172,6 +172,7 @@ export default function HomeScreen() {
             case "product_finder": router.push("/product-finder"); break;
             case "store_qr":       router.push("/store-qr");       break;
             case "address_book":   router.push("/address-book");   break;
+            case "favourite":      router.push("/favourite");      break;
             case "scanner":        router.push("/scanner");        break;
             default:
               Alert.alert("Coming Soon", `"${key}" is coming soon.`);
