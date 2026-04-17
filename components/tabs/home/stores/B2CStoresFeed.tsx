@@ -14,7 +14,7 @@ import { View, Text, Alert, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
 import useTheme from "../../../../theme/useTheme";
-import { B2C_PROMOS, B2C_STORES, B2CPromo, B2CStore } from "../../../data/b2cStoresData";
+import { B2C_PROMOS, B2C_STORES, B2CPromo, B2CStore } from "../../../../data/b2cStoresData";
 import B2CHeroBanner from "./B2CHeroBanner";
 import B2CStoreCard  from "./B2CStoreCard";
 

@@ -21,8 +21,8 @@ import ProductHScrollSection   from "./ProductHScrollSection";
 import FlashDealsSection       from "./FlashDealsSection";
 import PopularStoresSection    from "./PopularStoresSection";
 
-import { BANNERS }          from "../../../data/homeData";
-import { useLocation }      from "../../../context/LocationContext";
+import { BANNERS }          from "../../../../data/homeData";
+import { useLocation }      from "../../../../context/LocationContext";
 import {
   getTrendingForCity,
   SUMMER_CATEGORIES,
@@ -30,7 +30,7 @@ import {
   FLASH_DEALS,
   NEW_ARRIVALS,
   POPULAR_STORES,
-} from "../../../data/allFeedData";
+} from "../../../../data/allFeedData";
 
 const BRAND_BLUE = "#0F4C81";
 const PURPLE     = "#7C3AED";

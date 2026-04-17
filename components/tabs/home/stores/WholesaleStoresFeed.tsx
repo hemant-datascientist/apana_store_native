@@ -16,7 +16,7 @@ import useTheme from "../../../../theme/useTheme";
 import {
   WHOLESALE_PROMOS, WHOLESALE_STORES,
   WholesalePromo, WholesaleStore,
-} from "../../../data/wholesaleStoresData";
+} from "../../../../data/wholesaleStoresData";
 import WholesaleHeroBanner from "./WholesaleHeroBanner";
 import StoreListCard       from "./StoreListCard";
 

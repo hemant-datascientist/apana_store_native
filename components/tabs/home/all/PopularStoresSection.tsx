@@ -12,7 +12,7 @@ import {
 import { Ionicons }       from "@expo/vector-icons";
 import { typography }     from "../../../../theme/typography";
 import SectionHeader      from "./SectionHeader";
-import { PopularStore }   from "../../../data/allFeedData";
+import { PopularStore }   from "../../../../data/allFeedData";
 
 interface PopularStoresSectionProps {
   stores: PopularStore[];

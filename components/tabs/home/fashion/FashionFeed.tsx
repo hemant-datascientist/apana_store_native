@@ -14,11 +14,11 @@ import { View, Alert, StyleSheet } from "react-native";
 import BannerCarousel         from "../BannerCarousel";
 import FashionGenderTabs      from "./FashionGenderTabs";
 import FashionSubCategoryGrid from "./FashionSubCategoryGrid";
-import { CATEGORY_FEEDS }     from "../../../data/categoryFeedData";
+import { CATEGORY_FEEDS }     from "../../../../data/categoryFeedData";
 import {
   FASHION_GENDERS,
   FashionGender,
-} from "../../../data/fashionData";
+} from "../../../../data/fashionData";
 
 const FASHION_ACCENT = "#660033";
 

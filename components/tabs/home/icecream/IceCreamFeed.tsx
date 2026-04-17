@@ -7,8 +7,8 @@ import { View, Alert } from "react-native";
 import BannerCarousel    from "../BannerCarousel";
 import TrendingSection   from "../TrendingSection";
 import CategorySubGrid, { SubCat } from "../shared/CategorySubGrid";
-import { CATEGORY_FEEDS } from "../../../data/categoryFeedData";
-import { MOCK_LOCATION }  from "../../../data/homeData";
+import { CATEGORY_FEEDS } from "../../../../data/categoryFeedData";
+import { MOCK_LOCATION }  from "../../../../data/homeData";
 
 const ACCENT = "#803E96";
 

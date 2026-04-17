@@ -13,8 +13,8 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Svg, { Path, G } from "react-native-svg";
 import { typography } from "../../../theme/typography";
-import { STATE_SVG_DATA } from "../../data/stateSvgData";
-import { REGION_GROUPS } from "../../data/bharatData";
+import { STATE_SVG_DATA } from "../../../data/stateSvgData";
+import { REGION_GROUPS } from "../../../data/bharatData";
 
 // ── Coordinate space of the full India SVG composite ─────────
 const INDIA_W = 612;

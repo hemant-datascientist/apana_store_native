@@ -13,7 +13,7 @@ import {
   TouchableOpacity, NativeSyntheticEvent, NativeScrollEvent,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Banner } from "../../data/homeData";
+import { Banner } from "../../../data/homeData";
 import { typography } from "../../../theme/typography";
 import useTheme from "../../../theme/useTheme";
 

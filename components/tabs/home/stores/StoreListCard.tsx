@@ -15,7 +15,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
 import useTheme from "../../../../theme/useTheme";
-import { NearbyStore } from "../../../data/nearbyStoresData";
+import { NearbyStore } from "../../../../data/nearbyStoresData";
 
 interface StoreListCardProps {
   store:         NearbyStore;

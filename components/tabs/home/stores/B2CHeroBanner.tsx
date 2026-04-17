@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
-import { B2CPromo } from "../../../data/b2cStoresData";
+import { B2CPromo } from "../../../../data/b2cStoresData";
 
 interface B2CHeroBannerProps {
   promos:  B2CPromo[];

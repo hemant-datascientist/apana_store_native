@@ -16,8 +16,8 @@ import {
   GROCERY_SUB_CATEGORIES,
   GROCERY_SECTIONS,
   GrocerySubCategory,
-} from "../../../data/groceryData";
-import { CATEGORY_FEEDS } from "../../../data/categoryFeedData";
+} from "../../../../data/groceryData";
+import { CATEGORY_FEEDS } from "../../../../data/categoryFeedData";
 
 export default function GroceryFeed() {
   function handleSubCategory(cat: GrocerySubCategory) {

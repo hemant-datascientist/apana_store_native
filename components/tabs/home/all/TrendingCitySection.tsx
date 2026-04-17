@@ -22,7 +22,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { typography }        from "../../../../theme/typography";
 import SectionHeader         from "./SectionHeader";
-import { TrendingCityItem }  from "../../../data/allFeedData";
+import { TrendingCityItem }  from "../../../../data/allFeedData";
 
 interface TrendingCitySectionProps {
   city:  string;

@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
-import { FashionSubCat } from "../../../data/fashionData";
+import { FashionSubCat } from "../../../../data/fashionData";
 
 interface FashionSubCategoryGridProps {
   subCats: FashionSubCat[];

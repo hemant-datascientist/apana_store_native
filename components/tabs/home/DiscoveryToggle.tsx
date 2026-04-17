@@ -14,7 +14,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../theme/typography";
-import { DiscoveryMode } from "../../data/homeData";
+import { DiscoveryMode } from "../../../data/homeData";
 
 interface DiscoveryToggleProps {
   mode:     DiscoveryMode;

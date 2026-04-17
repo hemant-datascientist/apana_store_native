@@ -14,7 +14,7 @@ import { View, Text, Alert, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
 import useTheme from "../../../../theme/useTheme";
-import { SERVICE_PROMOS, SERVICE_STORES, ServicePromo, ServiceStore } from "../../../data/serviceStoresData";
+import { SERVICE_PROMOS, SERVICE_STORES, ServicePromo, ServiceStore } from "../../../../data/serviceStoresData";
 import ServiceHeroBanner from "./ServiceHeroBanner";
 import ServiceStoreCard  from "./ServiceStoreCard";
 

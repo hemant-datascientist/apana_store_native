@@ -9,7 +9,7 @@
 import React from "react";
 import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { CategoryGroup } from "../../data/categoryData";
+import { CategoryGroup } from "../../../data/categoryData";
 import useTheme from "../../../theme/useTheme";
 import { typography } from "../../../theme/typography";
 import SubCategoryCard from "./SubCategoryCard";

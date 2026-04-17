@@ -8,7 +8,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { UserProfile } from "../../data/profileData";
+import { UserProfile } from "../../../data/profileData";
 import useTheme from "../../../theme/useTheme";
 import { typography } from "../../../theme/typography";
 

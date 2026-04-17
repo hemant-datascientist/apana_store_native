@@ -15,7 +15,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
 import SectionHeader  from "./SectionHeader";
-import { FlashDeal }  from "../../../data/allFeedData";
+import { FlashDeal }  from "../../../../data/allFeedData";
 
 interface FlashDealsSectionProps {
   deals: FlashDeal[];

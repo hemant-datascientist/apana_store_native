@@ -15,7 +15,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
 import useTheme from "../../../../theme/useTheme";
-import { ServiceStore } from "../../../data/serviceStoresData";
+import { ServiceStore } from "../../../../data/serviceStoresData";
 
 interface ServiceStoreCardProps {
   store:       ServiceStore;

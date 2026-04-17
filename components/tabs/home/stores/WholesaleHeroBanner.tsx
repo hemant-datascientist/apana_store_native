@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
-import { WholesalePromo } from "../../../data/wholesaleStoresData";
+import { WholesalePromo } from "../../../../data/wholesaleStoresData";
 
 interface WholesaleHeroBannerProps {
   promos:  WholesalePromo[];

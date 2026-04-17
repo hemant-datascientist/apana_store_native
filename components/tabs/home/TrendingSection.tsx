@@ -11,7 +11,7 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { TrendingItem } from "../../data/homeData";
+import { TrendingItem } from "../../../data/homeData";
 import useTheme from "../../../theme/useTheme";
 import { typography } from "../../../theme/typography";
 

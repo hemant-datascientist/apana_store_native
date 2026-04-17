@@ -8,7 +8,7 @@
 
 import React from "react";
 import { View, StyleSheet, Dimensions } from "react-native";
-import { StoreType } from "../../data/categoryData";
+import { StoreType } from "../../../data/categoryData";
 import StoreTypeCard from "./StoreTypeCard";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;

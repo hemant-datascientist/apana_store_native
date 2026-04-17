@@ -13,7 +13,7 @@ import {
 import { Ionicons }        from "@expo/vector-icons";
 import { typography }      from "../../../../theme/typography";
 import SectionHeader       from "./SectionHeader";
-import { SeasonalCat }     from "../../../data/allFeedData";
+import { SeasonalCat }     from "../../../../data/allFeedData";
 
 interface SeasonalCategorySectionProps {
   season:     string;       // e.g. "Summer 2026"

@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
-import { FashionGender, FashionGenderConfig } from "../../../data/fashionData";
+import { FashionGender, FashionGenderConfig } from "../../../../data/fashionData";
 
 interface FashionGenderTabsProps {
   genders:   FashionGenderConfig[];

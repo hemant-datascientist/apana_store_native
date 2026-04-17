@@ -17,7 +17,7 @@
 
 import React from "react";
 import Svg, { G, Path } from "react-native-svg";
-import { STATE_SVG_DATA } from "../../data/stateSvgData";
+import { STATE_SVG_DATA } from "../../../data/stateSvgData";
 
 interface StateSvgProps {
   stateKey:  string;

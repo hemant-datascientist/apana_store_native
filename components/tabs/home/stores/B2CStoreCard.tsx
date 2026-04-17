@@ -16,7 +16,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
 import useTheme from "../../../../theme/useTheme";
-import { B2CStore } from "../../../data/b2cStoresData";
+import { B2CStore } from "../../../../data/b2cStoresData";
 
 interface B2CStoreCardProps {
   store:       B2CStore;

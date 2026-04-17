@@ -16,7 +16,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
-import { GroceryProduct, GrocerySection } from "../../../data/groceryData";
+import { GroceryProduct, GrocerySection } from "../../../../data/groceryData";
 
 interface GroceryProductGridProps {
   section: GrocerySection;
