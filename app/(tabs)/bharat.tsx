@@ -23,8 +23,8 @@ import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { REGION_GROUPS, StateInfo } from "../../data/bharatData";
-import RegionSection from "../../components/bharat/RegionSection";
-import IndiaMapSvg   from "../../components/bharat/IndiaMapSvg";
+import RegionSection from "../../components/tabs/bharat/RegionSection";
+import IndiaMapSvg   from "../../components/tabs/bharat/IndiaMapSvg";
 
 // Total state + UT count for the badge
 const TOTAL_STATES = REGION_GROUPS.reduce((acc, g) => acc + g.states.length, 0);

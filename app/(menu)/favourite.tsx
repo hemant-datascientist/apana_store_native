@@ -28,12 +28,12 @@ import {
 import { SafeAreaView }      from "react-native-safe-area-context";
 import { Ionicons }          from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { typography }        from "../theme/typography";
-import { FAVOURITE_STORES }  from "../data/profileData";
+import { typography }        from "../../theme/typography";
+import { FAVOURITE_STORES }  from "../../data/profileData";
 import {
   FAVOURITE_RIDERS,   FavouriteRider,
   FAVOURITE_DELIVERIES, FavouriteDelivery,
-} from "../data/favouriteData";
+} from "../../data/favouriteData";
 
 const BRAND_BLUE  = "#0F4C81";
 const { width: SW } = Dimensions.get("window");

@@ -19,11 +19,11 @@ import {
   DiscoveryMode,
 } from "../../data/homeData";
 import { CATEGORY_GROUPS, STORE_TYPES } from "../../data/categoryData";
-import HomeHeader      from "../../components/home/HomeHeader";
-import HomeSearchBar   from "../../components/home/HomeSearchBar";
-import DiscoveryToggle from "../../components/home/DiscoveryToggle";
-import CategorySection from "../../components/category/CategorySection";
-import StoreTypeGrid   from "../../components/category/StoreTypeGrid";
+import HomeHeader      from "../../components/tabs/home/HomeHeader";
+import HomeSearchBar   from "../../components/tabs/home/HomeSearchBar";
+import DiscoveryToggle from "../../components/tabs/home/DiscoveryToggle";
+import CategorySection from "../../components/tabs/category/CategorySection";
+import StoreTypeGrid   from "../../components/tabs/category/StoreTypeGrid";
 
 export default function CategoryScreen() {
   const { colors } = useTheme();

@@ -23,9 +23,9 @@ import {
 import { SafeAreaView }  from "react-native-safe-area-context";
 import { Ionicons }      from "@expo/vector-icons";
 import { useRouter }     from "expo-router";
-import { typography }    from "../theme/typography";
-import { useLocation }   from "../context/LocationContext";
-import { SAVED_ADDRESSES, UserAddress } from "../data/addressData";
+import { typography }    from "../../theme/typography";
+import { useLocation }   from "../../context/LocationContext";
+import { SAVED_ADDRESSES, UserAddress } from "../../data/addressData";
 
 const BRAND_BLUE = "#0F4C81";
 

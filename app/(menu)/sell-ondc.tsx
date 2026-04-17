@@ -19,7 +19,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons }     from "@expo/vector-icons";
 import { useRouter }    from "expo-router";
-import { typography }   from "../theme/typography";
+import { typography }   from "../../theme/typography";
 
 const BRAND_BLUE = "#0F4C81";
 const CARD_BLUE  = "#1A5E9A";

@@ -29,37 +29,37 @@ import {
 import { useLocation } from "../../context/LocationContext";
 
 // ── Hero components ──────────────────────────────────────────
-import HomeHeader          from "../../components/home/HomeHeader";
-import HomeSearchBar       from "../../components/home/HomeSearchBar";
-import DiscoveryToggle     from "../../components/home/DiscoveryToggle";
-import CategoryScroll      from "../../components/home/CategoryScroll";
-import StoreDiscoveryTabs, { StoreTab }    from "../../components/home/StoreDiscoveryTabs";
-import StoreFilterBar,     { StoreFilters } from "../../components/home/StoreFilterBar";
-import MenuDrawer                          from "../../components/home/MenuDrawer";
+import HomeHeader          from "../../components/tabs/home/HomeHeader";
+import HomeSearchBar       from "../../components/tabs/home/HomeSearchBar";
+import DiscoveryToggle     from "../../components/tabs/home/DiscoveryToggle";
+import CategoryScroll      from "../../components/tabs/home/CategoryScroll";
+import StoreDiscoveryTabs, { StoreTab }    from "../../components/tabs/home/StoreDiscoveryTabs";
+import StoreFilterBar,     { StoreFilters } from "../../components/tabs/home/StoreFilterBar";
+import MenuDrawer                          from "../../components/tabs/home/MenuDrawer";
 
 // ── Product category feeds ───────────────────────────────────
-import AllFeed        from "../../components/home/all/AllFeed";
-import GroceryFeed    from "../../components/home/grocery/GroceryFeed";
-import FashionFeed    from "../../components/home/fashion/FashionFeed";
-import MobilesFeed    from "../../components/home/mobiles/MobilesFeed";
-import ElectronicsFeed from "../../components/home/electronics/ElectronicsFeed";
-import AppliancesFeed from "../../components/home/appliances/AppliancesFeed";
-import BeautyFeed     from "../../components/home/beauty/BeautyFeed";
-import SportsFeed     from "../../components/home/sports/SportsFeed";
-import HomeFeed       from "../../components/home/home/HomeFeed";
-import PharmacyFeed   from "../../components/home/pharmacy/PharmacyFeed";
-import FoodFeed       from "../../components/home/food/FoodFeed";
-import BooksFeed      from "../../components/home/books/BooksFeed";
-import IceCreamFeed   from "../../components/home/icecream/IceCreamFeed";
-import FurnitureFeed  from "../../components/home/furniture/FurnitureFeed";
-import HardwareFeed   from "../../components/home/hardware/HardwareFeed";
-import MiscFeed       from "../../components/home/misc/MiscFeed";
+import AllFeed        from "../../components/tabs/home/all/AllFeed";
+import GroceryFeed    from "../../components/tabs/home/grocery/GroceryFeed";
+import FashionFeed    from "../../components/tabs/home/fashion/FashionFeed";
+import MobilesFeed    from "../../components/tabs/home/mobiles/MobilesFeed";
+import ElectronicsFeed from "../../components/tabs/home/electronics/ElectronicsFeed";
+import AppliancesFeed from "../../components/tabs/home/appliances/AppliancesFeed";
+import BeautyFeed     from "../../components/tabs/home/beauty/BeautyFeed";
+import SportsFeed     from "../../components/tabs/home/sports/SportsFeed";
+import HomeFeed       from "../../components/tabs/home/home/HomeFeed";
+import PharmacyFeed   from "../../components/tabs/home/pharmacy/PharmacyFeed";
+import FoodFeed       from "../../components/tabs/home/food/FoodFeed";
+import BooksFeed      from "../../components/tabs/home/books/BooksFeed";
+import IceCreamFeed   from "../../components/tabs/home/icecream/IceCreamFeed";
+import FurnitureFeed  from "../../components/tabs/home/furniture/FurnitureFeed";
+import HardwareFeed   from "../../components/tabs/home/hardware/HardwareFeed";
+import MiscFeed       from "../../components/tabs/home/misc/MiscFeed";
 
 // ── Store feeds ──────────────────────────────────────────────
-import NearbyStoresFeed    from "../../components/home/stores/NearbyStoresFeed";
-import WholesaleStoresFeed from "../../components/home/stores/WholesaleStoresFeed";
-import B2CStoresFeed       from "../../components/home/stores/B2CStoresFeed";
-import ServiceStoresFeed   from "../../components/home/stores/ServiceStoresFeed";
+import NearbyStoresFeed    from "../../components/tabs/home/stores/NearbyStoresFeed";
+import WholesaleStoresFeed from "../../components/tabs/home/stores/WholesaleStoresFeed";
+import B2CStoresFeed       from "../../components/tabs/home/stores/B2CStoresFeed";
+import ServiceStoresFeed   from "../../components/tabs/home/stores/ServiceStoresFeed";
 
 export default function HomeScreen() {
   const { colors, setCategoryPrimary } = useTheme();

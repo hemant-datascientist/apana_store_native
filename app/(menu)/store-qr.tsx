@@ -23,7 +23,7 @@ import { Ionicons }                          from "@expo/vector-icons";
 import { SafeAreaView }                      from "react-native-safe-area-context";
 import { useRouter }                         from "expo-router";
 import * as Haptics                          from "expo-haptics";
-import { typography }                        from "../theme/typography";
+import { typography }                        from "../../theme/typography";
 
 const { width: SW, height: SH } = Dimensions.get("window");
 const SCAN_SIZE = SW * 0.68;

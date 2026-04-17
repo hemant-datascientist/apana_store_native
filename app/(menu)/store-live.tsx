@@ -17,12 +17,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import useTheme from "../theme/useTheme";
-import { typography } from "../theme/typography";
-import { STORE_LIVE_DATA, TOTAL_LIVE } from "../data/storeLiveData";
-import DonutChart    from "../components/store-live/DonutChart";
-import HorizontalBars from "../components/store-live/HorizontalBars";
-import StoreTable    from "../components/store-live/StoreTable";
+import useTheme from "../../theme/useTheme";
+import { typography } from "../../theme/typography";
+import { STORE_LIVE_DATA, TOTAL_LIVE } from "../../data/storeLiveData";
+import DonutChart    from "../../components/store-live/DonutChart";
+import HorizontalBars from "../../components/store-live/HorizontalBars";
+import StoreTable    from "../../components/store-live/StoreTable";
 
 export default function StoreLiveScreen() {
   const { colors, isDark } = useTheme();

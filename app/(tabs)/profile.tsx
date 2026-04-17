@@ -30,12 +30,12 @@ import {
   MOCK_RIDER,
   SETTING_GROUPS,
 } from "../../data/profileData";
-import ProfileHeader         from "../../components/profile/ProfileHeader";
-import ProfileStats          from "../../components/profile/ProfileStats";
-import FavouriteStores       from "../../components/profile/FavouriteStores";
-import PartnerCard           from "../../components/profile/PartnerCard";
-import ProfileSettingSection from "../../components/profile/ProfileSettingSection";
-import AppearanceModal       from "../../components/profile/AppearanceModal";
+import ProfileHeader         from "../../components/tabs/profile/ProfileHeader";
+import ProfileStats          from "../../components/tabs/profile/ProfileStats";
+import FavouriteStores       from "../../components/tabs/profile/FavouriteStores";
+import PartnerCard           from "../../components/tabs/profile/PartnerCard";
+import ProfileSettingSection from "../../components/tabs/profile/ProfileSettingSection";
+import AppearanceModal       from "../../components/tabs/profile/AppearanceModal";
 
 export default function ProfileScreen() {
   const { colors }  = useTheme();

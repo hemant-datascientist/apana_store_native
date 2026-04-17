@@ -28,8 +28,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
-import { typography } from "../theme/typography";
-import useTheme from "../theme/useTheme";
+import { typography } from "../../theme/typography";
+import useTheme from "../../theme/useTheme";
 
 // ── Scan zone dimensions ──────────────────────────────────────
 const { width: SW, height: SH } = Dimensions.get("window");

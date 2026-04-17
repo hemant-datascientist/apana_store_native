@@ -16,7 +16,7 @@
 //   - typography      → fontFamily and size constants
 //
 // Auth flow:
-//   First launch → get-started → login → otp → (tabs)
+//   First launch → (auth)/get-started → (auth)/login → (auth)/otp → (tabs)
 //   Return visit → (tabs) directly (AsyncStorage restores session)
 //   Guest        → skipAsGuest() → (tabs) with browse-only access
 // ============================================================
@@ -54,26 +54,10 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             {/* Main tab group — the primary customer experience */}
             <Stack.Screen name="(tabs)" />
-            {/* Store Live statistics screen */}
-            <Stack.Screen name="store-live" />
-            {/* Barcode / QR scanner screen */}
-            <Stack.Screen name="scanner" />
-            {/* Address Book — delivery address selection */}
-            <Stack.Screen name="address-book" />
-            {/* Menu screens */}
-            <Stack.Screen name="about-us" />
-            <Stack.Screen name="sell-ondc" />
-            <Stack.Screen name="product-finder" />
-            <Stack.Screen name="store-qr" />
-            <Stack.Screen name="favourite" />
-            {/* Auth flow — onboarding + login + create-account + OTP */}
-            <Stack.Screen name="get-started" />
-            <Stack.Screen name="login" />
-            <Stack.Screen name="create-account" />
-            <Stack.Screen name="otp" />
-            {/* Profile sub-screens */}
-            <Stack.Screen name="edit-profile" />
-            <Stack.Screen name="notifications" />
+            {/* Menu + utility screens — about-us, address-book, favourite, product-finder, scanner, sell-ondc, store-live, store-qr */}
+            <Stack.Screen name="(menu)" />
+            {/* Auth + account screens — get-started, login, create-account, otp, edit-profile, notifications */}
+            <Stack.Screen name="(auth)" />
           </Stack>
         </LocationProvider>
       </AuthProvider>
