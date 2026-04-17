@@ -21,6 +21,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
+import { useAuth } from "../../context/AuthContext";
 import {
   MOCK_USER,
   PROFILE_STATS,
@@ -37,16 +38,36 @@ import ProfileSettingSection from "../../components/profile/ProfileSettingSectio
 import AppearanceModal       from "../../components/profile/AppearanceModal";
 
 export default function ProfileScreen() {
-  const { colors } = useTheme();
-  const router     = useRouter();
+  const { colors }  = useTheme();
+  const router      = useRouter();
+  const { logout }  = useAuth();
   const [appearanceVisible, setAppearanceVisible] = useState(false);
 
   function handleSetting(key: string) {
-    if (key === "appearance") {
-      setAppearanceVisible(true);
-      return;
-    }
+    if (key === "appearance")   { setAppearanceVisible(true);          return; }
+    if (key === "addresses")    { router.push("/address-book");        return; }
+    if (key === "about")        { router.push("/about-us");            return; }
+    if (key === "edit_profile") { router.push("/edit-profile");        return; }
+    if (key === "notifications"){ router.push("/notifications");       return; }
     Alert.alert("Coming Soon", `"${key}" feature is on the way.`);
+  }
+
+  function handleLogout() {
+    Alert.alert(
+      "Log Out",
+      "Are you sure you want to log out?",
+      [
+        { text: "Cancel",  style: "cancel" },
+        {
+          text:  "Log Out",
+          style: "destructive",
+          onPress: async () => {
+            await logout();
+            router.replace("/get-started");
+          },
+        },
+      ],
+    );
   }
 
   return (
@@ -59,7 +80,7 @@ export default function ProfileScreen() {
         {/* ── Header: avatar + name + edit ── */}
         <ProfileHeader
           user={MOCK_USER}
-          onEdit={() => Alert.alert("Edit Profile", "Profile editor coming soon.")}
+          onEdit={() => router.push("/edit-profile")}
         />
 
         {/* ── Stats row ── */}
@@ -103,10 +124,7 @@ export default function ProfileScreen() {
         <View style={styles.logoutWrap}>
           <TouchableOpacity
             style={[styles.logoutBtn, { borderColor: colors.danger }]}
-            onPress={() => Alert.alert("Log Out", "Are you sure you want to log out?", [
-              { text: "Cancel", style: "cancel" },
-              { text: "Log Out", style: "destructive", onPress: () => {} },
-            ])}
+            onPress={handleLogout}
             activeOpacity={0.8}
           >
             <Ionicons name="log-out-outline" size={18} color={colors.danger} />

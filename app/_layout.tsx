@@ -70,6 +70,9 @@ export default function RootLayout() {
             <Stack.Screen name="get-started" />
             <Stack.Screen name="login" />
             <Stack.Screen name="otp" />
+            {/* Profile sub-screens */}
+            <Stack.Screen name="edit-profile" />
+            <Stack.Screen name="notifications" />
           </Stack>
         </LocationProvider>
       </AuthProvider>
