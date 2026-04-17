@@ -2,34 +2,37 @@
 // ALL FEED — Apana Store (Home, Products > All Items)
 //
 // Rich multi-section home feed:
-//   1. BannerCarousel         — promo banners
-//   2. Trending in {city}     — 3-col product grid
-//   3. Seasonal Picks         — 3-col product grid
-//   4. Daily Essentials       — horizontal scroll
-//   5. Flash Deals            — horizontal scroll + % off badge
-//   6. New Arrivals           — horizontal scroll + "New" badge
+//   1. BannerCarousel            — promo banners
+//   2. Trending in {city}        — 4-col grid of famous local items
+//   3. Summer Picks              — 4-col seasonal category grid
+//   4. Daily Essentials          — horizontal scroll + add button
+//   5. Flash Deals               — horizontal scroll + % off + add button
+//   6. New Arrivals              — horizontal scroll + add button
+//   7. Popular Near You          — horizontal scroll of top-rated stores
 // ============================================================
 
 import React from "react";
 import { View } from "react-native";
 
-import BannerCarousel        from "../BannerCarousel";
-import ProductGridSection    from "./ProductGridSection";
-import ProductHScrollSection from "./ProductHScrollSection";
-import FlashDealsSection     from "./FlashDealsSection";
+import BannerCarousel          from "../BannerCarousel";
+import TrendingCitySection     from "./TrendingCitySection";
+import SeasonalCategorySection from "./SeasonalCategorySection";
+import ProductHScrollSection   from "./ProductHScrollSection";
+import FlashDealsSection       from "./FlashDealsSection";
+import PopularStoresSection    from "./PopularStoresSection";
 
 import { BANNERS, MOCK_LOCATION } from "../../../data/homeData";
 import {
-  TRENDING_PRODUCTS,
-  SEASONAL_PRODUCTS,
+  TRENDING_CITY_ITEMS,
+  SUMMER_CATEGORIES,
   DAILY_ESSENTIALS,
   FLASH_DEALS,
   NEW_ARRIVALS,
+  POPULAR_STORES,
 } from "../../../data/allFeedData";
 
-const BRAND_BLUE   = "#0F4C81";
-const GROCERY_GREEN= "#026451";
-const PURPLE       = "#7C3AED";
+const BRAND_BLUE = "#0F4C81";
+const PURPLE     = "#7C3AED";
 
 export default function AllFeed() {
   const city = MOCK_LOCATION.area;
@@ -43,20 +46,17 @@ export default function AllFeed() {
         onPress={() => {}}
       />
 
-      {/* ── 2. Trending in {city} — 3-col grid ── */}
-      <ProductGridSection
-        icon="flame-outline"
-        title={`Trending in ${city}`}
-        accentColor="#F97316"
-        products={TRENDING_PRODUCTS}
+      {/* ── 2. Trending in {city} — 4-col famous local items grid ── */}
+      <TrendingCitySection
+        city={city}
+        items={TRENDING_CITY_ITEMS}
       />
 
-      {/* ── 3. Seasonal Picks — 3-col grid ── */}
-      <ProductGridSection
-        icon="sunny-outline"
-        title="Seasonal Picks"
-        accentColor={GROCERY_GREEN}
-        products={SEASONAL_PRODUCTS}
+      {/* ── 3. Summer Picks — seasonal category grid ── */}
+      <SeasonalCategorySection
+        season="Summer"
+        categories={SUMMER_CATEGORIES}
+        accent="#E05A00"
       />
 
       {/* ── 4. Daily Essentials — horizontal scroll ── */}
@@ -77,6 +77,9 @@ export default function AllFeed() {
         accentColor={PURPLE}
         products={NEW_ARRIVALS}
       />
+
+      {/* ── 7. Popular Stores Near You ── */}
+      <PopularStoresSection stores={POPULAR_STORES} />
 
       <View style={{ height: 24 }} />
     </View>

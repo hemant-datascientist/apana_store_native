@@ -4,7 +4,8 @@
 // Horizontal scroll of deal cards with:
 //   - Red % off badge (top-right of image)
 //   - Original price (strikethrough, grey)
-//   - Sale price (red/accent, bold)
+//   - Sale price (red, bold)
+//   - "+" add to cart button
 // ============================================================
 
 import React from "react";
@@ -13,15 +14,15 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../theme/typography";
-import SectionHeader from "./SectionHeader";
-import { FlashDeal } from "../../../data/allFeedData";
+import SectionHeader  from "./SectionHeader";
+import { FlashDeal }  from "../../../data/allFeedData";
 
 interface FlashDealsSectionProps {
   deals: FlashDeal[];
 }
 
-const DEAL_ACCENT = "#DC2626";   // red
-const CARD_W      = 115;
+const DEAL_ACCENT = "#DC2626";
+const CARD_W      = 120;
 const IMG_H       = 100;
 
 function fmt(n: number) {
@@ -45,14 +46,14 @@ export default function FlashDealsSection({ deals }: FlashDealsSectionProps) {
         contentContainerStyle={styles.scroll}
       >
         {deals.map(d => (
-          <TouchableOpacity
-            key={d.id}
-            style={styles.card}
-            activeOpacity={0.8}
-            onPress={() => Alert.alert(d.name, `${fmt(d.price)} (was ${fmt(d.originalPrice)})`)}
-          >
+          <View key={d.id} style={styles.card}>
+
             {/* Image placeholder */}
-            <View style={[styles.imgArea, { backgroundColor: d.bg }]}>
+            <TouchableOpacity
+              style={[styles.imgArea, { backgroundColor: d.bg }]}
+              activeOpacity={0.85}
+              onPress={() => Alert.alert(d.name, `${fmt(d.price)} (was ${fmt(d.originalPrice)})`)}
+            >
               <Ionicons name={d.icon as any} size={36} color="rgba(0,0,0,0.20)" />
 
               {/* % OFF badge — top right */}
@@ -61,7 +62,7 @@ export default function FlashDealsSection({ deals }: FlashDealsSectionProps) {
                   {d.discountPct}%{"\n"}OFF
                 </Text>
               </View>
-            </View>
+            </TouchableOpacity>
 
             {/* Info */}
             <View style={styles.info}>
@@ -77,12 +78,22 @@ export default function FlashDealsSection({ deals }: FlashDealsSectionProps) {
                 {fmt(d.originalPrice)}
               </Text>
 
-              {/* Sale price */}
-              <Text style={[styles.salePrice, { fontFamily: typography.fontFamily.bold }]}>
-                {fmt(d.price)}
-              </Text>
+              {/* Sale price row + Add button */}
+              <View style={styles.priceRow}>
+                <Text style={[styles.salePrice, { fontFamily: typography.fontFamily.bold }]}>
+                  {fmt(d.price)}
+                </Text>
+                <TouchableOpacity
+                  style={styles.addBtn}
+                  activeOpacity={0.8}
+                  onPress={() => Alert.alert("Added", `${d.name} added to cart.`)}
+                >
+                  <Ionicons name="add" size={14} color="#fff" />
+                </TouchableOpacity>
+              </View>
             </View>
-          </TouchableOpacity>
+
+          </View>
         ))}
       </ScrollView>
     </View>
@@ -90,17 +101,14 @@ export default function FlashDealsSection({ deals }: FlashDealsSectionProps) {
 }
 
 const styles = StyleSheet.create({
-  root: {
-    marginTop: 20,
-  },
+  root: { marginTop: 20 },
 
-  header: {
-    paddingHorizontal: 16,
-  },
+  header: { paddingHorizontal: 16 },
 
   scroll: {
     paddingHorizontal: 16,
     gap:               8,
+    paddingBottom:     4,
   },
 
   card: {
@@ -136,15 +144,16 @@ const styles = StyleSheet.create({
     alignItems:        "center",
   },
   pctText: {
-    color:       "#fff",
-    fontSize:    8.5,
-    lineHeight:  11,
-    textAlign:   "center",
+    color:     "#fff",
+    fontSize:  8,
+    lineHeight: 10,
+    textAlign: "center",
   },
 
   info: {
-    padding: 6,
-    gap:     1,
+    padding:    7,
+    paddingTop: 6,
+    gap:        1,
   },
   name: {
     fontSize:   11,
@@ -152,18 +161,33 @@ const styles = StyleSheet.create({
     lineHeight: 14,
   },
   unit: {
-    fontSize:    9.5,
-    color:       "#9CA3AF",
+    fontSize:     9.5,
+    color:        "#9CA3AF",
     marginBottom: 2,
   },
   original: {
-    fontSize:            10,
-    color:               "#9CA3AF",
-    textDecorationLine:  "line-through",
+    fontSize:           10,
+    color:              "#9CA3AF",
+    textDecorationLine: "line-through",
+  },
+
+  priceRow: {
+    flexDirection:  "row",
+    alignItems:     "center",
+    justifyContent: "space-between",
+    marginTop:      3,
   },
   salePrice: {
     fontSize: 12,
     color:    "#DC2626",
-    marginTop: 1,
+  },
+
+  addBtn: {
+    width:          24,
+    height:         24,
+    borderRadius:   6,
+    backgroundColor:"#DC2626",
+    alignItems:     "center",
+    justifyContent: "center",
   },
 });

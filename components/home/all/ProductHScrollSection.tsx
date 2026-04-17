@@ -3,7 +3,7 @@
 //
 // Section header + horizontally scrolling product cards.
 // Used for: Daily Essentials, New Arrivals, etc.
-// Card: square icon bg + name + unit + price.
+// Card: icon placeholder + name + unit + price + "+" add button.
 // ============================================================
 
 import React from "react";
@@ -11,8 +11,8 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { typography } from "../../../theme/typography";
-import SectionHeader  from "./SectionHeader";
+import { typography }  from "../../../theme/typography";
+import SectionHeader   from "./SectionHeader";
 import { HomeProduct } from "../../../data/allFeedData";
 
 interface ProductHScrollSectionProps {
@@ -22,8 +22,8 @@ interface ProductHScrollSectionProps {
   products:    HomeProduct[];
 }
 
-const CARD_W = 110;
-const IMG_H  = 95;
+const CARD_W = 115;
+const IMG_H  = 100;
 
 function fmt(n: number) {
   return `₹${n.toLocaleString("en-IN")}`;
@@ -44,15 +44,15 @@ export default function ProductHScrollSection({
         contentContainerStyle={styles.scroll}
       >
         {products.map(p => (
-          <TouchableOpacity
-            key={p.id}
-            style={styles.card}
-            activeOpacity={0.8}
-            onPress={() => Alert.alert(p.name, `${p.unit} · ${fmt(p.price)}`)}
-          >
+          <View key={p.id} style={styles.card}>
+
             {/* Image placeholder */}
-            <View style={[styles.imgArea, { backgroundColor: p.bg }]}>
-              <Ionicons name={p.icon as any} size={34} color="rgba(0,0,0,0.20)" />
+            <TouchableOpacity
+              style={[styles.imgArea, { backgroundColor: p.bg }]}
+              activeOpacity={0.85}
+              onPress={() => Alert.alert(p.name, `${p.unit} · ${fmt(p.price)}`)}
+            >
+              <Ionicons name={p.icon as any} size={36} color="rgba(0,0,0,0.20)" />
               {p.badge && (
                 <View style={[styles.badge, { backgroundColor: accentColor }]}>
                   <Text style={[styles.badgeText, { fontFamily: typography.fontFamily.bold }]}>
@@ -60,7 +60,7 @@ export default function ProductHScrollSection({
                   </Text>
                 </View>
               )}
-            </View>
+            </TouchableOpacity>
 
             {/* Info */}
             <View style={styles.info}>
@@ -70,11 +70,23 @@ export default function ProductHScrollSection({
               <Text numberOfLines={1} style={[styles.unit, { fontFamily: typography.fontFamily.regular }]}>
                 {p.unit}
               </Text>
-              <Text style={[styles.price, { color: accentColor, fontFamily: typography.fontFamily.bold }]}>
-                {fmt(p.price)}
-              </Text>
+
+              {/* Price row + Add button */}
+              <View style={styles.priceRow}>
+                <Text style={[styles.price, { color: accentColor, fontFamily: typography.fontFamily.bold }]}>
+                  {fmt(p.price)}
+                </Text>
+                <TouchableOpacity
+                  style={[styles.addBtn, { backgroundColor: accentColor }]}
+                  activeOpacity={0.8}
+                  onPress={() => Alert.alert("Added", `${p.name} added to cart.`)}
+                >
+                  <Ionicons name="add" size={14} color="#fff" />
+                </TouchableOpacity>
+              </View>
             </View>
-          </TouchableOpacity>
+
+          </View>
         ))}
       </ScrollView>
     </View>
@@ -82,17 +94,14 @@ export default function ProductHScrollSection({
 }
 
 const styles = StyleSheet.create({
-  root: {
-    marginTop: 20,
-  },
+  root: { marginTop: 20 },
 
-  header: {
-    paddingHorizontal: 16,
-  },
+  header: { paddingHorizontal: 16 },
 
   scroll: {
     paddingHorizontal: 16,
     gap:               8,
+    paddingBottom:     4,
   },
 
   card: {
@@ -125,14 +134,12 @@ const styles = StyleSheet.create({
     paddingVertical:   2,
     borderRadius:      4,
   },
-  badgeText: {
-    color:    "#fff",
-    fontSize: 8,
-  },
+  badgeText: { color: "#fff", fontSize: 8 },
 
   info: {
-    padding: 6,
-    gap:     2,
+    padding:    7,
+    paddingTop: 6,
+    gap:        2,
   },
   name: {
     fontSize:   11,
@@ -143,8 +150,20 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     color:    "#9CA3AF",
   },
-  price: {
-    fontSize:  11.5,
-    marginTop: 2,
+
+  priceRow: {
+    flexDirection:  "row",
+    alignItems:     "center",
+    justifyContent: "space-between",
+    marginTop:      4,
+  },
+  price: { fontSize: 12 },
+
+  addBtn: {
+    width:          24,
+    height:         24,
+    borderRadius:   6,
+    alignItems:     "center",
+    justifyContent: "center",
   },
 });

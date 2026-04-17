@@ -3,7 +3,7 @@
 //
 // Section header + explicit 3-column product grid.
 // Uses row-chunking (not flexWrap) to guarantee 3 per row.
-// Each card: colored icon bg + badge + name + unit + price.
+// Card: colored icon bg + badge + name + unit + price + "+" btn.
 // ============================================================
 
 import React from "react";
@@ -27,7 +27,7 @@ const H_PAD         = 16;
 const COL_GAP       = 8;
 const COLS          = 3;
 const CARD_W        = Math.floor((SW - H_PAD * 2 - COL_GAP * (COLS - 1)) / COLS);
-const IMG_H         = CARD_W;   // square image area
+const IMG_H         = CARD_W;
 
 function chunk<T>(arr: T[], size: number): T[][] {
   const out: T[][] = [];
@@ -52,15 +52,15 @@ export default function ProductGridSection({
         {rows.map((row, rIdx) => (
           <View key={rIdx} style={styles.row}>
             {row.map(p => (
-              <TouchableOpacity
-                key={p.id}
-                style={[styles.card, { width: CARD_W }]}
-                activeOpacity={0.8}
-                onPress={() => Alert.alert(p.name, `${p.unit} · ${fmt(p.price)}`)}
-              >
-                {/* Image placeholder */}
-                <View style={[styles.imgArea, { backgroundColor: p.bg }]}>
-                  <Ionicons name={p.icon as any} size={40} color="rgba(0,0,0,0.20)" />
+              <View key={p.id} style={[styles.card, { width: CARD_W }]}>
+
+                {/* Image area — tappable */}
+                <TouchableOpacity
+                  style={[styles.imgArea, { backgroundColor: p.bg }]}
+                  activeOpacity={0.85}
+                  onPress={() => Alert.alert(p.name, `${p.unit} · ${fmt(p.price)}`)}
+                >
+                  <Ionicons name={p.icon as any} size={38} color="rgba(0,0,0,0.20)" />
                   {p.badge && (
                     <View style={[styles.badge, { backgroundColor: accentColor }]}>
                       <Text style={[styles.badgeText, { fontFamily: typography.fontFamily.bold }]}>
@@ -68,7 +68,7 @@ export default function ProductGridSection({
                       </Text>
                     </View>
                   )}
-                </View>
+                </TouchableOpacity>
 
                 {/* Info */}
                 <View style={styles.info}>
@@ -78,11 +78,23 @@ export default function ProductGridSection({
                   <Text numberOfLines={1} style={[styles.unit, { fontFamily: typography.fontFamily.regular }]}>
                     {p.unit}
                   </Text>
-                  <Text style={[styles.price, { color: accentColor, fontFamily: typography.fontFamily.bold }]}>
-                    {fmt(p.price)}
-                  </Text>
+
+                  {/* Price + Add button */}
+                  <View style={styles.priceRow}>
+                    <Text style={[styles.price, { color: accentColor, fontFamily: typography.fontFamily.bold }]}>
+                      {fmt(p.price)}
+                    </Text>
+                    <TouchableOpacity
+                      style={[styles.addBtn, { backgroundColor: accentColor }]}
+                      activeOpacity={0.8}
+                      onPress={() => Alert.alert("Added", `${p.name} added to cart.`)}
+                    >
+                      <Ionicons name="add" size={12} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </TouchableOpacity>
+
+              </View>
             ))}
 
             {/* Ghost cards for incomplete last row */}
@@ -110,16 +122,16 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    borderRadius:     10,
-    overflow:         "hidden",
-    backgroundColor:  "#fff",
-    borderWidth:      1,
-    borderColor:      "#F3F4F6",
-    shadowColor:      "#000",
-    shadowOffset:     { width: 0, height: 1 },
-    shadowOpacity:    0.06,
-    shadowRadius:     4,
-    elevation:        2,
+    borderRadius:    10,
+    overflow:        "hidden",
+    backgroundColor: "#fff",
+    borderWidth:     1,
+    borderColor:     "#F3F4F6",
+    shadowColor:     "#000",
+    shadowOffset:    { width: 0, height: 1 },
+    shadowOpacity:   0.06,
+    shadowRadius:    4,
+    elevation:       2,
   },
   ghost: {
     backgroundColor: "transparent",
@@ -132,36 +144,47 @@ const styles = StyleSheet.create({
     height:         IMG_H,
     alignItems:     "center",
     justifyContent: "center",
+    position:       "relative",
   },
 
   badge: {
     position:          "absolute",
-    top:               6,
-    left:              6,
+    top:               5,
+    left:              5,
     paddingHorizontal: 5,
     paddingVertical:   2,
     borderRadius:      4,
   },
-  badgeText: {
-    color:    "#fff",
-    fontSize: 8,
-  },
+  badgeText: { color: "#fff", fontSize: 8 },
 
   info: {
-    padding: 7,
-    gap:     2,
+    padding:    7,
+    paddingTop: 6,
+    gap:        2,
   },
   name: {
-    fontSize:   11.5,
+    fontSize:   11,
     color:      "#111827",
-    lineHeight: 15,
+    lineHeight: 14,
   },
   unit: {
-    fontSize: 10,
+    fontSize: 9.5,
     color:    "#9CA3AF",
   },
-  price: {
-    fontSize:   12,
-    marginTop:  2,
+
+  priceRow: {
+    flexDirection:  "row",
+    alignItems:     "center",
+    justifyContent: "space-between",
+    marginTop:      4,
+  },
+  price: { fontSize: 11.5 },
+
+  addBtn: {
+    width:          22,
+    height:         22,
+    borderRadius:   5,
+    alignItems:     "center",
+    justifyContent: "center",
   },
 });

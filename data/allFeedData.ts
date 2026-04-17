@@ -1,16 +1,18 @@
 // ============================================================
 // ALL FEED DATA — Apana Store (Customer App)
 //
-// Product data for the home-screen "All Items" feed sections:
-//   TRENDING_PRODUCTS   — "Trending in {city}" 3-col grid
-//   SEASONAL_PRODUCTS   — "Seasonal Picks" 3-col grid
+// Data for the home-screen "All Items" feed sections:
+//   TRENDING_CITY_ITEMS — famous local items/brands/food unique to city
+//   SUMMER_CATEGORIES   — seasonal sub-categories (Summer)
 //   DAILY_ESSENTIALS    — horizontal scroll (milk, bread, …)
 //   FLASH_DEALS         — horizontal scroll with % off badge
 //   NEW_ARRIVALS        — horizontal scroll, new products
+//   POPULAR_STORES      — horizontal scroll of nearby stores
 //
 // Replace with GET /customer/home/feed when backend ready.
 // ============================================================
 
+// ── Common product shape ──────────────────────────────────────
 export interface HomeProduct {
   id:     string;
   name:   string;
@@ -18,7 +20,7 @@ export interface HomeProduct {
   price:  number;
   icon:   string;   // Ionicons glyph
   bg:     string;   // image placeholder background
-  badge?: string;   // e.g. "New", "Season"
+  badge?: string;   // e.g. "New", "Hot"
 }
 
 export interface FlashDeal extends HomeProduct {
@@ -26,36 +28,54 @@ export interface FlashDeal extends HomeProduct {
   discountPct:   number;
 }
 
-// ── Trending in city ─────────────────────────────────────────
-export const TRENDING_PRODUCTS: HomeProduct[] = [
-  { id:"tr1",  name:"Fresh Tomatoes",     unit:"500 g",    price:22,   icon:"radio-button-on",    bg:"#FEE2E2" },
-  { id:"tr2",  name:"Amul Butter",        unit:"100 g",    price:56,   icon:"restaurant-outline", bg:"#FEF3C7" },
-  { id:"tr3",  name:"Samsung Earbuds",    unit:"1 pair",   price:1299, icon:"headset-outline",    bg:"#DBEAFE", badge:"Hot" },
-  { id:"tr4",  name:"Dettol Handwash",    unit:"250 ml",   price:89,   icon:"water-outline",      bg:"#DCFCE7" },
-  { id:"tr5",  name:"Head & Shoulders",   unit:"200 ml",   price:180,  icon:"leaf-outline",       bg:"#EDE9FE" },
-  { id:"tr6",  name:"Maggi Noodles",      unit:"70 g",     price:14,   icon:"restaurant-outline", bg:"#FFEDD5" },
-  { id:"tr7",  name:"Colgate Total",      unit:"150 g",    price:95,   icon:"medical-outline",    bg:"#DCFCE7" },
-  { id:"tr8",  name:"Good Day Biscuits",  unit:"201 g",    price:30,   icon:"nutrition-outline",  bg:"#FEF3C7" },
-  { id:"tr9",  name:"Amul Milk",          unit:"500 ml",   price:28,   icon:"cafe-outline",       bg:"#DBEAFE" },
-  { id:"tr10", name:"Parle-G",            unit:"800 g",    price:110,  icon:"nutrition-outline",  bg:"#FEE2E2" },
-  { id:"tr11", name:"Vim Dishwash",       unit:"750 ml",   price:109,  icon:"water-outline",      bg:"#ECFDF5" },
-  { id:"tr12", name:"Surf Excel",         unit:"500 g",    price:110,  icon:"sparkles-outline",   bg:"#EDE9FE" },
+// ── Trending local/city famous items ─────────────────────────
+// These are things the city is KNOWN for — local food, crafts,
+// iconic brands, famous dishes. No price — tap to discover.
+export interface TrendingCityItem {
+  id:   string;
+  name: string;
+  tag:  string;   // e.g. "Famous Snack", "Local Brand"
+  icon: string;
+  bg:   string;
+}
+
+export const TRENDING_CITY_ITEMS: TrendingCityItem[] = [
+  { id:"tc1",  name:"Metro Wholesale",        tag:"Local Store",       icon:"storefront-outline",   bg:"#DBEAFE" },
+  { id:"tc2",  name:"Shrewsbury Biscuits",    tag:"Famous Snack",      icon:"nutrition-outline",    bg:"#FEF3C7" },
+  { id:"tc3",  name:"Chitale Bhakarwadi",     tag:"Famous Snack",      icon:"nutrition-outline",    bg:"#FFEDD5" },
+  { id:"tc4",  name:"Meridian Ice Cream",     tag:"Ice Cream Parlour", icon:"ice-cream-outline",    bg:"#FCE7F3" },
+  { id:"tc5",  name:"Puneri Pagadi",          tag:"Traditional Craft", icon:"flag-outline",         bg:"#EDE9FE" },
+  { id:"tc6",  name:"Maharashtrian Naths",    tag:"Traditional Jewel", icon:"diamond-outline",      bg:"#FCE7F3" },
+  { id:"tc7",  name:"Osha Chappals",          tag:"Local Footwear",    icon:"walk-outline",         bg:"#FEF3C7" },
+  { id:"tc8",  name:"Kolhapuri Chappals",     tag:"Famous Footwear",   icon:"walk-outline",         bg:"#FFEDD5" },
+  { id:"tc9",  name:"Bun Maska",              tag:"Famous Breakfast",  icon:"cafe-outline",         bg:"#FFEDD5" },
+  { id:"tc10", name:"Kala Khatta",            tag:"Famous Drink",      icon:"wine-outline",         bg:"#EDE9FE" },
+  { id:"tc11", name:"Pithla Bhakri",          tag:"Local Cuisine",     icon:"restaurant-outline",   bg:"#DCFCE7" },
+  { id:"tc12", name:"Puran Poli",             tag:"Famous Sweet",      icon:"nutrition-outline",    bg:"#FEE2E2" },
 ];
 
-// ── Seasonal picks (Summer / April) ──────────────────────────
-export const SEASONAL_PRODUCTS: HomeProduct[] = [
-  { id:"se1",  name:"Alphonso Mango",     unit:"1 kg",     price:380,  icon:"nutrition-outline",  bg:"#FEF3C7", badge:"Season" },
-  { id:"se2",  name:"Watermelon",         unit:"1 kg",     price:25,   icon:"nutrition-outline",  bg:"#FEE2E2" },
-  { id:"se3",  name:"Litchi",             unit:"500 g",    price:85,   icon:"leaf-outline",       bg:"#DCFCE7", badge:"Season" },
-  { id:"se4",  name:"Kokum Sharbat",      unit:"500 ml",   price:45,   icon:"wine-outline",       bg:"#FCE7F3" },
-  { id:"se5",  name:"Coconut Water",      unit:"1 piece",  price:50,   icon:"nutrition-outline",  bg:"#DCFCE7" },
-  { id:"se6",  name:"Mango Ice Cream",    unit:"1 litre",  price:130,  icon:"ice-cream-outline",  bg:"#FEF3C7", badge:"New" },
-  { id:"se7",  name:"Nivea Sunscreen",    unit:"75 ml",    price:220,  icon:"sunny-outline",      bg:"#DBEAFE", badge:"SPF 50" },
-  { id:"se8",  name:"Aam Panna",          unit:"500 ml",   price:25,   icon:"wine-outline",       bg:"#FEF3C7" },
-  { id:"se9",  name:"Khus Sharbat",       unit:"750 ml",   price:65,   icon:"wine-outline",       bg:"#ECFDF5" },
-  { id:"se10", name:"ORS Powder",         unit:"5 sachets",price:40,   icon:"fitness-outline",    bg:"#DBEAFE" },
-  { id:"se11", name:"Cucumber",           unit:"500 g",    price:25,   icon:"leaf-outline",       bg:"#ECFDF5" },
-  { id:"se12", name:"Tender Coconut",     unit:"1 piece",  price:55,   icon:"nutrition-outline",  bg:"#DCFCE7" },
+// ── Seasonal sub-categories (Summer / April–June) ─────────────
+// Category-based discovery, not individual products.
+export interface SeasonalCat {
+  key:   string;
+  label: string;
+  icon:  string;
+  bg:    string;
+}
+
+export const SUMMER_CATEGORIES: SeasonalCat[] = [
+  { key:"sunscreens",  label:"Sunscreens",         icon:"sunny-outline",         bg:"#FEF3C7" },
+  { key:"skincare",    label:"Skincare",            icon:"sparkles-outline",      bg:"#FCE7F3" },
+  { key:"beverages",   label:"Refreshing Cools",    icon:"wine-outline",          bg:"#DBEAFE" },
+  { key:"milkshakes",  label:"Milkshakes",          icon:"cafe-outline",          bg:"#FEF3C7" },
+  { key:"aircooler",   label:"Air Coolers",         icon:"snow-outline",          bg:"#E0F2FE" },
+  { key:"energy",      label:"Energy Drinks",       icon:"flash-outline",         bg:"#FEE2E2" },
+  { key:"fruits",      label:"Summer Fruits",       icon:"nutrition-outline",     bg:"#DCFCE7" },
+  { key:"icecream",    label:"Frozen Desserts",     icon:"ice-cream-outline",     bg:"#FCE7F3" },
+  { key:"hydration",   label:"Body Hydration",      icon:"fitness-outline",       bg:"#ECFDF5" },
+  { key:"pool",        label:"Pool & Beach",        icon:"water-outline",         bg:"#DBEAFE" },
+  { key:"lightcloth",  label:"Light Clothing",      icon:"shirt-outline",         bg:"#EDE9FE" },
+  { key:"footwear",    label:"Summer Footwear",     icon:"walk-outline",          bg:"#FFEDD5" },
 ];
 
 // ── Daily Essentials (horizontal scroll) ─────────────────────
@@ -90,14 +110,39 @@ export const FLASH_DEALS: FlashDeal[] = [
 
 // ── New Arrivals (horizontal scroll) ─────────────────────────
 export const NEW_ARRIVALS: HomeProduct[] = [
-  { id:"na1",  name:"Galaxy Buds FE",     unit:"1 pair",   price:4999, icon:"headset-outline",    bg:"#DBEAFE", badge:"New" },
-  { id:"na2",  name:"Nivea Sunscreen",    unit:"75 ml",    price:220,  icon:"sunny-outline",      bg:"#FEF3C7", badge:"New" },
-  { id:"na3",  name:"Organic Green Tea",  unit:"25 bags",  price:180,  icon:"leaf-outline",       bg:"#DCFCE7", badge:"New" },
-  { id:"na4",  name:"Mamaearth Face Wash",unit:"100 ml",   price:175,  icon:"water-outline",      bg:"#FCE7F3", badge:"New" },
-  { id:"na5",  name:"Oats & Muesli Mix",  unit:"500 g",    price:195,  icon:"nutrition-outline",  bg:"#FFEDD5", badge:"New" },
-  { id:"na6",  name:"Protein Bar 6-pack", unit:"6 pcs",    price:450,  icon:"fitness-outline",    bg:"#EDE9FE", badge:"New" },
-  { id:"na7",  name:"Premium Basmati",    unit:"5 kg",     price:650,  icon:"nutrition-outline",  bg:"#FEF3C7", badge:"New" },
-  { id:"na8",  name:"Bio Enzyme Cleaner", unit:"500 ml",   price:280,  icon:"leaf-outline",       bg:"#ECFDF5", badge:"New" },
-  { id:"na9",  name:"Cold Press Coconut Oil",unit:"500 ml",price:380,  icon:"nutrition-outline",  bg:"#FEF3C7", badge:"New" },
-  { id:"na10", name:"Charcoal Face Mask", unit:"100 ml",   price:250,  icon:"sparkles-outline",   bg:"#FCE7F3", badge:"New" },
+  { id:"na1",  name:"Galaxy Buds FE",       unit:"1 pair",   price:4999, icon:"headset-outline",    bg:"#DBEAFE", badge:"New" },
+  { id:"na2",  name:"Nivea Sunscreen",      unit:"75 ml",    price:220,  icon:"sunny-outline",      bg:"#FEF3C7", badge:"New" },
+  { id:"na3",  name:"Organic Green Tea",    unit:"25 bags",  price:180,  icon:"leaf-outline",       bg:"#DCFCE7", badge:"New" },
+  { id:"na4",  name:"Mamaearth Face Wash",  unit:"100 ml",   price:175,  icon:"water-outline",      bg:"#FCE7F3", badge:"New" },
+  { id:"na5",  name:"Oats & Muesli Mix",    unit:"500 g",    price:195,  icon:"nutrition-outline",  bg:"#FFEDD5", badge:"New" },
+  { id:"na6",  name:"Protein Bar 6-pack",   unit:"6 pcs",    price:450,  icon:"fitness-outline",    bg:"#EDE9FE", badge:"New" },
+  { id:"na7",  name:"Premium Basmati",      unit:"5 kg",     price:650,  icon:"nutrition-outline",  bg:"#FEF3C7", badge:"New" },
+  { id:"na8",  name:"Bio Enzyme Cleaner",   unit:"500 ml",   price:280,  icon:"leaf-outline",       bg:"#ECFDF5", badge:"New" },
+  { id:"na9",  name:"Cold Press Coconut Oil",unit:"500 ml",  price:380,  icon:"nutrition-outline",  bg:"#FEF3C7", badge:"New" },
+  { id:"na10", name:"Charcoal Face Mask",   unit:"100 ml",   price:250,  icon:"sparkles-outline",   bg:"#FCE7F3", badge:"New" },
+];
+
+// ── Popular Stores Near You (horizontal scroll) ───────────────
+export interface PopularStore {
+  id:        string;
+  name:      string;
+  category:  string;
+  area:      string;
+  rating:    number;   // e.g. 4.5
+  icon:      string;
+  bg:        string;
+  badge:     string;
+  badgeBg:   string;
+  badgeColor:string;
+}
+
+export const POPULAR_STORES: PopularStore[] = [
+  { id:"ps1",  name:"Chitale Bandhu",         category:"Sweets & Snacks",  area:"Deccan",      rating:4.8, icon:"storefront-outline",  bg:"#FEF3C7", badge:"Top Rated", badgeBg:"#FEF3C7", badgeColor:"#B45309" },
+  { id:"ps2",  name:"D-Mart Baner",           category:"Supermarket",      area:"Baner",       rating:4.5, icon:"cart-outline",         bg:"#DBEAFE", badge:"Popular",   badgeBg:"#FFEDD5", badgeColor:"#C2410C" },
+  { id:"ps3",  name:"Apollo Pharmacy",        category:"Pharmacy",         area:"Wakad",       rating:4.7, icon:"medkit-outline",       bg:"#FEE2E2", badge:"Open 24/7", badgeBg:"#DCFCE7", badgeColor:"#15803D" },
+  { id:"ps4",  name:"Cafe Goodluck",          category:"Cafe",             area:"Deccan",      rating:4.9, icon:"cafe-outline",         bg:"#FFEDD5", badge:"Iconic",    badgeBg:"#FEF3C7", badgeColor:"#B45309" },
+  { id:"ps5",  name:"Vaishali Restaurant",    category:"Restaurant",       area:"FC Road",     rating:4.8, icon:"restaurant-outline",   bg:"#DCFCE7", badge:"Legendary", badgeBg:"#FFEDD5", badgeColor:"#C2410C" },
+  { id:"ps6",  name:"Naturals Ice Cream",     category:"Ice Cream",        area:"Kothrud",     rating:4.6, icon:"ice-cream-outline",    bg:"#FCE7F3", badge:"Popular",   badgeBg:"#FFEDD5", badgeColor:"#C2410C" },
+  { id:"ps7",  name:"More Supermarket",       category:"Grocery",          area:"Aundh",       rating:4.4, icon:"basket-outline",       bg:"#ECFDF5", badge:"Open",      badgeBg:"#DCFCE7", badgeColor:"#15803D" },
+  { id:"ps8",  name:"Westside Clothing",      category:"Fashion",          area:"FC Road",     rating:4.5, icon:"shirt-outline",        bg:"#EDE9FE", badge:"Trending",  badgeBg:"#DBEAFE", badgeColor:"#1D4ED8" },
 ];
