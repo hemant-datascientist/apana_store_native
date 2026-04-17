@@ -1,8 +1,8 @@
 // ============================================================
 // FASHION DATA — Apana Store (Customer App)
 //
-// Gender/age tabs: Men | Women | Boy | Girl
-// Each gender has its own set of sub-categories (clothing types).
+// Gender/age tabs: Men | Women | Boy (Kids) | Girl (Kids)
+// Each tab has its own set of clothing sub-categories.
 //
 // Replace with GET /customer/fashion/categories when backend ready.
 // ============================================================
@@ -17,10 +17,11 @@ export interface FashionSubCat {
 }
 
 export interface FashionGenderConfig {
-  key:     FashionGender;
-  label:   string;
-  icon:    string;   // Ionicons glyph for tab button
-  subCats: FashionSubCat[];
+  key:       FashionGender;
+  label:     string;
+  subLabel?: string;   // shown below label (e.g. "Kids")
+  icon:      string;   // Ionicons glyph for tab button
+  subCats:   FashionSubCat[];
 }
 
 export const FASHION_GENDERS: FashionGenderConfig[] = [
@@ -82,11 +83,12 @@ export const FASHION_GENDERS: FashionGenderConfig[] = [
     ],
   },
 
-  // ── BOY ────────────────────────────────────────────────────
+  // ── BOY (Kids) ─────────────────────────────────────────────
   {
-    key:   "boy",
-    label: "Boy",
-    icon:  "person-outline",
+    key:      "boy",
+    label:    "Boy",
+    subLabel: "Kids",
+    icon:     "person-outline",
     subCats: [
       { key: "topwear",     label: "Topwear",      icon: "shirt-outline",            bg: "#DBEAFE" },
       { key: "innerwear",   label: "Inner-wear",   icon: "body-outline",             bg: "#FEE2E2" },
@@ -107,11 +109,12 @@ export const FASHION_GENDERS: FashionGenderConfig[] = [
     ],
   },
 
-  // ── GIRL ───────────────────────────────────────────────────
+  // ── GIRL (Kids) ────────────────────────────────────────────
   {
-    key:   "girl",
-    label: "Girl",
-    icon:  "person-outline",
+    key:      "girl",
+    label:    "Girl",
+    subLabel: "Kids",
+    icon:     "person-outline",
     subCats: [
       { key: "topwear",     label: "Topwear",      icon: "shirt-outline",            bg: "#FCE7F3" },
       { key: "innerwear",   label: "Inner-wear",   icon: "body-outline",             bg: "#FEE2E2" },

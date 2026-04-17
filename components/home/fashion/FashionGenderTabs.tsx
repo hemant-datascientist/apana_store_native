@@ -1,10 +1,11 @@
 // ============================================================
 // FASHION GENDER TABS — Apana Store
 //
-// Horizontal row of 4 gender/age selector tabs.
-// Men | Women | Boy | Girl
-// Each tab: Ionicon silhouette + label.
-// Active tab: fashion-maroon accent fill + white icon/label.
+// 4 equal-width gender/age tabs:
+//   Men | Women | Boy (Kids) | Girl (Kids)
+//
+// Each tab: circular icon + main label + optional subLabel.
+// Active: fashion-maroon fill + white text/icon.
 // ============================================================
 
 import React from "react";
@@ -19,11 +20,13 @@ interface FashionGenderTabsProps {
   genders:   FashionGenderConfig[];
   activeKey: FashionGender;
   onChange:  (key: FashionGender) => void;
-  accent:    string;  // fashion primary color e.g. #660033
+  accent:    string;
 }
 
 const { width: SW } = Dimensions.get("window");
 const H_PAD         = 16;
+const GAPS          = 3 * 3;   // 3 gaps × 3px
+const TAB_W         = Math.floor((SW - H_PAD * 2 - GAPS) / 4);
 
 export default function FashionGenderTabs({
   genders, activeKey, onChange, accent,
@@ -37,6 +40,7 @@ export default function FashionGenderTabs({
             key={g.key}
             style={[
               styles.tab,
+              { width: TAB_W },
               isActive
                 ? { backgroundColor: accent, borderColor: accent }
                 : { backgroundColor: "#F9FAFB", borderColor: "#E5E7EB" },
@@ -47,35 +51,51 @@ export default function FashionGenderTabs({
             {/* Silhouette icon */}
             <View style={[
               styles.iconWrap,
-              { backgroundColor: isActive ? "rgba(255,255,255,0.15)" : "#F3F4F6" },
+              { backgroundColor: isActive ? "rgba(255,255,255,0.18)" : "#EBEBEB" },
             ]}>
               <Ionicons
                 name={g.icon as any}
-                size={26}
+                size={24}
                 color={isActive ? "#fff" : "#6B7280"}
               />
             </View>
 
-            {/* Label */}
+            {/* Main label */}
             <Text style={[
               styles.label,
               {
                 color:      isActive ? "#fff" : "#374151",
                 fontFamily: isActive
                   ? typography.fontFamily.bold
-                  : typography.fontFamily.regular,
+                  : typography.fontFamily.medium,
               },
             ]}>
               {g.label}
             </Text>
+
+            {/* SubLabel — "Kids" badge for Boy and Girl */}
+            {g.subLabel && (
+              <View style={[
+                styles.kidsBadge,
+                { backgroundColor: isActive ? "rgba(255,255,255,0.22)" : "#F3F4F6" },
+              ]}>
+                <Text style={[
+                  styles.kidsText,
+                  {
+                    color:      isActive ? "#fff" : "#6B7280",
+                    fontFamily: typography.fontFamily.semiBold,
+                  },
+                ]}>
+                  {g.subLabel}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
         );
       })}
     </View>
   );
 }
-
-const TAB_W = (SW - H_PAD * 2 - 9) / 4;   // 4 tabs with 3 gaps of 3px
 
 const styles = StyleSheet.create({
   root: {
@@ -87,24 +107,33 @@ const styles = StyleSheet.create({
   },
 
   tab: {
-    width:          TAB_W,
-    alignItems:     "center",
+    alignItems:      "center",
     paddingVertical: 10,
-    borderRadius:   12,
-    borderWidth:    1,
-    gap:            6,
+    paddingHorizontal: 4,
+    borderRadius:    12,
+    borderWidth:     1,
+    gap:             4,
   },
 
   iconWrap: {
-    width:          44,
-    height:         44,
-    borderRadius:   22,
+    width:          40,
+    height:         40,
+    borderRadius:   20,
     alignItems:     "center",
     justifyContent: "center",
   },
 
   label: {
-    fontSize:      11,
+    fontSize:      11.5,
     letterSpacing: 0.1,
+  },
+
+  kidsBadge: {
+    paddingHorizontal: 6,
+    paddingVertical:   2,
+    borderRadius:      6,
+  },
+  kidsText: {
+    fontSize: 9,
   },
 });
