@@ -161,6 +161,16 @@ export default function HomeScreen() {
 
       </SafeAreaView>
 
+      {/* ── Store filter bar — fixed between hero and feed, stores mode only ── */}
+      {mode === "stores" && storeTab !== "map_view" && (
+        <StoreFilterBar
+          filters={filters}
+          onFilterChange={setFilters}
+          onFilterPress={() => Alert.alert("Filter", "Filter sheet coming soon.")}
+          onSortPress={()   => Alert.alert("Sort",   "Sort options coming soon.")}
+        />
+      )}
+
       {/* ── Menu drawer ── */}
       <MenuDrawer
         visible={drawerOpen}
@@ -185,28 +195,15 @@ export default function HomeScreen() {
         style={[styles.feed, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.feedContent}
         showsVerticalScrollIndicator={false}
-        stickyHeaderIndices={[0]}
       >
-        {/* Sticky filter bar — stores only (except map view) */}
-        {mode === "stores" && storeTab !== "map_view" ? (
-          <StoreFilterBar
-            filters={filters}
-            onFilterChange={setFilters}
-            onFilterPress={() => Alert.alert("Filter", "Filter sheet coming soon.")}
-            onSortPress={()   => Alert.alert("Sort",   "Sort options coming soon.")}
-          />
-        ) : (
-          <View />
-        )}
-
         {/* Products feed — one component per category */}
         {mode === "products" && renderCategoryFeed()}
 
         {/* Store feeds */}
-        {mode === "stores" && storeTab === "nearby"       && <NearbyStoresFeed />}
-        {mode === "stores" && storeTab === "wholesale"    && <WholesaleStoresFeed />}
-        {mode === "stores" && storeTab === "b2c"          && <B2CStoresFeed />}
-        {mode === "stores" && storeTab === "service_based"&& <ServiceStoresFeed />}
+        {mode === "stores" && storeTab === "nearby"        && <NearbyStoresFeed />}
+        {mode === "stores" && storeTab === "wholesale"     && <WholesaleStoresFeed />}
+        {mode === "stores" && storeTab === "b2c"           && <B2CStoresFeed />}
+        {mode === "stores" && storeTab === "service_based" && <ServiceStoresFeed />}
 
       </ScrollView>
 
@@ -216,7 +213,10 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   root:        { flex: 1 },
-  hero:        {},
+  hero: {
+    zIndex:    10,
+    elevation: 10,   // Android: keeps hero above scroll content
+  },
   feed:        { flex: 1 },
   feedContent: { paddingBottom: 32 },
 });
