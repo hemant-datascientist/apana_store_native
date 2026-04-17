@@ -22,7 +22,8 @@ import {
   Poppins_700Bold,
 } from "@expo-google-fonts/poppins";
 import { View } from "react-native";
-import { ThemeProvider } from "../theme/ThemeContext";
+import { ThemeProvider }    from "../theme/ThemeContext";
+import { LocationProvider } from "../context/LocationContext";
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -38,14 +39,23 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        {/* Main tab group — the primary customer experience */}
-        <Stack.Screen name="(tabs)" />
-        {/* Store Live statistics screen */}
-        <Stack.Screen name="store-live" />
-        {/* Barcode / QR scanner screen */}
-        <Stack.Screen name="scanner" />
-      </Stack>
+      <LocationProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          {/* Main tab group — the primary customer experience */}
+          <Stack.Screen name="(tabs)" />
+          {/* Store Live statistics screen */}
+          <Stack.Screen name="store-live" />
+          {/* Barcode / QR scanner screen */}
+          <Stack.Screen name="scanner" />
+          {/* Address Book — delivery address selection */}
+          <Stack.Screen name="address-book" />
+          {/* Menu screens */}
+          <Stack.Screen name="about-us" />
+          <Stack.Screen name="sell-ondc" />
+          <Stack.Screen name="product-finder" />
+          <Stack.Screen name="store-qr" />
+        </Stack>
+      </LocationProvider>
     </ThemeProvider>
   );
 }

@@ -21,12 +21,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter }    from "expo-router";
 import useTheme         from "../../theme/useTheme";
 import {
-  MOCK_LOCATION,
   STORES_LIVE_COUNT,
   CATEGORIES,
   HEADER_BG,
   DiscoveryMode,
 } from "../../data/homeData";
+import { useLocation } from "../../context/LocationContext";
 
 // ── Hero components ──────────────────────────────────────────
 import HomeHeader          from "../../components/home/HomeHeader";
@@ -64,6 +64,7 @@ import ServiceStoresFeed   from "../../components/home/stores/ServiceStoresFeed"
 export default function HomeScreen() {
   const { colors, setCategoryPrimary } = useTheme();
   const router                         = useRouter();
+  const { selectedAddress }            = useLocation();
 
   // Products mode state
   const [search,   setSearch]   = useState("");
@@ -126,9 +127,9 @@ export default function HomeScreen() {
       <SafeAreaView style={[styles.hero, { backgroundColor: heroBg }]} edges={["top"]}>
 
         <HomeHeader
-          location={MOCK_LOCATION}
+          location={{ area: selectedAddress.city, state: selectedAddress.state, pincode: selectedAddress.pincode }}
           storesLive={STORES_LIVE_COUNT}
-          onLocationPress={() => Alert.alert("Change Location", "Area selector coming soon.")}
+          onLocationPress={() => router.push("/address-book")}
           onStoreLivePress={() => router.push("/store-live")}
         />
 
@@ -164,7 +165,18 @@ export default function HomeScreen() {
       <MenuDrawer
         visible={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        onSelect={key => Alert.alert("Menu", `"${key}" coming soon.`)}
+        onSelect={key => {
+          switch (key) {
+            case "about_us":       router.push("/about-us");       break;
+            case "sell_ondc":      router.push("/sell-ondc");      break;
+            case "product_finder": router.push("/product-finder"); break;
+            case "store_qr":       router.push("/store-qr");       break;
+            case "address_book":   router.push("/address-book");   break;
+            case "scanner":        router.push("/scanner");        break;
+            default:
+              Alert.alert("Coming Soon", `"${key}" is coming soon.`);
+          }
+        }}
       />
 
       {/* ── Feed ── */}

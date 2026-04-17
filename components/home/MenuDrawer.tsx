@@ -35,13 +35,14 @@ const MENU_ITEMS: MenuItem[] = [
   { key: "offer_zone",    label: "Offer Zone",        icon: "pricetag-outline"              },
   { key: "shop_brands",   label: "Shop by Brands",    icon: "brand_b"                       },
   { key: "new_launches",  label: "New Launches",      icon: "sparkles-outline"              },
-  { key: "product_finder",label: "Product Finder",    icon: "scan-outline",  dividerAfter: true },
+  { key: "product_finder",label: "Product Finder",    icon: "search-outline"                },
+  { key: "store_qr",      label: "Store QR",          icon: "qr-code-outline", dividerAfter: true },
   { key: "favourite",     label: "Favourite",         icon: "heart-outline"                 },
   { key: "bookmark",      label: "Bookmark",          icon: "bookmark-outline", dividerAfter: true },
   { key: "sell_ondc",     label: "Sell on ONDC",      icon: "bag-handle-outline"            },
-  { key: "address_book",  label: "Address Book",      icon: "book-outline"                  },
+  { key: "address_book",  label: "Address Book",      icon: "location-outline"              },
   { key: "auto_riders",   label: "Auto Riders – ONDC",icon: "car-outline",   dividerAfter: true },
-  { key: "about_us",      label: "About Us",          icon: "happy-outline"                 },
+  { key: "about_us",      label: "About Us",          icon: "information-circle-outline"    },
 ];
 
 // ── Brand "B" icon (custom) ────────────────────────────────────

@@ -21,7 +21,8 @@ import ProductHScrollSection   from "./ProductHScrollSection";
 import FlashDealsSection       from "./FlashDealsSection";
 import PopularStoresSection    from "./PopularStoresSection";
 
-import { BANNERS, MOCK_LOCATION } from "../../../data/homeData";
+import { BANNERS }          from "../../../data/homeData";
+import { useLocation }      from "../../../context/LocationContext";
 import {
   getTrendingForCity,
   SUMMER_CATEGORIES,
@@ -35,7 +36,8 @@ const BRAND_BLUE = "#0F4C81";
 const PURPLE     = "#7C3AED";
 
 export default function AllFeed() {
-  const city = MOCK_LOCATION.area;
+  const { selectedAddress } = useLocation();
+  const city = selectedAddress.city;
 
   return (
     <View>
