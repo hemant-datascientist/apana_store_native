@@ -28,31 +28,158 @@ export interface FlashDeal extends HomeProduct {
   discountPct:   number;
 }
 
-// ── Trending local/city famous items ─────────────────────────
-// These are things the city is KNOWN for — local food, crafts,
-// iconic brands, famous dishes. No price — tap to discover.
+// ── Trending local / city-famous items ───────────────────────
+//
+// Each city has its OWN trending list — what is famous in Pune
+// is NOT the same as what is famous in Mumbai or Delhi.
+//
+// Backend contract (replace mock when ready):
+//   GET /customer/home/trending?city=pune
+//   Response: TrendingCityItem[]
+//
+// To add a new city: add a key to CITY_TRENDING below.
+// To go live: replace getTrendingForCity() body with an API call.
+// ─────────────────────────────────────────────────────────────
+
 export interface TrendingCityItem {
   id:   string;
   name: string;
-  tag:  string;   // e.g. "Famous Snack", "Local Brand"
-  icon: string;
-  bg:   string;
+  tag:  string;   // short label: "Famous Snack", "Local Brand" …
+  icon: string;   // Ionicons glyph
+  bg:   string;   // image placeholder background
 }
 
-export const TRENDING_CITY_ITEMS: TrendingCityItem[] = [
-  { id:"tc1",  name:"Metro Wholesale",        tag:"Local Store",       icon:"storefront-outline",   bg:"#DBEAFE" },
-  { id:"tc2",  name:"Shrewsbury Biscuits",    tag:"Famous Snack",      icon:"nutrition-outline",    bg:"#FEF3C7" },
-  { id:"tc3",  name:"Chitale Bhakarwadi",     tag:"Famous Snack",      icon:"nutrition-outline",    bg:"#FFEDD5" },
-  { id:"tc4",  name:"Meridian Ice Cream",     tag:"Ice Cream Parlour", icon:"ice-cream-outline",    bg:"#FCE7F3" },
-  { id:"tc5",  name:"Puneri Pagadi",          tag:"Traditional Craft", icon:"flag-outline",         bg:"#EDE9FE" },
-  { id:"tc6",  name:"Maharashtrian Naths",    tag:"Traditional Jewel", icon:"diamond-outline",      bg:"#FCE7F3" },
-  { id:"tc7",  name:"Osha Chappals",          tag:"Local Footwear",    icon:"walk-outline",         bg:"#FEF3C7" },
-  { id:"tc8",  name:"Kolhapuri Chappals",     tag:"Famous Footwear",   icon:"walk-outline",         bg:"#FFEDD5" },
-  { id:"tc9",  name:"Bun Maska",              tag:"Famous Breakfast",  icon:"cafe-outline",         bg:"#FFEDD5" },
-  { id:"tc10", name:"Kala Khatta",            tag:"Famous Drink",      icon:"wine-outline",         bg:"#EDE9FE" },
-  { id:"tc11", name:"Pithla Bhakri",          tag:"Local Cuisine",     icon:"restaurant-outline",   bg:"#DCFCE7" },
-  { id:"tc12", name:"Puran Poli",             tag:"Famous Sweet",      icon:"nutrition-outline",    bg:"#FEE2E2" },
-];
+// City slug → trending items map
+// slug = city name lowercased + trimmed (matches MOCK_LOCATION.area)
+export const CITY_TRENDING: Record<string, TrendingCityItem[]> = {
+
+  // ── Pune ───────────────────────────────────────────────────
+  pune: [
+    { id:"pn1",  name:"Metro Wholesale",        tag:"Local Store",       icon:"storefront-outline",   bg:"#DBEAFE" },
+    { id:"pn2",  name:"Shrewsbury Biscuits",    tag:"Famous Snack",      icon:"nutrition-outline",    bg:"#FEF3C7" },
+    { id:"pn3",  name:"Chitale Bhakarwadi",     tag:"Famous Snack",      icon:"nutrition-outline",    bg:"#FFEDD5" },
+    { id:"pn4",  name:"Meridian Ice Cream",     tag:"Ice Cream Parlour", icon:"ice-cream-outline",    bg:"#FCE7F3" },
+    { id:"pn5",  name:"Puneri Pagadi",          tag:"Traditional Craft", icon:"flag-outline",         bg:"#EDE9FE" },
+    { id:"pn6",  name:"Maharashtrian Naths",    tag:"Traditional Jewel", icon:"diamond-outline",      bg:"#FCE7F3" },
+    { id:"pn7",  name:"Osha Chappals",          tag:"Local Footwear",    icon:"walk-outline",         bg:"#FEF3C7" },
+    { id:"pn8",  name:"Kolhapuri Chappals",     tag:"Famous Footwear",   icon:"walk-outline",         bg:"#FFEDD5" },
+    { id:"pn9",  name:"Bun Maska",              tag:"Famous Breakfast",  icon:"cafe-outline",         bg:"#FFEDD5" },
+    { id:"pn10", name:"Kala Khatta",            tag:"Famous Drink",      icon:"wine-outline",         bg:"#EDE9FE" },
+    { id:"pn11", name:"Pithla Bhakri",          tag:"Local Cuisine",     icon:"restaurant-outline",   bg:"#DCFCE7" },
+    { id:"pn12", name:"Puran Poli",             tag:"Famous Sweet",      icon:"nutrition-outline",    bg:"#FEE2E2" },
+  ],
+
+  // ── Mumbai ─────────────────────────────────────────────────
+  mumbai: [
+    { id:"mb1",  name:"Vada Pav",               tag:"Iconic Street Food", icon:"fast-food-outline",   bg:"#FFEDD5" },
+    { id:"mb2",  name:"Pav Bhaji",              tag:"Famous Dish",        icon:"restaurant-outline",  bg:"#FEE2E2" },
+    { id:"mb3",  name:"Cutting Chai",           tag:"Famous Drink",       icon:"cafe-outline",        bg:"#FEF3C7" },
+    { id:"mb4",  name:"Irani Cafe",             tag:"Heritage Cafe",      icon:"cafe-outline",        bg:"#FFEDD5" },
+    { id:"mb5",  name:"Colaba Causeway",        tag:"Famous Market",      icon:"storefront-outline",  bg:"#DBEAFE" },
+    { id:"mb6",  name:"Crawford Market",        tag:"Heritage Market",    icon:"basket-outline",      bg:"#DCFCE7" },
+    { id:"mb7",  name:"Bhel Puri",              tag:"Famous Snack",       icon:"nutrition-outline",   bg:"#FEF3C7" },
+    { id:"mb8",  name:"Mumbai Sandwich",        tag:"Famous Breakfast",   icon:"nutrition-outline",   bg:"#DCFCE7" },
+    { id:"mb9",  name:"Dabbawalas",             tag:"Iconic Service",     icon:"bicycle-outline",     bg:"#DBEAFE" },
+    { id:"mb10", name:"Kanda Poha",             tag:"Local Breakfast",    icon:"restaurant-outline",  bg:"#FEF3C7" },
+    { id:"mb11", name:"Kulfi Falooda",          tag:"Famous Dessert",     icon:"ice-cream-outline",   bg:"#FCE7F3" },
+    { id:"mb12", name:"Modak",                  tag:"Famous Sweet",       icon:"nutrition-outline",   bg:"#EDE9FE" },
+  ],
+
+  // ── Delhi ──────────────────────────────────────────────────
+  delhi: [
+    { id:"dl1",  name:"Chole Bhature",          tag:"Famous Dish",        icon:"restaurant-outline",  bg:"#FFEDD5" },
+    { id:"dl2",  name:"Butter Chicken",         tag:"Iconic Dish",        icon:"flame-outline",       bg:"#FEE2E2" },
+    { id:"dl3",  name:"Paranthe Wali Gali",     tag:"Famous Food Street", icon:"storefront-outline",  bg:"#FEF3C7" },
+    { id:"dl4",  name:"Chandni Chowk",          tag:"Heritage Market",    icon:"basket-outline",      bg:"#DBEAFE" },
+    { id:"dl5",  name:"Sarojini Nagar",         tag:"Famous for Clothes", icon:"shirt-outline",       bg:"#EDE9FE" },
+    { id:"dl6",  name:"Dilli Haat",             tag:"Crafts Market",      icon:"color-palette-outline",bg:"#FCE7F3"},
+    { id:"dl7",  name:"Gol Gappe",              tag:"Famous Street Food", icon:"nutrition-outline",   bg:"#DCFCE7" },
+    { id:"dl8",  name:"Jalebi",                 tag:"Famous Sweet",       icon:"nutrition-outline",   bg:"#FEF3C7" },
+    { id:"dl9",  name:"Lajpat Nagar",           tag:"Shopping Hub",       icon:"bag-outline",         bg:"#DBEAFE" },
+    { id:"dl10", name:"Karim's",                tag:"Legendary Eatery",   icon:"restaurant-outline",  bg:"#FFEDD5" },
+    { id:"dl11", name:"Rajma Chawal",           tag:"Local Comfort Food", icon:"restaurant-outline",  bg:"#FEE2E2" },
+    { id:"dl12", name:"Daulat Ki Chaat",        tag:"Seasonal Delicacy",  icon:"sparkles-outline",    bg:"#EDE9FE" },
+  ],
+
+  // ── Bangalore ──────────────────────────────────────────────
+  bangalore: [
+    { id:"bl1",  name:"Masala Dosa (MTR)",      tag:"Iconic Dish",        icon:"restaurant-outline",  bg:"#FFEDD5" },
+    { id:"bl2",  name:"Filter Coffee",          tag:"Famous Drink",       icon:"cafe-outline",        bg:"#FEF3C7" },
+    { id:"bl3",  name:"Vidyarthi Bhavan",       tag:"Heritage Eatery",    icon:"storefront-outline",  bg:"#DBEAFE" },
+    { id:"bl4",  name:"Commercial Street",      tag:"Famous Shopping",    icon:"bag-outline",         bg:"#EDE9FE" },
+    { id:"bl5",  name:"Rava Idli",              tag:"Bangalore Invention",icon:"restaurant-outline",  bg:"#DCFCE7" },
+    { id:"bl6",  name:"Bisi Bele Bath",         tag:"Local Cuisine",      icon:"flame-outline",       bg:"#FFEDD5" },
+    { id:"bl7",  name:"Craft Beer",             tag:"Brewery Culture",    icon:"wine-outline",        bg:"#DBEAFE" },
+    { id:"bl8",  name:"Brigade Road",           tag:"Shopping Street",    icon:"storefront-outline",  bg:"#FCE7F3" },
+    { id:"bl9",  name:"Mysore Pak",             tag:"Famous Sweet",       icon:"nutrition-outline",   bg:"#FEF3C7" },
+    { id:"bl10", name:"Koshy's Bakery",         tag:"Heritage Cafe",      icon:"cafe-outline",        bg:"#FFEDD5" },
+    { id:"bl11", name:"Silk Sarees",            tag:"Karnataka Craft",    icon:"sparkles-outline",    bg:"#EDE9FE" },
+    { id:"bl12", name:"Churmuri",               tag:"Local Street Food",  icon:"fast-food-outline",   bg:"#DCFCE7" },
+  ],
+
+  // ── Hyderabad ──────────────────────────────────────────────
+  hyderabad: [
+    { id:"hy1",  name:"Hyderabadi Biryani",     tag:"Iconic Dish",        icon:"restaurant-outline",  bg:"#FFEDD5" },
+    { id:"hy2",  name:"Haleem",                 tag:"Famous Dish",        icon:"restaurant-outline",  bg:"#FEE2E2" },
+    { id:"hy3",  name:"Mirchi Bajji",           tag:"Famous Street Food", icon:"fast-food-outline",   bg:"#DCFCE7" },
+    { id:"hy4",  name:"Laad Bazaar",            tag:"Famous for Bangles", icon:"diamond-outline",     bg:"#FCE7F3" },
+    { id:"hy5",  name:"Osmania Biscuit",        tag:"Famous Snack",       icon:"nutrition-outline",   bg:"#FEF3C7" },
+    { id:"hy6",  name:"Double Ka Meetha",       tag:"Famous Dessert",     icon:"nutrition-outline",   bg:"#EDE9FE" },
+    { id:"hy7",  name:"Irani Chai",             tag:"Famous Drink",       icon:"cafe-outline",        bg:"#FFEDD5" },
+    { id:"hy8",  name:"Kakatiya Pearls",        tag:"Hyderabad Jewellery",icon:"diamond-outline",     bg:"#DBEAFE" },
+    { id:"hy9",  name:"Paradise Biryani",       tag:"Iconic Restaurant",  icon:"storefront-outline",  bg:"#FFEDD5" },
+    { id:"hy10", name:"Qubani Ka Meetha",       tag:"Traditional Sweet",  icon:"nutrition-outline",   bg:"#FCE7F3" },
+    { id:"hy11", name:"Nimco Snacks",           tag:"Local Snack Brand",  icon:"nutrition-outline",   bg:"#FEF3C7" },
+    { id:"hy12", name:"Charminar Area",         tag:"Heritage Market",    icon:"location-outline",    bg:"#DBEAFE" },
+  ],
+
+  // ── Chennai ────────────────────────────────────────────────
+  chennai: [
+    { id:"ch1",  name:"Idli Sambar",            tag:"Iconic Breakfast",   icon:"restaurant-outline",  bg:"#DCFCE7" },
+    { id:"ch2",  name:"Filter Coffee",          tag:"Famous Drink",       icon:"cafe-outline",        bg:"#FEF3C7" },
+    { id:"ch3",  name:"T Nagar Shopping",       tag:"Shopping Hub",       icon:"bag-outline",         bg:"#EDE9FE" },
+    { id:"ch4",  name:"Chennai Silk Sarees",    tag:"Kanchipuram Silk",   icon:"sparkles-outline",    bg:"#FCE7F3" },
+    { id:"ch5",  name:"Murukku",                tag:"Famous Snack",       icon:"nutrition-outline",   bg:"#FFEDD5" },
+    { id:"ch6",  name:"Kothu Parotta",          tag:"Local Dish",         icon:"restaurant-outline",  bg:"#FEE2E2" },
+    { id:"ch7",  name:"Pondy Bazaar",           tag:"Famous Market",      icon:"storefront-outline",  bg:"#DBEAFE" },
+    { id:"ch8",  name:"Madurai Malli",          tag:"Jasmine Flower",     icon:"flower-outline",      bg:"#ECFDF5" },
+    { id:"ch9",  name:"Chettinad Cuisine",      tag:"Regional Cuisine",   icon:"flame-outline",       bg:"#FFEDD5" },
+    { id:"ch10", name:"Mylapore Temple",        tag:"Cultural Heritage",  icon:"location-outline",    bg:"#DBEAFE" },
+    { id:"ch11", name:"Pazha Mudhir Solai",     tag:"Famous Fruit Shop",  icon:"nutrition-outline",   bg:"#DCFCE7" },
+    { id:"ch12", name:"Adhirasam",              tag:"Traditional Sweet",  icon:"nutrition-outline",   bg:"#FEF3C7" },
+  ],
+
+  // ── Kolkata ────────────────────────────────────────────────
+  kolkata: [
+    { id:"kl1",  name:"Rosogolla",              tag:"Iconic Sweet",       icon:"nutrition-outline",   bg:"#FCE7F3" },
+    { id:"kl2",  name:"Mishti Doi",             tag:"Famous Dessert",     icon:"cafe-outline",        bg:"#FEF3C7" },
+    { id:"kl3",  name:"Kati Roll",              tag:"Famous Street Food", icon:"fast-food-outline",   bg:"#FFEDD5" },
+    { id:"kl4",  name:"Puchka",                 tag:"Iconic Street Food", icon:"nutrition-outline",   bg:"#DCFCE7" },
+    { id:"kl5",  name:"Kolkata Biryani",        tag:"Iconic Dish",        icon:"restaurant-outline",  bg:"#FEE2E2" },
+    { id:"kl6",  name:"Sandesh",                tag:"Traditional Sweet",  icon:"nutrition-outline",   bg:"#EDE9FE" },
+    { id:"kl7",  name:"College Street",         tag:"Famous for Books",   icon:"book-outline",        bg:"#DBEAFE" },
+    { id:"kl8",  name:"New Market",             tag:"Heritage Market",    icon:"basket-outline",      bg:"#DCFCE7" },
+    { id:"kl9",  name:"Shondesh",               tag:"Bengali Sweet",      icon:"nutrition-outline",   bg:"#FCE7F3" },
+    { id:"kl10", name:"Kumartuli Crafts",        tag:"Traditional Craft",  icon:"color-palette-outline",bg:"#EDE9FE"},
+    { id:"kl11", name:"Mishti Pan",             tag:"Famous Pan Shop",    icon:"leaf-outline",        bg:"#ECFDF5" },
+    { id:"kl12", name:"Durga Puja Decor",       tag:"Cultural Specialty", icon:"sparkles-outline",    bg:"#FEF3C7" },
+  ],
+};
+
+// ── City trending resolver ────────────────────────────────────
+//
+// MOCK: returns hardcoded city data.
+//
+// BACKEND READY — swap this function body with an API call:
+//   const res  = await fetch(`/api/customer/home/trending?city=${slug}`);
+//   return res.json() as TrendingCityItem[];
+//
+// The component calling this does NOT change — only this function.
+// ─────────────────────────────────────────────────────────────
+export function getTrendingForCity(city: string): TrendingCityItem[] {
+  const slug = city.toLowerCase().trim();
+  return CITY_TRENDING[slug] ?? CITY_TRENDING["pune"]; // fallback to Pune until city is onboarded
+}
 
 // ── Seasonal sub-categories (Summer / April–June) ─────────────
 // Category-based discovery, not individual products.

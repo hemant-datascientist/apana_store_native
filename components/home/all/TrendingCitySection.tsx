@@ -5,8 +5,14 @@
 // local food, iconic brands, traditional crafts, famous dishes.
 // No price / no add button — tap to discover.
 //
-// Screenshot reference: Metro Wholesale, Shrewsbury Biscuits,
-// Chitale Bhakarwadi, Meridian Ice Cream, Puneri Pagadi …
+// IMPORTANT: Data is 100% city-specific.
+// What trends in Pune ≠ Mumbai ≠ Delhi ≠ Bangalore.
+//
+// Data source (mock → backend):
+//   getTrendingForCity(city)  →  GET /api/customer/home/trending?city={slug}
+//
+// To add a new city: add its slug key to CITY_TRENDING in allFeedData.ts.
+// This component does NOT change when you switch to the API.
 // ============================================================
 
 import React from "react";

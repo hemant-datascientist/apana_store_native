@@ -23,7 +23,7 @@ import PopularStoresSection    from "./PopularStoresSection";
 
 import { BANNERS, MOCK_LOCATION } from "../../../data/homeData";
 import {
-  TRENDING_CITY_ITEMS,
+  getTrendingForCity,
   SUMMER_CATEGORIES,
   DAILY_ESSENTIALS,
   FLASH_DEALS,
@@ -46,10 +46,12 @@ export default function AllFeed() {
         onPress={() => {}}
       />
 
-      {/* ── 2. Trending in {city} — 4-col famous local items grid ── */}
+      {/* ── 2. Trending in {city} — 4-col famous local items grid ──
+           Data is city-specific. Replace getTrendingForCity() with
+           GET /api/customer/home/trending?city={city} when backend ready. */}
       <TrendingCitySection
         city={city}
-        items={TRENDING_CITY_ITEMS}
+        items={getTrendingForCity(city)}
       />
 
       {/* ── 3. Summer Picks — seasonal category grid ── */}
