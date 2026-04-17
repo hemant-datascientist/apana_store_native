@@ -1,15 +1,18 @@
 // ============================================================
 // OTP SCREEN — Apana Store (Customer App)
 //
-// Receives params from /login:
+// Receives params from /login or /create-account:
 //   method  — "phone" | "email"
 //   contact — "+919876543210" or "user@email.com"
 //   display — "+91 98765 43210" or "user@email.com"
+//   name    — user's display name (create-account flow only)
+//   flow    — "login" | "register" (default: "login")
 //
 // Flow:
 //   Enter 6 digits (auto-advance each box)
 //   → "Verify & Continue"
-//   → POST /auth/verify-otp { method, contact, otp }
+//   → login flow:    POST /auth/verify-otp    { method, contact, otp }
+//   → register flow: POST /auth/verify-otp    { method, contact, otp, name }
 //   → Returns { access_token, refresh_token, user }
 //   → useAuth().login() → router.replace("/(tabs)")
 //
@@ -47,11 +50,15 @@ export default function OtpScreen() {
   const router  = useRouter();
   const { login } = useAuth();
 
-  const { method, contact, display } = useLocalSearchParams<{
+  const { method, contact, display, name, flow } = useLocalSearchParams<{
     method:  string;
     contact: string;
     display: string;
+    name?:   string;   // provided by create-account flow
+    flow?:   string;   // "login" | "register"
   }>();
+
+  const isRegister = flow === "register";
 
   // ── OTP digit state ────────────────────────────────────────
   const [digits,   setDigits]   = useState<string[]>(Array(OTP_LENGTH).fill(""));
@@ -148,11 +155,17 @@ export default function OtpScreen() {
       // Mock: 800ms delay, accept any 6-digit OTP
       await new Promise(r => setTimeout(r, 800));
 
-      // Populate mock user with actual contact
+      // Build AuthUser — register flow includes name + both contacts
       const authUser: AuthUser = {
         ...MOCK_USER,
-        phone: method === "phone" ? contact ?? null : null,
-        email: method === "email" ? contact ?? null : null,
+        name:   isRegister ? (name ?? MOCK_USER.name) : MOCK_USER.name,
+        phone:  isRegister
+          ? (method === "phone" ? contact ?? null : null) // phone always collected in register
+          : (method === "phone" ? contact ?? null : null),
+        email:  isRegister
+          ? (method === "email" ? contact ?? null : null) // email always collected in register
+          : (method === "email" ? contact ?? null : null),
+        is_new: isRegister,
       };
 
       await login(authUser, {
@@ -234,13 +247,19 @@ export default function OtpScreen() {
 
         {/* Title */}
         <Text style={[styles.title, { fontFamily: typography.fontFamily.bold }]}>
-          Enter Verification Code
+          {isRegister ? "Verify Your Account" : "Enter Verification Code"}
         </Text>
 
         {/* Subtitle */}
-        <Text style={[styles.subtitle, { fontFamily: typography.fontFamily.regular }]}>
-          We sent a 6-digit OTP to
-        </Text>
+        {isRegister && name ? (
+          <Text style={[styles.subtitle, { fontFamily: typography.fontFamily.regular }]}>
+            Hi <Text style={{ fontFamily: typography.fontFamily.semiBold, color: "#111827" }}>{name}</Text>! We sent a 6-digit OTP to
+          </Text>
+        ) : (
+          <Text style={[styles.subtitle, { fontFamily: typography.fontFamily.regular }]}>
+            We sent a 6-digit OTP to
+          </Text>
+        )}
         <Text style={[styles.contact, { fontFamily: typography.fontFamily.semiBold }]}>
           {display ?? contact}
         </Text>

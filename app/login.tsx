@@ -249,6 +249,18 @@ export default function LoginScreen() {
           )}
         </TouchableOpacity>
 
+        {/* ── Create Account link ── */}
+        <View style={styles.createRow}>
+          <Text style={[styles.createText, { fontFamily: typography.fontFamily.regular }]}>
+            New here?
+          </Text>
+          <TouchableOpacity onPress={() => router.push("/create-account")} activeOpacity={0.75}>
+            <Text style={[styles.createLink, { fontFamily: typography.fontFamily.semiBold }]}>
+              Create Account
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {/* ── Divider ── */}
         <View style={styles.orRow}>
           <View style={styles.orLine} />
@@ -427,6 +439,17 @@ const styles = StyleSheet.create({
     elevation:       0,
   },
   sendBtnText: { color: "#fff", fontSize: 16 },
+
+  // ── Create account row ──────────────────────────────────────
+  createRow: {
+    flexDirection:  "row",
+    justifyContent: "center",
+    alignItems:     "center",
+    gap:            6,
+    marginTop:      -4,
+  },
+  createText: { fontSize: 13, color: "#6B7280" },
+  createLink: { fontSize: 13, color: BRAND_BLUE },
 
   // ── OR divider ───────────────────────────────────────────────
   orRow: {

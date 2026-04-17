@@ -66,9 +66,10 @@ export default function RootLayout() {
             <Stack.Screen name="product-finder" />
             <Stack.Screen name="store-qr" />
             <Stack.Screen name="favourite" />
-            {/* Auth flow — onboarding + login + OTP */}
+            {/* Auth flow — onboarding + login + create-account + OTP */}
             <Stack.Screen name="get-started" />
             <Stack.Screen name="login" />
+            <Stack.Screen name="create-account" />
             <Stack.Screen name="otp" />
             {/* Profile sub-screens */}
             <Stack.Screen name="edit-profile" />
