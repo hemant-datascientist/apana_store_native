@@ -6,19 +6,20 @@
 //   Email — for notifications + login
 //   Phone — +91, for OTP login + delivery updates
 //
-// OTP method toggle: choose whether OTP goes to Phone or Email.
-// All 3 fields are saved to the account regardless.
+// Both phone AND email are verified via OTP in sequence:
+//   Step 1 → Phone OTP
+//   Step 2 → Email OTP
+//   → Account created
 //
 // Flow:
 //   Fill Name + Email + Phone
-//   → Choose OTP method (Phone / Email)
-//   → "Create Account" → POST /auth/send-otp
-//   → navigates to /otp with { method, contact, display, name, flow: "register" }
-//   → OTP verified → account created → router.replace("/(tabs)")
+//   → "Create Account" → POST /auth/register (sends OTP to phone)
+//   → navigates to /otp with { flow:"register", name, phone, phoneDisplay, email }
+//   → OTP screen handles both steps → login() → tabs
 //
 // Backend:
 //   POST /auth/register  { name, email, phone, app: "customer" }
-//   → 200 { otp_sent_to: "phone"|"email", expires_in: 300 }
+//   → 200 { session_token, expires_in: 300 }   (OTP sent to phone)
 // ============================================================
 
 import React, { useState, useRef } from "react";
@@ -34,8 +35,6 @@ import { typography }   from "../theme/typography";
 
 const BRAND_BLUE = "#0F4C81";
 
-type OtpMethod = "phone" | "email";
-
 function isValidPhone(v: string) { return /^[6-9]\d{9}$/.test(v.replace(/\s/g, "")); }
 function isValidEmail(v: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 function isValidName(v: string)  { return v.trim().length >= 2; }
@@ -43,27 +42,18 @@ function isValidName(v: string)  { return v.trim().length >= 2; }
 export default function CreateAccountScreen() {
   const router = useRouter();
 
-  const [name,      setName]      = useState("");
-  const [email,     setEmail]     = useState("");
-  const [phone,     setPhone]     = useState("");
-  const [otpMethod, setOtpMethod] = useState<OtpMethod>("phone");
-  const [loading,   setLoading]   = useState(false);
+  const [name,    setName]    = useState("");
+  const [email,   setEmail]   = useState("");
+  const [phone,   setPhone]   = useState("");
+  const [loading, setLoading] = useState(false);
 
   const emailRef = useRef<TextInput>(null);
   const phoneRef = useRef<TextInput>(null);
 
-  const nameOk  = isValidName(name);
-  const emailOk = isValidEmail(email);
-  const phoneOk = isValidPhone(phone);
+  const nameOk    = isValidName(name);
+  const emailOk   = isValidEmail(email);
+  const phoneOk   = isValidPhone(phone);
   const canSubmit = nameOk && emailOk && phoneOk;
-
-  // Contact info for the chosen OTP method
-  const otpContact = otpMethod === "phone"
-    ? `+91${phone.replace(/\s/g, "")}`
-    : email.trim();
-  const otpDisplay = otpMethod === "phone"
-    ? `+91 ${phone.slice(0, 5)} ${phone.slice(5)}`
-    : email.trim();
 
   async function handleCreateAccount() {
     if (!canSubmit) return;
@@ -74,25 +64,26 @@ export default function CreateAccountScreen() {
       //   method: "POST",
       //   headers: { "Content-Type": "application/json" },
       //   body: JSON.stringify({
-      //     name: name.trim(),
+      //     name:  name.trim(),
       //     email: email.trim(),
       //     phone: `+91${phone.replace(/\s/g, "")}`,
-      //     otp_method: otpMethod,
-      //     app: "customer",
+      //     app:   "customer",
       //   }),
       // });
       // if (!res.ok) throw new Error("Registration failed");
+      // OTP sent to phone as step 1
 
       await new Promise(r => setTimeout(r, 800));
 
+      // Pass all 3 contacts — OTP screen handles step 1 (phone) then step 2 (email)
       router.push({
         pathname: "/otp",
         params: {
-          method:  otpMethod,
-          contact: otpContact,
-          display: otpDisplay,
-          name:    name.trim(),
-          flow:    "register",
+          flow:         "register",
+          name:         name.trim(),
+          phone:        `+91${phone.replace(/\s/g, "")}`,
+          phoneDisplay: `+91 ${phone.slice(0, 5)} ${phone.slice(5)}`,
+          email:        email.trim(),
         },
       });
     } catch {
@@ -133,6 +124,36 @@ export default function CreateAccountScreen() {
           </Text>
           <Text style={[styles.welcomeSub, { fontFamily: typography.fontFamily.regular }]}>
             Create your account to order from local stores near you
+          </Text>
+        </View>
+
+        {/* ── Verification info card ── */}
+        <View style={styles.verifyCard}>
+          <View style={styles.verifyStep}>
+            <View style={styles.verifyStepNum}>
+              <Text style={[styles.verifyStepNumText, { fontFamily: typography.fontFamily.bold }]}>1</Text>
+            </View>
+            <View style={styles.verifyStepLine} />
+            <View style={styles.verifyStepNum}>
+              <Text style={[styles.verifyStepNumText, { fontFamily: typography.fontFamily.bold }]}>2</Text>
+            </View>
+          </View>
+          <View style={styles.verifyLabels}>
+            <View style={styles.verifyLabel}>
+              <Ionicons name="phone-portrait-outline" size={13} color={BRAND_BLUE} />
+              <Text style={[styles.verifyLabelText, { fontFamily: typography.fontFamily.medium }]}>
+                Verify Mobile
+              </Text>
+            </View>
+            <View style={styles.verifyLabel}>
+              <Ionicons name="mail-outline" size={13} color={BRAND_BLUE} />
+              <Text style={[styles.verifyLabelText, { fontFamily: typography.fontFamily.medium }]}>
+                Verify Email
+              </Text>
+            </View>
+          </View>
+          <Text style={[styles.verifyHint, { fontFamily: typography.fontFamily.regular }]}>
+            Both your mobile number and email will be verified by OTP
           </Text>
         </View>
 
@@ -237,62 +258,6 @@ export default function CreateAccountScreen() {
           )}
         </View>
 
-        {/* ── OTP Method Picker ── */}
-        <View style={styles.otpMethodBlock}>
-          <Text style={[styles.fieldLabel, { fontFamily: typography.fontFamily.medium }]}>
-            Receive OTP via
-          </Text>
-          <View style={styles.methodToggle}>
-            <TouchableOpacity
-              style={[styles.methodTab, otpMethod === "phone" && styles.methodTabActive]}
-              onPress={() => setOtpMethod("phone")}
-              activeOpacity={0.8}
-            >
-              <Ionicons
-                name="phone-portrait-outline"
-                size={15}
-                color={otpMethod === "phone" ? "#fff" : "#6B7280"}
-              />
-              <Text style={[
-                styles.methodTabText,
-                { fontFamily: otpMethod === "phone" ? typography.fontFamily.bold : typography.fontFamily.medium },
-                otpMethod === "phone" && styles.methodTabTextActive,
-              ]}>
-                Phone
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.methodTab, otpMethod === "email" && styles.methodTabActive]}
-              onPress={() => setOtpMethod("email")}
-              activeOpacity={0.8}
-            >
-              <Ionicons
-                name="mail-outline"
-                size={15}
-                color={otpMethod === "email" ? "#fff" : "#6B7280"}
-              />
-              <Text style={[
-                styles.methodTabText,
-                { fontFamily: otpMethod === "email" ? typography.fontFamily.bold : typography.fontFamily.medium },
-                otpMethod === "email" && styles.methodTabTextActive,
-              ]}>
-                Email
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Dynamic hint showing where OTP will go */}
-          {canSubmit && (
-            <Text style={[styles.otpHint, { fontFamily: typography.fontFamily.regular }]}>
-              OTP will be sent to{" "}
-              <Text style={{ fontFamily: typography.fontFamily.semiBold, color: BRAND_BLUE }}>
-                {otpDisplay}
-              </Text>
-            </Text>
-          )}
-        </View>
-
         {/* ── Create Account button ── */}
         <TouchableOpacity
           style={[styles.submitBtn, !canSubmit && styles.submitBtnDisabled]}
@@ -365,7 +330,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop:        28,
     paddingBottom:     48,
-    gap:               18,
+    gap:               16,
   },
 
   // ── Welcome ─────────────────────────────────────────────────
@@ -373,7 +338,55 @@ const styles = StyleSheet.create({
   welcomeTitle: { fontSize: 24, color: "#111827" },
   welcomeSub:   { fontSize: 14, color: "#6B7280", lineHeight: 20 },
 
-  // ── Field blocks ────────────────────────────────────────────
+  // ── Verify card ─────────────────────────────────────────────
+  verifyCard: {
+    backgroundColor: "#EFF6FF",
+    borderRadius:    14,
+    borderWidth:     1,
+    borderColor:     "#BFDBFE",
+    padding:         14,
+    gap:             8,
+  },
+  verifyStep: {
+    flexDirection: "row",
+    alignItems:    "center",
+    gap:           0,
+  },
+  verifyStepNum: {
+    width:           24,
+    height:          24,
+    borderRadius:    12,
+    backgroundColor: BRAND_BLUE,
+    alignItems:      "center",
+    justifyContent:  "center",
+  },
+  verifyStepNumText: { fontSize: 12, color: "#fff" },
+  verifyStepLine: {
+    flex:            1,
+    height:          2,
+    backgroundColor: BRAND_BLUE,
+    opacity:         0.3,
+    marginHorizontal: 4,
+  },
+  verifyLabels: {
+    flexDirection:  "row",
+    justifyContent: "space-between",
+  },
+  verifyLabel: {
+    flexDirection: "row",
+    alignItems:    "center",
+    gap:           4,
+  },
+  verifyLabelText: {
+    fontSize: 12,
+    color:    BRAND_BLUE,
+  },
+  verifyHint: {
+    fontSize: 11,
+    color:    "#3B82F6",
+  },
+
+  // ── Fields ──────────────────────────────────────────────────
   fieldBlock: { gap: 6 },
   fieldLabel: {
     fontSize: 13,
@@ -384,7 +397,6 @@ const styles = StyleSheet.create({
     color:    "#EF4444",
   },
 
-  // Generic input row
   inputRow: {
     flexDirection:     "row",
     alignItems:        "center",
@@ -395,9 +407,7 @@ const styles = StyleSheet.create({
     backgroundColor:   "#F9FAFB",
     paddingHorizontal: 14,
   },
-  inputRowError: {
-    borderColor: "#EF4444",
-  },
+  inputRowError: { borderColor: "#EF4444" },
   input: {
     flex:            1,
     fontSize:        15,
@@ -405,14 +415,13 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
 
-  // Phone row
   phoneRow: {
-    flexDirection:  "row",
-    alignItems:     "center",
-    borderWidth:    1.5,
-    borderColor:    "#E5E7EB",
-    borderRadius:   14,
-    overflow:       "hidden",
+    flexDirection:   "row",
+    alignItems:      "center",
+    borderWidth:     1.5,
+    borderColor:     "#E5E7EB",
+    borderRadius:    14,
+    overflow:        "hidden",
     backgroundColor: "#F9FAFB",
   },
   countryCode: {
@@ -434,40 +443,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical:   15,
     letterSpacing:     0.5,
-  },
-
-  // ── OTP method ──────────────────────────────────────────────
-  otpMethodBlock: { gap: 8 },
-  methodToggle: {
-    flexDirection:   "row",
-    backgroundColor: "#F3F4F6",
-    borderRadius:    12,
-    padding:         4,
-    gap:             4,
-  },
-  methodTab: {
-    flex:            1,
-    flexDirection:   "row",
-    alignItems:      "center",
-    justifyContent:  "center",
-    gap:             6,
-    paddingVertical: 10,
-    borderRadius:    9,
-  },
-  methodTabActive: {
-    backgroundColor: BRAND_BLUE,
-    shadowColor:     BRAND_BLUE,
-    shadowOffset:    { width: 0, height: 2 },
-    shadowOpacity:   0.22,
-    shadowRadius:    5,
-    elevation:       3,
-  },
-  methodTabText:       { fontSize: 13, color: "#6B7280" },
-  methodTabTextActive: { color: "#fff" },
-  otpHint: {
-    fontSize:  12,
-    color:     "#9CA3AF",
-    textAlign: "center",
   },
 
   // ── Submit button ────────────────────────────────────────────

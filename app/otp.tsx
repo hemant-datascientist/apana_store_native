@@ -1,23 +1,21 @@
 // ============================================================
 // OTP SCREEN — Apana Store (Customer App)
 //
-// Receives params from /login or /create-account:
-//   method  — "phone" | "email"
-//   contact — "+919876543210" or "user@email.com"
-//   display — "+91 98765 43210" or "user@email.com"
-//   name    — user's display name (create-account flow only)
-//   flow    — "login" | "register" (default: "login")
+// LOGIN flow  (from /login):
+//   params: { flow:"login", method:"phone"|"email", contact, display }
+//   → Single OTP step → login() → tabs
 //
-// Flow:
-//   Enter 6 digits (auto-advance each box)
-//   → "Verify & Continue"
-//   → login flow:    POST /auth/verify-otp    { method, contact, otp }
-//   → register flow: POST /auth/verify-otp    { method, contact, otp, name }
-//   → Returns { access_token, refresh_token, user }
-//   → useAuth().login() → router.replace("/(tabs)")
+// REGISTER flow (from /create-account):
+//   params: { flow:"register", name, phone, phoneDisplay, email }
+//   → Step 1: Verify phone OTP
+//   → Step 2: Verify email OTP
+//   → login() with full user (name + phone + email) → tabs
 //
-// Timer: 60s countdown → "Resend OTP" appears
-//        Resend → POST /auth/send-otp again, restarts timer
+// Backend:
+//   POST /auth/send-otp    { phone|email, app:"customer" }
+//   POST /auth/verify-otp  { method, contact, otp, session_token }
+//   POST /auth/register    { name, phone, email, phone_otp, email_otp }
+//   → { access_token, refresh_token, user }
 // ============================================================
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
@@ -27,62 +25,149 @@ import {
   Alert, NativeSyntheticEvent, TextInputKeyPressEventData,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons }       from "@expo/vector-icons";
+import { Ionicons }     from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { typography }     from "../theme/typography";
+import { typography }   from "../theme/typography";
 import { useAuth, AuthUser } from "../context/AuthContext";
 
-const BRAND_BLUE = "#0F4C81";
-const OTP_LENGTH = 6;
-const RESEND_COOLDOWN = 60; // seconds
+const BRAND_BLUE      = "#0F4C81";
+const OTP_LENGTH      = 6;
+const RESEND_COOLDOWN = 60;
 
-// ── Mock user returned after OTP verify ───────────────────────
-const MOCK_USER: AuthUser = {
-  id:         "usr_001",
-  name:       "Hemant",
-  phone:      null,
-  email:      null,
-  avatar_url: null,
-  is_new:     false,
-};
+// ── Step indicator (register flow only) ───────────────────────
+function StepIndicator({ step, phoneVerified }: { step: "phone" | "email"; phoneVerified: boolean }) {
+  const step1Done    = phoneVerified;
+  const step1Active  = step === "phone";
+  const step2Active  = step === "email";
 
+  return (
+    <View style={si.row}>
+      {/* Step 1 */}
+      <View style={si.stepWrap}>
+        <View style={[si.circle, step1Done ? si.circleDone : step1Active ? si.circleActive : si.circlePending]}>
+          {step1Done
+            ? <Ionicons name="checkmark" size={14} color="#fff" />
+            : <Text style={[si.circleNum, { fontFamily: typography.fontFamily.bold }]}>1</Text>
+          }
+        </View>
+        <Text style={[si.stepLabel, { fontFamily: step1Active ? typography.fontFamily.semiBold : typography.fontFamily.regular }]}>
+          Mobile
+        </Text>
+      </View>
+
+      {/* Connector line */}
+      <View style={si.line}>
+        <View style={[si.lineFill, step1Done && si.lineFillDone]} />
+      </View>
+
+      {/* Step 2 */}
+      <View style={si.stepWrap}>
+        <View style={[si.circle, step2Active ? si.circleActive : si.circlePending]}>
+          <Text style={[si.circleNum, { fontFamily: typography.fontFamily.bold }]}>2</Text>
+        </View>
+        <Text style={[si.stepLabel, { fontFamily: step2Active ? typography.fontFamily.semiBold : typography.fontFamily.regular }]}>
+          Email
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+const si = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    alignItems:    "center",
+    alignSelf:     "stretch",
+    marginBottom:  8,
+  },
+  stepWrap: {
+    alignItems: "center",
+    gap:         4,
+  },
+  circle: {
+    width:          30,
+    height:         30,
+    borderRadius:   15,
+    alignItems:     "center",
+    justifyContent: "center",
+  },
+  circleDone:    { backgroundColor: "#16A34A" },
+  circleActive:  { backgroundColor: BRAND_BLUE },
+  circlePending: { backgroundColor: "#E5E7EB" },
+  circleNum:     { fontSize: 13, color: "#fff" },
+  stepLabel:     { fontSize: 11, color: "#6B7280" },
+  line: {
+    flex:            1,
+    height:          2,
+    backgroundColor: "#E5E7EB",
+    marginHorizontal: 6,
+    marginBottom:    14,
+    overflow:        "hidden",
+  },
+  lineFill:     { flex: 1, backgroundColor: "#E5E7EB" },
+  lineFillDone: { backgroundColor: "#16A34A" },
+});
+
+// ── Main screen ───────────────────────────────────────────────
 export default function OtpScreen() {
-  const router  = useRouter();
-  const { login } = useAuth();
+  const router     = useRouter();
+  const { login }  = useAuth();
 
-  const { method, contact, display, name, flow } = useLocalSearchParams<{
-    method:  string;
-    contact: string;
-    display: string;
-    name?:   string;   // provided by create-account flow
-    flow?:   string;   // "login" | "register"
+  // Params — login flow uses method/contact/display;
+  // register flow uses phone/phoneDisplay/email/name
+  const {
+    flow, method, contact, display,
+    name, phone, phoneDisplay, email,
+  } = useLocalSearchParams<{
+    flow?:         string;
+    // login params
+    method?:       string;
+    contact?:      string;
+    display?:      string;
+    // register params
+    name?:         string;
+    phone?:        string;
+    phoneDisplay?: string;
+    email?:        string;
   }>();
 
   const isRegister = flow === "register";
 
+  // Register: two-step verification state
+  const [verifyStep,     setVerifyStep]     = useState<"phone" | "email">("phone");
+  const [phoneVerified,  setPhoneVerified]  = useState(false);
+
+  // ── Current target contact ─────────────────────────────────
+  // Login: single step using method/contact/display
+  // Register step 1: phone  /  step 2: email
+  const currentMethod  = isRegister ? verifyStep      : (method  ?? "phone");
+  const currentContact = isRegister
+    ? (verifyStep === "phone" ? (phone ?? "")  : (email ?? ""))
+    : (contact ?? "");
+  const currentDisplay = isRegister
+    ? (verifyStep === "phone" ? (phoneDisplay ?? phone ?? "") : (email ?? ""))
+    : (display ?? contact ?? "");
+
   // ── OTP digit state ────────────────────────────────────────
-  const [digits,   setDigits]   = useState<string[]>(Array(OTP_LENGTH).fill(""));
-  const [loading,  setLoading]  = useState(false);
-  const [timer,    setTimer]    = useState(RESEND_COOLDOWN);
+  const [digits,    setDigits]    = useState<string[]>(Array(OTP_LENGTH).fill(""));
+  const [loading,   setLoading]   = useState(false);
   const [resending, setResending] = useState(false);
+  const [timer,     setTimer]     = useState(RESEND_COOLDOWN);
 
   const inputRefs = useRef<Array<TextInput | null>>(Array(OTP_LENGTH).fill(null));
   const timerRef  = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const otp      = digits.join("");
-  const isComplete = otp.length === OTP_LENGTH && digits.every(d => d !== "");
+  const otp        = digits.join("");
+  const isComplete = digits.every(d => d !== "");
   const canResend  = timer === 0;
 
-  // ── Countdown timer ────────────────────────────────────────
+  // ── Timer ──────────────────────────────────────────────────
   const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     setTimer(RESEND_COOLDOWN);
     timerRef.current = setInterval(() => {
       setTimer(prev => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current!);
-          return 0;
-        }
+        if (prev <= 1) { clearInterval(timerRef.current!); return 0; }
         return prev - 1;
       });
     }, 1000);
@@ -90,32 +175,27 @@ export default function OtpScreen() {
 
   useEffect(() => {
     startTimer();
-    // Focus first box
     setTimeout(() => inputRefs.current[0]?.focus(), 300);
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [startTimer]);
 
-  // ── Digit input handler ────────────────────────────────────
+  // Re-focus when step changes (register flow)
+  useEffect(() => {
+    if (isRegister) {
+      setTimeout(() => inputRefs.current[0]?.focus(), 300);
+    }
+  }, [verifyStep, isRegister]);
+
+  // ── Input handlers ─────────────────────────────────────────
   function handleChange(text: string, index: number) {
-    // Accept only one digit
     const digit = text.replace(/\D/g, "").slice(-1);
     const next  = [...digits];
     next[index] = digit;
     setDigits(next);
-
-    // Auto-advance
-    if (digit && index < OTP_LENGTH - 1) {
-      inputRefs.current[index + 1]?.focus();
-    }
+    if (digit && index < OTP_LENGTH - 1) inputRefs.current[index + 1]?.focus();
   }
 
-  // ── Backspace handler ──────────────────────────────────────
-  function handleKeyPress(
-    e: NativeSyntheticEvent<TextInputKeyPressEventData>,
-    index: number,
-  ) {
+  function handleKeyPress(e: NativeSyntheticEvent<TextInputKeyPressEventData>, index: number) {
     if (e.nativeEvent.key === "Backspace" && !digits[index] && index > 0) {
       const next = [...digits];
       next[index - 1] = "";
@@ -124,59 +204,61 @@ export default function OtpScreen() {
     }
   }
 
-  // ── Paste handler — fills all boxes from clipboard ─────────
   function handlePaste(text: string, index: number) {
     const cleaned = text.replace(/\D/g, "").slice(0, OTP_LENGTH);
     if (cleaned.length > 1) {
       const next = Array(OTP_LENGTH).fill("");
       cleaned.split("").forEach((d, i) => { next[i] = d; });
       setDigits(next);
-      const lastFilled = Math.min(cleaned.length, OTP_LENGTH - 1);
-      inputRefs.current[lastFilled]?.focus();
+      inputRefs.current[Math.min(cleaned.length, OTP_LENGTH - 1)]?.focus();
     } else {
       handleChange(text, index);
     }
   }
 
-  // ── Verify OTP ─────────────────────────────────────────────
+  // ── Advance to email step (register only) ──────────────────
+  async function advanceToEmailStep() {
+    // TODO: POST /auth/send-otp { email, app: "customer", flow: "register" }
+    await new Promise(r => setTimeout(r, 500));
+    setPhoneVerified(true);
+    setVerifyStep("email");
+    setDigits(Array(OTP_LENGTH).fill(""));
+    startTimer();
+  }
+
+  // ── Verify ─────────────────────────────────────────────────
   async function handleVerify() {
     if (!isComplete) return;
     setLoading(true);
     try {
-      // TODO: replace with real API call
-      // const res = await fetch("https://api.apanastore.in/auth/verify-otp", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ method, contact, otp }),
-      // });
-      // if (!res.ok) throw new Error("Invalid OTP");
-      // const { access_token, refresh_token, user } = await res.json();
-
-      // Mock: 800ms delay, accept any 6-digit OTP
+      // TODO: POST /auth/verify-otp { method: currentMethod, contact: currentContact, otp }
       await new Promise(r => setTimeout(r, 800));
 
-      // Build AuthUser — register flow includes name + both contacts
+      if (isRegister && verifyStep === "phone") {
+        // Phone verified → now verify email
+        await advanceToEmailStep();
+        return;
+      }
+
+      // Final verification (login: single step | register: email step)
       const authUser: AuthUser = {
-        ...MOCK_USER,
-        name:   isRegister ? (name ?? MOCK_USER.name) : MOCK_USER.name,
-        phone:  isRegister
-          ? (method === "phone" ? contact ?? null : null) // phone always collected in register
-          : (method === "phone" ? contact ?? null : null),
-        email:  isRegister
-          ? (method === "email" ? contact ?? null : null) // email always collected in register
-          : (method === "email" ? contact ?? null : null),
-        is_new: isRegister,
+        id:         "usr_" + Date.now(),
+        name:       isRegister ? (name ?? "User") : "User",
+        phone:      isRegister ? (phone ?? null) : (currentMethod === "phone" ? currentContact : null),
+        email:      isRegister ? (email ?? null) : (currentMethod === "email" ? currentContact : null),
+        avatar_url: null,
+        is_new:     isRegister,
       };
 
+      // TODO: for register, POST /auth/register { name, phone, email, phone_verified: true, email_verified: true }
       await login(authUser, {
-        access:  "mock_access_token_" + Date.now(),
-        refresh: "mock_refresh_token_" + Date.now(),
+        access:  "mock_access_" + Date.now(),
+        refresh: "mock_refresh_" + Date.now(),
       });
 
       router.replace("/(tabs)");
     } catch {
       Alert.alert("Error", "Invalid OTP. Please try again.");
-      // Clear all digits and refocus first box
       setDigits(Array(OTP_LENGTH).fill(""));
       inputRefs.current[0]?.focus();
     } finally {
@@ -184,18 +266,12 @@ export default function OtpScreen() {
     }
   }
 
-  // ── Resend OTP ─────────────────────────────────────────────
+  // ── Resend ─────────────────────────────────────────────────
   async function handleResend() {
     if (!canResend) return;
     setResending(true);
     try {
-      // TODO: replace with real API call
-      // await fetch("https://api.apanastore.in/auth/send-otp", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ [method]: contact, app: "customer" }),
-      // });
-
+      // TODO: POST /auth/send-otp { [currentMethod]: currentContact, app: "customer" }
       await new Promise(r => setTimeout(r, 600));
       setDigits(Array(OTP_LENGTH).fill(""));
       inputRefs.current[0]?.focus();
@@ -211,6 +287,16 @@ export default function OtpScreen() {
   const timerMM = String(Math.floor(timer / 60)).padStart(2, "0");
   const timerSS = String(timer % 60).padStart(2, "0");
 
+  // ── Header title ───────────────────────────────────────────
+  const headerTitle = isRegister
+    ? (verifyStep === "phone" ? "Verify Mobile" : "Verify Email")
+    : "Verify OTP";
+
+  // ── Verify button label ────────────────────────────────────
+  const btnLabel = isRegister && verifyStep === "phone"
+    ? "Verify Mobile"
+    : "Verify & Continue";
+
   return (
     <KeyboardAvoidingView
       style={styles.root}
@@ -220,15 +306,11 @@ export default function OtpScreen() {
 
       {/* ── Header ── */}
       <SafeAreaView style={styles.header} edges={["top"]}>
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={() => router.back()}
-          activeOpacity={0.75}
-        >
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.75}>
           <Ionicons name="arrow-back" size={22} color="#fff" />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { fontFamily: typography.fontFamily.semiBold }]}>
-          Verify OTP
+          {headerTitle}
         </Text>
         <View style={styles.backBtn} />
       </SafeAreaView>
@@ -236,10 +318,15 @@ export default function OtpScreen() {
       {/* ── Body ── */}
       <View style={styles.body}>
 
+        {/* Step indicator — register only */}
+        {isRegister && (
+          <StepIndicator step={verifyStep} phoneVerified={phoneVerified} />
+        )}
+
         {/* Icon */}
         <View style={styles.iconWrap}>
           <Ionicons
-            name={method === "phone" ? "phone-portrait-outline" : "mail-outline"}
+            name={currentMethod === "phone" ? "phone-portrait-outline" : "mail-outline"}
             size={36}
             color={BRAND_BLUE}
           />
@@ -247,28 +334,41 @@ export default function OtpScreen() {
 
         {/* Title */}
         <Text style={[styles.title, { fontFamily: typography.fontFamily.bold }]}>
-          {isRegister ? "Verify Your Account" : "Enter Verification Code"}
+          {isRegister && verifyStep === "phone" && "Verify Your Mobile"}
+          {isRegister && verifyStep === "email" && "Now Verify Your Email"}
+          {!isRegister && "Enter Verification Code"}
         </Text>
 
         {/* Subtitle */}
-        {isRegister && name ? (
+        {isRegister && name && verifyStep === "phone" && (
           <Text style={[styles.subtitle, { fontFamily: typography.fontFamily.regular }]}>
-            Hi <Text style={{ fontFamily: typography.fontFamily.semiBold, color: "#111827" }}>{name}</Text>! We sent a 6-digit OTP to
+            Hi{" "}
+            <Text style={{ fontFamily: typography.fontFamily.semiBold, color: "#111827" }}>
+              {name}
+            </Text>
+            ! We sent a 6-digit OTP to
           </Text>
-        ) : (
+        )}
+        {isRegister && verifyStep === "email" && (
+          <Text style={[styles.subtitle, { fontFamily: typography.fontFamily.regular }]}>
+            Mobile verified ✓  Now enter the OTP sent to
+          </Text>
+        )}
+        {!isRegister && (
           <Text style={[styles.subtitle, { fontFamily: typography.fontFamily.regular }]}>
             We sent a 6-digit OTP to
           </Text>
         )}
+
         <Text style={[styles.contact, { fontFamily: typography.fontFamily.semiBold }]}>
-          {display ?? contact}
+          {currentDisplay}
         </Text>
 
         {/* ── OTP boxes ── */}
         <View style={styles.boxRow}>
           {digits.map((digit, i) => (
             <TextInput
-              key={i}
+              key={`${verifyStep}-${i}`}
               ref={ref => { inputRefs.current[i] = ref; }}
               style={[
                 styles.box,
@@ -279,10 +379,9 @@ export default function OtpScreen() {
               onChangeText={text => handlePaste(text, i)}
               onKeyPress={e => handleKeyPress(e, i)}
               keyboardType="number-pad"
-              maxLength={OTP_LENGTH}  // allows paste of full OTP
+              maxLength={OTP_LENGTH}
               selectTextOnFocus
               textAlign="center"
-              caretHidden={false}
             />
           ))}
         </View>
@@ -291,13 +390,12 @@ export default function OtpScreen() {
         <View style={styles.timerRow}>
           {canResend ? (
             <TouchableOpacity onPress={handleResend} disabled={resending} activeOpacity={0.8}>
-              {resending ? (
-                <ActivityIndicator size="small" color={BRAND_BLUE} />
-              ) : (
-                <Text style={[styles.resendText, { fontFamily: typography.fontFamily.semiBold }]}>
-                  Resend OTP
-                </Text>
-              )}
+              {resending
+                ? <ActivityIndicator size="small" color={BRAND_BLUE} />
+                : <Text style={[styles.resendText, { fontFamily: typography.fontFamily.semiBold }]}>
+                    Resend OTP
+                  </Text>
+              }
             </TouchableOpacity>
           ) : (
             <Text style={[styles.timerText, { fontFamily: typography.fontFamily.regular }]}>
@@ -320,17 +418,21 @@ export default function OtpScreen() {
           ) : (
             <>
               <Text style={[styles.verifyBtnText, { fontFamily: typography.fontFamily.bold }]}>
-                Verify &amp; Continue
+                {btnLabel}
               </Text>
-              <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+              <Ionicons
+                name={isRegister && verifyStep === "phone" ? "arrow-forward" : "checkmark-circle-outline"}
+                size={20}
+                color="#fff"
+              />
             </>
           )}
         </TouchableOpacity>
 
-        {/* ── Wrong number ── */}
+        {/* Wrong contact */}
         <TouchableOpacity onPress={() => router.back()} activeOpacity={0.75}>
           <Text style={[styles.wrongText, { fontFamily: typography.fontFamily.regular }]}>
-            Wrong {method === "phone" ? "number" : "email"}?{" "}
+            Wrong {currentMethod === "phone" ? "number" : "email"}?{" "}
             <Text style={{ fontFamily: typography.fontFamily.semiBold, color: BRAND_BLUE }}>
               Change it
             </Text>
@@ -371,35 +473,36 @@ const styles = StyleSheet.create({
     flex:              1,
     alignItems:        "center",
     paddingHorizontal: 32,
-    paddingTop:        48,
+    paddingTop:        36,
     gap:               12,
   },
 
   // Icon circle
   iconWrap: {
-    width:           80,
-    height:          80,
-    borderRadius:    24,
+    width:           76,
+    height:          76,
+    borderRadius:    22,
     backgroundColor: "#EFF6FF",
     alignItems:      "center",
     justifyContent:  "center",
-    marginBottom:    8,
+    marginBottom:    4,
   },
 
   // Text
   title: {
-    fontSize:  22,
+    fontSize:  20,
     color:     "#111827",
     textAlign: "center",
   },
   subtitle: {
-    fontSize: 14,
-    color:    "#6B7280",
+    fontSize:  13,
+    color:     "#6B7280",
+    textAlign: "center",
   },
   contact: {
     fontSize:     15,
     color:        "#111827",
-    marginBottom: 8,
+    marginBottom: 4,
   },
 
   // ── OTP boxes ───────────────────────────────────────────────
@@ -418,17 +521,9 @@ const styles = StyleSheet.create({
     color:        "#111827",
     fontFamily:   "Poppins_600SemiBold",
   },
-  boxEmpty: {
-    borderColor:     "#E5E7EB",
-    backgroundColor: "#F9FAFB",
-  },
-  boxFilled: {
-    borderColor:     BRAND_BLUE,
-    backgroundColor: "#EFF6FF",
-  },
-  boxFocused: {
-    borderColor: BRAND_BLUE,
-  },
+  boxEmpty:  { borderColor: "#E5E7EB", backgroundColor: "#F9FAFB" },
+  boxFilled: { borderColor: BRAND_BLUE, backgroundColor: "#EFF6FF" },
+  boxFocused:{ borderColor: BRAND_BLUE },
 
   // ── Timer ────────────────────────────────────────────────────
   timerRow: {
@@ -437,16 +532,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop:      4,
   },
-  timerText: {
-    fontSize: 13,
-    color:    "#6B7280",
-  },
-  resendText: {
-    fontSize: 14,
-    color:    BRAND_BLUE,
-  },
+  timerText:  { fontSize: 13, color: "#6B7280" },
+  resendText: { fontSize: 14, color: BRAND_BLUE },
 
-  // ── Verify button ────────────────────────────────────────────
+  // ── Verify button ─────────────────────────────────────────────
   verifyBtn: {
     flexDirection:   "row",
     alignItems:      "center",
@@ -468,10 +557,7 @@ const styles = StyleSheet.create({
     shadowOpacity:   0,
     elevation:       0,
   },
-  verifyBtnText: {
-    color:    "#fff",
-    fontSize: 16,
-  },
+  verifyBtnText: { color: "#fff", fontSize: 16 },
 
   // ── Wrong contact ─────────────────────────────────────────────
   wrongText: {
