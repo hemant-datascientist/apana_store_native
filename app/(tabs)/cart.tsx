@@ -21,8 +21,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
 import { typography } from "../../theme/typography";
 import useTheme from "../../theme/useTheme";
+import { useAuth } from "../../context/AuthContext";
+import LoginPromptModal from "../../components/auth/LoginPromptModal";
 import {
   INITIAL_CART, PROMO_CODES, DELIVERY_FEE,
   CartStore, CartItem, FulfillmentMode,
@@ -44,11 +47,14 @@ function storeSubtotal(store: CartStore) {
 
 export default function CartScreen() {
   const { colors, isDark } = useTheme();
+  const { isLoggedIn }     = useAuth();
+  const router             = useRouter();
 
-  const [cart,          setCart]          = useState<CartStore[]>(INITIAL_CART);
-  const [promoInput,    setPromoInput]    = useState("");
-  const [appliedPromo,  setAppliedPromo]  = useState<string | null>(null);
-  const [promoError,    setPromoError]    = useState("");
+  const [cart,             setCart]             = useState<CartStore[]>(INITIAL_CART);
+  const [promoInput,       setPromoInput]       = useState("");
+  const [appliedPromo,     setAppliedPromo]     = useState<string | null>(null);
+  const [promoError,       setPromoError]       = useState("");
+  const [showLoginPrompt,  setShowLoginPrompt]  = useState(false);
 
   // ── Derived totals ─────────────────────────────────────────
   const subtotal      = cart.reduce((s, store) => s + storeSubtotal(store), 0);
@@ -459,7 +465,13 @@ export default function CartScreen() {
           <TouchableOpacity
             style={[styles.checkoutBtn, { backgroundColor: colors.primary }]}
             activeOpacity={0.85}
-            onPress={() => Alert.alert("Checkout", "Order placement coming soon.")}
+            onPress={() => {
+              if (!isLoggedIn) {
+                setShowLoginPrompt(true);
+              } else {
+                Alert.alert("Checkout", "Order placement coming soon.");
+              }
+            }}
           >
             <Text style={[styles.checkoutBtnText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
               Proceed to Checkout
@@ -468,6 +480,17 @@ export default function CartScreen() {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
+
+      {/* ── Auth guard modal ── */}
+      <LoginPromptModal
+        visible={showLoginPrompt}
+        onClose={() => setShowLoginPrompt(false)}
+        onLogin={() => {
+          setShowLoginPrompt(false);
+          router.push("/login");
+        }}
+        reason="checkout"
+      />
 
     </View>
   );
