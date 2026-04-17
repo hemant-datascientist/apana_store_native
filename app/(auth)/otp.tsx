@@ -28,8 +28,9 @@ import {
   NativeSyntheticEvent, TextInputKeyPressEventData,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import useTheme            from "../../theme/useTheme";
+import useTheme              from "../../theme/useTheme";
 import { useAuth, AuthUser } from "../../context/AuthContext";
+import { useLocation }       from "../../context/LocationContext";
 import AuthHeader          from "../../components/auth/AuthHeader";
 import StepIndicator       from "../../components/otp/StepIndicator";
 import OtpIcon             from "../../components/otp/OtpIcon";
@@ -43,9 +44,10 @@ const OTP_LENGTH      = 6;
 const RESEND_COOLDOWN = 60;
 
 export default function OtpScreen() {
-  const router    = useRouter();
-  const { login } = useAuth();
-  const { colors }= useTheme();
+  const router              = useRouter();
+  const { login }           = useAuth();
+  const { colors }          = useTheme();
+  const { locationReady }   = useLocation();
 
   // ── Params — login uses method/contact/display; register uses phone/email/name ──
   const {
@@ -174,7 +176,8 @@ export default function OtpScreen() {
         access:  "mock_access_"  + Date.now(),
         refresh: "mock_refresh_" + Date.now(),
       });
-      router.replace("/(tabs)");
+      // First login → ask for location; returning user → go straight to tabs
+      router.replace(locationReady ? "/(tabs)" : "/location-access");
     } catch {
       Alert.alert("Error", "Invalid OTP. Please try again.");
       setDigits(Array(OTP_LENGTH).fill(""));

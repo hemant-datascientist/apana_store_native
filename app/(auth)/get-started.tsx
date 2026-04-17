@@ -18,6 +18,7 @@ import {
 import { useRouter }          from "expo-router";
 import useTheme               from "../../theme/useTheme";
 import { useAuth }            from "../../context/AuthContext";
+import { useLocation }        from "../../context/LocationContext";
 import { ONBOARDING_SLIDES }  from "../../data/onboardingData";
 import HeroSection            from "../../components/onboarding/HeroSection";
 import OnboardingSlide        from "../../components/onboarding/OnboardingSlide";
@@ -28,8 +29,9 @@ const { width: SW } = Dimensions.get("window");
 
 export default function GetStartedScreen() {
   const router          = useRouter();
-  const { skipAsGuest } = useAuth();
-  const { colors }      = useTheme();
+  const { skipAsGuest }   = useAuth();
+  const { colors }        = useTheme();
+  const { locationReady } = useLocation();
 
   const [slideIdx, setSlideIdx] = useState(0);
   const scrollRef               = useRef<ScrollView>(null);
@@ -42,7 +44,7 @@ export default function GetStartedScreen() {
 
   function handleSkip() {
     skipAsGuest();
-    router.replace("/(tabs)");
+    router.replace(locationReady ? "/(tabs)" : "/location-access");
   }
 
   function handleGetStarted() {

@@ -25,6 +25,7 @@ import {
 import { useRouter }        from "expo-router";
 import useTheme             from "../../theme/useTheme";
 import { useAuth }          from "../../context/AuthContext";
+import { useLocation }      from "../../context/LocationContext";
 import AuthHeader           from "../../components/auth/AuthHeader";
 import WelcomeBlock         from "../../components/auth/WelcomeBlock";
 import MethodToggle         from "../../components/auth/MethodToggle";
@@ -44,8 +45,9 @@ function isValidEmail(v: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); 
 
 export default function LoginScreen() {
   const router          = useRouter();
-  const { skipAsGuest } = useAuth();
-  const { colors }      = useTheme();
+  const { skipAsGuest }   = useAuth();
+  const { colors }        = useTheme();
+  const { locationReady } = useLocation();
 
   const [method,  setMethod]  = useState<Method>("phone");
   const [phone,   setPhone]   = useState("");
@@ -92,7 +94,7 @@ export default function LoginScreen() {
 
   function handleSkip() {
     skipAsGuest();
-    router.replace("/(tabs)");
+    router.replace(locationReady ? "/(tabs)" : "/location-access");
   }
 
   return (

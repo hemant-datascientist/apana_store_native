@@ -9,15 +9,18 @@
 // ============================================================
 
 export interface UserAddress {
-  id:       string;
-  label:    string;   // "Home" | "Work" | custom name
-  icon:     string;   // Ionicons glyph
-  name:     string;   // Recipient name
-  line1:    string;   // House / flat / building
-  line2:    string;   // Street / area
-  city:     string;   // City name — used as key in getTrendingForCity
-  state:    string;
-  pincode:  string;
+  id:                 string;
+  label:              string;    // "Home" | "Work" | "Current Location" | custom
+  icon:               string;    // Ionicons glyph
+  name?:              string;    // Recipient name (optional for GPS-detected)
+  line1:              string;    // House / flat / building
+  line2:              string;    // Street / area
+  city:               string;    // City name — used as key in getTrendingForCity
+  state:              string;
+  pincode:            string;
+  lat?:               number;    // GPS latitude  (set when location-detected)
+  lng?:               number;    // GPS longitude (set when location-detected)
+  isCurrentLocation?: boolean;   // true = detected via device GPS
 }
 
 export const SAVED_ADDRESSES: UserAddress[] = [

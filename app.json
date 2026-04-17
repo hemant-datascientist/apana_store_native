@@ -38,7 +38,14 @@
         }
       ],
       "expo-font",
-      "expo-camera"
+      "expo-camera",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Apana Store to use your location to show nearby stores and get accurate delivery times.",
+          "locationAlwaysAndWhenInUsePermission": "Allow Apana Store to use your location to show nearby stores and get accurate delivery times."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
