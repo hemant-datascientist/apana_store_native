@@ -43,6 +43,7 @@ import B2CStoresFeed                       from "../../components/home/stores/B2
 import ServiceStoresFeed                   from "../../components/home/stores/ServiceStoresFeed";
 import { CATEGORY_FEEDS }                  from "../../data/categoryFeedData";
 import GroceryFeed                         from "../../components/home/grocery/GroceryFeed";
+import FashionFeed                         from "../../components/home/fashion/FashionFeed";
 
 export default function HomeScreen() {
   const { colors, setCategoryPrimary } = useTheme();
@@ -168,8 +169,13 @@ export default function HomeScreen() {
           <GroceryFeed />
         )}
 
+        {/* Products feed — Fashion (gender + sub-category layout) */}
+        {mode === "products" && category === "fashion" && (
+          <FashionFeed />
+        )}
+
         {/* Products feed — specific category (generic layout) */}
-        {mode === "products" && category !== "all" && category !== "grocery" && CATEGORY_FEEDS[category] && (
+        {mode === "products" && category !== "all" && category !== "grocery" && category !== "fashion" && CATEGORY_FEEDS[category] && (
           <>
             <BannerCarousel
               banners={CATEGORY_FEEDS[category].banners}
