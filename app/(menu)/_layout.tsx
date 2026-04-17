@@ -23,6 +23,7 @@ export default function MenuLayout() {
       <Stack.Screen name="product-finder" />
       <Stack.Screen name="scanner"        />
       <Stack.Screen name="sell-ondc"      />
+      <Stack.Screen name="store-detail"   />
       <Stack.Screen name="store-live"     />
       <Stack.Screen name="store-qr"       />
     </Stack>

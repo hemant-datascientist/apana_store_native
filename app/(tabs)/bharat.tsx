@@ -89,7 +89,7 @@ export default function BharatScreen() {
 
           {/* Card header */}
           <View style={styles.mapCardHeader}>
-            <Text style={[styles.mapCardTitle, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.base }]}>
+            <Text style={[styles.mapCardTitle, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
               India — All States
             </Text>
             <View style={styles.mapStatRow}>

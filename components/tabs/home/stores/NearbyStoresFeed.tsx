@@ -12,6 +12,7 @@
 
 import React from "react";
 import { View, Text, Alert, StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
 import { typography } from "../../../../theme/typography";
 import useTheme from "../../../../theme/useTheme";
 import { HERO_STORES, NEARBY_STORES, NearbyStore, HeroStore } from "../../../../data/nearbyStoresData";
@@ -20,9 +21,10 @@ import StoreListCard    from "./StoreListCard";
 
 export default function NearbyStoresFeed() {
   const { colors } = useTheme();
+  const router     = useRouter();
 
   function handleHeroPress(store: HeroStore) {
-    Alert.alert(store.name, "Store page coming soon.");
+    router.push(`/store-detail?id=${store.id}`);
   }
 
   function handleDirection(store: NearbyStore) {
@@ -30,7 +32,7 @@ export default function NearbyStoresFeed() {
   }
 
   function handleViewItems(store: NearbyStore) {
-    Alert.alert(store.name, "View items coming soon.");
+    router.push(`/store-detail?id=${store.id}`);
   }
 
   return (

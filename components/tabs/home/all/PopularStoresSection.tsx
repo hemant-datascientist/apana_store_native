@@ -7,9 +7,10 @@
 
 import React from "react";
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet,
 } from "react-native";
 import { Ionicons }       from "@expo/vector-icons";
+import { useRouter }      from "expo-router";
 import { typography }     from "../../../../theme/typography";
 import SectionHeader      from "./SectionHeader";
 import { PopularStore }   from "../../../../data/allFeedData";
@@ -23,6 +24,8 @@ const CARD_W       = 148;
 const IMG_H        = 88;
 
 export default function PopularStoresSection({ stores }: PopularStoresSectionProps) {
+  const router = useRouter();
+
   return (
     <View style={styles.root}>
       <View style={styles.header}>
@@ -43,7 +46,7 @@ export default function PopularStoresSection({ stores }: PopularStoresSectionPro
             key={s.id}
             style={styles.card}
             activeOpacity={0.8}
-            onPress={() => Alert.alert(s.name, `${s.category} · ${s.area}`)}
+            onPress={() => router.push(`/store-detail?id=${s.id}`)}
           >
             {/* Image placeholder */}
             <View style={[styles.imgArea, { backgroundColor: s.bg }]}>

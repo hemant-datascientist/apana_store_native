@@ -93,7 +93,7 @@ export default function ProfileScreen() {
         <FavouriteStores
           stores={FAVOURITE_STORES}
           onViewAll={() => router.push("/favourite?tab=stores")}
-          onPress={store => Alert.alert(store.name, `${store.category} · ${store.area}`)}
+          onPress={store => router.push(`/store-detail?id=${store.id}`)}
         />
 
         {/* ── My Delivery Boy — tapping card section links to Delivery tab ── */}
