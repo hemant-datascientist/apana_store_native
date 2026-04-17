@@ -18,6 +18,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import {
@@ -37,6 +38,7 @@ import AppearanceModal       from "../../components/profile/AppearanceModal";
 
 export default function ProfileScreen() {
   const { colors } = useTheme();
+  const router     = useRouter();
   const [appearanceVisible, setAppearanceVisible] = useState(false);
 
   function handleSetting(key: string) {
@@ -63,18 +65,24 @@ export default function ProfileScreen() {
         {/* ── Stats row ── */}
         <ProfileStats stats={PROFILE_STATS} />
 
-        {/* ── Favourite Stores ── */}
+        {/* ── Favourite Stores — View All → Favourite screen (Stores tab) ── */}
         <FavouriteStores
           stores={FAVOURITE_STORES}
-          onViewAll={() => Alert.alert("Favourite Stores", "Full list coming soon.")}
+          onViewAll={() => router.push("/favourite?tab=stores")}
           onPress={store => Alert.alert(store.name, `${store.category} · ${store.area}`)}
         />
 
-        {/* ── My Delivery Boy ── */}
-        <PartnerCard partner={MOCK_DELIVERY_BOY} />
+        {/* ── My Delivery Boy — tapping card section links to Delivery tab ── */}
+        <PartnerCard
+          partner={MOCK_DELIVERY_BOY}
+          onViewFavourites={() => router.push("/favourite?tab=delivery")}
+        />
 
-        {/* ── My Rider ── */}
-        <PartnerCard partner={MOCK_RIDER} />
+        {/* ── My Rider — tapping card section links to Riders tab ── */}
+        <PartnerCard
+          partner={MOCK_RIDER}
+          onViewFavourites={() => router.push("/favourite?tab=riders")}
+        />
 
         {/* ── Settings sections ── */}
         {SETTING_GROUPS.map(group => (

@@ -16,7 +16,8 @@ import { typography } from "../../theme/typography";
 import { fulfillmentColors } from "../../theme/colors";
 
 interface PartnerCardProps {
-  partner: AssignedPartner;
+  partner:          AssignedPartner;
+  onViewFavourites?: () => void;
 }
 
 const CONFIG = {
@@ -36,7 +37,7 @@ const CONFIG = {
   },
 };
 
-export default function PartnerCard({ partner }: PartnerCardProps) {
+export default function PartnerCard({ partner, onViewFavourites }: PartnerCardProps) {
   const { colors } = useTheme();
   const cfg        = CONFIG[partner.type];
 
@@ -49,6 +50,13 @@ export default function PartnerCard({ partner }: PartnerCardProps) {
         <Text style={[styles.sectionTitle, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.md }]}>
           {cfg.title}
         </Text>
+        {onViewFavourites && (
+          <TouchableOpacity onPress={onViewFavourites} activeOpacity={0.7} style={styles.viewFavBtn}>
+            <Text style={[styles.viewFavText, { color: colors.primary, fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
+              View All
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Card */}
@@ -156,7 +164,9 @@ const styles = StyleSheet.create({
     gap:           6,
     marginBottom:  10,
   },
-  sectionTitle: {},
+  sectionTitle: { flex: 1 },
+  viewFavBtn:   {},
+  viewFavText:  {},
   card: {
     borderRadius:  16,
     borderWidth:   1,
