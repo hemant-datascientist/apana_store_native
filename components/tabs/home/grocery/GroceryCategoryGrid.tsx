@@ -11,7 +11,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet, Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { typography } from "../../../theme/typography";
+import { typography } from "../../../../theme/typography";
 import { GrocerySubCategory } from "../../../data/groceryData";
 
 interface GroceryCategoryGridProps {

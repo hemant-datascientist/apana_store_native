@@ -21,8 +21,8 @@
 import React from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons }   from "@expo/vector-icons";
-import useTheme       from "../../theme/useTheme";
-import { typography } from "../../theme/typography";
+import useTheme       from "../../../theme/useTheme";
+import { typography } from "../../../theme/typography";
 
 interface EditableFieldProps {
   label:          string;

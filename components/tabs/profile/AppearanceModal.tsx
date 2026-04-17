@@ -21,9 +21,9 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import useTheme from "../../theme/useTheme";
-import { typography } from "../../theme/typography";
-import { brandColors } from "../../theme/colors";
+import useTheme from "../../../theme/useTheme";
+import { typography } from "../../../theme/typography";
+import { brandColors } from "../../../theme/colors";
 
 // ── Types ─────────────────────────────────────────────────────
 type ThemeMode = "system" | "light" | "dark";

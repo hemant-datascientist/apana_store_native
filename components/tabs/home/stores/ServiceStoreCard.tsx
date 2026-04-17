@@ -13,8 +13,8 @@ import {
   View, Text, TouchableOpacity, StyleSheet, Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { typography } from "../../../theme/typography";
-import useTheme from "../../../theme/useTheme";
+import { typography } from "../../../../theme/typography";
+import useTheme from "../../../../theme/useTheme";
 import { ServiceStore } from "../../../data/serviceStoresData";
 
 interface ServiceStoreCardProps {

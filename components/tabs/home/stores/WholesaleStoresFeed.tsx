@@ -11,8 +11,8 @@
 
 import React from "react";
 import { View, Text, Alert, StyleSheet } from "react-native";
-import { typography } from "../../../theme/typography";
-import useTheme from "../../../theme/useTheme";
+import { typography } from "../../../../theme/typography";
+import useTheme from "../../../../theme/useTheme";
 import {
   WHOLESALE_PROMOS, WHOLESALE_STORES,
   WholesalePromo, WholesaleStore,

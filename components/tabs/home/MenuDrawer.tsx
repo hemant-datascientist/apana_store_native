@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { typography } from "../../theme/typography";
+import { typography } from "../../../theme/typography";
 import { HEADER_BG } from "../../data/homeData";
 
 const { width: SCREEN_W } = Dimensions.get("window");

@@ -15,7 +15,7 @@ import {
   ScrollView, View, Text, TouchableOpacity, StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { typography } from "../../theme/typography";
+import { typography } from "../../../theme/typography";
 import { Category } from "../../data/homeData";
 
 interface CategoryScrollProps {

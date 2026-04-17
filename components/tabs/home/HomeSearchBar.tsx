@@ -18,7 +18,7 @@ import {
   View, TextInput, TouchableOpacity, StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { typography } from "../../theme/typography";
+import { typography } from "../../../theme/typography";
 import { DiscoveryMode } from "../../data/homeData";
 
 // Semi-transparent white pill — sits on the dark header

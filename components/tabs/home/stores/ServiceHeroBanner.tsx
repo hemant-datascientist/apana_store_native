@@ -14,7 +14,7 @@ import {
   StyleSheet, Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { typography } from "../../../theme/typography";
+import { typography } from "../../../../theme/typography";
 import { ServicePromo } from "../../../data/serviceStoresData";
 
 interface ServiceHeroBannerProps {

@@ -12,8 +12,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { FavouriteStore } from "../../data/profileData";
-import useTheme from "../../theme/useTheme";
-import { typography } from "../../theme/typography";
+import useTheme from "../../../theme/useTheme";
+import { typography } from "../../../theme/typography";
 
 interface FavouriteStoresProps {
   stores:    FavouriteStore[];

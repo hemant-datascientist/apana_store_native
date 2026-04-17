@@ -8,8 +8,8 @@
 
 import React from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { typography } from "../../theme/typography";
-import useTheme from "../../theme/useTheme";
+import { typography } from "../../../theme/typography";
+import useTheme from "../../../theme/useTheme";
 import { RegionGroup, StateInfo } from "../../data/bharatData";
 import StateCard from "./StateCard";
 

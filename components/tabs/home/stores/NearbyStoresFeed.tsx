@@ -12,8 +12,8 @@
 
 import React from "react";
 import { View, Text, Alert, StyleSheet } from "react-native";
-import { typography } from "../../../theme/typography";
-import useTheme from "../../../theme/useTheme";
+import { typography } from "../../../../theme/typography";
+import useTheme from "../../../../theme/useTheme";
 import { HERO_STORES, NEARBY_STORES, NearbyStore, HeroStore } from "../../../data/nearbyStoresData";
 import NearbyHeroBanner from "./NearbyHeroBanner";
 import StoreListCard    from "./StoreListCard";

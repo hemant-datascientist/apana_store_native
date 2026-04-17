@@ -17,8 +17,8 @@ import {
   View, Text, TouchableOpacity, Switch, ScrollView, StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import useTheme from "../../theme/useTheme";
-import { typography } from "../../theme/typography";
+import useTheme from "../../../theme/useTheme";
+import { typography } from "../../../theme/typography";
 
 export interface StoreFilters {
   nearest:   boolean;

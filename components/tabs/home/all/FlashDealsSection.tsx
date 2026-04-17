@@ -13,7 +13,7 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { typography } from "../../../theme/typography";
+import { typography } from "../../../../theme/typography";
 import SectionHeader  from "./SectionHeader";
 import { FlashDeal }  from "../../../data/allFeedData";
 

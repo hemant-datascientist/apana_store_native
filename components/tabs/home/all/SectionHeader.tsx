@@ -8,7 +8,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { typography } from "../../../theme/typography";
+import { typography } from "../../../../theme/typography";
 
 interface SectionHeaderProps {
   icon:        string;

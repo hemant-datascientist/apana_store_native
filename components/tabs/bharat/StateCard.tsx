@@ -9,8 +9,8 @@
 
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { typography } from "../../theme/typography";
-import useTheme from "../../theme/useTheme";
+import { typography } from "../../../theme/typography";
+import useTheme from "../../../theme/useTheme";
 import StateSvg from "./StateSvg";
 import { StateInfo } from "../../data/bharatData";
 

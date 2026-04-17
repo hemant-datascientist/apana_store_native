@@ -14,8 +14,8 @@ import {
   View, Text, TouchableOpacity, StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { typography } from "../../../theme/typography";
-import useTheme from "../../../theme/useTheme";
+import { typography } from "../../../../theme/typography";
+import useTheme from "../../../../theme/useTheme";
 import { B2CStore } from "../../../data/b2cStoresData";
 
 interface B2CStoreCardProps {
