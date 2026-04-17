@@ -3,12 +3,13 @@
 //
 // Products mode:
 //   Hero  — HomeHeader + HomeSearchBar + DiscoveryToggle + CategoryScroll
-//   Feed  — BannerCarousel → TrendingSection
+//   Feed  — dedicated <XxxFeed /> component per category
 //
 // Stores mode:
 //   Hero  — HomeHeader + HomeSearchBar + DiscoveryToggle + StoreDiscoveryTabs
-//   Feed  — StoreFilterBar → (stores feed coming soon)
+//   Feed  — StoreFilterBar → store-tab feed
 //
+// Each category has its own feed folder in components/home/<category>/
 // Data: GET /customer/home — replace mocks from homeData.ts
 // ============================================================
 
@@ -17,33 +18,48 @@ import {
   View, ScrollView, StyleSheet, StatusBar, Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import useTheme from "../../theme/useTheme";
+import { useRouter }    from "expo-router";
+import useTheme         from "../../theme/useTheme";
 import {
   MOCK_LOCATION,
   STORES_LIVE_COUNT,
   CATEGORIES,
-  BANNERS,
-  TRENDING_ITEMS,
   HEADER_BG,
   DiscoveryMode,
 } from "../../data/homeData";
+
+// ── Hero components ──────────────────────────────────────────
 import HomeHeader          from "../../components/home/HomeHeader";
 import HomeSearchBar       from "../../components/home/HomeSearchBar";
 import DiscoveryToggle     from "../../components/home/DiscoveryToggle";
 import CategoryScroll      from "../../components/home/CategoryScroll";
-import BannerCarousel      from "../../components/home/BannerCarousel";
-import TrendingSection     from "../../components/home/TrendingSection";
-import StoreDiscoveryTabs, { StoreTab } from "../../components/home/StoreDiscoveryTabs";
+import StoreDiscoveryTabs, { StoreTab }    from "../../components/home/StoreDiscoveryTabs";
 import StoreFilterBar,     { StoreFilters } from "../../components/home/StoreFilterBar";
-import MenuDrawer                           from "../../components/home/MenuDrawer";
-import NearbyStoresFeed                    from "../../components/home/stores/NearbyStoresFeed";
-import WholesaleStoresFeed                 from "../../components/home/stores/WholesaleStoresFeed";
-import B2CStoresFeed                       from "../../components/home/stores/B2CStoresFeed";
-import ServiceStoresFeed                   from "../../components/home/stores/ServiceStoresFeed";
-import { CATEGORY_FEEDS }                  from "../../data/categoryFeedData";
-import GroceryFeed                         from "../../components/home/grocery/GroceryFeed";
-import FashionFeed                         from "../../components/home/fashion/FashionFeed";
+import MenuDrawer                          from "../../components/home/MenuDrawer";
+
+// ── Product category feeds ───────────────────────────────────
+import AllFeed        from "../../components/home/all/AllFeed";
+import GroceryFeed    from "../../components/home/grocery/GroceryFeed";
+import FashionFeed    from "../../components/home/fashion/FashionFeed";
+import MobilesFeed    from "../../components/home/mobiles/MobilesFeed";
+import ElectronicsFeed from "../../components/home/electronics/ElectronicsFeed";
+import AppliancesFeed from "../../components/home/appliances/AppliancesFeed";
+import BeautyFeed     from "../../components/home/beauty/BeautyFeed";
+import SportsFeed     from "../../components/home/sports/SportsFeed";
+import HomeFeed       from "../../components/home/home/HomeFeed";
+import PharmacyFeed   from "../../components/home/pharmacy/PharmacyFeed";
+import FoodFeed       from "../../components/home/food/FoodFeed";
+import BooksFeed      from "../../components/home/books/BooksFeed";
+import IceCreamFeed   from "../../components/home/icecream/IceCreamFeed";
+import FurnitureFeed  from "../../components/home/furniture/FurnitureFeed";
+import HardwareFeed   from "../../components/home/hardware/HardwareFeed";
+import MiscFeed       from "../../components/home/misc/MiscFeed";
+
+// ── Store feeds ──────────────────────────────────────────────
+import NearbyStoresFeed    from "../../components/home/stores/NearbyStoresFeed";
+import WholesaleStoresFeed from "../../components/home/stores/WholesaleStoresFeed";
+import B2CStoresFeed       from "../../components/home/stores/B2CStoresFeed";
+import ServiceStoresFeed   from "../../components/home/stores/ServiceStoresFeed";
 
 export default function HomeScreen() {
   const { colors, setCategoryPrimary } = useTheme();
@@ -57,13 +73,12 @@ export default function HomeScreen() {
   function handleCategorySelect(key: string) {
     setCategory(key);
     const cat = CATEGORIES.find(c => c.key === key);
-    // "all" or missing → restore brand color; otherwise apply category color
     setCategoryPrimary(
       !cat || cat.color === "primary" ? null : cat.color
     );
   }
 
-  // Hero background: category color when one is active, else default dark navy
+  // Hero background: category color when active, else dark navy
   const activeCategory = CATEGORIES.find(c => c.key === category);
   const heroBg = activeCategory && activeCategory.color !== "primary"
     ? activeCategory.color
@@ -80,11 +95,34 @@ export default function HomeScreen() {
     topRated: false,
   });
 
+  // ── Category feed renderer ───────────────────────────────
+  function renderCategoryFeed() {
+    switch (category) {
+      case "all":         return <AllFeed />;
+      case "grocery":     return <GroceryFeed />;
+      case "fashion":     return <FashionFeed />;
+      case "mobiles":     return <MobilesFeed />;
+      case "electronics": return <ElectronicsFeed />;
+      case "appliances":  return <AppliancesFeed />;
+      case "beauty":      return <BeautyFeed />;
+      case "sports":      return <SportsFeed />;
+      case "home":        return <HomeFeed />;
+      case "pharmacy":    return <PharmacyFeed />;
+      case "food":        return <FoodFeed />;
+      case "books":       return <BooksFeed />;
+      case "icecream":    return <IceCreamFeed />;
+      case "furniture":   return <FurnitureFeed />;
+      case "hardware":    return <HardwareFeed />;
+      case "misc":        return <MiscFeed />;
+      default:            return <AllFeed />;
+    }
+  }
+
   return (
     <View style={styles.root}>
       <StatusBar barStyle="light-content" backgroundColor={heroBg} />
 
-      {/* ── Dark navy hero ── */}
+      {/* ── Dark hero ── */}
       <SafeAreaView style={[styles.hero, { backgroundColor: heroBg }]} edges={["top"]}>
 
         <HomeHeader
@@ -107,7 +145,6 @@ export default function HomeScreen() {
 
         <DiscoveryToggle mode={mode} onChange={setMode} />
 
-        {/* Products → CategoryScroll | Stores → StoreDiscoveryTabs */}
         {mode === "products" ? (
           <CategoryScroll
             categories={CATEGORIES}
@@ -130,14 +167,14 @@ export default function HomeScreen() {
         onSelect={key => Alert.alert("Menu", `"${key}" coming soon.`)}
       />
 
-      {/* ── Themed feed ── */}
+      {/* ── Feed ── */}
       <ScrollView
         style={[styles.feed, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.feedContent}
         showsVerticalScrollIndicator={false}
         stickyHeaderIndices={[0]}
       >
-        {/* Sticky: filter bar — stores (except map_view) or blank spacer */}
+        {/* Sticky filter bar — stores only (except map view) */}
         {mode === "stores" && storeTab !== "map_view" ? (
           <StoreFilterBar
             filters={filters}
@@ -149,68 +186,14 @@ export default function HomeScreen() {
           <View />
         )}
 
-        {/* Products feed — "All Items" */}
-        {mode === "products" && category === "all" && (
-          <>
-            <BannerCarousel
-              banners={BANNERS}
-              onPress={b => Alert.alert(b.title, b.subtitle)}
-            />
-            <TrendingSection
-              city={MOCK_LOCATION.area}
-              items={TRENDING_ITEMS}
-              onPress={item => Alert.alert(item.name, `${item.category} · ${item.area}`)}
-            />
-          </>
-        )}
+        {/* Products feed — one component per category */}
+        {mode === "products" && renderCategoryFeed()}
 
-        {/* Products feed — Grocery (custom layout) */}
-        {mode === "products" && category === "grocery" && (
-          <GroceryFeed />
-        )}
-
-        {/* Products feed — Fashion (gender + sub-category layout) */}
-        {mode === "products" && category === "fashion" && (
-          <FashionFeed />
-        )}
-
-        {/* Products feed — specific category (generic layout) */}
-        {mode === "products" && category !== "all" && category !== "grocery" && category !== "fashion" && CATEGORY_FEEDS[category] && (
-          <>
-            <BannerCarousel
-              banners={CATEGORY_FEEDS[category].banners}
-              onPress={b => Alert.alert(b.title, b.subtitle)}
-            />
-            <TrendingSection
-              city={MOCK_LOCATION.area}
-              items={CATEGORY_FEEDS[category].items}
-              title={CATEGORY_FEEDS[category].sectionTitle}
-              icon={CATEGORY_FEEDS[category].sectionIcon}
-              onPress={item => Alert.alert(item.name, `${item.category} · ${item.area}`)}
-            />
-          </>
-        )}
-
-
-        {/* Stores feed — Nearby tab */}
-        {mode === "stores" && storeTab === "nearby" && (
-          <NearbyStoresFeed />
-        )}
-
-        {/* Stores feed — Wholesale tab */}
-        {mode === "stores" && storeTab === "wholesale" && (
-          <WholesaleStoresFeed />
-        )}
-
-        {/* Stores feed — B2C tab */}
-        {mode === "stores" && storeTab === "b2c" && (
-          <B2CStoresFeed />
-        )}
-
-        {/* Stores feed — Service Based tab */}
-        {mode === "stores" && storeTab === "service_based" && (
-          <ServiceStoresFeed />
-        )}
+        {/* Store feeds */}
+        {mode === "stores" && storeTab === "nearby"       && <NearbyStoresFeed />}
+        {mode === "stores" && storeTab === "wholesale"    && <WholesaleStoresFeed />}
+        {mode === "stores" && storeTab === "b2c"          && <B2CStoresFeed />}
+        {mode === "stores" && storeTab === "service_based"&& <ServiceStoresFeed />}
 
       </ScrollView>
 
