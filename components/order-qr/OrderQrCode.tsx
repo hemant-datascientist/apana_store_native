@@ -65,6 +65,7 @@ export default function OrderQrCode({ orderId, mode, modeColor, qrLabel }: Order
           size={QR_SIZE}
           color="#111827"
           backgroundColor="#FFFFFF"
+          quietZone={12}
         />
 
         {/* Brightness hint */}
