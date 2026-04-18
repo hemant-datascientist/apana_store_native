@@ -21,7 +21,7 @@
 import React, { useState, useMemo } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
-  StyleSheet, StatusBar, Alert,
+  StyleSheet, StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -87,14 +87,14 @@ export default function CheckoutScreen() {
   // ── Progress: "checkout" step is active ───────────────────
   const ACTIVE_STEP = "checkout";
 
-  // ── Place order ───────────────────────────────────────────
+  // ── Place order → navigate to QR handshake screen ────────
+  // Uses replace so the customer can't navigate back to checkout
+  // after the order is placed.
   function handlePlaceOrder() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    const modeLabel = modeCfg.label;
-    Alert.alert(
-      `${modeLabel} Order Placed! 🎉`,
-      `Your ${modeLabel.toLowerCase()} order has been placed. Track it from the Orders tab.`,
-      [{ text: "Track Order", onPress: () => router.replace("/(tabs)") }],
+    const orderId = `APX-${Date.now()}`;
+    router.replace(
+      `/order-qr?mode=${mode}&orderId=${orderId}&total=${total}&stores=${cart.length}`,
     );
   }
 
