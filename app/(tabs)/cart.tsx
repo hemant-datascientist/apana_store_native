@@ -469,7 +469,7 @@ export default function CartScreen() {
               if (!isLoggedIn) {
                 setShowLoginPrompt(true);
               } else {
-                Alert.alert("Checkout", "Order placement coming soon.");
+                router.push("/checkout");
               }
             }}
           >
