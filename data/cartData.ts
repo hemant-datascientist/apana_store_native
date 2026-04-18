@@ -80,3 +80,17 @@ export const DELIVERY_FEE: Record<FulfillmentMode, number> = {
   delivery: 25,
   ride:     35,
 };
+
+// ── Fulfillment display config (used by cart + checkout) ──────
+export const FULFILLMENT_CONFIG: Record<FulfillmentMode, {
+  label: string; icon: string; color: string; bg: string;
+}> = {
+  pickup:   { label: "Pickup",   icon: "walk-outline",    color: "#026451", bg: "#DCFCE7" },
+  delivery: { label: "Delivery", icon: "bicycle-outline", color: "#1D4ED8", bg: "#DBEAFE" },
+  ride:     { label: "Ride",     icon: "car-outline",     color: "#7C3AED", bg: "#EDE9FE" },
+};
+
+// ── Helper: subtotal for a single store ───────────────────────
+export function storeSubtotal(store: CartStore): number {
+  return store.items.reduce((sum, i) => sum + i.price * i.qty, 0);
+}
