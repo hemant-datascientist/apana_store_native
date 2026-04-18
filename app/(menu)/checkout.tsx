@@ -1,18 +1,21 @@
 // ============================================================
 // CHECKOUT SCREEN — Apana Store (Customer App)
 //
+// Receives `mode` query param (pickup | delivery | ride) from
+// the cart screen. Only shows stores whose fulfillment matches
+// that mode — keeping each order type completely separate.
+//
 // Sections (top → bottom):
 //   Progress Steps         — Cart → Review → Payment → Track
-//   Delivery Address Card  — selected address + change modal
-//   Order Summary          — per-store collapsible rows
-//   Delivery Notes         — optional note to delivery partner
+//   Mode banner            — coloured strip showing current mode
+//   Delivery Address Card  — only shown for delivery/ride modes
+//   Order Summary          — per-store collapsible rows (filtered)
+//   Delivery Notes         — optional note to the partner/store
 //   Payment Method Card    — selected method + change modal
 //   Price Breakdown        — subtotal, delivery, discount, total
 //   Place Order CTA        — sticky bottom bar
 //
-// Data: reads INITIAL_CART + SAVED_ADDRESSES + MOCK_PAYMENT_METHODS
-// Note: cart state is local (no global store yet). When Zustand /
-//       CartContext is added, swap INITIAL_CART for the shared state.
+// Backend: POST /orders { cart, mode, addressId, paymentMethodId, note }
 // ============================================================
 
 import React, { useState, useMemo } from "react";
@@ -23,11 +26,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 
-import { INITIAL_CART, DELIVERY_FEE } from "../../data/cartData";
+import {
+  INITIAL_CART, DELIVERY_FEE, FulfillmentMode, FULFILLMENT_CONFIG,
+} from "../../data/cartData";
 import { SAVED_ADDRESSES, UserAddress } from "../../data/addressData";
 import { MOCK_PAYMENT_METHODS, PaymentMethod } from "../../data/paymentData";
 import { CHECKOUT_STEPS } from "../../data/checkoutData";
@@ -43,55 +48,55 @@ export default function CheckoutScreen() {
   const { colors, isDark } = useTheme();
   const router             = useRouter();
 
-  // ── Cart data (from shared INITIAL_CART until global state added) ──
-  const cart = INITIAL_CART;
+  // ── Fulfillment mode passed from the cart screen ──────────
+  // Defaults to "delivery" if somehow arrived without a param.
+  const { mode: modeParam } = useLocalSearchParams<{ mode?: string }>();
+  const mode = (modeParam ?? "delivery") as FulfillmentMode;
 
-  // ── Selected address (default: first saved address = Home) ────
+  // ── Filter cart to only stores for this mode ──────────────
+  // Each fulfillment mode is a completely separate order.
+  const cart = useMemo(
+    () => INITIAL_CART.filter(s => s.fulfillment === mode),
+    [mode],
+  );
+
+  const modeCfg = FULFILLMENT_CONFIG[mode];
+
+  // ── Address: only shown for delivery and ride ─────────────
+  // Pickup orders don't need a delivery address.
+  const needsAddress = mode !== "pickup";
+
+  // ── State ─────────────────────────────────────────────────
   const [selectedAddress,   setSelectedAddress]   = useState<UserAddress>(SAVED_ADDRESSES[0]);
   const [addressPickerOpen, setAddressPickerOpen] = useState(false);
 
-  // ── Selected payment (default: the method marked isDefault) ──
   const defaultMethod = MOCK_PAYMENT_METHODS.find(m => m.isDefault) ?? MOCK_PAYMENT_METHODS[0];
   const [selectedPayment,   setSelectedPayment]   = useState<PaymentMethod>(defaultMethod);
   const [paymentPickerOpen, setPaymentPickerOpen] = useState(false);
 
-  // ── Delivery note ─────────────────────────────────────────────
   const [note, setNote] = useState("");
 
-  // ── Derived totals ────────────────────────────────────────────
-  const { subtotal, deliveryTotal, total } = useMemo(() => {
-    const sub = cart.reduce(
-      (s, store) => s + store.items.reduce((si, i) => si + i.price * i.qty, 0),
-      0,
-    );
-    const del = cart.reduce((s, store) => s + DELIVERY_FEE[store.fulfillment], 0);
-    return { subtotal: sub, deliveryTotal: del, total: sub + del };
+  // ── Derived totals (only for this mode's stores) ──────────
+  const { subtotal, deliveryTotal, total, totalItems } = useMemo(() => {
+    const sub   = cart.reduce((s, st) => s + st.items.reduce((si, i) => si + i.price * i.qty, 0), 0);
+    const del   = cart.reduce((s, st) => s + DELIVERY_FEE[st.fulfillment], 0);
+    const items = cart.reduce((s, st) => s + st.items.reduce((si, i) => si + i.qty, 0), 0);
+    return { subtotal: sub, deliveryTotal: del, total: sub + del, totalItems: items };
   }, [cart]);
 
-  const totalItems = useMemo(
-    () => cart.reduce((s, store) => s + store.items.reduce((si, i) => si + i.qty, 0), 0),
-    [cart],
-  );
+  // ── Progress: "checkout" step is active ───────────────────
+  const ACTIVE_STEP = "checkout";
 
-  // ── Place order handler ───────────────────────────────────────
-  // Backend: POST /orders { cart, addressId, paymentMethodId, note }
+  // ── Place order ───────────────────────────────────────────
   function handlePlaceOrder() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const modeLabel = modeCfg.label;
     Alert.alert(
-      "Order Placed! 🎉",
-      "Your order has been placed successfully. Track it live from the Orders tab.",
-      [
-        {
-          text:    "Track Order",
-          onPress: () => router.replace("/(tabs)"),
-        },
-      ],
+      `${modeLabel} Order Placed! 🎉`,
+      `Your ${modeLabel.toLowerCase()} order has been placed. Track it from the Orders tab.`,
+      [{ text: "Track Order", onPress: () => router.replace("/(tabs)") }],
     );
   }
-
-  // ── Step indicator ────────────────────────────────────────────
-  // Highlights the current step ("checkout") in the breadcrumb.
-  const ACTIVE_STEP = "checkout";
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -100,7 +105,6 @@ export default function CheckoutScreen() {
       {/* ── Header ── */}
       <SafeAreaView style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]} edges={["top"]}>
         <View style={styles.headerRow}>
-          {/* Back button */}
           <TouchableOpacity
             style={[styles.backBtn, { backgroundColor: colors.background }]}
             onPress={() => router.back()}
@@ -113,7 +117,6 @@ export default function CheckoutScreen() {
             Checkout
           </Text>
 
-          {/* Item count badge */}
           <View style={[styles.badge, { backgroundColor: colors.primary }]}>
             <Text style={[styles.badgeText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.xs }]}>
               {totalItems}
@@ -128,7 +131,6 @@ export default function CheckoutScreen() {
             const isActive = step.key === ACTIVE_STEP;
             return (
               <React.Fragment key={step.key}>
-                {/* Step node */}
                 <View style={styles.stepNode}>
                   <View style={[
                     styles.stepCircle,
@@ -149,8 +151,6 @@ export default function CheckoutScreen() {
                     {step.label}
                   </Text>
                 </View>
-
-                {/* Connector line (skip after last) */}
                 {idx < CHECKOUT_STEPS.length - 1 && (
                   <View style={[styles.stepLine, { backgroundColor: isDone ? "#22C55E" : colors.border }]} />
                 )}
@@ -161,33 +161,58 @@ export default function CheckoutScreen() {
       </SafeAreaView>
 
       {/* ── Scrollable content ── */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scroll}
-      >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
-        {/* ── Delivery Address ── */}
-        <CheckoutAddressCard
-          address={selectedAddress}
-          onChangePress={() => setAddressPickerOpen(true)}
-        />
+        {/* ── Fulfillment mode banner ── */}
+        {/* Makes it unmistakably clear which order type this is */}
+        <View style={[styles.modeBanner, { backgroundColor: modeCfg.bg }]}>
+          <View style={[styles.modeIconCircle, { backgroundColor: modeCfg.color + "22" }]}>
+            <Ionicons name={modeCfg.icon as any} size={20} color={modeCfg.color} />
+          </View>
+          <View>
+            <Text style={[styles.modeBannerTitle, { color: modeCfg.color, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
+              {modeCfg.label} Order
+            </Text>
+            <Text style={[styles.modeBannerSub, { color: modeCfg.color + "CC", fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+              {cart.length} store{cart.length > 1 ? "s" : ""} · {totalItems} item{totalItems > 1 ? "s" : ""}
+            </Text>
+          </View>
+        </View>
 
-        {/* ── Order Summary — per store ── */}
+        {/* ── Delivery address (delivery + ride only) ── */}
+        {needsAddress && (
+          <CheckoutAddressCard
+            address={selectedAddress}
+            onChangePress={() => setAddressPickerOpen(true)}
+          />
+        )}
+
+        {/* ── Pickup info banner (pickup mode) ── */}
+        {mode === "pickup" && (
+          <View style={[styles.pickupNote, { backgroundColor: "#DCFCE7", borderColor: "#16A34A" }]}>
+            <Ionicons name="walk-outline" size={18} color="#16A34A" />
+            <Text style={[styles.pickupNoteText, { color: "#15803D", fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
+              You'll collect your order directly from the store. Show your order QR at the counter.
+            </Text>
+          </View>
+        )}
+
+        {/* ── Order summary — stores for this mode only ── */}
         <View style={styles.sectionBlock}>
           <Text style={[styles.sectionLabel, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-            Order from {cart.length} store{cart.length > 1 ? "s" : ""}
+            Your Order
           </Text>
           {cart.map(store => (
             <CheckoutStoreRow key={store.id} store={store} />
           ))}
         </View>
 
-        {/* ── Delivery note (optional) ── */}
+        {/* ── Delivery / pickup note ── */}
         <View style={[styles.noteCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.noteTitleRow}>
             <Ionicons name="chatbubble-ellipses-outline" size={16} color={colors.primary} />
             <Text style={[styles.noteTitle, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-              Delivery Note
+              {mode === "pickup" ? "Note to Store" : "Delivery Note"}
             </Text>
             <Text style={[styles.noteOptional, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
               (optional)
@@ -201,7 +226,11 @@ export default function CheckoutScreen() {
               fontFamily:      typography.fontFamily.regular,
               fontSize:        typography.size.sm,
             }]}
-            placeholder="e.g. Leave at the gate, call on arrival…"
+            placeholder={
+              mode === "pickup"
+                ? "e.g. Keep ready by 5 PM…"
+                : "e.g. Leave at the gate, call on arrival…"
+            }
             placeholderTextColor={colors.subText}
             value={note}
             onChangeText={setNote}
@@ -213,13 +242,13 @@ export default function CheckoutScreen() {
           </Text>
         </View>
 
-        {/* ── Payment Method ── */}
+        {/* ── Payment method ── */}
         <CheckoutPaymentCard
           method={selectedPayment}
           onChangePress={() => setPaymentPickerOpen(true)}
         />
 
-        {/* ── Price Breakdown ── */}
+        {/* ── Price breakdown ── */}
         <CheckoutPriceBreakdown
           subtotal={subtotal}
           deliveryTotal={deliveryTotal}
@@ -228,12 +257,12 @@ export default function CheckoutScreen() {
           total={total}
         />
 
-        {/* ── Trust + policy footer ── */}
+        {/* ── Trust + policy ── */}
         <View style={[styles.trustCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           {[
-            { icon: "shield-checkmark-outline", color: "#16A34A", text: "All orders are verified & secured" },
-            { icon: "refresh-outline",          color: colors.primary, text: "Easy cancellation within 2 minutes of placing" },
-            { icon: "lock-closed-outline",      color: "#F59E0B", text: "100% safe payment — UPI, Card, COD" },
+            { icon: "shield-checkmark-outline", color: "#16A34A",     text: "All orders verified & secured" },
+            { icon: "refresh-outline",          color: colors.primary, text: "Cancel within 2 minutes of placing" },
+            { icon: "lock-closed-outline",      color: "#F59E0B",     text: "100% safe payment — UPI, Card, COD" },
           ].map((tip, i) => (
             <View key={i} style={styles.trustRow}>
               <Ionicons name={tip.icon as any} size={14} color={tip.color} />
@@ -244,56 +273,50 @@ export default function CheckoutScreen() {
           ))}
         </View>
 
-        {/* ── Terms note ── */}
         <Text style={[styles.terms, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
           By placing this order you agree to Apana Store's{" "}
           <Text style={{ color: colors.primary }}>Terms of Service</Text> and{" "}
           <Text style={{ color: colors.primary }}>Privacy Policy</Text>.
         </Text>
 
-        {/* Spacer for sticky CTA */}
         <View style={{ height: 100 }} />
       </ScrollView>
 
       {/* ── Sticky Place Order CTA ── */}
       <SafeAreaView
-        style={[styles.ctaBar, { backgroundColor: colors.card, borderTopColor: colors.border }]}
+        style={[styles.ctaBar, { backgroundColor: modeCfg.color }]}
         edges={["bottom"]}
       >
         <View style={styles.ctaContent}>
-          {/* Total summary */}
           <View>
-            <Text style={[styles.ctaTotal, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg }]}>
+            <Text style={[styles.ctaTotal, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg }]}>
               ₹{total}
             </Text>
-            <Text style={[styles.ctaSub, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-              {cart.length} store{cart.length > 1 ? "s" : ""} · {totalItems} item{totalItems > 1 ? "s" : ""}
+            <Text style={[styles.ctaSub, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+              {modeCfg.label} · {cart.length} store{cart.length > 1 ? "s" : ""}
             </Text>
           </View>
 
-          {/* Place Order button */}
           <TouchableOpacity
-            style={[styles.ctaBtn, { backgroundColor: colors.primary }]}
+            style={[styles.ctaBtn, { backgroundColor: "rgba(255,255,255,0.2)" }]}
             onPress={handlePlaceOrder}
             activeOpacity={0.85}
           >
             <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
             <Text style={[styles.ctaBtnText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-              Place Order
+              Place {modeCfg.label} Order
             </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
 
-      {/* ── Address picker modal ── */}
+      {/* ── Modals ── */}
       <CheckoutAddressPicker
         visible={addressPickerOpen}
         selectedId={selectedAddress.id}
         onSelect={addr => { setSelectedAddress(addr); setAddressPickerOpen(false); }}
         onClose={() => setAddressPickerOpen(false)}
       />
-
-      {/* ── Payment picker modal ── */}
       <CheckoutPaymentPicker
         visible={paymentPickerOpen}
         selectedId={selectedPayment.id}
@@ -305,12 +328,9 @@ export default function CheckoutScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
+  root:   { flex: 1 },
+  header: { borderBottomWidth: 1 },
 
-  // Header
-  header: {
-    borderBottomWidth: 1,
-  },
   headerRow: {
     flexDirection:     "row",
     alignItems:        "center",
@@ -333,7 +353,6 @@ const styles = StyleSheet.create({
   },
   badgeText: { color: "#fff" },
 
-  // Progress steps
   stepsRow: {
     flexDirection:     "row",
     alignItems:        "center",
@@ -341,10 +360,7 @@ const styles = StyleSheet.create({
     paddingBottom:     14,
     paddingTop:        4,
   },
-  stepNode: {
-    alignItems: "center",
-    gap:        4,
-  },
+  stepNode:   { alignItems: "center", gap: 4 },
   stepCircle: {
     width:          26,
     height:         26,
@@ -355,18 +371,44 @@ const styles = StyleSheet.create({
   },
   stepLabel: {},
   stepLine: {
-    flex:   1,
-    height: 1.5,
+    flex:         1,
+    height:       1.5,
     marginBottom: 14,
   },
 
-  // Scroll
-  scroll: {
-    padding: 16,
-    gap:     14,
-  },
+  scroll: { padding: 16, gap: 14 },
 
-  // Section label above store rows
+  // Mode banner
+  modeBanner: {
+    flexDirection:     "row",
+    alignItems:        "center",
+    gap:               12,
+    paddingHorizontal: 14,
+    paddingVertical:   12,
+    borderRadius:      14,
+  },
+  modeIconCircle: {
+    width:          40,
+    height:         40,
+    borderRadius:   12,
+    alignItems:     "center",
+    justifyContent: "center",
+  },
+  modeBannerTitle: {},
+  modeBannerSub:   { marginTop: 2 },
+
+  // Pickup note
+  pickupNote: {
+    flexDirection:     "row",
+    alignItems:        "flex-start",
+    gap:               10,
+    padding:           14,
+    borderRadius:      14,
+    borderWidth:       1,
+  },
+  pickupNoteText: { flex: 1, lineHeight: 18 },
+
+  // Section
   sectionBlock: { gap: 10 },
   sectionLabel: {},
 
@@ -385,15 +427,15 @@ const styles = StyleSheet.create({
   noteTitle:    {},
   noteOptional: {},
   noteInput: {
-    borderWidth:   1,
-    borderRadius:  10,
-    padding:       12,
-    minHeight:     72,
+    borderWidth:       1,
+    borderRadius:      10,
+    padding:           12,
+    minHeight:         72,
     textAlignVertical: "top",
   },
   noteCount: { textAlign: "right" },
 
-  // Trust card
+  // Trust
   trustCard: {
     borderRadius: 14,
     borderWidth:  1,
@@ -407,19 +449,14 @@ const styles = StyleSheet.create({
   },
   trustText: { flex: 1, lineHeight: 17 },
 
-  // Terms
-  terms: {
-    textAlign:  "center",
-    lineHeight: 18,
-  },
+  terms: { textAlign: "center", lineHeight: 18 },
 
-  // Sticky CTA bar
+  // CTA bar — uses mode color as background
   ctaBar: {
-    position:        "absolute",
-    bottom:          0,
-    left:            0,
-    right:           0,
-    borderTopWidth:  1,
+    position:       "absolute",
+    bottom:         0,
+    left:           0,
+    right:          0,
   },
   ctaContent: {
     flexDirection:     "row",
@@ -429,8 +466,8 @@ const styles = StyleSheet.create({
     paddingVertical:   12,
     gap:               12,
   },
-  ctaTotal: {},
-  ctaSub:   {},
+  ctaTotal:   { color: "#fff" },
+  ctaSub:     { color: "rgba(255,255,255,0.8)", marginTop: 2 },
   ctaBtn: {
     flex:              1,
     flexDirection:     "row",
