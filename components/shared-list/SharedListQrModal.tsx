@@ -1,50 +1,47 @@
 // ============================================================
 // SHARED LIST QR MODAL — Apana Store
 //
-// Bottom-sheet modal that shows a scannable QR code for a
-// shared shopping list. The recipient scans it to join the list.
+// Bottom-sheet modal that displays a scannable QR code.
+// QR image sharing is handled by the PARENT screen via onShareQr —
+// ViewShot cannot capture inside a Modal on Android, so the hidden
+// QR card lives in shared-list-detail.tsx and capture runs there.
 //
 // QR payload: { type, listId, listName, invitedBy }
-// Brightness toggle: tap the QR card to go full-white
-// Share QR: ViewShot.capture() → PNG tmpfile → expo-sharing
-//
-// NOTE: captureRef() fails inside Modals on Android.
-//       ViewShot component with .capture() works in both platforms.
+// Brightness toggle: tap the QR card to go full-white (low-light)
 // ============================================================
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   Modal, View, Text, TouchableOpacity, StyleSheet,
-  Pressable, Dimensions, Alert,
+  Pressable, Dimensions,
 } from "react-native";
-import QRCode   from "react-native-qrcode-svg";
-import ViewShot from "react-native-view-shot";
+import QRCode        from "react-native-qrcode-svg";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import * as Sharing from "expo-sharing";
-import useTheme        from "../../theme/useTheme";
-import { typography }  from "../../theme/typography";
-import { SharedList }  from "../../data/sharedListData";
+import useTheme       from "../../theme/useTheme";
+import { typography } from "../../theme/typography";
+import { SharedList } from "../../data/sharedListData";
 
 const { width: SW } = Dimensions.get("window");
 const QR_SIZE       = SW * 0.55;
 
 interface SharedListQrModalProps {
-  visible: boolean;
-  list:    SharedList;
-  onClose: () => void;
+  visible:     boolean;
+  list:        SharedList;
+  onClose:     () => void;
+  // Capture + share is handled in the parent screen (outside Modal)
+  onShareQr:   () => Promise<void>;
 }
 
-export default function SharedListQrModal({ visible, list, onClose }: SharedListQrModalProps) {
+export default function SharedListQrModal({
+  visible, list, onClose, onShareQr,
+}: SharedListQrModalProps) {
   const { colors } = useTheme();
   const insets     = useSafeAreaInsets();
   const [bright,  setBright]  = useState(false);
   const [sharing, setSharing] = useState(false);
 
-  // ── ViewShot ref — wraps the QR card; .capture() screenshots it ──
-  const shotRef = useRef<ViewShot>(null);
-
-  // ── QR payload ────────────────────────────────────────────
+  // ── QR payload (display only — the hidden card in parent uses same value) ──
   const qrValue = JSON.stringify({
     type:      "apana_shared_list",
     listId:    list.id,
@@ -52,24 +49,11 @@ export default function SharedListQrModal({ visible, list, onClose }: SharedList
     invitedBy: "Apana Store User",
   });
 
-  // ── Capture QR card as PNG and open OS share sheet ────────
+  // ── Delegate capture + share to parent ───────────────────
   async function handleShareQr() {
     setSharing(true);
     try {
-      // capture() returns a tmpfile URI (file://…/qr.png)
-      const uri = await (shotRef.current as any).capture();
-
-      const canShare = await Sharing.isAvailableAsync();
-      if (!canShare) {
-        Alert.alert("Not available", "Sharing is not supported on this device.");
-        return;
-      }
-      await Sharing.shareAsync(uri, {
-        mimeType:    "image/png",
-        dialogTitle: `Share QR for "${list.name}"`,
-      });
-    } catch (err) {
-      Alert.alert("Error", "Could not capture QR code. Please try again.");
+      await onShareQr();
     } finally {
       setSharing(false);
     }
@@ -116,46 +100,38 @@ export default function SharedListQrModal({ visible, list, onClose }: SharedList
           </TouchableOpacity>
         </View>
 
-        {/* ViewShot wraps the QR card so .capture() screenshots it ──
-            options are passed here; format/quality set the output PNG  */}
-        <ViewShot
-          ref={shotRef}
-          options={{ format: "png", quality: 1, result: "tmpfile" }}
+        {/* QR Card — tap to brighten for easier scanning in low light */}
+        <TouchableOpacity
+          style={[styles.qrCard, bright && styles.qrCardBright]}
+          onPress={() => setBright(b => !b)}
+          activeOpacity={1}
         >
-          <TouchableOpacity
-            style={[styles.qrCard, bright && styles.qrCardBright]}
-            onPress={() => setBright(b => !b)}
-            activeOpacity={1}
-            collapsable={false}
-          >
-            {/* Branded corner dots */}
-            <View style={[styles.dot, styles.TL, { backgroundColor: colors.primary }]} />
-            <View style={[styles.dot, styles.TR, { backgroundColor: colors.primary }]} />
-            <View style={[styles.dot, styles.BL, { backgroundColor: colors.primary }]} />
-            <View style={[styles.dot, styles.BR, { backgroundColor: colors.primary }]} />
+          {/* Branded corner dots */}
+          <View style={[styles.dot, styles.TL, { backgroundColor: colors.primary }]} />
+          <View style={[styles.dot, styles.TR, { backgroundColor: colors.primary }]} />
+          <View style={[styles.dot, styles.BL, { backgroundColor: colors.primary }]} />
+          <View style={[styles.dot, styles.BR, { backgroundColor: colors.primary }]} />
 
-            <QRCode
-              value={qrValue}
-              size={QR_SIZE}
-              color="#111827"
-              backgroundColor="#FFFFFF"
-            />
+          <QRCode
+            value={qrValue}
+            size={QR_SIZE}
+            color="#111827"
+            backgroundColor="#FFFFFF"
+          />
 
-            {/* Brightness hint */}
-            {!bright && (
-              <View style={[styles.brightHint, { backgroundColor: colors.primary + "18" }]}>
-                <Ionicons name="sunny-outline" size={12} color={colors.primary} />
-                <Text style={[styles.brightText, {
-                  color:      colors.primary,
-                  fontFamily: typography.fontFamily.regular,
-                  fontSize:   typography.size.ss,
-                }]}>
-                  Tap to brighten
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </ViewShot>
+          {!bright && (
+            <View style={[styles.brightHint, { backgroundColor: colors.primary + "18" }]}>
+              <Ionicons name="sunny-outline" size={12} color={colors.primary} />
+              <Text style={[styles.brightText, {
+                color:      colors.primary,
+                fontFamily: typography.fontFamily.regular,
+                fontSize:   typography.size.ss,
+              }]}>
+                Tap to brighten
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
 
         {/* List info pill */}
         <View style={[styles.listPill, {
@@ -191,7 +167,7 @@ export default function SharedListQrModal({ visible, list, onClose }: SharedList
           </Text>
         </View>
 
-        {/* Share QR image button */}
+        {/* Share QR image button — triggers capture in parent screen */}
         <TouchableOpacity
           style={[styles.shareBtn, {
             backgroundColor: sharing ? colors.border : colors.primary,
@@ -219,7 +195,6 @@ const styles = StyleSheet.create({
     flex:            1,
     backgroundColor: "rgba(0,0,0,0.45)",
   },
-
   sheet: {
     borderTopLeftRadius:  24,
     borderTopRightRadius: 24,
@@ -227,14 +202,12 @@ const styles = StyleSheet.create({
     gap:                  16,
     alignItems:           "center",
   },
-
   handle: {
     width:        40,
     height:       4,
     borderRadius: 2,
     marginBottom: 4,
   },
-
   headerRow: {
     flexDirection:  "row",
     alignItems:     "flex-start",
@@ -250,7 +223,6 @@ const styles = StyleSheet.create({
     alignItems:     "center",
     justifyContent: "center",
   },
-
   qrCard: {
     backgroundColor: "#FFFFFF",
     borderRadius:    20,
@@ -267,13 +239,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     opacity:         1,
   },
-
   dot: { position: "absolute", width: 10, height: 10, borderRadius: 5 },
   TL:  { top: 10,    left: 10  },
   TR:  { top: 10,    right: 10 },
   BL:  { bottom: 10, left: 10  },
   BR:  { bottom: 10, right: 10 },
-
   brightHint: {
     position:          "absolute",
     bottom:            12,
@@ -285,7 +255,6 @@ const styles = StyleSheet.create({
     borderRadius:      20,
   },
   brightText: {},
-
   listPill: {
     flexDirection:     "row",
     alignItems:        "center",
@@ -298,7 +267,6 @@ const styles = StyleSheet.create({
   },
   listName:  { flex: 1 },
   itemCount: {},
-
   note: {
     flexDirection:     "row",
     alignItems:        "flex-start",
@@ -308,7 +276,6 @@ const styles = StyleSheet.create({
     borderRadius:      12,
   },
   noteText: { flex: 1, lineHeight: 17 },
-
   shareBtn: {
     flexDirection:     "row",
     alignItems:        "center",

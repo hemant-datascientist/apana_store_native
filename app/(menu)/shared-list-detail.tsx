@@ -7,24 +7,26 @@
 //
 // Params: id — SharedList.id from the overview screen
 //
-// Layout:
-//   Header            — list name + back + QR + share
-//   AssigneeCard      — contact info + live location + actions
-//   Progress summary  — "X of Y items done" + progress bar
-//   Items list        — checkable rows (card)
-//   Add item bar      — sticky input at bottom
+// QR sharing architecture:
+//   A hidden ViewShot+QRCode is rendered OFF-SCREEN in this parent
+//   view (not inside the Modal). captureRef / ViewShot.capture()
+//   cannot cross the Modal window boundary on Android, so the capture
+//   must happen here. handleShareQrImage is passed down to the modal.
 // ============================================================
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, StatusBar, Share, Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons }     from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import useTheme from "../../theme/useTheme";
-import { typography } from "../../theme/typography";
+import ViewShot         from "react-native-view-shot";
+import QRCode           from "react-native-qrcode-svg";
+import * as Sharing     from "expo-sharing";
+import useTheme         from "../../theme/useTheme";
+import { typography }   from "../../theme/typography";
 
 import {
   MOCK_SHARED_LISTS, ShoppingItem,
@@ -35,17 +37,17 @@ import SharedListItemRow      from "../../components/shared-list/SharedListItemR
 import SharedListAddItem      from "../../components/shared-list/SharedListAddItem";
 import SharedListQrModal      from "../../components/shared-list/SharedListQrModal";
 
+const QR_HIDDEN_SIZE = 260;
+
 export default function SharedListDetailScreen() {
-  const { colors, isDark } = useTheme();
-  const router             = useRouter();
-  const { id }             = useLocalSearchParams<{ id?: string }>();
+  const { colors } = useTheme();
+  const router     = useRouter();
+  const { id }     = useLocalSearchParams<{ id?: string }>();
 
   // ── Find the list — fallback to first list ────────────────
   const baseList = MOCK_SHARED_LISTS.find(l => l.id === id) ?? MOCK_SHARED_LISTS[0];
 
   // ── Local mutable items state ─────────────────────────────
-  // Initialized from mock data; checked state updates locally.
-  // Backend: PATCH /lists/:id/items/:itemId { checked: true }
   const [items,     setItems]     = useState<ShoppingItem[]>(baseList.items);
   const [qrVisible, setQrVisible] = useState(false);
 
@@ -53,6 +55,38 @@ export default function SharedListDetailScreen() {
   const totalCount   = items.length;
   const progress     = totalCount > 0 ? checkedCount / totalCount : 0;
   const isCompleted  = totalCount > 0 && checkedCount === totalCount;
+
+  // ── QR payload ────────────────────────────────────────────
+  const qrValue = JSON.stringify({
+    type:      "apana_shared_list",
+    listId:    baseList.id,
+    listName:  baseList.name,
+    invitedBy: "Apana Store User",
+  });
+
+  // ── Hidden ViewShot ref — outside the Modal ───────────────
+  // ViewShot.capture() fails inside a Modal on Android because
+  // Modals render in a separate native window. The QR card is
+  // rendered off-screen here so capture() works on both platforms.
+  const qrShotRef = useRef<any>(null);
+
+  // ── Capture the hidden QR card and open the share sheet ───
+  async function handleShareQrImage() {
+    try {
+      const uri = await qrShotRef.current.capture();
+      const canShare = await Sharing.isAvailableAsync();
+      if (!canShare) {
+        Alert.alert("Not supported", "Sharing is not available on this device.");
+        return;
+      }
+      await Sharing.shareAsync(uri, {
+        mimeType:    "image/png",
+        dialogTitle: `Share QR for "${baseList.name}"`,
+      });
+    } catch {
+      Alert.alert("Error", "Could not share QR code. Please try again.");
+    }
+  }
 
   // ── Toggle item checked state ─────────────────────────────
   function toggleItem(itemId: string) {
@@ -62,7 +96,6 @@ export default function SharedListDetailScreen() {
   }
 
   // ── Add a new item ────────────────────────────────────────
-  // Backend: POST /lists/:id/items { name, qty }
   function handleAddItem(name: string, qty: string) {
     const newItem: ShoppingItem = {
       id:      `item_${Date.now()}`,
@@ -74,7 +107,7 @@ export default function SharedListDetailScreen() {
     setItems(prev => [...prev, newItem]);
   }
 
-  // ── Share list ────────────────────────────────────────────
+  // ── Share list as text ────────────────────────────────────
   async function handleShare() {
     await Share.share({
       title:   `${baseList.name} — Apana Store`,
@@ -85,6 +118,26 @@ export default function SharedListDetailScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
+
+      {/* ── Hidden QR card for capture — rendered off-screen ──
+           position:absolute + left:-9999 keeps it off-screen but
+           still mounted so ViewShot can capture it correctly.     */}
+      <ViewShot
+        ref={qrShotRef}
+        options={{ format: "png", quality: 1, result: "tmpfile" }}
+        style={styles.hiddenShot}
+      >
+        <View style={styles.hiddenQrCard} collapsable={false}>
+          <QRCode
+            value={qrValue}
+            size={QR_HIDDEN_SIZE}
+            color="#111827"
+            backgroundColor="#FFFFFF"
+          />
+          <Text style={styles.hiddenQrLabel}>{baseList.name}</Text>
+          <Text style={styles.hiddenQrSub}>Apana Store · Shared List</Text>
+        </View>
+      </ViewShot>
 
       {/* ── Header ── */}
       <SafeAreaView style={[styles.header, { backgroundColor: colors.primary }]} edges={["top"]}>
@@ -101,6 +154,7 @@ export default function SharedListDetailScreen() {
               {isCompleted ? " · All done! 🎉" : ""}
             </Text>
           </View>
+
           {/* QR code button */}
           <TouchableOpacity
             style={[styles.headerBtn, { backgroundColor: "rgba(255,255,255,0.2)" }]}
@@ -110,7 +164,7 @@ export default function SharedListDetailScreen() {
             <Ionicons name="qr-code-outline" size={18} color="#fff" />
           </TouchableOpacity>
 
-          {/* Native share button */}
+          {/* Text share button */}
           <TouchableOpacity
             style={[styles.headerBtn, { backgroundColor: "rgba(255,255,255,0.2)" }]}
             onPress={handleShare}
@@ -155,7 +209,11 @@ export default function SharedListDetailScreen() {
               width: `${Math.round(progress * 100)}%` as any,
             }]} />
           </View>
-          <Text style={[styles.progressSub, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+          <Text style={[styles.progressSub, {
+            color:      colors.subText,
+            fontFamily: typography.fontFamily.regular,
+            fontSize:   typography.size.xs,
+          }]}>
             {totalCount - checkedCount} item{totalCount - checkedCount !== 1 ? "s" : ""} remaining
           </Text>
         </View>
@@ -164,10 +222,18 @@ export default function SharedListDetailScreen() {
         <View style={[styles.itemsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.itemsHeader}>
             <Ionicons name="list-outline" size={15} color={colors.primary} />
-            <Text style={[styles.itemsTitle, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
+            <Text style={[styles.itemsTitle, {
+              color:      colors.text,
+              fontFamily: typography.fontFamily.bold,
+              fontSize:   typography.size.sm,
+            }]}>
               Items
             </Text>
-            <Text style={[styles.itemsCount, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+            <Text style={[styles.itemsCount, {
+              color:      colors.subText,
+              fontFamily: typography.fontFamily.regular,
+              fontSize:   typography.size.xs,
+            }]}>
               {totalCount} total
             </Text>
           </View>
@@ -175,7 +241,11 @@ export default function SharedListDetailScreen() {
 
           {items.length === 0 ? (
             <View style={styles.emptyItems}>
-              <Text style={[styles.emptyItemsText, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.sm }]}>
+              <Text style={[styles.emptyItemsText, {
+                color:      colors.subText,
+                fontFamily: typography.fontFamily.regular,
+                fontSize:   typography.size.sm,
+              }]}>
                 No items yet — add some below
               </Text>
             </View>
@@ -203,6 +273,7 @@ export default function SharedListDetailScreen() {
       <SharedListQrModal
         visible={qrVisible}
         list={baseList}
+        onShareQr={handleShareQrImage}
         onClose={() => setQrVisible(false)}
       />
     </View>
@@ -211,6 +282,31 @@ export default function SharedListDetailScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+
+  // ── Hidden QR card ──────────────────────────────────────────
+  // Rendered off-screen so ViewShot can capture it without the
+  // Modal window-boundary limitation on Android.
+  hiddenShot: {
+    position: "absolute",
+    left:     -9999,
+    top:      100,
+  },
+  hiddenQrCard: {
+    backgroundColor: "#FFFFFF",
+    padding:         24,
+    alignItems:      "center",
+    gap:             10,
+  },
+  hiddenQrLabel: {
+    color:      "#111827",
+    fontSize:   16,
+    fontFamily: "Poppins_700Bold",
+  },
+  hiddenQrSub: {
+    color:      "#6B7280",
+    fontSize:   12,
+    fontFamily: "Poppins_400Regular",
+  },
 
   header: {},
   headerRow: {
@@ -241,7 +337,6 @@ const styles = StyleSheet.create({
 
   scroll: { padding: 16, gap: 14 },
 
-  // Progress card
   progressCard: {
     borderRadius: 14,
     borderWidth:  1,
@@ -266,7 +361,6 @@ const styles = StyleSheet.create({
   },
   progressSub: {},
 
-  // Items card
   itemsCard: {
     borderRadius: 14,
     borderWidth:  1,
@@ -283,9 +377,6 @@ const styles = StyleSheet.create({
   itemsCount: { marginLeft: 2 },
   itemsDivider: { height: 1 },
 
-  emptyItems: {
-    paddingVertical:   24,
-    alignItems:        "center",
-  },
+  emptyItems:     { paddingVertical: 24, alignItems: "center" },
   emptyItemsText: {},
 });
