@@ -8,7 +8,7 @@
 // Params: id — SharedList.id from the overview screen
 //
 // Layout:
-//   Header            — list name + back + share
+//   Header            — list name + back + QR + share
 //   AssigneeCard      — contact info + live location + actions
 //   Progress summary  — "X of Y items done" + progress bar
 //   Items list        — checkable rows (card)
@@ -33,6 +33,7 @@ import {
 import SharedListAssigneeCard from "../../components/shared-list/SharedListAssigneeCard";
 import SharedListItemRow      from "../../components/shared-list/SharedListItemRow";
 import SharedListAddItem      from "../../components/shared-list/SharedListAddItem";
+import SharedListQrModal      from "../../components/shared-list/SharedListQrModal";
 
 export default function SharedListDetailScreen() {
   const { colors, isDark } = useTheme();
@@ -45,7 +46,8 @@ export default function SharedListDetailScreen() {
   // ── Local mutable items state ─────────────────────────────
   // Initialized from mock data; checked state updates locally.
   // Backend: PATCH /lists/:id/items/:itemId { checked: true }
-  const [items, setItems] = useState<ShoppingItem[]>(baseList.items);
+  const [items,     setItems]     = useState<ShoppingItem[]>(baseList.items);
+  const [qrVisible, setQrVisible] = useState(false);
 
   const checkedCount = useMemo(() => items.filter(i => i.checked).length, [items]);
   const totalCount   = items.length;
@@ -99,6 +101,16 @@ export default function SharedListDetailScreen() {
               {isCompleted ? " · All done! 🎉" : ""}
             </Text>
           </View>
+          {/* QR code button */}
+          <TouchableOpacity
+            style={[styles.headerBtn, { backgroundColor: "rgba(255,255,255,0.2)" }]}
+            onPress={() => setQrVisible(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="qr-code-outline" size={18} color="#fff" />
+          </TouchableOpacity>
+
+          {/* Native share button */}
           <TouchableOpacity
             style={[styles.headerBtn, { backgroundColor: "rgba(255,255,255,0.2)" }]}
             onPress={handleShare}
@@ -186,6 +198,13 @@ export default function SharedListDetailScreen() {
       <SafeAreaView style={{ backgroundColor: colors.card }} edges={["bottom"]}>
         <SharedListAddItem onAdd={handleAddItem} />
       </SafeAreaView>
+
+      {/* ── QR share modal ── */}
+      <SharedListQrModal
+        visible={qrVisible}
+        list={baseList}
+        onClose={() => setQrVisible(false)}
+      />
     </View>
   );
 }
