@@ -26,16 +26,16 @@ const { width: SW } = Dimensions.get("window");
 const QR_SIZE       = SW * 0.55;
 
 interface SharedListQrModalProps {
-  visible:    boolean;
-  list:       SharedList;
-  onClose:    () => void;
-  onShareQr:  () => Promise<void>;
-  // sharing state is lifted to parent so the button reflects capture progress
-  sharing:    boolean;
+  visible:   boolean;
+  list:      SharedList;
+  onClose:   () => void;
+  onShareQr: () => Promise<void>;
+  sharing:   boolean;
+  qrReady:   boolean;   // true once the cached PNG is written and ready to share
 }
 
 export default function SharedListQrModal({
-  visible, list, onClose, onShareQr, sharing,
+  visible, list, onClose, onShareQr, sharing, qrReady,
 }: SharedListQrModalProps) {
   const { colors } = useTheme();
   const insets     = useSafeAreaInsets();
@@ -162,21 +162,21 @@ export default function SharedListQrModal({
           </Text>
         </View>
 
-        {/* Share QR image button — triggers capture in parent screen */}
+        {/* Share QR image button — disabled until PNG is cached in parent */}
         <TouchableOpacity
           style={[styles.shareBtn, {
-            backgroundColor: sharing ? colors.border : colors.primary,
+            backgroundColor: (!qrReady || sharing) ? colors.border : colors.primary,
           }]}
           onPress={handleShareQr}
           activeOpacity={0.85}
-          disabled={sharing}
+          disabled={!qrReady || sharing}
         >
           <Ionicons name="share-outline" size={18} color="#fff" />
           <Text style={[styles.shareBtnText, {
             fontFamily: typography.fontFamily.bold,
             fontSize:   typography.size.md,
           }]}>
-            {sharing ? "Preparing…" : "Share QR Code"}
+            {!qrReady ? "Preparing QR…" : sharing ? "Sharing…" : "Share QR Code"}
           </Text>
         </TouchableOpacity>
 
