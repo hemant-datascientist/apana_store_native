@@ -12,6 +12,11 @@
 //   to cache on mount and calls onReady(filePath).
 //   filePath is passed to SharedListQrModal, which renders
 //   QRShareButton — sharing is fully handled in that button.
+//
+// Text sharing:
+//   "Share Items as Text" button lives on THIS screen (not inside
+//   the modal) because Share.share() can fail inside a Modal on
+//   Android (different native window).
 // ============================================================
 
 import React, { useState, useMemo } from "react";
@@ -68,11 +73,16 @@ export default function SharedListDetailScreen() {
     }]);
   }
 
-  // ── Text share (list content as plain text) ───────────────
-  async function handleTextShare() {
+  // ── Share item list as plain text ─────────────────────────
+  // Kept on the main screen (NOT inside the modal) because
+  // Share.share() fails inside a Modal on Android.
+  async function handleShareText() {
+    const lines = items
+      .map(i => `${i.checked ? "✅" : "⬜"} ${i.name} (${i.qty})`)
+      .join("\n");
     await Share.share({
       title:   `${baseList.name} — Apana Store`,
-      message: `Shopping list shared via Apana Store:\n\n${items.map(i => `${i.checked ? "✅" : "⬜"} ${i.name} (${i.qty})`).join("\n")}`,
+      message: `Shopping list: ${baseList.name}\n\n${lines}\n\nShared via Apana Store`,
     });
   }
 
@@ -108,22 +118,13 @@ export default function SharedListDetailScreen() {
             </Text>
           </View>
 
-          {/* QR button — opens QR modal */}
+          {/* QR button — opens QR modal (image sharing only) */}
           <TouchableOpacity
             style={[styles.headerBtn, { backgroundColor: "rgba(255,255,255,0.2)" }]}
             onPress={() => setQrVisible(true)}
             activeOpacity={0.8}
           >
             <Ionicons name="qr-code-outline" size={18} color="#fff" />
-          </TouchableOpacity>
-
-          {/* Text share button */}
-          <TouchableOpacity
-            style={[styles.headerBtn, { backgroundColor: "rgba(255,255,255,0.2)" }]}
-            onPress={handleTextShare}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="share-outline" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -189,6 +190,28 @@ export default function SharedListDetailScreen() {
           )}
         </View>
 
+        {/* ── Share items as text — lives here (not in modal) so
+             Share.share() is called from the main window, not a
+             Modal, which fixes the Android share-sheet failure.   */}
+        <TouchableOpacity
+          style={[styles.shareTextBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={handleShareText}
+          activeOpacity={0.8}
+        >
+          <View style={[styles.shareTextIcon, { backgroundColor: colors.primary + "15" }]}>
+            <Ionicons name="share-social-outline" size={20} color={colors.primary} />
+          </View>
+          <View style={styles.shareTextBody}>
+            <Text style={[styles.shareTextTitle, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
+              Share Items as Text
+            </Text>
+            <Text style={[styles.shareTextSub, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+              Send the shopping list via WhatsApp, SMS, or any app
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={colors.subText} />
+        </TouchableOpacity>
+
         <View style={{ height: 90 }} />
       </ScrollView>
 
@@ -196,13 +219,12 @@ export default function SharedListDetailScreen() {
         <SharedListAddItem onAdd={handleAddItem} />
       </SafeAreaView>
 
-      {/* ── QR modal — receives filePath, renders QRShareButton ── */}
+      {/* ── QR modal — QR image sharing only ── */}
       <SharedListQrModal
         visible={qrVisible}
         list={baseList}
-        items={items}
-        qrFilePath={qrFilePath}
         onClose={() => setQrVisible(false)}
+        qrFilePath={qrFilePath}
       />
     </View>
   );
@@ -256,4 +278,24 @@ const styles = StyleSheet.create({
 
   emptyItems:     { paddingVertical: 24, alignItems: "center" },
   emptyItemsText: {},
+
+  // Share text button card
+  shareTextBtn: {
+    flexDirection:     "row",
+    alignItems:        "center",
+    gap:               12,
+    padding:           14,
+    borderRadius:      14,
+    borderWidth:       1,
+  },
+  shareTextIcon: {
+    width:          44,
+    height:         44,
+    borderRadius:   12,
+    alignItems:     "center",
+    justifyContent: "center",
+  },
+  shareTextBody:  { flex: 1 },
+  shareTextTitle: {},
+  shareTextSub:   { marginTop: 2 },
 });
