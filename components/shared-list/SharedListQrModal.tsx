@@ -1,13 +1,13 @@
 // ============================================================
 // SHARED LIST QR MODAL — Apana Store
 //
-// Bottom-sheet modal that displays a scannable QR code.
-// QR image sharing is handled by the PARENT screen via onShareQr —
-// ViewShot cannot capture inside a Modal on Android, so the hidden
-// QR card lives in shared-list-detail.tsx and capture runs there.
+// Bottom-sheet modal that displays a scannable QR code for a
+// shared shopping list and lets the user share it as an image.
 //
 // QR payload: { type, listId, listName, invitedBy }
 // Brightness toggle: tap the QR card to go full-white (low-light)
+// Share: QRShareButton receives the pre-generated PNG filePath
+//        from the parent screen (via QRGenerator component).
 // ============================================================
 
 import React, { useState } from "react";
@@ -15,44 +15,39 @@ import {
   Modal, View, Text, TouchableOpacity, StyleSheet,
   Pressable, Dimensions,
 } from "react-native";
-import QRCode        from "react-native-qrcode-svg";
-import { Ionicons } from "@expo/vector-icons";
+import QRCode          from "react-native-qrcode-svg";
+import { Ionicons }    from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import useTheme       from "../../theme/useTheme";
-import { typography } from "../../theme/typography";
-import { SharedList } from "../../data/sharedListData";
+import useTheme        from "../../theme/useTheme";
+import { typography }  from "../../theme/typography";
+import { SharedList }  from "../../data/sharedListData";
+import QRShareButton   from "../qr/QRShareButton";
 
 const { width: SW } = Dimensions.get("window");
 const QR_SIZE       = SW * 0.55;
 
 interface SharedListQrModalProps {
-  visible:   boolean;
-  list:      SharedList;
-  onClose:   () => void;
-  onShareQr: () => Promise<void>;
-  sharing:   boolean;
-  qrReady:   boolean;   // true once the cached PNG is written and ready to share
+  visible:    boolean;
+  list:       SharedList;
+  onClose:    () => void;
+  // null while QRGenerator in the parent screen is still writing the PNG
+  qrFilePath: string | null;
 }
 
 export default function SharedListQrModal({
-  visible, list, onClose, onShareQr, sharing, qrReady,
+  visible, list, onClose, qrFilePath,
 }: SharedListQrModalProps) {
   const { colors } = useTheme();
   const insets     = useSafeAreaInsets();
   const [bright, setBright] = useState(false);
 
-  // ── QR payload (display only — the hidden card in parent uses same value) ──
+  // ── QR payload (display only — QRGenerator uses the same value) ──
   const qrValue = JSON.stringify({
     type:      "apana_shared_list",
     listId:    list.id,
     listName:  list.name,
     invitedBy: "Apana Store User",
   });
-
-  // ── Delegate capture + share to parent ───────────────────
-  async function handleShareQr() {
-    await onShareQr();
-  }
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -101,7 +96,6 @@ export default function SharedListQrModal({
           onPress={() => setBright(b => !b)}
           activeOpacity={1}
         >
-          {/* Branded corner dots */}
           <View style={[styles.dot, styles.TL, { backgroundColor: colors.primary }]} />
           <View style={[styles.dot, styles.TR, { backgroundColor: colors.primary }]} />
           <View style={[styles.dot, styles.BL, { backgroundColor: colors.primary }]} />
@@ -162,23 +156,12 @@ export default function SharedListQrModal({
           </Text>
         </View>
 
-        {/* Share QR image button — disabled until PNG is cached in parent */}
-        <TouchableOpacity
-          style={[styles.shareBtn, {
-            backgroundColor: (!qrReady || sharing) ? colors.border : colors.primary,
-          }]}
-          onPress={handleShareQr}
-          activeOpacity={0.85}
-          disabled={!qrReady || sharing}
-        >
-          <Ionicons name="share-outline" size={18} color="#fff" />
-          <Text style={[styles.shareBtnText, {
-            fontFamily: typography.fontFamily.bold,
-            fontSize:   typography.size.md,
-          }]}>
-            {!qrReady ? "Preparing QR…" : sharing ? "Sharing…" : "Share QR Code"}
-          </Text>
-        </TouchableOpacity>
+        {/* Share QR image — QRShareButton handles all share logic */}
+        <QRShareButton
+          filePath={qrFilePath}
+          dialogTitle={`Share QR for "${list.name}"`}
+          color={colors.primary}
+        />
 
       </View>
     </Modal>
@@ -186,10 +169,8 @@ export default function SharedListQrModal({
 }
 
 const styles = StyleSheet.create({
-  scrim: {
-    flex:            1,
-    backgroundColor: "rgba(0,0,0,0.45)",
-  },
+  scrim: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)" },
+
   sheet: {
     borderTopLeftRadius:  24,
     borderTopRightRadius: 24,
@@ -197,12 +178,9 @@ const styles = StyleSheet.create({
     gap:                  16,
     alignItems:           "center",
   },
-  handle: {
-    width:        40,
-    height:       4,
-    borderRadius: 2,
-    marginBottom: 4,
-  },
+
+  handle:   { width: 40, height: 4, borderRadius: 2, marginBottom: 4 },
+
   headerRow: {
     flexDirection:  "row",
     alignItems:     "flex-start",
@@ -218,6 +196,7 @@ const styles = StyleSheet.create({
     alignItems:     "center",
     justifyContent: "center",
   },
+
   qrCard: {
     backgroundColor: "#FFFFFF",
     borderRadius:    20,
@@ -230,15 +209,14 @@ const styles = StyleSheet.create({
     shadowRadius:    14,
     elevation:       6,
   },
-  qrCardBright: {
-    backgroundColor: "#FFFFFF",
-    opacity:         1,
-  },
+  qrCardBright: { backgroundColor: "#FFFFFF", opacity: 1 },
+
   dot: { position: "absolute", width: 10, height: 10, borderRadius: 5 },
   TL:  { top: 10,    left: 10  },
   TR:  { top: 10,    right: 10 },
   BL:  { bottom: 10, left: 10  },
   BR:  { bottom: 10, right: 10 },
+
   brightHint: {
     position:          "absolute",
     bottom:            12,
@@ -250,6 +228,7 @@ const styles = StyleSheet.create({
     borderRadius:      20,
   },
   brightText: {},
+
   listPill: {
     flexDirection:     "row",
     alignItems:        "center",
@@ -262,23 +241,14 @@ const styles = StyleSheet.create({
   },
   listName:  { flex: 1 },
   itemCount: {},
+
   note: {
-    flexDirection:     "row",
-    alignItems:        "flex-start",
-    gap:               8,
-    alignSelf:         "stretch",
-    padding:           12,
-    borderRadius:      12,
+    flexDirection:  "row",
+    alignItems:     "flex-start",
+    gap:            8,
+    alignSelf:      "stretch",
+    padding:        12,
+    borderRadius:   12,
   },
   noteText: { flex: 1, lineHeight: 17 },
-  shareBtn: {
-    flexDirection:     "row",
-    alignItems:        "center",
-    justifyContent:    "center",
-    gap:               8,
-    alignSelf:         "stretch",
-    paddingVertical:   14,
-    borderRadius:      14,
-  },
-  shareBtnText: { color: "#fff" },
 });

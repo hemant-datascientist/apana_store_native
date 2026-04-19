@@ -1,26 +1,29 @@
 // ============================================================
 // SHARED LIST DETAIL SCREEN — Apana Store
 //
-// QR share flow:
-//   On mount → wait 600ms for SVG to render → toDataURL() → write
-//   PNG to FileSystem.cacheDirectory → setQrReady(true).
-//   Share button shares the already-written PNG instantly.
-//   On unmount → delete the cached PNG file.
+// Shows one shared shopping list in full. The active shopper
+// (assignee) checks off items as they shop. The creator sees
+// the same view with real-time progress.
+//
+// Params: id — SharedList.id from the overview screen
+//
+// QR image sharing:
+//   QRGenerator (hidden, in this parent View) writes the QR PNG
+//   to cache on mount and calls onReady(filePath).
+//   filePath is passed to SharedListQrModal, which renders
+//   QRShareButton — sharing is fully handled in that button.
 // ============================================================
 
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, StatusBar, Share, Alert,
+  StyleSheet, StatusBar, Share,
 } from "react-native";
-import { SafeAreaView }   from "react-native-safe-area-context";
-import { Ionicons }       from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons }     from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import QRCode             from "react-native-qrcode-svg";
-import * as FileSystem    from "expo-file-system/legacy";
-import * as Sharing       from "expo-sharing";
-import useTheme           from "../../theme/useTheme";
-import { typography }     from "../../theme/typography";
+import useTheme         from "../../theme/useTheme";
+import { typography }   from "../../theme/typography";
 
 import { MOCK_SHARED_LISTS, ShoppingItem } from "../../data/sharedListData";
 
@@ -28,6 +31,7 @@ import SharedListAssigneeCard from "../../components/shared-list/SharedListAssig
 import SharedListItemRow      from "../../components/shared-list/SharedListItemRow";
 import SharedListAddItem      from "../../components/shared-list/SharedListAddItem";
 import SharedListQrModal      from "../../components/shared-list/SharedListQrModal";
+import QRGenerator            from "../../components/qr/QRGenerator";
 
 export default function SharedListDetailScreen() {
   const { colors } = useTheme();
@@ -36,10 +40,10 @@ export default function SharedListDetailScreen() {
 
   const baseList = MOCK_SHARED_LISTS.find(l => l.id === id) ?? MOCK_SHARED_LISTS[0];
 
-  const [items,     setItems]     = useState<ShoppingItem[]>(baseList.items);
-  const [qrVisible, setQrVisible] = useState(false);
-  const [sharing,   setSharing]   = useState(false);
-  const [qrReady,   setQrReady]   = useState(false);
+  const [items,      setItems]      = useState<ShoppingItem[]>(baseList.items);
+  const [qrVisible,  setQrVisible]  = useState(false);
+  // ── filePath is null until QRGenerator finishes writing the PNG ──
+  const [qrFilePath, setQrFilePath] = useState<string | null>(null);
 
   const checkedCount = useMemo(() => items.filter(i => i.checked).length, [items]);
   const totalCount   = items.length;
@@ -54,78 +58,6 @@ export default function SharedListDetailScreen() {
     invitedBy: "Apana Store User",
   });
 
-  // ── Refs ──────────────────────────────────────────────────
-  // svgRef — underlying react-native-svg Svg element (via getRef)
-  // cachedPngPath — persists the file path across renders for cleanup
-  const svgRef        = useRef<any>(null);
-  const cachedPngPath = useRef<string | null>(null);
-
-  // ── Generate QR PNG on mount, cache it, delete on unmount ─
-  // Generating on mount (not on button press) means the file is
-  // ready the moment the user opens the modal. No race conditions.
-  useEffect(() => {
-    let cancelled = false;
-
-    async function generateQrPng() {
-      // Give the hidden SVG time to fully rasterize before toDataURL
-      await new Promise(r => setTimeout(r, 700));
-      if (cancelled || !svgRef.current) return;
-
-      svgRef.current.toDataURL(async (data: string) => {
-        if (cancelled || !data || data.length < 100) return;
-        try {
-          const base64   = data.includes(",") ? data.split(",")[1] : data;
-          const filePath = `${FileSystem.cacheDirectory}apana-qr-${baseList.id}.png`;
-
-          await FileSystem.writeAsStringAsync(filePath, base64, {
-            encoding: FileSystem.EncodingType.Base64,
-          });
-
-          cachedPngPath.current = filePath;
-          if (!cancelled) setQrReady(true);
-        } catch (e) {
-          console.warn("[QR] PNG write failed:", e);
-        }
-      });
-    }
-
-    generateQrPng();
-
-    // Cleanup: delete the cached PNG when navigating away
-    return () => {
-      cancelled = true;
-      if (cachedPngPath.current) {
-        FileSystem.deleteAsync(cachedPngPath.current, { idempotent: true })
-          .catch(() => {});
-      }
-    };
-  }, []);
-
-  // ── Share the pre-generated PNG from cache ─────────────────
-  async function handleShareQrImage() {
-    if (!qrReady || !cachedPngPath.current) {
-      Alert.alert("Not ready", "QR image is still being prepared. Please try again in a moment.");
-      return;
-    }
-    setSharing(true);
-    try {
-      const canShare = await Sharing.isAvailableAsync();
-      if (!canShare) {
-        Alert.alert("Not supported", "Sharing is not available on this device.");
-        return;
-      }
-      await Sharing.shareAsync(cachedPngPath.current, {
-        mimeType:    "image/png",
-        dialogTitle: `Share QR for "${baseList.name}"`,
-        UTI:         "public.png",
-      });
-    } catch (err: any) {
-      Alert.alert("Share failed", err?.message ?? "Could not share QR code.");
-    } finally {
-      setSharing(false);
-    }
-  }
-
   function toggleItem(itemId: string) {
     setItems(prev => prev.map(i => i.id === itemId ? { ...i, checked: !i.checked } : i));
   }
@@ -136,7 +68,8 @@ export default function SharedListDetailScreen() {
     }]);
   }
 
-  async function handleShare() {
+  // ── Text share (list content as plain text) ───────────────
+  async function handleTextShare() {
     await Share.share({
       title:   `${baseList.name} — Apana Store`,
       message: `Shopping list shared via Apana Store:\n\n${items.map(i => `${i.checked ? "✅" : "⬜"} ${i.name} (${i.qty})`).join("\n")}`,
@@ -147,19 +80,16 @@ export default function SharedListDetailScreen() {
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
 
-      {/* ── Hidden QR — off-screen, used only for toDataURL capture ──
-           Must be in the PARENT screen (not Modal). Pushed off-screen
-           with negative left — opacity:0 causes Android to skip SVG
-           rasterization, which silently breaks toDataURL.              */}
-      <View style={styles.hiddenQr} pointerEvents="none">
-        <QRCode
-          value={qrValue}
-          size={280}
-          color="#111827"
-          backgroundColor="#FFFFFF"
-          getRef={(ref) => { svgRef.current = ref; }}
-        />
-      </View>
+      {/* ── QRGenerator — hidden PNG builder ─────────────────
+           Must be a direct child of the root View (same native
+           window as the rest of the screen), NOT inside a Modal.
+           QRGenerator positions itself at zIndex:-1 behind header. */}
+      <QRGenerator
+        value={qrValue}
+        cacheKey={`shared-list-${baseList.id}`}
+        onReady={(path) => setQrFilePath(path)}
+        onError={(msg)  => console.warn("[SharedListDetail] QR gen error:", msg)}
+      />
 
       {/* ── Header ── */}
       <SafeAreaView style={[styles.header, { backgroundColor: colors.primary }]} edges={["top"]}>
@@ -175,6 +105,8 @@ export default function SharedListDetailScreen() {
               {checkedCount}/{totalCount} done{isCompleted ? " · All done! 🎉" : ""}
             </Text>
           </View>
+
+          {/* QR button — opens QR modal */}
           <TouchableOpacity
             style={[styles.headerBtn, { backgroundColor: "rgba(255,255,255,0.2)" }]}
             onPress={() => setQrVisible(true)}
@@ -182,9 +114,11 @@ export default function SharedListDetailScreen() {
           >
             <Ionicons name="qr-code-outline" size={18} color="#fff" />
           </TouchableOpacity>
+
+          {/* Text share button */}
           <TouchableOpacity
             style={[styles.headerBtn, { backgroundColor: "rgba(255,255,255,0.2)" }]}
-            onPress={handleShare}
+            onPress={handleTextShare}
             activeOpacity={0.8}
           >
             <Ionicons name="share-outline" size={18} color="#fff" />
@@ -260,12 +194,11 @@ export default function SharedListDetailScreen() {
         <SharedListAddItem onAdd={handleAddItem} />
       </SafeAreaView>
 
+      {/* ── QR modal — receives filePath, renders QRShareButton ── */}
       <SharedListQrModal
         visible={qrVisible}
         list={baseList}
-        sharing={sharing}
-        qrReady={qrReady}
-        onShareQr={handleShareQrImage}
+        qrFilePath={qrFilePath}
         onClose={() => setQrVisible(false)}
       />
     </View>
@@ -274,13 +207,6 @@ export default function SharedListDetailScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-
-  // Off-screen, not opacity:0 — Android skips SVG rasterization on opacity:0
-  hiddenQr: {
-    position: "absolute",
-    left:     -9999,
-    top:      200,
-  },
 
   header: {},
   headerRow: {
@@ -311,19 +237,19 @@ const styles = StyleSheet.create({
 
   scroll: { padding: 16, gap: 14 },
 
-  progressCard: { borderRadius: 14, borderWidth: 1, padding: 14, gap: 8 },
+  progressCard:   { borderRadius: 14, borderWidth: 1, padding: 14, gap: 8 },
   progressTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  progressLabel: {},
-  progressCount: {},
-  progressTrack: { height: 8, borderRadius: 4, overflow: "hidden" },
-  progressFill:  { height: 8, borderRadius: 4 },
-  progressSub:   {},
+  progressLabel:  {},
+  progressCount:  {},
+  progressTrack:  { height: 8, borderRadius: 4, overflow: "hidden" },
+  progressFill:   { height: 8, borderRadius: 4 },
+  progressSub:    {},
 
-  itemsCard:   { borderRadius: 14, borderWidth: 1, overflow: "hidden" },
-  itemsHeader: { flexDirection: "row", alignItems: "center", gap: 7, paddingHorizontal: 14, paddingVertical: 12 },
-  itemsTitle:  {},
-  itemsCount:  { marginLeft: 2 },
-  itemsDivider:{ height: 1 },
+  itemsCard:    { borderRadius: 14, borderWidth: 1, overflow: "hidden" },
+  itemsHeader:  { flexDirection: "row", alignItems: "center", gap: 7, paddingHorizontal: 14, paddingVertical: 12 },
+  itemsTitle:   {},
+  itemsCount:   { marginLeft: 2 },
+  itemsDivider: { height: 1 },
 
   emptyItems:     { paddingVertical: 24, alignItems: "center" },
   emptyItemsText: {},

@@ -3,45 +3,36 @@
 //
 // Shown immediately after placing an order. The customer
 // presents this QR code to complete the handshake:
-//
 //   Pickup   → Show to store counter staff to collect order
 //   Delivery → Show to delivery partner at the door
 //   Ride     → Show to rider to start the ride
 //
-// Params (from checkout.tsx):
-//   mode    — "pickup" | "delivery" | "ride"
-//   orderId — server-generated ID (or mock-generated here)
-//   total   — order total in ₹
-//   stores  — number of stores in this order
-//
-// Layout:
-//   Header: back + mode badge + share icon
-//   Mode banner: colored strip with mode title + subtitle
-//   OrderQrCode: actual QR code card (tap to brighten)
-//   OrderQrStatus: animated status timeline
-//   OrderQrInstructions: numbered step guide
-//   OrderQrSummary: order details + expiry
-//   Bottom bar: "View Orders" CTA
+// QR image sharing:
+//   QRGenerator renders hidden QR on mount, writes PNG to cache,
+//   calls onReady(path). QRShareButton shares that PNG via
+//   expo-sharing. Both are reusable components in components/qr/.
 // ============================================================
 
-import React, { useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, StatusBar, Share,
+  StyleSheet, StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons }     from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import useTheme from "../../theme/useTheme";
-import { typography } from "../../theme/typography";
+import useTheme         from "../../theme/useTheme";
+import { typography }   from "../../theme/typography";
 
 import { FulfillmentMode, FULFILLMENT_CONFIG } from "../../data/cartData";
-import { ORDER_QR_CONFIG, generateOrderId } from "../../data/orderQrData";
+import { ORDER_QR_CONFIG, generateOrderId }    from "../../data/orderQrData";
 
 import OrderQrCode         from "../../components/order-qr/OrderQrCode";
 import OrderQrStatus       from "../../components/order-qr/OrderQrStatus";
 import OrderQrInstructions from "../../components/order-qr/OrderQrInstructions";
 import OrderQrSummary      from "../../components/order-qr/OrderQrSummary";
+import QRGenerator         from "../../components/qr/QRGenerator";
+import QRShareButton       from "../../components/qr/QRShareButton";
 
 export default function OrderQrScreen() {
   const { colors, isDark } = useTheme();
@@ -70,25 +61,37 @@ export default function OrderQrScreen() {
   // ── Timestamp when this screen was opened (= order placed) ─
   const placedAt = useMemo(() => new Date(), []);
 
-  const cfg      = ORDER_QR_CONFIG[mode];
-  const modeCfg  = FULFILLMENT_CONFIG[mode];
+  const cfg     = ORDER_QR_CONFIG[mode];
+  const modeCfg = FULFILLMENT_CONFIG[mode];
 
-  // ── Share order details ───────────────────────────────────
-  async function handleShare() {
-    await Share.share({
-      title:   `Apana Store Order — ${orderId}`,
-      message: `My ${modeCfg.label} order from Apana Store.\nOrder ID: ${orderId}\nTotal: ₹${totalAmt}\n\nTrack with the Apana Store app.`,
-    });
-  }
+  // ── QR PNG file path — null until QRGenerator finishes ───
+  const [qrFilePath, setQrFilePath] = useState<string | null>(null);
+
+  // ── QR payload — same value used by OrderQrCode display ──
+  const qrValue = JSON.stringify({
+    type:    "apana_order",
+    orderId,
+    mode,
+    ts:      placedAt.getTime(),
+  });
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={modeCfg.color} />
 
+      {/* ── QRGenerator — hidden PNG builder (not inside Modal) ──
+           Renders at zIndex:-1 behind the header. Writes the QR
+           to cache and calls onReady with the file path.          */}
+      <QRGenerator
+        value={qrValue}
+        cacheKey={`order-${orderId}`}
+        onReady={(path) => setQrFilePath(path)}
+        onError={(msg)  => console.warn("[OrderQR] gen error:", msg)}
+      />
+
       {/* ── Header ── */}
       <SafeAreaView style={[styles.header, { backgroundColor: modeCfg.color }]} edges={["top"]}>
         <View style={styles.headerRow}>
-          {/* Back */}
           <TouchableOpacity
             style={styles.headerBtn}
             onPress={() => router.replace("/(tabs)")}
@@ -97,12 +100,10 @@ export default function OrderQrScreen() {
             <Ionicons name="arrow-back" size={20} color="#fff" />
           </TouchableOpacity>
 
-          {/* Title */}
           <View style={styles.headerCenter}>
             <Text style={[styles.headerTitle, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg }]}>
               {cfg.title}
             </Text>
-            {/* Mode badge */}
             <View style={[styles.modeBadge, { backgroundColor: "rgba(255,255,255,0.20)" }]}>
               <Ionicons name={modeCfg.icon as any} size={11} color="#fff" />
               <Text style={[styles.modeBadgeText, { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.ss }]}>
@@ -111,21 +112,14 @@ export default function OrderQrScreen() {
             </View>
           </View>
 
-          {/* Share */}
-          <TouchableOpacity
-            style={styles.headerBtn}
-            onPress={handleShare}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="share-outline" size={20} color="#fff" />
-          </TouchableOpacity>
+          {/* Spacer to balance header row */}
+          <View style={styles.headerBtn} />
         </View>
       </SafeAreaView>
 
       {/* ── Scrollable content ── */}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
-        {/* ── Mode subtitle ── */}
         <View style={[styles.subtitleCard, { backgroundColor: modeCfg.color + "14", borderColor: modeCfg.color + "30" }]}>
           <Ionicons name="shield-checkmark-outline" size={16} color={modeCfg.color} />
           <Text style={[styles.subtitle, { color: modeCfg.color, fontFamily: typography.fontFamily.medium, fontSize: typography.size.sm }]}>
@@ -133,7 +127,6 @@ export default function OrderQrScreen() {
           </Text>
         </View>
 
-        {/* ── QR Code ── */}
         <OrderQrCode
           orderId={orderId}
           mode={mode}
@@ -141,21 +134,18 @@ export default function OrderQrScreen() {
           qrLabel={cfg.qrLabel}
         />
 
-        {/* ── Status timeline ── */}
         <OrderQrStatus
           steps={cfg.steps}
           activeStep={cfg.activeStep}
           modeColor={modeCfg.color}
         />
 
-        {/* ── How it works instructions ── */}
         <OrderQrInstructions
           instructions={cfg.instructions}
           modeColor={modeCfg.color}
           modeIcon={modeCfg.icon}
         />
 
-        {/* ── Order summary ── */}
         <OrderQrSummary
           mode={mode}
           storeCount={storeCount}
@@ -164,7 +154,14 @@ export default function OrderQrScreen() {
           placedAt={placedAt}
         />
 
-        {/* Spacer for sticky bottom bar */}
+        {/* ── Share QR image — enabled once QRGenerator finishes ── */}
+        <QRShareButton
+          filePath={qrFilePath}
+          dialogTitle={`Share Order QR — ${orderId}`}
+          color={modeCfg.color}
+          style={styles.shareBtn}
+        />
+
         <View style={{ height: 100 }} />
       </ScrollView>
 
@@ -255,7 +252,8 @@ const styles = StyleSheet.create({
     borderRadius:      14,
     borderWidth:       1,
   },
-  subtitle: { flex: 1, lineHeight: 20 },
+  subtitle:  { flex: 1, lineHeight: 20 },
+  shareBtn:  { marginTop: 4 },
 
   // Bottom bar
   bottomBar: {
