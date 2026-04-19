@@ -74,27 +74,36 @@ export default function OrderQrScreen() {
   });
 
   // ── Share order as text — itemised list of what was ordered ──
-  // Reads from CartContext (same cart used during checkout).
+  // Calculates total directly from cart items so it's never ₹0.
   async function handleShareOrderText() {
     const modeStores = cart.filter(s => s.fulfillment === mode);
 
     let body = "";
     if (modeStores.length === 0) {
-      // Fallback when cart is already cleared or not available
-      body = `${modeCfg.label} order placed.\nOrder ID: ${orderId}\nTotal: ₹${totalAmt}`;
+      body =
+        `${modeCfg.label} order placed.\n` +
+        `Order ID: ${orderId}\n` +
+        `Total: ₹${totalAmt}`;
     } else {
+      // Build per-store item lines and compute subtotal from cart
+      let cartSubtotal = 0;
       const storeLines = modeStores.map(store => {
-        const itemLines = store.items
-          .map(i => `  • ${i.name} × ${i.qty}  —  ₹${i.price * i.qty}`)
-          .join("\n");
+        const itemLines = store.items.map(i => {
+          cartSubtotal += i.price * i.qty;
+          return `  • ${i.name} × ${i.qty}  —  ₹${i.price * i.qty}`;
+        }).join("\n");
         return `🏪 ${store.name}\n${itemLines}`;
       }).join("\n\n");
+
+      // Use cart-computed total; fall back to URL param if cart is empty
+      const displayTotal = cartSubtotal > 0 ? cartSubtotal : totalAmt;
 
       body =
         `Order ID: ${orderId}\n` +
         `Mode: ${modeCfg.label}\n\n` +
         `${storeLines}\n\n` +
-        `Total: ₹${totalAmt}\n\n` +
+        `────────────────\n` +
+        `Total: ₹${displayTotal}\n\n` +
         `Placed via Apana Store`;
     }
 
