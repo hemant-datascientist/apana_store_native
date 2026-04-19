@@ -97,6 +97,25 @@ export default function OrderQrScreen() {
   // ── QR PNG path for combined (delivery/ride) share button ─
   const [qrFilePath, setQrFilePath] = useState<string | null>(null);
 
+  // ── Per-store QR PNG paths for pickup share buttons ───────
+  const [storeQrPaths, setStoreQrPaths] = useState<Record<string, string>>({});
+
+  function setStoreQrPath(storeOrderId: string, path: string) {
+    setStoreQrPaths(prev => ({ ...prev, [storeOrderId]: path }));
+  }
+
+  // ── Per-store QR payload (mirrors OrderQrStoreCard's qrValue) ─
+  function makeStoreQrValue(so: StoreOrderResult) {
+    return JSON.stringify({
+      type:          "apana_order",
+      masterOrderId: orderId,
+      storeOrderId:  so.storeOrderId,
+      storeId:       so.storeId,
+      mode:          "pickup",
+      ts:            placedAt.getTime(),
+    });
+  }
+
   // ── Combined QR payload (delivery/ride) ──────────────────
   const combinedQrValue = JSON.stringify({
     type:         "apana_order",
@@ -142,10 +161,23 @@ export default function OrderQrScreen() {
           cacheKey={`order-${orderId}`}
           label={`Order ID: ${orderId}`}
           sublabel={`Apana Store · ${modeCfg.label} Order · ₹${totalAmt}`}
-          onReady={path  => setQrFilePath(path)}
-          onError={msg   => console.warn("[OrderQR] gen error:", msg)}
+          onReady={path => setQrFilePath(path)}
+          onError={msg  => console.warn("[OrderQR] gen error:", msg)}
         />
       )}
+
+      {/* One hidden QRGenerator per store for pickup share buttons */}
+      {mode === "pickup" && storeOrders.map(so => (
+        <QRGenerator
+          key={so.storeOrderId}
+          value={makeStoreQrValue(so)}
+          cacheKey={`order-${so.storeOrderId}`}
+          label={so.storeName}
+          sublabel={`Order: ${so.storeOrderId} · Apana Store · ₹${so.subtotal}`}
+          onReady={path => setStoreQrPath(so.storeOrderId, path)}
+          onError={msg  => console.warn(`[OrderQR] store ${so.storeOrderId}:`, msg)}
+        />
+      ))}
 
       {/* ── Header ── */}
       <SafeAreaView style={[styles.header, { backgroundColor: modeCfg.color }]} edges={["top"]}>
@@ -201,6 +233,7 @@ export default function OrderQrScreen() {
                 modeColor={modeCfg.color}
                 validityHours={cfg.validityHours}
                 placedAt={placedAt}
+                qrFilePath={storeQrPaths[so.storeOrderId] ?? null}
                 onSimulateScan={() =>
                   router.push(
                     `/order-collected?storeOrderId=${so.storeOrderId}&orderId=${orderId}&mode=${mode}&total=${so.subtotal}&storeName=${encodeURIComponent(so.storeName)}`

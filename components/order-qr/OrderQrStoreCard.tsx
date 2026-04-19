@@ -20,6 +20,7 @@ import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { CartItem } from "../../data/cartData";
 import { StoreOrderResult } from "../../services/checkoutService";
+import QRShareButton from "../qr/QRShareButton";
 
 const { width: SW } = Dimensions.get("window");
 const QR_SIZE = SW * 0.46;   // smaller than the full-screen QR
@@ -31,13 +32,14 @@ interface OrderQrStoreCardProps {
   modeColor:     string;
   validityHours: number;
   placedAt:      Date;
+  qrFilePath:    string | null;     // PNG path from parent QRGenerator (null while building)
   onSimulateScan: () => void;       // navigate to order-collected for this store
   onViewInvoice:  () => void;       // navigate to invoice for this store
 }
 
 export default function OrderQrStoreCard({
   storeOrder, items, masterOrderId, modeColor,
-  validityHours, placedAt, onSimulateScan, onViewInvoice,
+  validityHours, placedAt, qrFilePath, onSimulateScan, onViewInvoice,
 }: OrderQrStoreCardProps) {
   const { colors } = useTheme();
   const [bright, setBright] = useState(false);
@@ -194,6 +196,15 @@ export default function OrderQrStoreCard({
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* ── Share QR as image ── */}
+      <View style={styles.shareWrap}>
+        <QRShareButton
+          filePath={qrFilePath}
+          dialogTitle={`Share QR — ${storeOrder.storeName}`}
+          color={modeColor}
+        />
+      </View>
     </View>
   );
 }
@@ -333,4 +344,9 @@ const styles = StyleSheet.create({
     borderWidth:     1,
   },
   actionText: {},
+
+  shareWrap: {
+    paddingHorizontal: 14,
+    paddingBottom:     14,
+  },
 });
