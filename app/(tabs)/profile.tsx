@@ -49,6 +49,8 @@ export default function ProfileScreen() {
     if (key === "about")        { router.push("/about-us");            return; }
     if (key === "edit_profile") { router.push("/edit-profile");        return; }
     if (key === "notifications"){ router.push("/notifications");       return; }
+    if (key === "language")     { router.push("/language");            return; }
+    if (key === "rate")         { router.push("/rate-us");             return; }
     if (key === "help")         { router.push("/help-support");        return; }
     if (key === "orders_hist") { router.push("/order-history");       return; }
     if (key === "payments")    { router.push("/payment-methods");     return; }
