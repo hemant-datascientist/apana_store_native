@@ -7,16 +7,19 @@
 //
 // QR payload: { type, listId, listName, invitedBy }
 // Brightness toggle: tap the QR card to go full-white (low-light)
+// Share QR: captures the QR as a PNG via toDataURL → shares image file
 // ============================================================
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Modal, View, Text, TouchableOpacity, StyleSheet,
-  Share, Pressable, Dimensions,
+  Pressable, Dimensions, Alert,
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as FileSystem from "expo-file-system";
+import * as Sharing    from "expo-sharing";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { SharedList } from "../../data/sharedListData";
@@ -33,22 +36,61 @@ interface SharedListQrModalProps {
 export default function SharedListQrModal({ visible, list, onClose }: SharedListQrModalProps) {
   const { colors } = useTheme();
   const insets     = useSafeAreaInsets();
-  const [bright,   setBright] = useState(false);
+  const [bright,   setBright]   = useState(false);
+  const [sharing,  setSharing]  = useState(false);
+
+  // ── Ref to the QRCode SVG (used for toDataURL capture) ───
+  const qrRef = useRef<any>(null);
 
   // ── QR payload ────────────────────────────────────────────
   // Deep-link format; backend will resolve to the list screen.
   const qrValue = JSON.stringify({
-    type:       "apana_shared_list",
-    listId:     list.id,
-    listName:   list.name,
-    invitedBy:  "Apana Store User",
+    type:      "apana_shared_list",
+    listId:    list.id,
+    listName:  list.name,
+    invitedBy: "Apana Store User",
   });
 
-  async function handleShare() {
-    await Share.share({
-      title:   `Join my list: ${list.name}`,
-      message: `I've shared a shopping list "${list.name}" with you on Apana Store. Open the app and scan my QR code to join!\n\nList ID: ${list.id}`,
-    });
+  // ── Share the QR code as a PNG image ─────────────────────
+  // 1. Capture QR SVG → base64 PNG via toDataURL
+  // 2. Write to a temp file in the app cache
+  // 3. Hand off to the OS share sheet via expo-sharing
+  async function handleShareQr() {
+    if (!qrRef.current) {
+      Alert.alert("Error", "QR code not ready yet. Please try again.");
+      return;
+    }
+
+    setSharing(true);
+    try {
+      await new Promise<void>((resolve, reject) => {
+        qrRef.current.toDataURL(async (base64: string) => {
+          try {
+            const filePath = `${FileSystem.cacheDirectory}shared-list-qr.png`;
+            await FileSystem.writeAsStringAsync(filePath, base64, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
+            const canShare = await Sharing.isAvailableAsync();
+            if (!canShare) {
+              Alert.alert("Sharing not available", "Your device does not support sharing files.");
+              resolve();
+              return;
+            }
+            await Sharing.shareAsync(filePath, {
+              mimeType:    "image/png",
+              dialogTitle: `Share QR for ${list.name}`,
+            });
+            resolve();
+          } catch (err) {
+            reject(err);
+          }
+        });
+      });
+    } catch {
+      Alert.alert("Error", "Could not share QR code. Please try again.");
+    } finally {
+      setSharing(false);
+    }
   }
 
   return (
@@ -101,6 +143,7 @@ export default function SharedListQrModal({ visible, list, onClose }: SharedList
             size={QR_SIZE}
             color="#111827"
             backgroundColor="#FFFFFF"
+            getRef={(c) => { qrRef.current = c; }}
           />
 
           {/* Brightness hint */}
@@ -133,15 +176,16 @@ export default function SharedListQrModal({ visible, list, onClose }: SharedList
           </Text>
         </View>
 
-        {/* Share button */}
+        {/* Share QR image button */}
         <TouchableOpacity
-          style={[styles.shareBtn, { backgroundColor: colors.primary }]}
-          onPress={handleShare}
+          style={[styles.shareBtn, { backgroundColor: sharing ? colors.border : colors.primary }]}
+          onPress={handleShareQr}
           activeOpacity={0.85}
+          disabled={sharing}
         >
           <Ionicons name="share-outline" size={18} color="#fff" />
           <Text style={[styles.shareBtnText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.md }]}>
-            Share List Link
+            {sharing ? "Preparing…" : "Share QR Code"}
           </Text>
         </TouchableOpacity>
 
@@ -202,11 +246,11 @@ const styles = StyleSheet.create({
   },
 
   // Branded corner dots
-  dot:          { position: "absolute", width: 10, height: 10, borderRadius: 5 },
-  TL:           { top: 10, left: 10  },
-  TR:           { top: 10, right: 10 },
-  BL:           { bottom: 10, left: 10  },
-  BR:           { bottom: 10, right: 10 },
+  dot: { position: "absolute", width: 10, height: 10, borderRadius: 5 },
+  TL:  { top: 10, left: 10  },
+  TR:  { top: 10, right: 10 },
+  BL:  { bottom: 10, left: 10  },
+  BR:  { bottom: 10, right: 10 },
 
   // Brightness hint overlay
   brightHint: {
