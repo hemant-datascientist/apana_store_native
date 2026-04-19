@@ -88,7 +88,8 @@ export default function SharedListDetailScreen() {
         value={qrValue}
         cacheKey={`shared-list-${baseList.id}`}
         label={baseList.name}
-        sublabel={`Apana Store · Shared Shopping List · ${totalCount} items`}
+        sublabel={`Apana Store · Shared Shopping List`}
+        items={items.map(i => `${i.checked ? "✅" : "⬜"} ${i.name} (${i.qty})`)}
         onReady={(path) => setQrFilePath(path)}
         onError={(msg)  => console.warn("[SharedListDetail] QR gen error:", msg)}
       />

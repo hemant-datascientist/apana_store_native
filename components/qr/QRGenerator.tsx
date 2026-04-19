@@ -39,12 +39,13 @@ interface QRGeneratorProps {
   cacheKey:   string;              // unique key for cached PNG filename
   label?:     string;              // bold text below QR (e.g. list name or order ID)
   sublabel?:  string;              // small text below label (e.g. "Apana Store · Shared List")
+  items?:     string[];            // optional list rows rendered below the QR (e.g. shopping items)
   onReady:    (filePath: string) => void;
   onError?:   (message: string)  => void;
 }
 
 export default function QRGenerator({
-  value, cacheKey, label, sublabel, onReady, onError,
+  value, cacheKey, label, sublabel, items, onReady, onError,
 }: QRGeneratorProps) {
   // ── Ref on the card View — captureRef screenshots the whole card ──
   const cardRef = useRef<View>(null);
@@ -124,6 +125,15 @@ export default function QRGenerator({
           <Text style={styles.sublabel}>{sublabel}</Text>
         )}
 
+        {/* Shopping items list — each row is one item */}
+        {items && items.length > 0 && (
+          <View style={styles.itemsBox}>
+            {items.map((row, i) => (
+              <Text key={i} style={styles.itemRow}>{row}</Text>
+            ))}
+          </View>
+        )}
+
         {/* Fixed app branding at the bottom */}
         <Text style={styles.brand}>Apana Store</Text>
       </View>
@@ -160,6 +170,18 @@ const styles = StyleSheet.create({
     fontSize:   12,
     fontFamily: "Poppins_400Regular",
     textAlign:  "center",
+  },
+  itemsBox: {
+    alignSelf:   "stretch",
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+    paddingTop:  10,
+    gap:         4,
+  },
+  itemRow: {
+    color:      "#374151",
+    fontSize:   12,
+    fontFamily: "Poppins_400Regular",
   },
   brand: {
     color:      "#0F4C81",
