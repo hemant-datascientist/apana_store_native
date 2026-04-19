@@ -26,20 +26,20 @@ const { width: SW } = Dimensions.get("window");
 const QR_SIZE       = SW * 0.55;
 
 interface SharedListQrModalProps {
-  visible:     boolean;
-  list:        SharedList;
-  onClose:     () => void;
-  // Capture + share is handled in the parent screen (outside Modal)
-  onShareQr:   () => Promise<void>;
+  visible:    boolean;
+  list:       SharedList;
+  onClose:    () => void;
+  onShareQr:  () => Promise<void>;
+  // sharing state is lifted to parent so the button reflects capture progress
+  sharing:    boolean;
 }
 
 export default function SharedListQrModal({
-  visible, list, onClose, onShareQr,
+  visible, list, onClose, onShareQr, sharing,
 }: SharedListQrModalProps) {
   const { colors } = useTheme();
   const insets     = useSafeAreaInsets();
-  const [bright,  setBright]  = useState(false);
-  const [sharing, setSharing] = useState(false);
+  const [bright, setBright] = useState(false);
 
   // ── QR payload (display only — the hidden card in parent uses same value) ──
   const qrValue = JSON.stringify({
@@ -51,12 +51,7 @@ export default function SharedListQrModal({
 
   // ── Delegate capture + share to parent ───────────────────
   async function handleShareQr() {
-    setSharing(true);
-    try {
-      await onShareQr();
-    } finally {
-      setSharing(false);
-    }
+    await onShareQr();
   }
 
   return (
