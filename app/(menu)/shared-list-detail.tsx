@@ -89,7 +89,6 @@ export default function SharedListDetailScreen() {
         cacheKey={`shared-list-${baseList.id}`}
         label={baseList.name}
         sublabel={`Apana Store · Shared Shopping List`}
-        items={items.map(i => `${i.checked ? "✅" : "⬜"} ${i.name} (${i.qty})`)}
         onReady={(path) => setQrFilePath(path)}
         onError={(msg)  => console.warn("[SharedListDetail] QR gen error:", msg)}
       />
@@ -201,6 +200,7 @@ export default function SharedListDetailScreen() {
       <SharedListQrModal
         visible={qrVisible}
         list={baseList}
+        items={items}
         qrFilePath={qrFilePath}
         onClose={() => setQrVisible(false)}
       />

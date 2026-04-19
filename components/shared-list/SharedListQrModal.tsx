@@ -13,14 +13,14 @@
 import React, { useState } from "react";
 import {
   Modal, View, Text, TouchableOpacity, StyleSheet,
-  Pressable, Dimensions,
+  Pressable, Dimensions, Share,
 } from "react-native";
 import QRCode          from "react-native-qrcode-svg";
 import { Ionicons }    from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useTheme        from "../../theme/useTheme";
 import { typography }  from "../../theme/typography";
-import { SharedList }  from "../../data/sharedListData";
+import { SharedList, ShoppingItem } from "../../data/sharedListData";
 import QRShareButton   from "../qr/QRShareButton";
 
 const { width: SW } = Dimensions.get("window");
@@ -29,17 +29,28 @@ const QR_SIZE       = SW * 0.55;
 interface SharedListQrModalProps {
   visible:    boolean;
   list:       SharedList;
+  items:      ShoppingItem[];
   onClose:    () => void;
-  // null while QRGenerator in the parent screen is still writing the PNG
   qrFilePath: string | null;
 }
 
 export default function SharedListQrModal({
-  visible, list, onClose, qrFilePath,
+  visible, list, items, onClose, qrFilePath,
 }: SharedListQrModalProps) {
   const { colors } = useTheme();
   const insets     = useSafeAreaInsets();
   const [bright, setBright] = useState(false);
+
+  // ── Share item list as a text message ─────────────────────
+  async function handleShareText() {
+    const lines = items
+      .map(i => `${i.checked ? "✅" : "⬜"} ${i.name} (${i.qty})`)
+      .join("\n");
+    await Share.share({
+      title:   `${list.name} — Apana Store`,
+      message: `Shopping list: ${list.name}\n\n${lines}\n\nShared via Apana Store`,
+    });
+  }
 
   // ── QR payload (display only — QRGenerator uses the same value) ──
   const qrValue = JSON.stringify({
@@ -163,6 +174,22 @@ export default function SharedListQrModal({
           color={colors.primary}
         />
 
+        {/* Share item list as a separate text message */}
+        <TouchableOpacity
+          style={[styles.textShareBtn, { borderColor: colors.border }]}
+          onPress={handleShareText}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="list-outline" size={16} color={colors.text} />
+          <Text style={[styles.textShareLabel, {
+            color:      colors.text,
+            fontFamily: typography.fontFamily.semiBold,
+            fontSize:   typography.size.sm,
+          }]}>
+            Share Item List as Text
+          </Text>
+        </TouchableOpacity>
+
       </View>
     </Modal>
   );
@@ -251,4 +278,16 @@ const styles = StyleSheet.create({
     borderRadius:   12,
   },
   noteText: { flex: 1, lineHeight: 17 },
+
+  textShareBtn: {
+    flexDirection:     "row",
+    alignItems:        "center",
+    justifyContent:    "center",
+    gap:               8,
+    alignSelf:         "stretch",
+    paddingVertical:   13,
+    borderRadius:      14,
+    borderWidth:       1,
+  },
+  textShareLabel: {},
 });
