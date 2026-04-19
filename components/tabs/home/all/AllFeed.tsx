@@ -5,10 +5,11 @@
 //   1. BannerCarousel            — promo banners
 //   2. Trending in {city}        — 4-col grid of famous local items
 //   3. Summer Picks              — 4-col seasonal category grid
-//   4. Daily Essentials          — horizontal scroll + add button
-//   5. Flash Deals               — horizontal scroll + % off + add button
-//   6. New Arrivals              — horizontal scroll + add button
-//   7. Popular Near You          — horizontal scroll of top-rated stores
+//   4. Discover                  — Offer Zone / Brands / New Launches tiles
+//   5. Daily Essentials          — horizontal scroll + add button
+//   6. Flash Deals               — horizontal scroll + % off + add button
+//   7. New Arrivals              — horizontal scroll + add button
+//   8. Popular Near You          — horizontal scroll of top-rated stores
 // ============================================================
 
 import React from "react";
@@ -20,6 +21,7 @@ import SeasonalCategorySection from "./SeasonalCategorySection";
 import ProductHScrollSection   from "./ProductHScrollSection";
 import FlashDealsSection       from "./FlashDealsSection";
 import PopularStoresSection    from "./PopularStoresSection";
+import HomeDiscoverRow        from "../HomeDiscoverRow";
 
 import { BANNERS }          from "../../../../data/homeData";
 import { useLocation }      from "../../../../context/LocationContext";
@@ -63,7 +65,12 @@ export default function AllFeed() {
         accent="#E05A00"
       />
 
-      {/* ── 4. Daily Essentials — horizontal scroll ── */}
+      {/* ── 4. Discover — Offer Zone · Brands · New Launches ── */}
+      <View style={{ paddingVertical: 14 }}>
+        <HomeDiscoverRow />
+      </View>
+
+      {/* ── 5. Daily Essentials — horizontal scroll ── */}
       <ProductHScrollSection
         icon="cart-outline"
         title="Daily Essentials"
