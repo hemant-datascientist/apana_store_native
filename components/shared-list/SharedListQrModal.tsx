@@ -23,7 +23,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useTheme        from "../../theme/useTheme";
 import { typography }  from "../../theme/typography";
 import { SharedList }  from "../../data/sharedListData";
-import QRShareButton   from "../qr/QRShareButton";
+import QRShareButton    from "../qr/QRShareButton";
+import ShareItemsButton from "../qr/ShareItemsButton";
 
 const { width: SW } = Dimensions.get("window");
 const QR_SIZE       = SW * 0.55;
@@ -158,36 +159,18 @@ export default function SharedListQrModal({
           </Text>
         </View>
 
-        {/* ── Button row: QR image share + text share side by side ── */}
-        <View style={styles.btnRow}>
+        {/* Share QR as PNG image */}
+        <QRShareButton
+          filePath={qrFilePath}
+          dialogTitle={`Share QR for "${list.name}"`}
+          color={colors.primary}
+        />
 
-          {/* Share item list as text — fires onShareText() on parent
-              so Share.share() runs in the main window, not the Modal */}
-          <TouchableOpacity
-            style={[styles.textBtn, { borderColor: colors.border, backgroundColor: colors.background }]}
-            onPress={() => { onClose(); setTimeout(onShareText, 300); }}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="list-outline" size={17} color={colors.text} />
-            <Text style={[styles.textBtnLabel, {
-              color:      colors.text,
-              fontFamily: typography.fontFamily.semiBold,
-              fontSize:   typography.size.sm,
-            }]}>
-              Share Items
-            </Text>
-          </TouchableOpacity>
-
-          {/* Share QR as PNG image */}
-          <View style={styles.qrBtnWrap}>
-            <QRShareButton
-              filePath={qrFilePath}
-              dialogTitle={`Share QR for "${list.name}"`}
-              color={colors.primary}
-            />
-          </View>
-
-        </View>
+        {/* Share item list as text — closes modal first so
+            Share.share() runs in the main window, not the Modal */}
+        <ShareItemsButton
+          onPress={() => { onClose(); setTimeout(onShareText, 300); }}
+        />
 
       </View>
     </Modal>
@@ -278,22 +261,5 @@ const styles = StyleSheet.create({
   },
   noteText: { flex: 1, lineHeight: 17 },
 
-  // Two-button row at the bottom
-  btnRow: {
-    flexDirection: "row",
-    alignSelf:     "stretch",
-    gap:           10,
-  },
-  textBtn: {
-    flex:           1,
-    flexDirection:  "row",
-    alignItems:     "center",
-    justifyContent: "center",
-    gap:            7,
-    paddingVertical: 13,
-    borderRadius:   14,
-    borderWidth:    1,
-  },
-  textBtnLabel: {},
-  qrBtnWrap: { flex: 2 },
 });
+
