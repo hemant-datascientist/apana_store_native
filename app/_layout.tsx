@@ -34,6 +34,7 @@ import { View } from "react-native";
 import { ThemeProvider }    from "../theme/ThemeContext";
 import { LocationProvider } from "../context/LocationContext";
 import { AuthProvider }     from "../context/AuthContext";
+import { CartProvider }     from "../context/CartContext";
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -51,6 +52,7 @@ export default function RootLayout() {
     <ThemeProvider>
       <AuthProvider>
         <LocationProvider>
+          <CartProvider>
           <Stack screenOptions={{ headerShown: false }}>
             {/* Main tab group — the primary customer experience */}
             <Stack.Screen name="(tabs)" />
@@ -59,6 +61,7 @@ export default function RootLayout() {
             {/* Auth + account screens — get-started, login, create-account, otp, edit-profile, notifications */}
             <Stack.Screen name="(auth)" />
           </Stack>
+          </CartProvider>
         </LocationProvider>
       </AuthProvider>
     </ThemeProvider>

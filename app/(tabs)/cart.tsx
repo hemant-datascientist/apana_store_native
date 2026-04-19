@@ -1,23 +1,15 @@
 // ============================================================
 // CART SCREEN — Apana Store (Customer App)
 //
-// Slim orchestrator. All state + mutation logic lives here;
-// all UI is delegated to components/cart/.
+// Slim orchestrator. Reads cart state from CartContext (shared
+// with checkout) so mutations here are visible to checkout.
 //
 // Key design decision:
 //   Each fulfillment mode (Pickup / Delivery / Ride) produces a
-//   SEPARATE checkout flow. A customer can't simultaneously pick
-//   up from a store, wait for delivery, and be on a ride.
-//   The sticky bar shows one "Checkout" button per mode group.
+//   SEPARATE checkout flow. The sticky bar shows one "Checkout"
+//   button per mode group.
 //
-// State:
-//   cart            — list of CartStore (local; migrate to Zustand later)
-//   promoInput      — current promo code text
-//   appliedPromo    — validated promo key or null
-//   promoError      — validation message
-//   showLoginPrompt — guards checkout for guest users
-//
-// Data: INITIAL_CART, PROMO_CODES, DELIVERY_FEE (cartData.ts)
+// Data: CartContext → useCart()
 // Backend: POST /cart, POST /orders when ready
 // ============================================================
 
@@ -28,9 +20,9 @@ import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import useTheme from "../../theme/useTheme";
 import { useAuth } from "../../context/AuthContext";
+import { useCart } from "../../context/CartContext";
 import {
-  INITIAL_CART, PROMO_CODES, DELIVERY_FEE,
-  CartStore, FulfillmentMode, storeSubtotal,
+  PROMO_CODES, DELIVERY_FEE, FulfillmentMode, storeSubtotal,
 } from "../../data/cartData";
 import LoginPromptModal   from "../../components/auth/LoginPromptModal";
 import CartHeader         from "../../components/cart/CartHeader";
@@ -46,8 +38,10 @@ export default function CartScreen() {
   const { isLoggedIn }     = useAuth();
   const router             = useRouter();
 
-  // ── Cart state ────────────────────────────────────────────
-  const [cart,            setCart]            = useState<CartStore[]>(INITIAL_CART);
+  // ── Cart state from shared context ───────────────────────
+  const { cart, updateQty, removeItem, setFulfillment, clearCart } = useCart();
+
+  // ── Local-only UI state ───────────────────────────────────
   const [promoInput,      setPromoInput]      = useState("");
   const [appliedPromo,    setAppliedPromo]    = useState<string | null>(null);
   const [promoError,      setPromoError]      = useState("");
@@ -62,13 +56,11 @@ export default function CartScreen() {
   const totalItems    = cart.reduce((s, st) => s + st.items.reduce((si, i) => si + i.qty, 0), 0);
 
   // ── Fulfillment groups for the per-mode checkout bar ──────
-  // Groups all stores by their chosen fulfillment mode so each
-  // mode gets its own independent checkout button and flow.
   const fulfillmentGroups = useMemo<FulfillmentGroup[]>(() => {
     const map = new Map<FulfillmentMode, FulfillmentGroup>();
     cart.forEach(store => {
-      const sub     = storeSubtotal(store) + DELIVERY_FEE[store.fulfillment];
-      const items   = store.items.reduce((s, i) => s + i.qty, 0);
+      const sub      = storeSubtotal(store) + DELIVERY_FEE[store.fulfillment];
+      const items    = store.items.reduce((s, i) => s + i.qty, 0);
       const existing = map.get(store.fulfillment);
       if (existing) {
         existing.storeCount++;
@@ -81,52 +73,35 @@ export default function CartScreen() {
     return Array.from(map.values());
   }, [cart]);
 
-  // ── Dynamic spacer: grows with number of checkout buttons ─
-  // Each group button is ~64px tall + 8px gap + 12px padding top/bottom
+  // ── Dynamic spacer ────────────────────────────────────────
   const barHeight = useMemo(
     () => fulfillmentGroups.length * 64 + (fulfillmentGroups.length - 1) * 8 + 24,
     [fulfillmentGroups.length],
   );
 
-  // ── Item quantity mutation ────────────────────────────────
-  function updateQty(storeId: string, itemId: string, delta: number) {
+  // ── Wrappers that add haptics ─────────────────────────────
+  function handleUpdateQty(storeId: string, itemId: string, delta: number) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setCart(prev => prev.map(store => store.id !== storeId ? store : {
-      ...store,
-      items: store.items.map(item =>
-        item.id !== itemId ? item : { ...item, qty: Math.max(1, item.qty + delta) }
-      ),
-    }));
+    updateQty(storeId, itemId, delta);
   }
 
-  // ── Remove item (removes store card if last item gone) ────
-  function removeItem(storeId: string, itemId: string) {
+  function handleRemoveItem(storeId: string, itemId: string) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setCart(prev =>
-      prev.map(store => store.id !== storeId ? store : {
-        ...store, items: store.items.filter(i => i.id !== itemId),
-      }).filter(store => store.items.length > 0)
-    );
+    removeItem(storeId, itemId);
   }
 
-  // ── Fulfillment mode change per store ─────────────────────
-  function setFulfillment(storeId: string, mode: FulfillmentMode) {
-    setCart(prev => prev.map(s => s.id === storeId ? { ...s, fulfillment: mode } : s));
-  }
-
-  // ── Clear entire cart ─────────────────────────────────────
-  function clearCart() {
+  function handleClearCart() {
     Alert.alert("Clear Cart", "Remove all items from cart?", [
       { text: "Cancel", style: "cancel" },
       { text: "Clear", style: "destructive", onPress: () => {
-        setCart([]);
+        clearCart();
         setAppliedPromo(null);
         setPromoInput("");
       }},
     ]);
   }
 
-  // ── Promo code apply / remove ─────────────────────────────
+  // ── Promo code ────────────────────────────────────────────
   function applyPromo() {
     const code = promoInput.trim().toUpperCase();
     if (!code) { setPromoError("Enter a promo code."); return; }
@@ -146,9 +121,7 @@ export default function CartScreen() {
     setPromoError("");
   }
 
-  // ── Checkout: each mode opens its own checkout screen ─────
-  // Passes the fulfillment mode as a query param so checkout
-  // only shows stores for that specific mode.
+  // ── Checkout: passes mode — checkout reads from CartContext ─
   function handleCheckout(mode: FulfillmentMode) {
     if (!isLoggedIn) { setShowLoginPrompt(true); return; }
     router.push(`/checkout?mode=${mode}`);
@@ -167,31 +140,26 @@ export default function CartScreen() {
     );
   }
 
-  // ── Filled cart ───────────────────────────────────────────
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.card} />
 
-      {/* Header */}
       <SafeAreaView style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]} edges={["top"]}>
-        <CartHeader totalItems={totalItems} onClear={clearCart} />
+        <CartHeader totalItems={totalItems} onClear={handleClearCart} />
       </SafeAreaView>
 
-      {/* Scrollable content */}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
-        {/* Store cards */}
         {cart.map(store => (
           <CartStoreCard
             key={store.id}
             store={store}
-            onUpdateQty={updateQty}
-            onRemoveItem={removeItem}
+            onUpdateQty={handleUpdateQty}
+            onRemoveItem={handleRemoveItem}
             onSetFulfillment={setFulfillment}
           />
         ))}
 
-        {/* Promo code */}
         <CartPromoCard
           promoInput={promoInput}
           onInputChange={t => { setPromoInput(t); setPromoError(""); }}
@@ -203,7 +171,6 @@ export default function CartScreen() {
           onRemove={removePromo}
         />
 
-        {/* Price breakdown */}
         <CartPriceBreakdown
           subtotal={subtotal}
           deliveryTotal={deliveryTotal}
@@ -212,17 +179,13 @@ export default function CartScreen() {
           total={total}
         />
 
-        {/* Trust info */}
         <CartTrustInfo />
 
-        {/* Dynamic spacer — grows with number of checkout buttons */}
         <View style={{ height: barHeight + 20 }} />
       </ScrollView>
 
-      {/* Per-mode checkout buttons */}
       <CartCheckoutBar groups={fulfillmentGroups} onCheckout={handleCheckout} />
 
-      {/* Auth guard modal */}
       <LoginPromptModal
         visible={showLoginPrompt}
         onClose={() => setShowLoginPrompt(false)}

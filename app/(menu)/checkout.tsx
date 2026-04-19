@@ -35,9 +35,10 @@ import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 
 import {
-  INITIAL_CART, DELIVERY_FEE, FulfillmentMode, FULFILLMENT_CONFIG,
+  DELIVERY_FEE, FulfillmentMode, FULFILLMENT_CONFIG,
   CartStore,
 } from "../../data/cartData";
+import { useCart } from "../../context/CartContext";
 import { SAVED_ADDRESSES, UserAddress } from "../../data/addressData";
 import { MOCK_PAYMENT_METHODS, PaymentMethod } from "../../data/paymentData";
 import { CHECKOUT_STEPS } from "../../data/checkoutData";
@@ -59,16 +60,16 @@ export default function CheckoutScreen() {
   const router             = useRouter();
 
   // ── Fulfillment mode passed from the cart screen ──────────
-  // Defaults to "delivery" if somehow arrived without a param.
   const { mode: modeParam } = useLocalSearchParams<{ mode?: string }>();
   const mode = (modeParam ?? "delivery") as FulfillmentMode;
 
-  // ── Filter cart to only stores for this mode ──────────────
-  // Each fulfillment type is a completely separate order.
-  // Backend swap: replace INITIAL_CART with a cart context / Zustand store.
+  // ── Cart from shared context — same state as CartScreen ───
+  // Filtering by mode means only stores the user chose THIS mode
+  // for are included; changes made on the cart page are reflected.
+  const { cart: fullCart } = useCart();
   const cart = useMemo<CartStore[]>(
-    () => INITIAL_CART.filter(s => s.fulfillment === mode),
-    [mode],
+    () => fullCart.filter(s => s.fulfillment === mode),
+    [fullCart, mode],
   );
 
   const modeCfg = FULFILLMENT_CONFIG[mode];
