@@ -36,6 +36,7 @@ export default function MenuLayout() {
       <Stack.Screen name="new-launchers"  />
       <Stack.Screen name="language"            />
       <Stack.Screen name="rate-us"             />
+      <Stack.Screen name="add-payment"         />
     </Stack>
   );
 }

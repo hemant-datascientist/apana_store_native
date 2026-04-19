@@ -72,9 +72,9 @@ export default function PaymentMethodsScreen() {
     );
   }
 
-  // ── Add new (placeholder) ─────────────────────────────────────
+  // ── Add new — navigate to add-payment screen ─────────────────
   function handleAdd() {
-    Alert.alert("Add Payment Method", "Payment method addition coming soon.");
+    router.push("/add-payment");
   }
 
   return (
