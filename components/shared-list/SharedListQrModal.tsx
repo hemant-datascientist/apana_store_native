@@ -2,12 +2,14 @@
 // SHARED LIST QR MODAL — Apana Store
 //
 // Bottom-sheet modal that shows a scannable QR code for a
-// shared shopping list. The recipient scans it with the
-// Apana Store app to instantly open and join the list.
+// shared shopping list. The recipient scans it to join the list.
 //
 // QR payload: { type, listId, listName, invitedBy }
-// Brightness toggle: tap the QR card to go full-white (low-light)
-// Share QR: captureRef() screenshots the QR card → shares as PNG
+// Brightness toggle: tap the QR card to go full-white
+// Share QR: ViewShot.capture() → PNG tmpfile → expo-sharing
+//
+// NOTE: captureRef() fails inside Modals on Android.
+//       ViewShot component with .capture() works in both platforms.
 // ============================================================
 
 import React, { useState, useRef } from "react";
@@ -15,13 +17,13 @@ import {
   Modal, View, Text, TouchableOpacity, StyleSheet,
   Pressable, Dimensions, Alert,
 } from "react-native";
-import QRCode          from "react-native-qrcode-svg";
-import { captureRef } from "react-native-view-shot";
-import { Ionicons }   from "@expo/vector-icons";
+import QRCode   from "react-native-qrcode-svg";
+import ViewShot from "react-native-view-shot";
+import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Sharing from "expo-sharing";
-import useTheme    from "../../theme/useTheme";
-import { typography } from "../../theme/typography";
+import useTheme        from "../../theme/useTheme";
+import { typography }  from "../../theme/typography";
 import { SharedList }  from "../../data/sharedListData";
 
 const { width: SW } = Dimensions.get("window");
@@ -39,8 +41,8 @@ export default function SharedListQrModal({ visible, list, onClose }: SharedList
   const [bright,  setBright]  = useState(false);
   const [sharing, setSharing] = useState(false);
 
-  // ── Ref on the QR card View — captured as a PNG screenshot ──
-  const qrCardRef = useRef<View>(null);
+  // ── ViewShot ref — wraps the QR card; .capture() screenshots it ──
+  const shotRef = useRef<ViewShot>(null);
 
   // ── QR payload ────────────────────────────────────────────
   const qrValue = JSON.stringify({
@@ -50,31 +52,23 @@ export default function SharedListQrModal({ visible, list, onClose }: SharedList
     invitedBy: "Apana Store User",
   });
 
-  // ── Capture the QR card as a PNG and share it ────────────
-  // captureRef() screenshots the View (white card + QR + dots)
-  // then expo-sharing hands the PNG file to the OS share sheet.
+  // ── Capture QR card as PNG and open OS share sheet ────────
   async function handleShareQr() {
-    if (!qrCardRef.current) {
-      Alert.alert("Error", "QR not ready — please try again.");
-      return;
-    }
     setSharing(true);
     try {
-      const uri = await captureRef(qrCardRef, {
-        format:  "png",
-        quality: 1,
-        result:  "tmpfile",
-      });
+      // capture() returns a tmpfile URI (file://…/qr.png)
+      const uri = await (shotRef.current as any).capture();
+
       const canShare = await Sharing.isAvailableAsync();
       if (!canShare) {
-        Alert.alert("Not supported", "Your device cannot share files.");
+        Alert.alert("Not available", "Sharing is not supported on this device.");
         return;
       }
       await Sharing.shareAsync(uri, {
         mimeType:    "image/png",
         dialogTitle: `Share QR for "${list.name}"`,
       });
-    } catch {
+    } catch (err) {
       Alert.alert("Error", "Could not capture QR code. Please try again.");
     } finally {
       setSharing(false);
@@ -99,10 +93,18 @@ export default function SharedListQrModal({ visible, list, onClose }: SharedList
         {/* Header */}
         <View style={styles.headerRow}>
           <View>
-            <Text style={[styles.title, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg }]}>
+            <Text style={[styles.title, {
+              color:      colors.text,
+              fontFamily: typography.fontFamily.bold,
+              fontSize:   typography.size.lg,
+            }]}>
               Share via QR
             </Text>
-            <Text style={[styles.subtitle, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+            <Text style={[styles.subtitle, {
+              color:      colors.subText,
+              fontFamily: typography.fontFamily.regular,
+              fontSize:   typography.size.xs,
+            }]}>
               Let someone scan this to join your list
             </Text>
           </View>
@@ -114,45 +116,65 @@ export default function SharedListQrModal({ visible, list, onClose }: SharedList
           </TouchableOpacity>
         </View>
 
-        {/* QR Card — this View is captured as the shared image */}
-        <TouchableOpacity
-          ref={qrCardRef as any}
-          style={[styles.qrCard, bright && styles.qrCardBright]}
-          onPress={() => setBright(b => !b)}
-          activeOpacity={1}
-          collapsable={false}   // required for captureRef on Android
+        {/* ViewShot wraps the QR card so .capture() screenshots it ──
+            options are passed here; format/quality set the output PNG  */}
+        <ViewShot
+          ref={shotRef}
+          options={{ format: "png", quality: 1, result: "tmpfile" }}
         >
-          {/* Corner accent dots */}
-          <View style={[styles.dot, styles.TL, { backgroundColor: colors.primary }]} />
-          <View style={[styles.dot, styles.TR, { backgroundColor: colors.primary }]} />
-          <View style={[styles.dot, styles.BL, { backgroundColor: colors.primary }]} />
-          <View style={[styles.dot, styles.BR, { backgroundColor: colors.primary }]} />
+          <TouchableOpacity
+            style={[styles.qrCard, bright && styles.qrCardBright]}
+            onPress={() => setBright(b => !b)}
+            activeOpacity={1}
+            collapsable={false}
+          >
+            {/* Branded corner dots */}
+            <View style={[styles.dot, styles.TL, { backgroundColor: colors.primary }]} />
+            <View style={[styles.dot, styles.TR, { backgroundColor: colors.primary }]} />
+            <View style={[styles.dot, styles.BL, { backgroundColor: colors.primary }]} />
+            <View style={[styles.dot, styles.BR, { backgroundColor: colors.primary }]} />
 
-          <QRCode
-            value={qrValue}
-            size={QR_SIZE}
-            color="#111827"
-            backgroundColor="#FFFFFF"
-          />
+            <QRCode
+              value={qrValue}
+              size={QR_SIZE}
+              color="#111827"
+              backgroundColor="#FFFFFF"
+            />
 
-          {/* Brightness hint */}
-          {!bright && (
-            <View style={[styles.brightHint, { backgroundColor: colors.primary + "18" }]}>
-              <Ionicons name="sunny-outline" size={12} color={colors.primary} />
-              <Text style={[styles.brightText, { color: colors.primary, fontFamily: typography.fontFamily.regular, fontSize: typography.size.ss }]}>
-                Tap to brighten
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
+            {/* Brightness hint */}
+            {!bright && (
+              <View style={[styles.brightHint, { backgroundColor: colors.primary + "18" }]}>
+                <Ionicons name="sunny-outline" size={12} color={colors.primary} />
+                <Text style={[styles.brightText, {
+                  color:      colors.primary,
+                  fontFamily: typography.fontFamily.regular,
+                  fontSize:   typography.size.ss,
+                }]}>
+                  Tap to brighten
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </ViewShot>
 
         {/* List info pill */}
-        <View style={[styles.listPill, { backgroundColor: colors.primary + "12", borderColor: colors.primary + "30" }]}>
+        <View style={[styles.listPill, {
+          backgroundColor: colors.primary + "12",
+          borderColor:     colors.primary + "30",
+        }]}>
           <Ionicons name="list-outline" size={14} color={colors.primary} />
-          <Text style={[styles.listName, { color: colors.primary, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]} numberOfLines={1}>
+          <Text style={[styles.listName, {
+            color:      colors.primary,
+            fontFamily: typography.fontFamily.bold,
+            fontSize:   typography.size.sm,
+          }]} numberOfLines={1}>
             {list.name}
           </Text>
-          <Text style={[styles.itemCount, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+          <Text style={[styles.itemCount, {
+            color:      colors.subText,
+            fontFamily: typography.fontFamily.regular,
+            fontSize:   typography.size.xs,
+          }]}>
             {list.items.length} items
           </Text>
         </View>
@@ -160,20 +182,29 @@ export default function SharedListQrModal({ visible, list, onClose }: SharedList
         {/* Instruction note */}
         <View style={[styles.note, { backgroundColor: colors.background }]}>
           <Ionicons name="scan-outline" size={15} color={colors.subText} />
-          <Text style={[styles.noteText, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+          <Text style={[styles.noteText, {
+            color:      colors.subText,
+            fontFamily: typography.fontFamily.regular,
+            fontSize:   typography.size.xs,
+          }]}>
             Recipient opens Apana Store → Scanner → scans this code to view and check off items together
           </Text>
         </View>
 
         {/* Share QR image button */}
         <TouchableOpacity
-          style={[styles.shareBtn, { backgroundColor: sharing ? colors.border : colors.primary }]}
+          style={[styles.shareBtn, {
+            backgroundColor: sharing ? colors.border : colors.primary,
+          }]}
           onPress={handleShareQr}
           activeOpacity={0.85}
           disabled={sharing}
         >
           <Ionicons name="share-outline" size={18} color="#fff" />
-          <Text style={[styles.shareBtnText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.md }]}>
+          <Text style={[styles.shareBtnText, {
+            fontFamily: typography.fontFamily.bold,
+            fontSize:   typography.size.md,
+          }]}>
             {sharing ? "Preparing…" : "Share QR Code"}
           </Text>
         </TouchableOpacity>
@@ -237,7 +268,6 @@ const styles = StyleSheet.create({
     opacity:         1,
   },
 
-  // Branded corner dots
   dot: { position: "absolute", width: 10, height: 10, borderRadius: 5 },
   TL:  { top: 10,    left: 10  },
   TR:  { top: 10,    right: 10 },
