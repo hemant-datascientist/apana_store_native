@@ -28,6 +28,9 @@ export default function MenuLayout() {
       <Stack.Screen name="store-qr"       />
       <Stack.Screen name="checkout"       />
       <Stack.Screen name="order-qr"       />
+      <Stack.Screen name="offer-zone"     />
+      <Stack.Screen name="brands"         />
+      <Stack.Screen name="new-launchers"  />
     </Stack>
   );
 }

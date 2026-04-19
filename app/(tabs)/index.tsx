@@ -36,6 +36,7 @@ import CategoryScroll      from "../../components/tabs/home/CategoryScroll";
 import StoreDiscoveryTabs, { StoreTab }    from "../../components/tabs/home/StoreDiscoveryTabs";
 import StoreFilterBar,     { StoreFilters } from "../../components/tabs/home/StoreFilterBar";
 import MenuDrawer                          from "../../components/tabs/home/MenuDrawer";
+import HomeDiscoverRow                    from "../../components/tabs/home/HomeDiscoverRow";
 
 // ── Product category feeds ───────────────────────────────────
 import AllFeed        from "../../components/tabs/home/all/AllFeed";
@@ -197,6 +198,11 @@ export default function HomeScreen() {
             onSortPress={()   => Alert.alert("Sort",   "Sort options coming soon.")}
           />
         )}
+
+        {/* ── Discover row (Offer Zone · Brands · New Launches) ── */}
+        <View style={{ paddingVertical: 16 }}>
+          <HomeDiscoverRow />
+        </View>
 
         {/* ── Products feed — one component per category ── */}
         {mode === "products" && renderCategoryFeed()}
