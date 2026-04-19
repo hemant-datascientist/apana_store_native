@@ -144,15 +144,15 @@ export default function OrderCollectedScreen() {
       >
         <View style={styles.bottomContent}>
 
-          {/* Secondary: View Orders */}
+          {/* Secondary: View Invoice */}
           <TouchableOpacity
             style={[styles.secondaryBtn, { borderColor: colors.border }]}
-            onPress={() => router.push("/order-history")}
+            onPress={() => router.push(`/invoice?orderId=${orderId}`)}
             activeOpacity={0.8}
           >
-            <Ionicons name="receipt-outline" size={16} color={colors.text} />
+            <Ionicons name="document-text-outline" size={16} color={colors.text} />
             <Text style={[styles.secondaryText, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
-              View Orders
+              View Invoice
             </Text>
           </TouchableOpacity>
 
