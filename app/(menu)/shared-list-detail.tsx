@@ -118,6 +118,15 @@ export default function SharedListDetailScreen() {
             </Text>
           </View>
 
+          {/* Text share button — always visible in header */}
+          <TouchableOpacity
+            style={[styles.headerBtn, { backgroundColor: "rgba(255,255,255,0.2)" }]}
+            onPress={handleShareText}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="share-outline" size={18} color="#fff" />
+          </TouchableOpacity>
+
           {/* QR button — opens QR modal (image sharing only) */}
           <TouchableOpacity
             style={[styles.headerBtn, { backgroundColor: "rgba(255,255,255,0.2)" }]}
