@@ -11,6 +11,7 @@
 import React, { useState } from "react";
 import { View, ScrollView, StyleSheet, StatusBar, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter }    from "expo-router";
 import useTheme from "../../theme/useTheme";
 import {
   MOCK_LOCATION,
@@ -27,6 +28,7 @@ import StoreTypeGrid   from "../../components/tabs/category/StoreTypeGrid";
 
 export default function CategoryScreen() {
   const { colors } = useTheme();
+  const router     = useRouter();
 
   const [search, setSearch] = useState("");
   const [mode,   setMode]   = useState<DiscoveryMode>("products");
@@ -51,7 +53,7 @@ export default function CategoryScreen() {
           onMenuPress={()   => Alert.alert("Menu",          "Drawer coming soon.")}
           onMicPress={()    => Alert.alert("Voice",         "Voice search coming soon.")}
           onBellPress={() => router.push("/notifications")}
-          onScanPress={()   => Alert.alert("Scanner",       "Barcode scanner coming soon.")}
+          onScanPress={() => router.push("/scanner")}
           onLocatePress={() => Alert.alert("Locate",        "GPS locate coming soon.")}
         />
 
