@@ -129,6 +129,9 @@ export default function HomeScreen() {
         onClose={() => setDrawerOpen(false)}
         onSelect={key => {
           switch (key) {
+            case "offer_zone":     router.push("/offer-zone");     break;
+            case "shop_brands":    router.push("/brands");         break;
+            case "new_launches":   router.push("/new-launchers");  break;
             case "about_us":       router.push("/about-us");       break;
             case "sell_ondc":      router.push("/sell-ondc");      break;
             case "product_finder": router.push("/product-finder"); break;
