@@ -25,7 +25,7 @@
 import React, { useState, useMemo } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
-  StyleSheet, StatusBar, ActivityIndicator, Alert,
+  StyleSheet, StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -40,18 +40,12 @@ import {
 } from "../../data/cartData";
 import { useCart } from "../../context/CartContext";
 import { SAVED_ADDRESSES, UserAddress } from "../../data/addressData";
-import { MOCK_PAYMENT_METHODS, PaymentMethod } from "../../data/paymentData";
 import { CHECKOUT_STEPS } from "../../data/checkoutData";
-import {
-  placeOrder, validatePromoCode,
-  PlaceOrderRequest, StoreOrderInput, StoreOrderResult,
-} from "../../services/checkoutService";
+import { validatePromoCode } from "../../services/checkoutService";
 
 import CheckoutAddressCard    from "../../components/checkout/CheckoutAddressCard";
 import CheckoutAddressPicker  from "../../components/checkout/CheckoutAddressPicker";
 import CheckoutStoreRow       from "../../components/checkout/CheckoutStoreRow";
-import CheckoutPaymentCard    from "../../components/checkout/CheckoutPaymentCard";
-import CheckoutPaymentPicker  from "../../components/checkout/CheckoutPaymentPicker";
 import CheckoutPriceBreakdown from "../../components/checkout/CheckoutPriceBreakdown";
 import CheckoutPromoInput     from "../../components/checkout/CheckoutPromoInput";
 
@@ -81,10 +75,6 @@ export default function CheckoutScreen() {
   const [selectedAddress,   setSelectedAddress]   = useState<UserAddress>(SAVED_ADDRESSES[0]);
   const [addressPickerOpen, setAddressPickerOpen] = useState(false);
 
-  const defaultMethod = MOCK_PAYMENT_METHODS.find(m => m.isDefault) ?? MOCK_PAYMENT_METHODS[0];
-  const [selectedPayment,   setSelectedPayment]   = useState<PaymentMethod>(defaultMethod);
-  const [paymentPickerOpen, setPaymentPickerOpen] = useState(false);
-
   const [note, setNote] = useState("");
 
   // ── Promo code state ──────────────────────────────────────
@@ -93,8 +83,7 @@ export default function CheckoutScreen() {
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [appliedPromo,  setAppliedPromo]  = useState<string | null>(null);
 
-  // ── Order placement state ─────────────────────────────────
-  const [placing,    setPlacing]    = useState(false);
+  // ── Validation error shown before navigating to Payment ─────
   const [orderError, setOrderError] = useState<string | null>(null);
 
   // ── Derived totals ────────────────────────────────────────
@@ -145,13 +134,10 @@ export default function CheckoutScreen() {
     setAppliedPromo(null);
   }
 
-  // ── Validate then place order ─────────────────────────────
-  // placeOrder() → POST /api/orders
-  // orderId always comes from the server response, never generated client-side.
-  async function handlePlaceOrder() {
+  // ── Validate → navigate to Payment screen ────────────────────
+  // Payment + order placement happens on the next screen (checkout-payment).
+  function handleContinue() {
     setOrderError(null);
-
-    // ── Validation ────────────────────────────────────────
     if (cart.length === 0) {
       setOrderError("Your cart is empty for this fulfillment mode.");
       return;
@@ -160,52 +146,16 @@ export default function CheckoutScreen() {
       setOrderError("Please select a delivery address.");
       return;
     }
-
-    setPlacing(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    try {
-      // ── Build typed request payload ──────────────────────
-      const storeOrders: StoreOrderInput[] = cart.map(store => ({
-        storeId:   store.id,
-        storeName: store.name,
-        items:     store.items.map(item => ({
-          itemId:    item.id,
-          name:      item.name,
-          qty:       item.qty,
-          unitPrice: item.price,
-        })),
-      }));
-
-      const req: PlaceOrderRequest = {
-        mode,
-        addressId:       needsAddress ? selectedAddress.id : null,
-        paymentMethodId: selectedPayment.id,
-        storeOrders,
-        promoCode:       appliedPromo,
-        note:            note.trim(),
-      };
-
-      const res = await placeOrder(req);
-
-      if (!res.success) {
-        setOrderError(res.message ?? "Order failed. Please try again.");
-        return;
-      }
-
-      // ── Success: haptic + navigate to QR handshake ────────
-      // storeOrdersJson carries per-store order IDs so the QR screen
-      // can show one QR per store (pickup) or a combined QR (delivery/ride).
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      const storeOrdersJson = encodeURIComponent(JSON.stringify(res.storeOrders));
-      router.replace(
-        `/order-qr?mode=${mode}&orderId=${res.orderId}&total=${total}&storeOrdersJson=${storeOrdersJson}`,
-      );
-    } catch (err: any) {
-      setOrderError(err?.message ?? "Something went wrong. Please try again.");
-    } finally {
-      setPlacing(false);
-    }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const params = new URLSearchParams({
+      mode,
+      addressId:  needsAddress ? selectedAddress.id : "",
+      promoCode:  appliedPromo ?? "",
+      discount:   String(promoDiscount),
+      note:       encodeURIComponent(note.trim()),
+      total:      String(total),
+    });
+    router.push(`/checkout-payment?${params.toString()}`);
   }
 
   return (
@@ -377,12 +327,6 @@ export default function CheckoutScreen() {
           </Text>
         </View>
 
-        {/* ── Payment method ── */}
-        <CheckoutPaymentCard
-          method={selectedPayment}
-          onChangePress={() => setPaymentPickerOpen(true)}
-        />
-
         {/* ── Price breakdown — total reflects promo discount ── */}
         <CheckoutPriceBreakdown
           subtotal={subtotal}
@@ -432,36 +376,26 @@ export default function CheckoutScreen() {
             </Text>
           </View>
 
-          {/* Disabled + spinner while API call is in-flight */}
+          {/* Navigate to Payment screen — order is placed there */}
           <TouchableOpacity
-            style={[styles.ctaBtn, { backgroundColor: "rgba(255,255,255,0.2)", opacity: placing ? 0.6 : 1 }]}
-            onPress={handlePlaceOrder}
-            disabled={placing}
+            style={[styles.ctaBtn, { backgroundColor: "rgba(255,255,255,0.2)" }]}
+            onPress={handleContinue}
             activeOpacity={0.85}
           >
-            {placing
-              ? <ActivityIndicator size="small" color="#fff" />
-              : <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
-            }
+            <Ionicons name="card-outline" size={18} color="#fff" />
             <Text style={[styles.ctaBtnText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-              {placing ? "Placing Order…" : `Place ${modeCfg.label} Order`}
+              Continue to Payment
             </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
 
-      {/* ── Modals ── */}
+      {/* ── Address picker modal ── */}
       <CheckoutAddressPicker
         visible={addressPickerOpen}
         selectedId={selectedAddress.id}
         onSelect={addr => { setSelectedAddress(addr); setAddressPickerOpen(false); }}
         onClose={() => setAddressPickerOpen(false)}
-      />
-      <CheckoutPaymentPicker
-        visible={paymentPickerOpen}
-        selectedId={selectedPayment.id}
-        onSelect={method => { setSelectedPayment(method); setPaymentPickerOpen(false); }}
-        onClose={() => setPaymentPickerOpen(false)}
       />
     </View>
   );

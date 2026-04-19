@@ -37,6 +37,8 @@ export default function MenuLayout() {
       <Stack.Screen name="language"            />
       <Stack.Screen name="rate-us"             />
       <Stack.Screen name="add-payment"         />
+      <Stack.Screen name="checkout-payment"    />
+      <Stack.Screen name="order-tracking"      />
     </Stack>
   );
 }
