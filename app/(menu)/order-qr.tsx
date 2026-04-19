@@ -85,6 +85,8 @@ export default function OrderQrScreen() {
       <QRGenerator
         value={qrValue}
         cacheKey={`order-${orderId}`}
+        label={`Order ID: ${orderId}`}
+        sublabel={`Apana Store · ${modeCfg.label} Order · ₹${totalAmt}`}
         onReady={(path) => setQrFilePath(path)}
         onError={(msg)  => console.warn("[OrderQR] gen error:", msg)}
       />
