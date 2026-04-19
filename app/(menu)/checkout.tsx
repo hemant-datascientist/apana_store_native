@@ -10,18 +10,22 @@
 //   Mode banner            — coloured strip showing current mode
 //   Delivery Address Card  — only shown for delivery/ride modes
 //   Order Summary          — per-store collapsible rows (filtered)
+//   Promo Code             — coupon entry; validatePromoCode() stub
 //   Delivery Notes         — optional note to the partner/store
 //   Payment Method Card    — selected method + change modal
 //   Price Breakdown        — subtotal, delivery, discount, total
 //   Place Order CTA        — sticky bottom bar
 //
-// Backend: POST /orders { cart, mode, addressId, paymentMethodId, note }
+// Backend:
+//   POST /api/orders → PlaceOrderResponse
+//   POST /api/promo/validate → PromoValidateResponse
+//   (see services/checkoutService.ts for typed interfaces + stubs)
 // ============================================================
 
 import React, { useState, useMemo } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
-  StyleSheet, StatusBar,
+  StyleSheet, StatusBar, ActivityIndicator, Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -32,10 +36,15 @@ import { typography } from "../../theme/typography";
 
 import {
   INITIAL_CART, DELIVERY_FEE, FulfillmentMode, FULFILLMENT_CONFIG,
+  CartStore,
 } from "../../data/cartData";
 import { SAVED_ADDRESSES, UserAddress } from "../../data/addressData";
 import { MOCK_PAYMENT_METHODS, PaymentMethod } from "../../data/paymentData";
 import { CHECKOUT_STEPS } from "../../data/checkoutData";
+import {
+  placeOrder, validatePromoCode,
+  PlaceOrderRequest, StoreOrderInput,
+} from "../../services/checkoutService";
 
 import CheckoutAddressCard    from "../../components/checkout/CheckoutAddressCard";
 import CheckoutAddressPicker  from "../../components/checkout/CheckoutAddressPicker";
@@ -43,6 +52,7 @@ import CheckoutStoreRow       from "../../components/checkout/CheckoutStoreRow";
 import CheckoutPaymentCard    from "../../components/checkout/CheckoutPaymentCard";
 import CheckoutPaymentPicker  from "../../components/checkout/CheckoutPaymentPicker";
 import CheckoutPriceBreakdown from "../../components/checkout/CheckoutPriceBreakdown";
+import CheckoutPromoInput     from "../../components/checkout/CheckoutPromoInput";
 
 export default function CheckoutScreen() {
   const { colors, isDark } = useTheme();
@@ -54,19 +64,19 @@ export default function CheckoutScreen() {
   const mode = (modeParam ?? "delivery") as FulfillmentMode;
 
   // ── Filter cart to only stores for this mode ──────────────
-  // Each fulfillment mode is a completely separate order.
-  const cart = useMemo(
+  // Each fulfillment type is a completely separate order.
+  // Backend swap: replace INITIAL_CART with a cart context / Zustand store.
+  const cart = useMemo<CartStore[]>(
     () => INITIAL_CART.filter(s => s.fulfillment === mode),
     [mode],
   );
 
   const modeCfg = FULFILLMENT_CONFIG[mode];
 
-  // ── Address: only shown for delivery and ride ─────────────
-  // Pickup orders don't need a delivery address.
+  // Pickup orders don't need a delivery address
   const needsAddress = mode !== "pickup";
 
-  // ── State ─────────────────────────────────────────────────
+  // ── UI state ──────────────────────────────────────────────
   const [selectedAddress,   setSelectedAddress]   = useState<UserAddress>(SAVED_ADDRESSES[0]);
   const [addressPickerOpen, setAddressPickerOpen] = useState(false);
 
@@ -76,26 +86,121 @@ export default function CheckoutScreen() {
 
   const [note, setNote] = useState("");
 
-  // ── Derived totals (only for this mode's stores) ──────────
+  // ── Promo code state ──────────────────────────────────────
+  const [promoStatus,   setPromoStatus]   = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [promoMessage,  setPromoMessage]  = useState("");
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [appliedPromo,  setAppliedPromo]  = useState<string | null>(null);
+
+  // ── Order placement state ─────────────────────────────────
+  const [placing,    setPlacing]    = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
+
+  // ── Derived totals ────────────────────────────────────────
   const { subtotal, deliveryTotal, total, totalItems } = useMemo(() => {
     const sub   = cart.reduce((s, st) => s + st.items.reduce((si, i) => si + i.price * i.qty, 0), 0);
     const del   = cart.reduce((s, st) => s + DELIVERY_FEE[st.fulfillment], 0);
     const items = cart.reduce((s, st) => s + st.items.reduce((si, i) => si + i.qty, 0), 0);
-    return { subtotal: sub, deliveryTotal: del, total: sub + del, totalItems: items };
-  }, [cart]);
+    return {
+      subtotal:      sub,
+      deliveryTotal: del,
+      total:         Math.max(0, sub + del - promoDiscount),
+      totalItems:    items,
+    };
+  }, [cart, promoDiscount]);
 
-  // ── Progress: "checkout" step is active ───────────────────
+  // ── Progress: "checkout" step is active ──────────────────
   const ACTIVE_STEP = "checkout";
 
-  // ── Place order → navigate to QR handshake screen ────────
-  // Uses replace so the customer can't navigate back to checkout
-  // after the order is placed.
-  function handlePlaceOrder() {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    const orderId = `APX-${Date.now()}`;
-    router.replace(
-      `/order-qr?mode=${mode}&orderId=${orderId}&total=${total}&stores=${cart.length}`,
-    );
+  // ── Apply promo code — delegates to service stub ─────────
+  // validatePromoCode() → POST /api/promo/validate
+  async function handleApplyPromo(code: string) {
+    setPromoStatus("loading");
+    setPromoMessage("");
+    try {
+      const result = await validatePromoCode({ code, subtotal, mode });
+      if (result.valid) {
+        setPromoStatus("success");
+        setPromoDiscount(result.discountAmt);
+        setAppliedPromo(code.toUpperCase());
+        setPromoMessage(result.message);
+      } else {
+        setPromoStatus("error");
+        setPromoDiscount(0);
+        setAppliedPromo(null);
+        setPromoMessage(result.message);
+      }
+    } catch {
+      setPromoStatus("error");
+      setPromoMessage("Could not validate promo. Try again.");
+    }
+  }
+
+  // ── Clear applied promo ───────────────────────────────────
+  function handleClearPromo() {
+    setPromoStatus("idle");
+    setPromoMessage("");
+    setPromoDiscount(0);
+    setAppliedPromo(null);
+  }
+
+  // ── Validate then place order ─────────────────────────────
+  // placeOrder() → POST /api/orders
+  // orderId always comes from the server response, never generated client-side.
+  async function handlePlaceOrder() {
+    setOrderError(null);
+
+    // ── Validation ────────────────────────────────────────
+    if (cart.length === 0) {
+      setOrderError("Your cart is empty for this fulfillment mode.");
+      return;
+    }
+    if (needsAddress && !selectedAddress) {
+      setOrderError("Please select a delivery address.");
+      return;
+    }
+
+    setPlacing(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    try {
+      // ── Build typed request payload ──────────────────────
+      const storeOrders: StoreOrderInput[] = cart.map(store => ({
+        storeId: store.id,
+        items:   store.items.map(item => ({
+          itemId:    item.id,
+          name:      item.name,
+          qty:       item.qty,
+          unitPrice: item.price,
+        })),
+      }));
+
+      const req: PlaceOrderRequest = {
+        mode,
+        addressId:       needsAddress ? selectedAddress.id : null,
+        paymentMethodId: selectedPayment.id,
+        storeOrders,
+        promoCode:       appliedPromo,
+        note:            note.trim(),
+      };
+
+      const res = await placeOrder(req);
+
+      if (!res.success) {
+        setOrderError(res.message ?? "Order failed. Please try again.");
+        return;
+      }
+
+      // ── Success: haptic + navigate to QR handshake ────────
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.replace(
+        `/order-qr?mode=${mode}&orderId=${res.orderId}&total=${total}&stores=${cart.length}`,
+      );
+    } catch (err: any) {
+      setOrderError(err?.message ?? "Something went wrong. Please try again.");
+    } finally {
+      setPlacing(false);
+    }
   }
 
   return (
@@ -163,8 +268,24 @@ export default function CheckoutScreen() {
       {/* ── Scrollable content ── */}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
+        {/* ── Error banner — shown when placeOrder() rejects ── */}
+        {!!orderError && (
+          <View style={[styles.errorBanner, { backgroundColor: "#FEE2E2", borderColor: "#FCA5A5" }]}>
+            <Ionicons name="alert-circle-outline" size={16} color="#DC2626" />
+            <Text style={[styles.errorText, {
+              color:      "#DC2626",
+              fontFamily: typography.fontFamily.medium,
+              fontSize:   typography.size.xs,
+            }]}>
+              {orderError}
+            </Text>
+            <TouchableOpacity onPress={() => setOrderError(null)}>
+              <Ionicons name="close" size={16} color="#DC2626" />
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* ── Fulfillment mode banner ── */}
-        {/* Makes it unmistakably clear which order type this is */}
         <View style={[styles.modeBanner, { backgroundColor: modeCfg.bg }]}>
           <View style={[styles.modeIconCircle, { backgroundColor: modeCfg.color + "22" }]}>
             <Ionicons name={modeCfg.icon as any} size={20} color={modeCfg.color} />
@@ -187,7 +308,7 @@ export default function CheckoutScreen() {
           />
         )}
 
-        {/* ── Pickup info banner (pickup mode) ── */}
+        {/* ── Pickup info banner ── */}
         {mode === "pickup" && (
           <View style={[styles.pickupNote, { backgroundColor: "#DCFCE7", borderColor: "#16A34A" }]}>
             <Ionicons name="walk-outline" size={18} color="#16A34A" />
@@ -206,6 +327,15 @@ export default function CheckoutScreen() {
             <CheckoutStoreRow key={store.id} store={store} />
           ))}
         </View>
+
+        {/* ── Promo code — validatePromoCode() from checkoutService ── */}
+        <CheckoutPromoInput
+          onApply={handleApplyPromo}
+          onClear={handleClearPromo}
+          status={promoStatus}
+          message={promoMessage}
+          discountAmt={promoDiscount}
+        />
 
         {/* ── Delivery / pickup note ── */}
         <View style={[styles.noteCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -248,12 +378,12 @@ export default function CheckoutScreen() {
           onChangePress={() => setPaymentPickerOpen(true)}
         />
 
-        {/* ── Price breakdown ── */}
+        {/* ── Price breakdown — total reflects promo discount ── */}
         <CheckoutPriceBreakdown
           subtotal={subtotal}
           deliveryTotal={deliveryTotal}
-          discountAmt={0}
-          appliedPromo={null}
+          discountAmt={promoDiscount}
+          appliedPromo={appliedPromo}
           total={total}
         />
 
@@ -297,14 +427,19 @@ export default function CheckoutScreen() {
             </Text>
           </View>
 
+          {/* Disabled + spinner while API call is in-flight */}
           <TouchableOpacity
-            style={[styles.ctaBtn, { backgroundColor: "rgba(255,255,255,0.2)" }]}
+            style={[styles.ctaBtn, { backgroundColor: "rgba(255,255,255,0.2)", opacity: placing ? 0.6 : 1 }]}
             onPress={handlePlaceOrder}
+            disabled={placing}
             activeOpacity={0.85}
           >
-            <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
+            {placing
+              ? <ActivityIndicator size="small" color="#fff" />
+              : <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
+            }
             <Text style={[styles.ctaBtnText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-              Place {modeCfg.label} Order
+              {placing ? "Placing Order…" : `Place ${modeCfg.label} Order`}
             </Text>
           </TouchableOpacity>
         </View>
@@ -377,6 +512,17 @@ const styles = StyleSheet.create({
   },
 
   scroll: { padding: 16, gap: 14 },
+
+  // Error banner
+  errorBanner: {
+    flexDirection:     "row",
+    alignItems:        "flex-start",
+    gap:               8,
+    padding:           12,
+    borderRadius:      12,
+    borderWidth:       1,
+  },
+  errorText: { flex: 1, lineHeight: 18 },
 
   // Mode banner
   modeBanner: {
@@ -451,12 +597,12 @@ const styles = StyleSheet.create({
 
   terms: { textAlign: "center", lineHeight: 18 },
 
-  // CTA bar — uses mode color as background
+  // CTA bar
   ctaBar: {
-    position:       "absolute",
-    bottom:         0,
-    left:           0,
-    right:          0,
+    position: "absolute",
+    bottom:   0,
+    left:     0,
+    right:    0,
   },
   ctaContent: {
     flexDirection:     "row",
