@@ -36,6 +36,7 @@ const MENU_ITEMS: MenuItem[] = [
   { key: "shop_brands",   label: "Shop by Brands",    icon: "brand_b"                       },
   { key: "new_launches",  label: "New Launches",      icon: "sparkles-outline"              },
   { key: "product_finder",label: "Product Finder",    icon: "search-outline"                },
+  { key: "shared_list",   label: "Shared Shopping",   icon: "people-outline", dividerAfter: true  },
   { key: "store_qr",      label: "Store QR",          icon: "qr-code-outline", dividerAfter: true },
   { key: "favourite",     label: "Favourite",         icon: "heart-outline"                 },
   { key: "bookmark",      label: "Bookmark",          icon: "bookmark-outline", dividerAfter: true },

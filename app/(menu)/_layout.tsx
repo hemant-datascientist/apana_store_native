@@ -31,8 +31,10 @@ export default function MenuLayout() {
       <Stack.Screen name="offer-zone"     />
       <Stack.Screen name="brands"         />
       <Stack.Screen name="new-launchers"  />
-      <Stack.Screen name="language"       />
-      <Stack.Screen name="rate-us"        />
+      <Stack.Screen name="language"            />
+      <Stack.Screen name="rate-us"             />
+      <Stack.Screen name="shared-list"         />
+      <Stack.Screen name="shared-list-detail"  />
     </Stack>
   );
 }
