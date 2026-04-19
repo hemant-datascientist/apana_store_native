@@ -169,7 +169,7 @@ export default function HomeScreen() {
             mode={mode}
             onMenuPress={() => setDrawerOpen(true)}
             onMicPress={()    => Alert.alert("Voice",         "Voice search coming soon.")}
-            onBellPress={()   => Alert.alert("Notifications", "Notifications coming soon.")}
+            onBellPress={() => router.push("/notifications")}
             onScanPress={()   => router.push("/scanner")}
             onLocatePress={() => Alert.alert("Locate",        "GPS locate coming soon.")}
           />

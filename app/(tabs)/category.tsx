@@ -50,7 +50,7 @@ export default function CategoryScreen() {
           mode={mode}
           onMenuPress={()   => Alert.alert("Menu",          "Drawer coming soon.")}
           onMicPress={()    => Alert.alert("Voice",         "Voice search coming soon.")}
-          onBellPress={()   => Alert.alert("Notifications", "Notifications coming soon.")}
+          onBellPress={() => router.push("/notifications")}
           onScanPress={()   => Alert.alert("Scanner",       "Barcode scanner coming soon.")}
           onLocatePress={() => Alert.alert("Locate",        "GPS locate coming soon.")}
         />
