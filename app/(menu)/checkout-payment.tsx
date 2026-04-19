@@ -135,15 +135,12 @@ export default function CheckoutPaymentScreen() {
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-      // Pickup → show per-store QR codes
-      if (mode === "pickup") {
-        const storeOrdersJson = encodeURIComponent(JSON.stringify(res.storeOrders));
-        router.replace(`/order-qr?mode=${mode}&orderId=${res.orderId}&total=${total}&storeOrdersJson=${storeOrdersJson}`);
-        return;
-      }
-
-      // Delivery / Ride → live order tracking
-      router.replace(`/order-tracking?mode=${mode}&orderId=${res.orderId}&total=${total}`);
+      // All modes go to Track first — QR is shown from there after order is ready.
+      // storeOrdersJson is forwarded so Track can pass it to the QR screen.
+      const storeOrdersJson = encodeURIComponent(JSON.stringify(res.storeOrders));
+      router.replace(
+        `/order-tracking?mode=${mode}&orderId=${res.orderId}&total=${total}&storeOrdersJson=${storeOrdersJson}`,
+      );
     } catch (err: any) {
       setPayError(err?.message ?? "Something went wrong. Please try again.");
     } finally {

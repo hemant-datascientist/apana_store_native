@@ -48,11 +48,27 @@ export default function OrderTrackingScreen() {
   const { colors, isDark } = useTheme();
   const router             = useRouter();
 
-  const { orderId = "APX-MOCK-001", mode: modeParam = "delivery", total = "0" }
-    = useLocalSearchParams<{ orderId?: string; mode?: string; total?: string }>();
+  const {
+    orderId          = "APX-MOCK-001",
+    mode:  modeParam = "delivery",
+    total            = "0",
+    storeOrdersJson  = "",
+  } = useLocalSearchParams<{
+    orderId?:         string;
+    mode?:            string;
+    total?:           string;
+    storeOrdersJson?: string;
+  }>();
 
   const mode    = modeParam as FulfillmentMode;
   const totalAmt= parseFloat(total);
+
+  // ── QR navigation — forwards storeOrdersJson to QR screen ──
+  function handleShowQR() {
+    router.push(
+      `/order-qr?mode=${mode}&orderId=${orderId}&total=${total}&storeOrdersJson=${storeOrdersJson}`,
+    );
+  }
 
   const cfg     = TRACKING_MODE_CONFIG[mode];
   const steps   = TRACKING_STEPS[mode];
@@ -165,7 +181,7 @@ export default function OrderTrackingScreen() {
         {/* ── Partner card ── */}
         <TrackingPartnerCard partner={partner} mode={mode} />
 
-        {/* ── Support & Cancel ── */}
+        {/* ── Help row ── */}
         <View style={styles.actionRow}>
           <TouchableOpacity
             style={[styles.secondaryBtn, { borderColor: colors.border, backgroundColor: colors.card }]}
@@ -192,6 +208,33 @@ export default function OrderTrackingScreen() {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
+
+      {/* ── Sticky QR CTA — always visible so customer can show QR anytime ── */}
+      <SafeAreaView
+        style={[styles.qrBar, { backgroundColor: cfg.color }]}
+        edges={["bottom"]}
+      >
+        <TouchableOpacity
+          style={styles.qrBarInner}
+          onPress={handleShowQR}
+          activeOpacity={0.85}
+        >
+          <View style={[styles.qrIconCircle, { backgroundColor: "rgba(255,255,255,0.2)" }]}>
+            <Ionicons name="qr-code-outline" size={22} color="#fff" />
+          </View>
+          <View style={styles.qrBarText}>
+            <Text style={[styles.qrBarTitle, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
+              {mode === "pickup" ? "Show Pickup QR at Counter" :
+               mode === "ride"   ? "Show Ride QR to Driver"   :
+                                   "Show QR for Delivery"}
+            </Text>
+            <Text style={[styles.qrBarSub, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+              Tap to open your verification QR code
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.8)" />
+        </TouchableOpacity>
+      </SafeAreaView>
     </View>
   );
 }
@@ -277,5 +320,26 @@ const styles = StyleSheet.create({
   },
   secondaryBtnText: {},
 
-  bottomSpacer: { height: 24 },
+  bottomSpacer: { height: 100 },
+
+  // Sticky QR bar
+  qrBar: {},
+  qrBarInner: {
+    flexDirection:     "row",
+    alignItems:        "center",
+    gap:               12,
+    paddingHorizontal: 16,
+    paddingVertical:   14,
+  },
+  qrIconCircle: {
+    width:          48,
+    height:         48,
+    borderRadius:   14,
+    alignItems:     "center",
+    justifyContent: "center",
+    flexShrink:     0,
+  },
+  qrBarText: { flex: 1, gap: 2 },
+  qrBarTitle: { color: "#fff" },
+  qrBarSub:   { color: "rgba(255,255,255,0.75)" },
 });
