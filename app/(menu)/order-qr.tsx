@@ -7,16 +7,15 @@
 //   Delivery → Show to delivery partner at the door
 //   Ride     → Show to rider to start the ride
 //
-// QR image sharing:
-//   QRGenerator renders hidden QR on mount, writes PNG to cache,
-//   calls onReady(path). QRShareButton shares that PNG via
-//   expo-sharing. Both are reusable components in components/qr/.
+// Share buttons:
+//   Share QR Code      — QRShareButton → expo-sharing (PNG image)
+//   Share Order as Text — Share.share() with itemised order list
 // ============================================================
 
 import React, { useState, useMemo } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, StatusBar,
+  StyleSheet, StatusBar, Share,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons }     from "@expo/vector-icons";
@@ -26,6 +25,7 @@ import { typography }   from "../../theme/typography";
 
 import { FulfillmentMode, FULFILLMENT_CONFIG } from "../../data/cartData";
 import { ORDER_QR_CONFIG, generateOrderId }    from "../../data/orderQrData";
+import { useCart }                             from "../../context/CartContext";
 
 import OrderQrCode         from "../../components/order-qr/OrderQrCode";
 import OrderQrStatus       from "../../components/order-qr/OrderQrStatus";
@@ -37,6 +37,7 @@ import QRShareButton       from "../../components/qr/QRShareButton";
 export default function OrderQrScreen() {
   const { colors, isDark } = useTheme();
   const router             = useRouter();
+  const { cart }           = useCart();
 
   // ── Params from checkout ──────────────────────────────────
   const {
@@ -55,10 +56,7 @@ export default function OrderQrScreen() {
   const totalAmt   = parseInt(totalParam  ?? "0", 10);
   const storeCount = parseInt(storesParam ?? "1", 10);
 
-  // ── Generate order ID if backend hasn't provided one yet ──
-  const orderId = useMemo(() => orderIdParam ?? generateOrderId(), [orderIdParam]);
-
-  // ── Timestamp when this screen was opened (= order placed) ─
+  const orderId  = useMemo(() => orderIdParam ?? generateOrderId(), [orderIdParam]);
   const placedAt = useMemo(() => new Date(), []);
 
   const cfg     = ORDER_QR_CONFIG[mode];
@@ -67,7 +65,7 @@ export default function OrderQrScreen() {
   // ── QR PNG file path — null until QRGenerator finishes ───
   const [qrFilePath, setQrFilePath] = useState<string | null>(null);
 
-  // ── QR payload — same value used by OrderQrCode display ──
+  // ── QR payload ────────────────────────────────────────────
   const qrValue = JSON.stringify({
     type:    "apana_order",
     orderId,
@@ -75,13 +73,42 @@ export default function OrderQrScreen() {
     ts:      placedAt.getTime(),
   });
 
+  // ── Share order as text — itemised list of what was ordered ──
+  // Reads from CartContext (same cart used during checkout).
+  async function handleShareOrderText() {
+    const modeStores = cart.filter(s => s.fulfillment === mode);
+
+    let body = "";
+    if (modeStores.length === 0) {
+      // Fallback when cart is already cleared or not available
+      body = `${modeCfg.label} order placed.\nOrder ID: ${orderId}\nTotal: ₹${totalAmt}`;
+    } else {
+      const storeLines = modeStores.map(store => {
+        const itemLines = store.items
+          .map(i => `  • ${i.name} × ${i.qty}  —  ₹${i.price * i.qty}`)
+          .join("\n");
+        return `🏪 ${store.name}\n${itemLines}`;
+      }).join("\n\n");
+
+      body =
+        `Order ID: ${orderId}\n` +
+        `Mode: ${modeCfg.label}\n\n` +
+        `${storeLines}\n\n` +
+        `Total: ₹${totalAmt}\n\n` +
+        `Placed via Apana Store`;
+    }
+
+    await Share.share({
+      title:   `My ${modeCfg.label} Order — Apana Store`,
+      message: body,
+    });
+  }
+
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={modeCfg.color} />
 
-      {/* ── QRGenerator — hidden PNG builder (not inside Modal) ──
-           Renders at zIndex:-1 behind the header. Writes the QR
-           to cache and calls onReady with the file path.          */}
+      {/* ── QRGenerator — hidden PNG builder (not inside Modal) ── */}
       <QRGenerator
         value={qrValue}
         cacheKey={`order-${orderId}`}
@@ -114,7 +141,6 @@ export default function OrderQrScreen() {
             </View>
           </View>
 
-          {/* Spacer to balance header row */}
           <View style={styles.headerBtn} />
         </View>
       </SafeAreaView>
@@ -156,13 +182,29 @@ export default function OrderQrScreen() {
           placedAt={placedAt}
         />
 
-        {/* ── Share QR image — enabled once QRGenerator finishes ── */}
+        {/* ── Share QR as PNG image ── */}
         <QRShareButton
           filePath={qrFilePath}
           dialogTitle={`Share Order QR — ${orderId}`}
           color={modeCfg.color}
           style={styles.shareBtn}
         />
+
+        {/* ── Share itemised order list as text ── */}
+        <TouchableOpacity
+          style={[styles.shareTextBtn, { borderColor: colors.border, backgroundColor: colors.card }]}
+          onPress={handleShareOrderText}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="list-outline" size={18} color={colors.text} />
+          <Text style={[styles.shareTextLabel, {
+            color:      colors.text,
+            fontFamily: typography.fontFamily.semiBold,
+            fontSize:   typography.size.sm,
+          }]}>
+            Share Item List
+          </Text>
+        </TouchableOpacity>
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -173,7 +215,6 @@ export default function OrderQrScreen() {
         edges={["bottom"]}
       >
         <View style={styles.bottomContent}>
-          {/* View Orders */}
           <TouchableOpacity
             style={[styles.ordersBtn, { borderColor: colors.border }]}
             onPress={() => router.push("/order-history")}
@@ -185,7 +226,6 @@ export default function OrderQrScreen() {
             </Text>
           </TouchableOpacity>
 
-          {/* Done / Back to Home */}
           <TouchableOpacity
             style={[styles.doneBtn, { backgroundColor: modeCfg.color }]}
             onPress={() => router.replace("/(tabs)")}
@@ -204,9 +244,8 @@ export default function OrderQrScreen() {
 }
 
 const styles = StyleSheet.create({
-  root:   { flex: 1 },
+  root: { flex: 1 },
 
-  // Header (mode-coloured background)
   header: {},
   headerRow: {
     flexDirection:     "row",
@@ -216,19 +255,19 @@ const styles = StyleSheet.create({
     gap:               8,
   },
   headerBtn: {
-    width:          40,
-    height:         40,
-    borderRadius:   12,
+    width:           40,
+    height:          40,
+    borderRadius:    12,
     backgroundColor: "rgba(255,255,255,0.18)",
-    alignItems:     "center",
-    justifyContent: "center",
+    alignItems:      "center",
+    justifyContent:  "center",
   },
   headerCenter: {
     flex:       1,
     alignItems: "center",
     gap:        4,
   },
-  headerTitle: { color: "#fff" },
+  headerTitle:    { color: "#fff" },
   modeBadge: {
     flexDirection:     "row",
     alignItems:        "center",
@@ -239,13 +278,8 @@ const styles = StyleSheet.create({
   },
   modeBadgeText: { color: "#fff" },
 
-  // Scroll
-  scroll: {
-    padding: 16,
-    gap:     16,
-  },
+  scroll: { padding: 16, gap: 16 },
 
-  // Subtitle banner
   subtitleCard: {
     flexDirection:     "row",
     alignItems:        "flex-start",
@@ -254,10 +288,22 @@ const styles = StyleSheet.create({
     borderRadius:      14,
     borderWidth:       1,
   },
-  subtitle:  { flex: 1, lineHeight: 20 },
-  shareBtn:  { marginTop: 4 },
+  subtitle: { flex: 1, lineHeight: 20 },
 
-  // Bottom bar
+  shareBtn: { marginTop: 4 },
+
+  // Share item list as text button
+  shareTextBtn: {
+    flexDirection:     "row",
+    alignItems:        "center",
+    justifyContent:    "center",
+    gap:               8,
+    paddingVertical:   13,
+    borderRadius:      14,
+    borderWidth:       1,
+  },
+  shareTextLabel: {},
+
   bottomBar: {
     position:       "absolute",
     bottom:         0,
@@ -272,24 +318,24 @@ const styles = StyleSheet.create({
     paddingVertical:   12,
   },
   ordersBtn: {
-    flex:              1,
-    flexDirection:     "row",
-    alignItems:        "center",
-    justifyContent:    "center",
-    gap:               7,
-    paddingVertical:   13,
-    borderRadius:      14,
-    borderWidth:       1,
+    flex:           1,
+    flexDirection:  "row",
+    alignItems:     "center",
+    justifyContent: "center",
+    gap:            7,
+    paddingVertical: 13,
+    borderRadius:   14,
+    borderWidth:    1,
   },
   ordersBtnText: {},
   doneBtn: {
-    flex:              1,
-    flexDirection:     "row",
-    alignItems:        "center",
-    justifyContent:    "center",
-    gap:               7,
-    paddingVertical:   13,
-    borderRadius:      14,
+    flex:           1,
+    flexDirection:  "row",
+    alignItems:     "center",
+    justifyContent: "center",
+    gap:            7,
+    paddingVertical: 13,
+    borderRadius:   14,
   },
   doneBtnText: { color: "#fff" },
 });
