@@ -215,6 +215,24 @@ export default function OrderQrScreen() {
           </Text>
         </TouchableOpacity>
 
+        {/* ── Simulate QR scan success → Handshake Complete screen ── */}
+        <TouchableOpacity
+          style={[styles.shareTextBtn, { borderColor: modeCfg.color + "60", backgroundColor: modeCfg.color + "10" }]}
+          onPress={() => router.push(
+            `/order-collected?orderId=${orderId}&mode=${mode}&total=${totalAmt}`
+          )}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="qr-code-outline" size={18} color={modeCfg.color} />
+          <Text style={[styles.shareTextLabel, {
+            color:      modeCfg.color,
+            fontFamily: typography.fontFamily.semiBold,
+            fontSize:   typography.size.sm,
+          }]}>
+            Simulate QR Scan Complete
+          </Text>
+        </TouchableOpacity>
+
         <View style={{ height: 100 }} />
       </ScrollView>
 
