@@ -5,7 +5,8 @@
 // Indian retail invoice: header → meta → items table →
 // summary → GST breakup → footer with share.
 //
-// Route: /invoice?orderId=<billNo>
+// Route: /invoice?storeOrderId=<storeOrderId>   ← preferred (pickup)
+//        /invoice?orderId=<billNo>               ← fallback (delivery/ride)
 // Accessible from: order-collected → "View Invoice" button,
 //                  order-history → row long-press / detail
 // ============================================================
@@ -32,10 +33,13 @@ import InvoiceFooter     from "../../components/invoice/InvoiceFooter";
 export default function InvoiceScreen() {
   const { colors, isDark } = useTheme();
   const router             = useRouter();
-  const { orderId }        = useLocalSearchParams<{ orderId?: string }>();
+  const { orderId, storeOrderId } = useLocalSearchParams<{
+    orderId?:      string;
+    storeOrderId?: string;
+  }>();
 
-  // ── Resolve invoice ───────────────────────────────────────
-  const invoice = getInvoiceByOrderId(orderId ?? "APX100123");
+  // ── Resolve invoice — storeOrderId takes priority (pickup per-store) ─
+  const invoice = getInvoiceByOrderId(storeOrderId ?? orderId ?? "APX-MOCK-S1");
 
   // ── Pre-build share text (passed to footer) ───────────────
   const shareText = useMemo(() => {
@@ -79,7 +83,7 @@ export default function InvoiceScreen() {
               Invoice
             </Text>
             <Text style={[styles.headerSub, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.ss }]}>
-              {invoice.billNo}
+              {invoice.storeOrderId}
             </Text>
           </View>
 

@@ -5,7 +5,7 @@
 // The store staff / delivery partner has scanned the customer's
 // order QR code — this screen confirms the handover is complete.
 //
-// Route: /order-collected?orderId=...&mode=...&total=...
+// Route: /order-collected?orderId=...&storeOrderId=...&mode=...&total=...&storeName=...
 //
 // Three states:
 //   pickup   → "Order Collected!" (store counter pickup)
@@ -38,18 +38,25 @@ export default function OrderCollectedScreen() {
 
   // ── Params ────────────────────────────────────────────────
   const {
-    orderId: orderIdParam,
-    mode:    modeParam,
-    total:   totalParam,
+    orderId:      orderIdParam,
+    storeOrderId: storeOrderIdParam,
+    mode:         modeParam,
+    total:        totalParam,
+    storeName:    storeNameParam,
   } = useLocalSearchParams<{
-    orderId?: string;
-    mode?:    string;
-    total?:   string;
+    orderId?:      string;
+    storeOrderId?: string;
+    mode?:         string;
+    total?:        string;
+    storeName?:    string;
   }>();
 
-  const mode      = (modeParam  ?? "pickup") as FulfillmentMode;
-  const orderId   = orderIdParam ?? "APX000001";
-  const totalAmt  = parseInt(totalParam ?? "0", 10);
+  const mode         = (modeParam ?? "pickup") as FulfillmentMode;
+  const orderId      = orderIdParam      ?? "APX000001";
+  // storeOrderId is set for pickup (per-store handshake), null for delivery/ride
+  const storeOrderId = storeOrderIdParam ?? null;
+  const storeName    = storeNameParam    ? decodeURIComponent(storeNameParam) : null;
+  const totalAmt     = parseInt(totalParam ?? "0", 10);
 
   const cfg      = COLLECTED_CONFIG[mode];
   const modeCfg  = FULFILLMENT_CONFIG[mode];
@@ -101,7 +108,7 @@ export default function OrderCollectedScreen() {
           color={cfg.heroColor}
           bg={cfg.heroBg}
           title={cfg.title}
-          subtitle={cfg.subtitle}
+          subtitle={storeName ? `${cfg.subtitle.split(".")[0]} at ${storeName}.` : cfg.subtitle}
         />
 
         {/* ── Handshake details (agent + metadata) ── */}
@@ -144,10 +151,14 @@ export default function OrderCollectedScreen() {
       >
         <View style={styles.bottomContent}>
 
-          {/* Secondary: View Invoice */}
+          {/* Secondary: View Invoice — per-store (pickup) or master order (delivery/ride) */}
           <TouchableOpacity
             style={[styles.secondaryBtn, { borderColor: colors.border }]}
-            onPress={() => router.push(`/invoice?orderId=${orderId}`)}
+            onPress={() => router.push(
+              storeOrderId
+                ? `/invoice?storeOrderId=${storeOrderId}`
+                : `/invoice?orderId=${orderId}`
+            )}
             activeOpacity={0.8}
           >
             <Ionicons name="document-text-outline" size={16} color={colors.text} />

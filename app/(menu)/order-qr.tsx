@@ -1,15 +1,26 @@
 // ============================================================
 // ORDER QR HANDSHAKE SCREEN — Apana Store (Customer App)
 //
-// Shown immediately after placing an order. The customer
-// presents this QR code to complete the handshake:
-//   Pickup   → Show to store counter staff to collect order
-//   Delivery → Show to delivery partner at the door
-//   Ride     → Show to rider to start the ride
+// Shown immediately after placing an order.
 //
-// Share buttons:
-//   Share QR Code      — QRShareButton → expo-sharing (PNG image)
-//   Share Order as Text — Share.share() with itemised order list
+// PICKUP mode (one QR per store):
+//   Each store gets its own QR card because the customer visits
+//   each store separately. Staff scan that store's storeOrderId.
+//   QR payload: { masterOrderId, storeOrderId, storeId, mode, ts }
+//
+// DELIVERY mode (one combined QR):
+//   A single QR is shown — the delivery partner scans it at the
+//   customer's door after collecting from all stores.
+//   QR payload: { masterOrderId, mode, ts }
+//
+// RIDE mode (one combined QR):
+//   Rider scans once to start the trip.
+//
+// Params from checkout.tsx:
+//   mode            — "pickup" | "delivery" | "ride"
+//   orderId         — master order ID (server-generated)
+//   total           — grand total in ₹
+//   storeOrdersJson — URL-encoded JSON of StoreOrderResult[]
 // ============================================================
 
 import React, { useState, useMemo } from "react";
@@ -17,22 +28,24 @@ import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, StatusBar, Share,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons }     from "@expo/vector-icons";
+import { SafeAreaView }  from "react-native-safe-area-context";
+import { Ionicons }      from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import useTheme         from "../../theme/useTheme";
-import { typography }   from "../../theme/typography";
+import useTheme          from "../../theme/useTheme";
+import { typography }    from "../../theme/typography";
 
 import { FulfillmentMode, FULFILLMENT_CONFIG } from "../../data/cartData";
 import { ORDER_QR_CONFIG, generateOrderId }    from "../../data/orderQrData";
+import { StoreOrderResult }                    from "../../services/checkoutService";
 import { useCart }                             from "../../context/CartContext";
 
-import OrderQrCode         from "../../components/order-qr/OrderQrCode";
-import OrderQrStatus       from "../../components/order-qr/OrderQrStatus";
-import OrderQrInstructions from "../../components/order-qr/OrderQrInstructions";
-import OrderQrSummary      from "../../components/order-qr/OrderQrSummary";
-import QRGenerator         from "../../components/qr/QRGenerator";
-import QRShareButton       from "../../components/qr/QRShareButton";
+import OrderQrCode          from "../../components/order-qr/OrderQrCode";
+import OrderQrStatus        from "../../components/order-qr/OrderQrStatus";
+import OrderQrInstructions  from "../../components/order-qr/OrderQrInstructions";
+import OrderQrSummary       from "../../components/order-qr/OrderQrSummary";
+import OrderQrStoreCard     from "../../components/order-qr/OrderQrStoreCard";
+import QRGenerator          from "../../components/qr/QRGenerator";
+import QRShareButton        from "../../components/qr/QRShareButton";
 
 export default function OrderQrScreen() {
   const { colors, isDark } = useTheme();
@@ -41,91 +54,98 @@ export default function OrderQrScreen() {
 
   // ── Params from checkout ──────────────────────────────────
   const {
-    mode:     modeParam,
-    orderId:  orderIdParam,
-    total:    totalParam,
-    stores:   storesParam,
+    mode:             modeParam,
+    orderId:          orderIdParam,
+    total:            totalParam,
+    storeOrdersJson:  storeOrdersParam,
   } = useLocalSearchParams<{
-    mode?:    string;
-    orderId?: string;
-    total?:   string;
-    stores?:  string;
+    mode?:            string;
+    orderId?:         string;
+    total?:           string;
+    storeOrdersJson?: string;
   }>();
 
-  const mode       = (modeParam  ?? "delivery") as FulfillmentMode;
-  const totalAmt   = parseInt(totalParam  ?? "0", 10);
-  const storeCount = parseInt(storesParam ?? "1", 10);
+  const mode     = (modeParam ?? "delivery") as FulfillmentMode;
+  const totalAmt = parseInt(totalParam ?? "0", 10);
 
-  const orderId  = useMemo(() => orderIdParam ?? generateOrderId(), [orderIdParam]);
-  const placedAt = useMemo(() => new Date(), []);
+  // Stable order ID — from server param or generated client-side
+  const orderId   = useMemo(() => orderIdParam ?? generateOrderId(), [orderIdParam]);
+  const placedAt  = useMemo(() => new Date(), []);
 
   const cfg     = ORDER_QR_CONFIG[mode];
   const modeCfg = FULFILLMENT_CONFIG[mode];
 
-  // ── QR PNG file path — null until QRGenerator finishes ───
+  // ── Parse per-store orders ────────────────────────────────
+  // These come from PlaceOrderResponse.storeOrders via checkout navigation.
+  const storeOrders = useMemo<StoreOrderResult[]>(() => {
+    if (!storeOrdersParam) return [];
+    try { return JSON.parse(decodeURIComponent(storeOrdersParam)); }
+    catch { return []; }
+  }, [storeOrdersParam]);
+
+  // ── For pickup: merge storeOrders with CartContext items ──
+  // storeOrders has IDs + metadata; CartContext has actual item names/prices.
+  const cartStores = useMemo(
+    () => cart.filter(s => s.fulfillment === mode),
+    [cart, mode],
+  );
+
+  function getCartItemsForStore(storeId: string) {
+    return cartStores.find(s => s.id === storeId)?.items ?? [];
+  }
+
+  // ── QR PNG path for combined (delivery/ride) share button ─
   const [qrFilePath, setQrFilePath] = useState<string | null>(null);
 
-  // ── QR payload ────────────────────────────────────────────
-  const qrValue = JSON.stringify({
-    type:    "apana_order",
-    orderId,
+  // ── Combined QR payload (delivery/ride) ──────────────────
+  const combinedQrValue = JSON.stringify({
+    type:         "apana_order",
+    masterOrderId: orderId,
     mode,
-    ts:      placedAt.getTime(),
+    ts:           placedAt.getTime(),
   });
 
-  // ── Share order as text — itemised list of what was ordered ──
-  // Calculates total directly from cart items so it's never ₹0.
+  // ── Share order as text ───────────────────────────────────
   async function handleShareOrderText() {
-    const modeStores = cart.filter(s => s.fulfillment === mode);
+    let cartSubtotal = 0;
+    const storeLines = cartStores.map(store => {
+      const itemLines = store.items.map(i => {
+        cartSubtotal += i.price * i.qty;
+        return `  • ${i.name} ×${i.qty}  — ₹${i.price * i.qty}`;
+      }).join("\n");
+      return `🏪 ${store.name}\n${itemLines}`;
+    }).join("\n\n");
 
-    let body = "";
-    if (modeStores.length === 0) {
-      body =
-        `${modeCfg.label} order placed.\n` +
-        `Order ID: ${orderId}\n` +
-        `Total: ₹${totalAmt}`;
-    } else {
-      // Build per-store item lines and compute subtotal from cart
-      let cartSubtotal = 0;
-      const storeLines = modeStores.map(store => {
-        const itemLines = store.items.map(i => {
-          cartSubtotal += i.price * i.qty;
-          return `  • ${i.name} × ${i.qty}  —  ₹${i.price * i.qty}`;
-        }).join("\n");
-        return `🏪 ${store.name}\n${itemLines}`;
-      }).join("\n\n");
+    const displayTotal = cartSubtotal > 0 ? cartSubtotal : totalAmt;
+    const body =
+      `Order ID: ${orderId}\n` +
+      `Mode: ${modeCfg.label}\n\n` +
+      `${storeLines}\n\n` +
+      `────────────────\n` +
+      `Total: ₹${displayTotal}\n\n` +
+      `Placed via Apana Store`;
 
-      // Use cart-computed total; fall back to URL param if cart is empty
-      const displayTotal = cartSubtotal > 0 ? cartSubtotal : totalAmt;
-
-      body =
-        `Order ID: ${orderId}\n` +
-        `Mode: ${modeCfg.label}\n\n` +
-        `${storeLines}\n\n` +
-        `────────────────\n` +
-        `Total: ₹${displayTotal}\n\n` +
-        `Placed via Apana Store`;
-    }
-
-    await Share.share({
-      title:   `My ${modeCfg.label} Order — Apana Store`,
-      message: body,
-    });
+    await Share.share({ title: `My ${modeCfg.label} Order — Apana Store`, message: body });
   }
+
+  // ── Is pickup with multiple stores? ──────────────────────
+  const isPickupMulti = mode === "pickup" && storeOrders.length > 1;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={modeCfg.color} />
 
-      {/* ── QRGenerator — hidden PNG builder (not inside Modal) ── */}
-      <QRGenerator
-        value={qrValue}
-        cacheKey={`order-${orderId}`}
-        label={`Order ID: ${orderId}`}
-        sublabel={`Apana Store · ${modeCfg.label} Order · ₹${totalAmt}`}
-        onReady={(path) => setQrFilePath(path)}
-        onError={(msg)  => console.warn("[OrderQR] gen error:", msg)}
-      />
+      {/* QRGenerator — hidden PNG builder for combined share (delivery/ride) */}
+      {mode !== "pickup" && (
+        <QRGenerator
+          value={combinedQrValue}
+          cacheKey={`order-${orderId}`}
+          label={`Order ID: ${orderId}`}
+          sublabel={`Apana Store · ${modeCfg.label} Order · ₹${totalAmt}`}
+          onReady={path  => setQrFilePath(path)}
+          onError={msg   => console.warn("[OrderQR] gen error:", msg)}
+        />
+      )}
 
       {/* ── Header ── */}
       <SafeAreaView style={[styles.header, { backgroundColor: modeCfg.color }]} edges={["top"]}>
@@ -157,79 +177,116 @@ export default function OrderQrScreen() {
       {/* ── Scrollable content ── */}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
+        {/* Subtitle tip */}
         <View style={[styles.subtitleCard, { backgroundColor: modeCfg.color + "14", borderColor: modeCfg.color + "30" }]}>
           <Ionicons name="shield-checkmark-outline" size={16} color={modeCfg.color} />
           <Text style={[styles.subtitle, { color: modeCfg.color, fontFamily: typography.fontFamily.medium, fontSize: typography.size.sm }]}>
-            {cfg.subtitle}
+            {isPickupMulti
+              ? `You have ${storeOrders.length} stores — each has its own QR. Visit each store and show its QR at the counter.`
+              : cfg.subtitle}
           </Text>
         </View>
 
-        <OrderQrCode
-          orderId={orderId}
-          mode={mode}
-          modeColor={modeCfg.color}
-          qrLabel={cfg.qrLabel}
-        />
+        {/* ════════════════════════════════════════════════════
+            PICKUP MODE — one QR card per store
+            ════════════════════════════════════════════════ */}
+        {mode === "pickup" && storeOrders.length > 0 ? (
+          <>
+            {storeOrders.map((so) => (
+              <OrderQrStoreCard
+                key={so.storeOrderId}
+                storeOrder={so}
+                items={getCartItemsForStore(so.storeId)}
+                masterOrderId={orderId}
+                modeColor={modeCfg.color}
+                validityHours={cfg.validityHours}
+                placedAt={placedAt}
+                onSimulateScan={() =>
+                  router.push(
+                    `/order-collected?storeOrderId=${so.storeOrderId}&orderId=${orderId}&mode=${mode}&total=${so.subtotal}&storeName=${encodeURIComponent(so.storeName)}`
+                  )
+                }
+                onViewInvoice={() =>
+                  router.push(`/invoice?storeOrderId=${so.storeOrderId}`)
+                }
+              />
+            ))}
 
-        <OrderQrStatus
-          steps={cfg.steps}
-          activeStep={cfg.activeStep}
-          modeColor={modeCfg.color}
-        />
+            {/* Master order summary strip */}
+            <OrderQrSummary
+              mode={mode}
+              storeCount={storeOrders.length}
+              totalAmount={totalAmt}
+              validityHours={cfg.validityHours}
+              placedAt={placedAt}
+            />
+          </>
+        ) : (
+          /* ═══════════════════════════════════════════════════
+             DELIVERY / RIDE — one combined QR
+             ═══════════════════════════════════════════════ */
+          <>
+            <OrderQrCode
+              orderId={orderId}
+              mode={mode}
+              modeColor={modeCfg.color}
+              qrLabel={cfg.qrLabel}
+            />
 
+            <OrderQrStatus
+              steps={cfg.steps}
+              activeStep={cfg.activeStep}
+              modeColor={modeCfg.color}
+            />
+
+            <OrderQrSummary
+              mode={mode}
+              storeCount={cartStores.length || 1}
+              totalAmount={totalAmt}
+              validityHours={cfg.validityHours}
+              placedAt={placedAt}
+            />
+
+            {/* Share QR as PNG */}
+            <QRShareButton
+              filePath={qrFilePath}
+              dialogTitle={`Share Order QR — ${orderId}`}
+              color={modeCfg.color}
+              style={styles.shareBtn}
+            />
+
+            {/* Simulate scan for delivery/ride */}
+            <TouchableOpacity
+              style={[styles.shareTextBtn, { borderColor: modeCfg.color + "60", backgroundColor: modeCfg.color + "10" }]}
+              onPress={() => router.push(
+                `/order-collected?orderId=${orderId}&mode=${mode}&total=${totalAmt}`
+              )}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="qr-code-outline" size={18} color={modeCfg.color} />
+              <Text style={[styles.shareTextLabel, { color: modeCfg.color, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
+                Simulate QR Scan Complete
+              </Text>
+            </TouchableOpacity>
+          </>
+        )}
+
+        {/* Instructions — common to all modes */}
         <OrderQrInstructions
           instructions={cfg.instructions}
           modeColor={modeCfg.color}
           modeIcon={modeCfg.icon}
         />
 
-        <OrderQrSummary
-          mode={mode}
-          storeCount={storeCount}
-          totalAmount={totalAmt}
-          validityHours={cfg.validityHours}
-          placedAt={placedAt}
-        />
-
-        {/* ── Share QR as PNG image ── */}
-        <QRShareButton
-          filePath={qrFilePath}
-          dialogTitle={`Share Order QR — ${orderId}`}
-          color={modeCfg.color}
-          style={styles.shareBtn}
-        />
-
-        {/* ── Share itemised order list as text ── */}
+        {/* Share order as text */}
         <TouchableOpacity
           style={[styles.shareTextBtn, { borderColor: colors.border, backgroundColor: colors.card }]}
           onPress={handleShareOrderText}
           activeOpacity={0.8}
         >
           <Ionicons name="list-outline" size={18} color={colors.text} />
-          <Text style={[styles.shareTextLabel, {
-            color:      colors.text,
-            fontFamily: typography.fontFamily.semiBold,
-            fontSize:   typography.size.sm,
-          }]}>
+          <Text style={[styles.shareTextLabel, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
             Share Item List
-          </Text>
-        </TouchableOpacity>
-
-        {/* ── Simulate QR scan success → Handshake Complete screen ── */}
-        <TouchableOpacity
-          style={[styles.shareTextBtn, { borderColor: modeCfg.color + "60", backgroundColor: modeCfg.color + "10" }]}
-          onPress={() => router.push(
-            `/order-collected?orderId=${orderId}&mode=${mode}&total=${totalAmt}`
-          )}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="qr-code-outline" size={18} color={modeCfg.color} />
-          <Text style={[styles.shareTextLabel, {
-            color:      modeCfg.color,
-            fontFamily: typography.fontFamily.semiBold,
-            fontSize:   typography.size.sm,
-          }]}>
-            Simulate QR Scan Complete
           </Text>
         </TouchableOpacity>
 
@@ -265,7 +322,6 @@ export default function OrderQrScreen() {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
-
     </View>
   );
 }
@@ -289,12 +345,8 @@ const styles = StyleSheet.create({
     alignItems:      "center",
     justifyContent:  "center",
   },
-  headerCenter: {
-    flex:       1,
-    alignItems: "center",
-    gap:        4,
-  },
-  headerTitle:    { color: "#fff" },
+  headerCenter:  { flex: 1, alignItems: "center", gap: 4 },
+  headerTitle:   { color: "#fff" },
   modeBadge: {
     flexDirection:     "row",
     alignItems:        "center",
@@ -308,26 +360,24 @@ const styles = StyleSheet.create({
   scroll: { padding: 16, gap: 16 },
 
   subtitleCard: {
-    flexDirection:     "row",
-    alignItems:        "flex-start",
-    gap:               8,
-    padding:           14,
-    borderRadius:      14,
-    borderWidth:       1,
+    flexDirection: "row",
+    alignItems:    "flex-start",
+    gap:           8,
+    padding:       14,
+    borderRadius:  14,
+    borderWidth:   1,
   },
   subtitle: { flex: 1, lineHeight: 20 },
 
-  shareBtn: { marginTop: 4 },
-
-  // Share item list as text button
+  shareBtn:     { marginTop: 4 },
   shareTextBtn: {
-    flexDirection:     "row",
-    alignItems:        "center",
-    justifyContent:    "center",
-    gap:               8,
-    paddingVertical:   13,
-    borderRadius:      14,
-    borderWidth:       1,
+    flexDirection:  "row",
+    alignItems:     "center",
+    justifyContent: "center",
+    gap:            8,
+    paddingVertical: 13,
+    borderRadius:   14,
+    borderWidth:    1,
   },
   shareTextLabel: {},
 
@@ -345,24 +395,24 @@ const styles = StyleSheet.create({
     paddingVertical:   12,
   },
   ordersBtn: {
-    flex:           1,
-    flexDirection:  "row",
-    alignItems:     "center",
-    justifyContent: "center",
-    gap:            7,
+    flex:            1,
+    flexDirection:   "row",
+    alignItems:      "center",
+    justifyContent:  "center",
+    gap:             7,
     paddingVertical: 13,
-    borderRadius:   14,
-    borderWidth:    1,
+    borderRadius:    14,
+    borderWidth:     1,
   },
   ordersBtnText: {},
   doneBtn: {
-    flex:           1,
-    flexDirection:  "row",
-    alignItems:     "center",
-    justifyContent: "center",
-    gap:            7,
+    flex:            1,
+    flexDirection:   "row",
+    alignItems:      "center",
+    justifyContent:  "center",
+    gap:             7,
     paddingVertical: 13,
-    borderRadius:   14,
+    borderRadius:    14,
   },
   doneBtnText: { color: "#fff" },
 });

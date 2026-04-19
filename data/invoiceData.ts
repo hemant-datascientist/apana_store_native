@@ -39,6 +39,9 @@ export interface InvoicePayment {
 
 // ── Full invoice ──────────────────────────────────────────
 export interface Invoice {
+  // Identity — storeOrderId links to a specific store's sub-order
+  storeOrderId:   string;   // e.g. "APX-...-S1" — unique per store
+  masterOrderId:  string;   // master order grouping all stores
   // Store info
   storeName:      string;
   storeLogo:      string;   // Ionicons glyph placeholder
@@ -78,10 +81,15 @@ export interface Invoice {
   thankYouNote:   string;
 }
 
-// ── Helper: look up invoice by orderId ────────────────────
-export function getInvoiceByOrderId(orderId: string): Invoice {
-  return MOCK_INVOICES.find(inv => inv.billNo === orderId)
-    ?? MOCK_INVOICES[0];
+// ── Helper: look up invoice by storeOrderId or billNo ────
+// storeOrderId is the per-store sub-order ID (preferred for pickup).
+// billNo is the human-readable invoice number (fallback / legacy).
+export function getInvoiceByOrderId(id: string): Invoice {
+  return (
+    MOCK_INVOICES.find(inv => inv.storeOrderId === id) ??
+    MOCK_INVOICES.find(inv => inv.billNo        === id) ??
+    MOCK_INVOICES[0]
+  );
 }
 
 // ── Helper: format date for display ──────────────────────
@@ -102,6 +110,8 @@ export const MOCK_INVOICES: Invoice[] = [
 
   // ── INV-001: Sharma General Store (Grocery + Electronics) ─
   {
+    storeOrderId:   "APX-MOCK-S1",
+    masterOrderId:  "APX-MOCK",
     storeName:      "Sharma General Store",
     storeLogo:      "storefront-outline",
     storeLogoColor: "#166534",
@@ -191,6 +201,8 @@ export const MOCK_INVOICES: Invoice[] = [
 
   // ── INV-002: TechZone Electronics ─────────────────────────
   {
+    storeOrderId:   "APX-MOCK-S2",
+    masterOrderId:  "APX-MOCK",
     storeName:      "TechZone Electronics",
     storeLogo:      "hardware-chip-outline",
     storeLogoColor: "#1E3A5F",

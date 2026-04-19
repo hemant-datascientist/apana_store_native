@@ -44,7 +44,7 @@ import { MOCK_PAYMENT_METHODS, PaymentMethod } from "../../data/paymentData";
 import { CHECKOUT_STEPS } from "../../data/checkoutData";
 import {
   placeOrder, validatePromoCode,
-  PlaceOrderRequest, StoreOrderInput,
+  PlaceOrderRequest, StoreOrderInput, StoreOrderResult,
 } from "../../services/checkoutService";
 
 import CheckoutAddressCard    from "../../components/checkout/CheckoutAddressCard";
@@ -167,8 +167,9 @@ export default function CheckoutScreen() {
     try {
       // ── Build typed request payload ──────────────────────
       const storeOrders: StoreOrderInput[] = cart.map(store => ({
-        storeId: store.id,
-        items:   store.items.map(item => ({
+        storeId:   store.id,
+        storeName: store.name,
+        items:     store.items.map(item => ({
           itemId:    item.id,
           name:      item.name,
           qty:       item.qty,
@@ -193,9 +194,12 @@ export default function CheckoutScreen() {
       }
 
       // ── Success: haptic + navigate to QR handshake ────────
+      // storeOrdersJson carries per-store order IDs so the QR screen
+      // can show one QR per store (pickup) or a combined QR (delivery/ride).
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      const storeOrdersJson = encodeURIComponent(JSON.stringify(res.storeOrders));
       router.replace(
-        `/order-qr?mode=${mode}&orderId=${res.orderId}&total=${total}&stores=${cart.length}`,
+        `/order-qr?mode=${mode}&orderId=${res.orderId}&total=${total}&storeOrdersJson=${storeOrdersJson}`,
       );
     } catch (err: any) {
       setOrderError(err?.message ?? "Something went wrong. Please try again.");
