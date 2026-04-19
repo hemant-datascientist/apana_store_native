@@ -2,12 +2,14 @@
 // SHARED LIST QR MODAL — Apana Store
 //
 // Bottom-sheet modal that displays a scannable QR code for a
-// shared shopping list and lets the user share it as an image.
+// shared shopping list with two share actions:
+//   1. Share QR Code (image)  — QRShareButton → expo-sharing
+//   2. Share Items as Text    — calls onShareText() on the parent
+//      (parent runs Share.share() in the main window, not Modal,
+//       to avoid the Android native-window share-sheet issue)
 //
 // QR payload: { type, listId, listName, invitedBy }
 // Brightness toggle: tap the QR card to go full-white (low-light)
-// Share: QRShareButton receives the pre-generated PNG filePath
-//        from the parent screen (via QRGenerator component).
 // ============================================================
 
 import React, { useState } from "react";
@@ -20,21 +22,22 @@ import { Ionicons }    from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useTheme        from "../../theme/useTheme";
 import { typography }  from "../../theme/typography";
-import { SharedList } from "../../data/sharedListData";
+import { SharedList }  from "../../data/sharedListData";
 import QRShareButton   from "../qr/QRShareButton";
 
 const { width: SW } = Dimensions.get("window");
 const QR_SIZE       = SW * 0.55;
 
 interface SharedListQrModalProps {
-  visible:    boolean;
-  list:       SharedList;
-  onClose:    () => void;
-  qrFilePath: string | null;
+  visible:       boolean;
+  list:          SharedList;
+  onClose:       () => void;
+  qrFilePath:    string | null;
+  onShareText:   () => void;   // parent calls Share.share() in main window
 }
 
 export default function SharedListQrModal({
-  visible, list, onClose, qrFilePath,
+  visible, list, onClose, qrFilePath, onShareText,
 }: SharedListQrModalProps) {
   const { colors } = useTheme();
   const insets     = useSafeAreaInsets();
@@ -71,14 +74,14 @@ export default function SharedListQrModal({
               fontFamily: typography.fontFamily.bold,
               fontSize:   typography.size.lg,
             }]}>
-              Share via QR
+              Share List
             </Text>
             <Text style={[styles.subtitle, {
               color:      colors.subText,
               fontFamily: typography.fontFamily.regular,
               fontSize:   typography.size.xs,
             }]}>
-              Let someone scan this to join your list
+              Scan QR to join · or send items as text
             </Text>
           </View>
           <TouchableOpacity
@@ -155,13 +158,36 @@ export default function SharedListQrModal({
           </Text>
         </View>
 
-        {/* Share QR image — QRShareButton handles all share logic */}
-        <QRShareButton
-          filePath={qrFilePath}
-          dialogTitle={`Share QR for "${list.name}"`}
-          color={colors.primary}
-        />
+        {/* ── Button row: QR image share + text share side by side ── */}
+        <View style={styles.btnRow}>
 
+          {/* Share item list as text — fires onShareText() on parent
+              so Share.share() runs in the main window, not the Modal */}
+          <TouchableOpacity
+            style={[styles.textBtn, { borderColor: colors.border, backgroundColor: colors.background }]}
+            onPress={() => { onClose(); setTimeout(onShareText, 300); }}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="list-outline" size={17} color={colors.text} />
+            <Text style={[styles.textBtnLabel, {
+              color:      colors.text,
+              fontFamily: typography.fontFamily.semiBold,
+              fontSize:   typography.size.sm,
+            }]}>
+              Share Items
+            </Text>
+          </TouchableOpacity>
+
+          {/* Share QR as PNG image */}
+          <View style={styles.qrBtnWrap}>
+            <QRShareButton
+              filePath={qrFilePath}
+              dialogTitle={`Share QR for "${list.name}"`}
+              color={colors.primary}
+            />
+          </View>
+
+        </View>
 
       </View>
     </Modal>
@@ -252,15 +278,22 @@ const styles = StyleSheet.create({
   },
   noteText: { flex: 1, lineHeight: 17 },
 
-  textShareBtn: {
-    flexDirection:     "row",
-    alignItems:        "center",
-    justifyContent:    "center",
-    gap:               8,
-    alignSelf:         "stretch",
-    paddingVertical:   13,
-    borderRadius:      14,
-    borderWidth:       1,
+  // Two-button row at the bottom
+  btnRow: {
+    flexDirection: "row",
+    alignSelf:     "stretch",
+    gap:           10,
   },
-  textShareLabel: {},
+  textBtn: {
+    flex:           1,
+    flexDirection:  "row",
+    alignItems:     "center",
+    justifyContent: "center",
+    gap:            7,
+    paddingVertical: 13,
+    borderRadius:   14,
+    borderWidth:    1,
+  },
+  textBtnLabel: {},
+  qrBtnWrap: { flex: 2 },
 });

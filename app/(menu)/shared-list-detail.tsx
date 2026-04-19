@@ -228,12 +228,13 @@ export default function SharedListDetailScreen() {
         <SharedListAddItem onAdd={handleAddItem} />
       </SafeAreaView>
 
-      {/* ── QR modal — QR image sharing only ── */}
+      {/* ── QR modal — QR image + text share buttons ── */}
       <SharedListQrModal
         visible={qrVisible}
         list={baseList}
         onClose={() => setQrVisible(false)}
         qrFilePath={qrFilePath}
+        onShareText={handleShareText}
       />
     </View>
   );
