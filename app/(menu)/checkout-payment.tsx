@@ -40,8 +40,12 @@ import {
 
 import CheckoutPaymentSelector from "../../components/checkout/CheckoutPaymentSelector";
 
-// ── Eligible payment methods (exclude COD — per product spec) ─
-const ELIGIBLE_METHODS = MOCK_PAYMENT_METHODS.filter(m => m.type !== "cod");
+// ── COD is available for delivery/ride (partner collects cash),
+//    but NOT for pickup (no one collects cash at the store counter).
+function getEligibleMethods(mode: FulfillmentMode) {
+  if (mode === "pickup") return MOCK_PAYMENT_METHODS.filter(m => m.type !== "cod");
+  return MOCK_PAYMENT_METHODS;
+}
 
 const ACTIVE_STEP = "payment";
 
@@ -87,8 +91,10 @@ export default function CheckoutPaymentScreen() {
   );
 
   // ── Payment method state ──────────────────────────────────────
-  const defaultMethod = ELIGIBLE_METHODS.find(m => m.isDefault) ?? ELIGIBLE_METHODS[0];
+  const eligibleMethods = useMemo(() => getEligibleMethods(mode), [mode]);
+  const defaultMethod   = eligibleMethods.find(m => m.isDefault) ?? eligibleMethods[0];
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>(defaultMethod);
+  const isCod = selectedPayment.type === "cod";
   const [placing,  setPlacing]  = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
 
@@ -268,10 +274,25 @@ export default function CheckoutPaymentScreen() {
 
         {/* ── Payment method selector ── */}
         <CheckoutPaymentSelector
-          methods={ELIGIBLE_METHODS}
+          methods={eligibleMethods}
           selectedId={selectedPayment.id}
           onSelect={setSelectedPayment}
         />
+
+        {/* ── COD info strip — shown only when Cash on Delivery is selected ── */}
+        {isCod && (
+          <View style={[styles.codStrip, { backgroundColor: "#FEF9C3", borderColor: "#FCD34D" }]}>
+            <Ionicons name="cash-outline" size={18} color="#D97706" />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.codTitle, { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
+                Pay with Cash on Delivery
+              </Text>
+              <Text style={[styles.codSub, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+                Keep exact change ready (₹{total.toFixed(0)}). The delivery partner will collect cash when they arrive.
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* ── Security assurance ── */}
         <View style={[styles.securityCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -303,7 +324,7 @@ export default function CheckoutPaymentScreen() {
               via {selectedPayment.label}
             </Text>
             <Text style={[styles.ctaAmount, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg }]}>
-              Pay ₹{total.toFixed(2)}
+              {isCod ? "₹" + total.toFixed(2) + " COD" : "Pay ₹" + total.toFixed(2)}
             </Text>
           </View>
 
@@ -315,10 +336,10 @@ export default function CheckoutPaymentScreen() {
           >
             {placing
               ? <ActivityIndicator size="small" color="#fff" />
-              : <Ionicons name="lock-closed-outline" size={18} color="#fff" />
+              : <Ionicons name={isCod ? "cash-outline" : "lock-closed-outline"} size={18} color="#fff" />
             }
             <Text style={[styles.ctaBtnText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-              {placing ? "Processing…" : "Confirm & Pay"}
+              {placing ? "Placing Order…" : isCod ? "Place Order (COD)" : "Confirm & Pay"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -431,6 +452,18 @@ const styles = StyleSheet.create({
     borderWidth:       1,
   },
   discountText: {},
+
+  // COD info strip
+  codStrip: {
+    flexDirection:  "row",
+    alignItems:     "flex-start",
+    gap:            12,
+    padding:        14,
+    borderRadius:   14,
+    borderWidth:    1,
+  },
+  codTitle: { color: "#92400E", marginBottom: 3 },
+  codSub:   { color: "#92400E", lineHeight: 18 },
 
   // Security
   securityCard: {
