@@ -54,15 +54,17 @@ export default function OrderQrScreen() {
 
   // ── Params from checkout ──────────────────────────────────
   const {
-    mode:             modeParam,
-    orderId:          orderIdParam,
-    total:            totalParam,
-    storeOrdersJson:  storeOrdersParam,
+    mode:               modeParam,
+    orderId:            orderIdParam,
+    total:              totalParam,
+    storeOrdersJson:    storeOrdersParam,
+    remainingStoresJson: remainingParam = "",
   } = useLocalSearchParams<{
-    mode?:            string;
-    orderId?:         string;
-    total?:           string;
-    storeOrdersJson?: string;
+    mode?:                string;
+    orderId?:             string;
+    total?:               string;
+    storeOrdersJson?:     string;
+    remainingStoresJson?: string;
   }>();
 
   const mode     = (modeParam ?? "delivery") as FulfillmentMode;
@@ -234,11 +236,15 @@ export default function OrderQrScreen() {
                 validityHours={cfg.validityHours}
                 placedAt={placedAt}
                 qrFilePath={storeQrPaths[so.storeOrderId] ?? null}
-                onSimulateScan={() =>
-                  router.push(
-                    `/order-collected?storeOrderId=${so.storeOrderId}&orderId=${orderId}&mode=${mode}&total=${so.subtotal}&storeName=${encodeURIComponent(so.storeName)}`
-                  )
-                }
+                onSimulateScan={() => {
+                  // Re-encode remainingParam (already decoded by expo-router) for next URL.
+                  // If no remaining stores, omit the param so order-collected shows "Back to Home".
+                  const base = `/order-collected?storeOrderId=${so.storeOrderId}&orderId=${orderId}&mode=${mode}&total=${so.subtotal}&storeName=${encodeURIComponent(so.storeName)}`;
+                  const url  = remainingParam
+                    ? `${base}&remainingStoresJson=${encodeURIComponent(remainingParam)}`
+                    : base;
+                  router.push(url as any);
+                }}
                 onViewInvoice={() =>
                   router.push(`/invoice?storeOrderId=${so.storeOrderId}`)
                 }

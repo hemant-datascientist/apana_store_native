@@ -18,7 +18,7 @@
 //   WS  /ws/tracking/:orderId               (live socket)
 // ============================================================
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, StatusBar,
@@ -30,6 +30,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import useTheme                  from "../../theme/useTheme";
 import { typography }            from "../../theme/typography";
 import { FulfillmentMode }       from "../../data/cartData";
+import { StoreOrderResult }      from "../../services/checkoutService";
 import { CHECKOUT_STEPS }        from "../../data/checkoutData";
 import {
   TRACKING_STEPS, MOCK_ACTIVE_STEP, MOCK_ETA,
@@ -63,10 +64,25 @@ export default function OrderTrackingScreen() {
   const mode    = modeParam as FulfillmentMode;
   const totalAmt= parseFloat(total);
 
-  // ── QR navigation — forwards storeOrdersJson to QR screen ──
+  // ── Parse store orders (expo-router already decoded the URL param) ──
+  const storeOrders = useMemo<StoreOrderResult[]>(() => {
+    if (!storeOrdersJson) return [];
+    try { return JSON.parse(storeOrdersJson); }
+    catch { return []; }
+  }, [storeOrdersJson]);
+
+  // ── Sequential pickup: first store is current, rest are pending ──
+  const currentStore    = mode === "pickup" && storeOrders.length > 0 ? storeOrders[0] : null;
+  const remainingStores = mode === "pickup" && storeOrders.length > 1 ? storeOrders.slice(1) : [];
+
+  // ── QR navigation — for pickup passes only current store + remaining ──
+  // storeOrdersJson is raw JSON (already decoded by expo-router), must re-encode for URL.
   function handleShowQR() {
+    const qrStores        = mode === "pickup" && currentStore ? [currentStore] : storeOrders;
+    const encodedStores   = encodeURIComponent(JSON.stringify(qrStores));
+    const encodedRemaining= encodeURIComponent(JSON.stringify(remainingStores));
     router.push(
-      `/order-qr?mode=${mode}&orderId=${orderId}&total=${total}&storeOrdersJson=${storeOrdersJson}`,
+      `/order-qr?mode=${mode}&orderId=${orderId}&total=${total}&storeOrdersJson=${encodedStores}&remainingStoresJson=${encodedRemaining}`,
     );
   }
 
@@ -224,9 +240,11 @@ export default function OrderTrackingScreen() {
           </View>
           <View style={styles.qrBarText}>
             <Text style={[styles.qrBarTitle, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-              {mode === "pickup" ? "Show Pickup QR at Counter" :
-               mode === "ride"   ? "Show Ride QR to Driver"   :
-                                   "Show QR for Delivery"}
+              {mode === "pickup" && currentStore
+              ? `Show QR at ${currentStore.storeName}`
+              : mode === "ride"
+                ? "Show Ride QR to Driver"
+                : "Show QR for Delivery"}
             </Text>
             <Text style={[styles.qrBarSub, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
               Tap to open your verification QR code

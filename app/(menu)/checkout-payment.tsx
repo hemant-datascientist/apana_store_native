@@ -40,10 +40,11 @@ import {
 
 import CheckoutPaymentSelector from "../../components/checkout/CheckoutPaymentSelector";
 
-// ── COD is available for delivery/ride (partner collects cash),
-//    but NOT for pickup (no one collects cash at the store counter).
-function getEligibleMethods(mode: FulfillmentMode) {
-  if (mode === "pickup") return MOCK_PAYMENT_METHODS.filter(m => m.type !== "cod");
+// ── COD is valid for ALL modes:
+//    pickup   → customer pays cash at the store counter on arrival
+//    delivery → delivery partner collects cash at the door
+//    ride     → rider collects cash on arrival
+function getEligibleMethods(_mode: FulfillmentMode) {
   return MOCK_PAYMENT_METHODS;
 }
 
@@ -288,7 +289,10 @@ export default function CheckoutPaymentScreen() {
                 Pay with Cash on Delivery
               </Text>
               <Text style={[styles.codSub, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-                Keep exact change ready (₹{total.toFixed(0)}). The delivery partner will collect cash when they arrive.
+                {mode === "pickup"
+                ? `Pay ₹${total.toFixed(0)} cash at the store counter when you collect your order.`
+                : `Keep exact change ready (₹${total.toFixed(0)}). The ${mode === "ride" ? "rider" : "delivery partner"} will collect cash when they arrive.`
+              }
               </Text>
             </View>
           </View>

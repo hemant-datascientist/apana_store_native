@@ -27,6 +27,7 @@ import { FulfillmentMode, FULFILLMENT_CONFIG } from "../../data/cartData";
 import {
   COLLECTED_CONFIG, MOCK_AGENTS,
 } from "../../data/orderCollectedData";
+import { StoreOrderResult } from "../../services/checkoutService";
 
 import HandshakeHero    from "../../components/order-collected/HandshakeHero";
 import HandshakeDetails from "../../components/order-collected/HandshakeDetails";
@@ -38,17 +39,19 @@ export default function OrderCollectedScreen() {
 
   // ── Params ────────────────────────────────────────────────
   const {
-    orderId:      orderIdParam,
-    storeOrderId: storeOrderIdParam,
-    mode:         modeParam,
-    total:        totalParam,
-    storeName:    storeNameParam,
+    orderId:             orderIdParam,
+    storeOrderId:        storeOrderIdParam,
+    mode:                modeParam,
+    total:               totalParam,
+    storeName:           storeNameParam,
+    remainingStoresJson: remainingParam = "",
   } = useLocalSearchParams<{
-    orderId?:      string;
-    storeOrderId?: string;
-    mode?:         string;
-    total?:        string;
-    storeName?:    string;
+    orderId?:              string;
+    storeOrderId?:         string;
+    mode?:                 string;
+    total?:                string;
+    storeName?:            string;
+    remainingStoresJson?:  string;
   }>();
 
   const mode         = (modeParam ?? "pickup") as FulfillmentMode;
@@ -61,6 +64,15 @@ export default function OrderCollectedScreen() {
   const cfg      = COLLECTED_CONFIG[mode];
   const modeCfg  = FULFILLMENT_CONFIG[mode];
   const agent    = MOCK_AGENTS[mode];
+
+  // ── Remaining pickup stores — drives "Next Store" CTA ────────
+  // remainingParam is already decoded by expo-router; parse as-is.
+  const remainingStores = useMemo<StoreOrderResult[]>(() => {
+    if (!remainingParam) return [];
+    try { return JSON.parse(remainingParam); }
+    catch { return []; }
+  }, [remainingParam]);
+  const hasNextStore = mode === "pickup" && remainingStores.length > 0;
 
   // Freeze timestamp to mount time
   const scannedAt = useMemo(() => new Date(), []);
@@ -167,15 +179,25 @@ export default function OrderCollectedScreen() {
             </Text>
           </TouchableOpacity>
 
-          {/* Primary: CTA (Track / Done) */}
+          {/* Primary CTA — "Next Store" if more pickup stores remain, else "Back to Home" */}
           <TouchableOpacity
             style={[styles.primaryBtn, { backgroundColor: cfg.heroColor }]}
-            onPress={() => router.replace("/(tabs)")}
+            onPress={() => {
+              if (hasNextStore) {
+                // Re-encode remainingParam (already decoded) for next order-tracking URL
+                const encoded = encodeURIComponent(remainingParam);
+                router.push(
+                  `/order-tracking?mode=pickup&orderId=${orderId}&total=${totalAmt}&storeOrdersJson=${encoded}` as any,
+                );
+              } else {
+                router.replace("/(tabs)");
+              }
+            }}
             activeOpacity={0.85}
           >
-            <Ionicons name="home-outline" size={16} color="#fff" />
+            <Ionicons name={hasNextStore ? "navigate-outline" : "home-outline"} size={16} color="#fff" />
             <Text style={[styles.primaryText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-              Back to Home
+              {hasNextStore ? `Next Store (${remainingStores.length} left)` : "Back to Home"}
             </Text>
           </TouchableOpacity>
         </View>
