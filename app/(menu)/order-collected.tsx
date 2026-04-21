@@ -41,6 +41,7 @@ export default function OrderCollectedScreen() {
   const {
     orderId:             orderIdParam,
     storeOrderId:        storeOrderIdParam,
+    storeId:             storeIdParam,
     mode:                modeParam,
     total:               totalParam,
     storeName:           storeNameParam,
@@ -48,6 +49,7 @@ export default function OrderCollectedScreen() {
   } = useLocalSearchParams<{
     orderId?:              string;
     storeOrderId?:         string;
+    storeId?:              string;
     mode?:                 string;
     total?:                string;
     storeName?:            string;
@@ -56,8 +58,9 @@ export default function OrderCollectedScreen() {
 
   const mode         = (modeParam ?? "pickup") as FulfillmentMode;
   const orderId      = orderIdParam      ?? "APX000001";
-  // storeOrderId is set for pickup (per-store handshake), null for delivery/ride
+  // storeOrderId and storeId are set for pickup (per-store handshake), null for delivery/ride
   const storeOrderId = storeOrderIdParam ?? null;
+  const storeId      = storeIdParam      ?? null;
   const storeName    = storeNameParam    ? decodeURIComponent(storeNameParam) : null;
   const totalAmt     = parseInt(totalParam ?? "0", 10);
 
@@ -166,11 +169,14 @@ export default function OrderCollectedScreen() {
           {/* Secondary: View Invoice — per-store (pickup) or master order (delivery/ride) */}
           <TouchableOpacity
             style={[styles.secondaryBtn, { borderColor: colors.border }]}
-            onPress={() => router.push(
-              storeOrderId
-                ? `/invoice?storeOrderId=${storeOrderId}`
-                : `/invoice?orderId=${orderId}`
-            )}
+            onPress={() => {
+              // storeId guarantees the correct store name in the invoice mock/backend
+              const idPart = storeOrderId
+                ? `storeOrderId=${storeOrderId}`
+                : `orderId=${orderId}`;
+              const sid = storeId ? `&storeId=${storeId}` : "";
+              router.push(`/invoice?${idPart}${sid}` as any);
+            }}
             activeOpacity={0.8}
           >
             <Ionicons name="document-text-outline" size={16} color={colors.text} />

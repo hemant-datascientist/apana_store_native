@@ -29,6 +29,7 @@ const ICON_SIZE  = 22;
 interface HomeSearchBarProps {
   value:          string;
   onChangeText:   (t: string) => void;
+  onSubmit?:      (q: string) => void;   // navigate to search results
   mode:           DiscoveryMode;
   onMenuPress:    () => void;
   onMicPress:     () => void;
@@ -38,7 +39,7 @@ interface HomeSearchBarProps {
 }
 
 export default function HomeSearchBar({
-  value, onChangeText, mode,
+  value, onChangeText, onSubmit, mode,
   onMenuPress, onMicPress,
   onBellPress, onScanPress, onLocatePress,
 }: HomeSearchBarProps) {
@@ -66,6 +67,7 @@ export default function HomeSearchBar({
           ref={inputRef}
           value={value}
           onChangeText={onChangeText}
+          onSubmitEditing={() => onSubmit?.(value)}
           placeholder={placeholder}
           placeholderTextColor="rgba(255,255,255,0.55)"
           style={[styles.input, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.sm }]}

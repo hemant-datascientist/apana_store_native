@@ -60,6 +60,7 @@ import NearbyStoresFeed    from "../../components/tabs/home/stores/NearbyStoresF
 import WholesaleStoresFeed from "../../components/tabs/home/stores/WholesaleStoresFeed";
 import B2CStoresFeed       from "../../components/tabs/home/stores/B2CStoresFeed";
 import ServiceStoresFeed   from "../../components/tabs/home/stores/ServiceStoresFeed";
+import MapViewFeed         from "../../components/tabs/home/stores/MapViewFeed";
 
 export default function HomeScreen() {
   const { colors, setCategoryPrimary } = useTheme();
@@ -166,6 +167,7 @@ export default function HomeScreen() {
           <HomeSearchBar
             value={search}
             onChangeText={setSearch}
+            onSubmit={q => q.trim() && router.push(`/search-results?q=${encodeURIComponent(q.trim())}` as any)}
             mode={mode}
             onMenuPress={() => setDrawerOpen(true)}
             onMicPress={()    => Alert.alert("Voice",         "Voice search coming soon.")}
@@ -209,6 +211,7 @@ export default function HomeScreen() {
         {mode === "stores" && storeTab === "wholesale"     && <WholesaleStoresFeed />}
         {mode === "stores" && storeTab === "b2c"           && <B2CStoresFeed />}
         {mode === "stores" && storeTab === "service_based" && <ServiceStoresFeed />}
+        {mode === "stores" && storeTab === "map_view"      && <MapViewFeed />}
 
       </ScrollView>
 

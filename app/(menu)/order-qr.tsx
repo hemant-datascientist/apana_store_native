@@ -239,14 +239,15 @@ export default function OrderQrScreen() {
                 onSimulateScan={() => {
                   // Re-encode remainingParam (already decoded by expo-router) for next URL.
                   // If no remaining stores, omit the param so order-collected shows "Back to Home".
-                  const base = `/order-collected?storeOrderId=${so.storeOrderId}&orderId=${orderId}&mode=${mode}&total=${so.subtotal}&storeName=${encodeURIComponent(so.storeName)}`;
+                  // storeId is forwarded so order-collected can pass it to the invoice screen.
+                  const base = `/order-collected?storeOrderId=${so.storeOrderId}&storeId=${so.storeId}&orderId=${orderId}&mode=${mode}&total=${so.subtotal}&storeName=${encodeURIComponent(so.storeName)}`;
                   const url  = remainingParam
                     ? `${base}&remainingStoresJson=${encodeURIComponent(remainingParam)}`
                     : base;
                   router.push(url as any);
                 }}
                 onViewInvoice={() =>
-                  router.push(`/invoice?storeOrderId=${so.storeOrderId}`)
+                  router.push(`/invoice?storeOrderId=${so.storeOrderId}&storeId=${so.storeId}` as any)
                 }
               />
             ))}

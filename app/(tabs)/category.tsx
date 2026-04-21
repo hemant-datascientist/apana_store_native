@@ -49,6 +49,7 @@ export default function CategoryScreen() {
         <HomeSearchBar
           value={search}
           onChangeText={setSearch}
+          onSubmit={q => q.trim() && router.push(`/search-results?q=${encodeURIComponent(q.trim())}` as any)}
           mode={mode}
           onMenuPress={()   => Alert.alert("Menu",          "Drawer coming soon.")}
           onMicPress={()    => Alert.alert("Voice",         "Voice search coming soon.")}

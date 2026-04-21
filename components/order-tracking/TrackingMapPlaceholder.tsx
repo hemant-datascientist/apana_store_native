@@ -1,103 +1,125 @@
 // ============================================================
-// TRACKING MAP PLACEHOLDER — Apana Store
+// TRACKING MAP — Apana Store (Order Tracking Screen)
 //
-// Visual stand-in for the Mappls live tracking map.
-// Shows a mocked route arc with animated partner dot.
-// Replace this entire component with MapplsMapView when the
-// SDK is integrated — the interface (partnerLocation, customerLocation)
-// stays the same.
+// Real MapMyIndia (Mappls) live-tracking map rendered via
+// MapplsWebView (react-native-webview + Mappls Map JS SDK).
 //
-// TODO: Integrate Mappls React Native SDK
-//   import MapplsMapView from "@mappls/react-native-mappls";
-//   Feed real-time lat/lng from WebSocket: WS /ws/tracking/:orderId
+// Shows:
+//   • Partner marker    — current partner/driver location
+//   • Customer marker   — delivery destination
+//   • Route line        — drawn between partner → customer
+//   • ETA overlay card  — top-right corner, mode-coloured
+//
+// Real-time updates:
+//   Feed real lat/lng via the imperative ref:
+//     mapRef.current?.setMarkers([updatedPartnerMarker, customerMarker])
+//   WebSocket: WS /ws/tracking/:orderId → { partnerLat, partnerLng }
+//   Call mapRef.current?.panTo(partnerLat, partnerLng) on each update.
+//
+// Props (unchanged from the old placeholder — no screen rewrites needed):
+//   mode            — "pickup" | "delivery" | "ride"
+//   etaMinutes      — shown in the ETA card
+//   partnerInitials — fallback text inside marker (until we have a photo)
+//   partnerColor    — accent colour matching the mode
+//   partnerLocation — real-time lat/lng of the partner (optional)
+//   customerLocation— lat/lng of the delivery destination (optional)
 // ============================================================
 
-import React, { useEffect, useRef } from "react";
-import { View, Text, StyleSheet, Animated, Dimensions } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import useTheme from "../../theme/useTheme";
-import { typography } from "../../theme/typography";
+import React, { useRef } from "react";
+import { View, Text, StyleSheet, Dimensions } from "react-native";
+import { Ionicons }    from "@expo/vector-icons";
+import useTheme        from "../../theme/useTheme";
+import { typography }  from "../../theme/typography";
 import { FulfillmentMode } from "../../data/cartData";
 import { TRACKING_MODE_CONFIG } from "../../data/orderTrackingData";
+import MapplsWebView, { MapMarker, MapplsWebViewHandle } from "../map/MapplsWebView";
+import {
+  DEFAULT_LAT, DEFAULT_LNG,
+} from "../../config/mapplsConfig";
 
 const SW = Dimensions.get("window").width;
+const MAP_H = 200;
+
+// ── Default locations (Pune) — replaced by real coords from WS ──
+// Partner starts a few blocks away from the customer for demo purposes.
+const DEFAULT_PARTNER_LAT  = 18.5235;
+const DEFAULT_PARTNER_LNG  = 73.8530;
+const DEFAULT_CUSTOMER_LAT = DEFAULT_LAT;
+const DEFAULT_CUSTOMER_LNG = DEFAULT_LNG;
 
 interface TrackingMapProps {
-  mode:            FulfillmentMode;
-  etaMinutes:      number;
-  partnerInitials: string;
-  partnerColor:    string;
+  mode:             FulfillmentMode;
+  etaMinutes:       number;
+  partnerInitials:  string;
+  partnerColor:     string;
+  // Real-time location — optional; defaults to Pune mock coords
+  partnerLocation?:  { lat: number; lng: number };
+  customerLocation?: { lat: number; lng: number };
 }
 
 export default function TrackingMapPlaceholder({
   mode, etaMinutes, partnerInitials, partnerColor,
+  partnerLocation, customerLocation,
 }: TrackingMapProps) {
   const { colors, isDark } = useTheme();
-  const cfg = TRACKING_MODE_CONFIG[mode];
+  const cfg                = TRACKING_MODE_CONFIG[mode];
+  const mapRef             = useRef<MapplsWebViewHandle>(null);
 
-  // Animate partner dot along a fake route
-  const dotX = useRef(new Animated.Value(0)).current;
+  // ── Resolve locations (real or mock fallback) ─────────────
+  const pLat = partnerLocation?.lat  ?? DEFAULT_PARTNER_LAT;
+  const pLng = partnerLocation?.lng  ?? DEFAULT_PARTNER_LNG;
+  const cLat = customerLocation?.lat ?? DEFAULT_CUSTOMER_LAT;
+  const cLng = customerLocation?.lng ?? DEFAULT_CUSTOMER_LNG;
 
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(dotX, { toValue: 1,   duration: 3000, useNativeDriver: true }),
-        Animated.timing(dotX, { toValue: 0.6, duration: 1500, useNativeDriver: true }),
-        Animated.timing(dotX, { toValue: 1,   duration: 2500, useNativeDriver: true }),
-      ]),
-    ).start();
-  }, []);
+  // ── Map centre — midpoint between partner and customer ────
+  const centerLat = (pLat + cLat) / 2;
+  const centerLng = (pLng + cLng) / 2;
 
-  // Map the animated value to a horizontal translation
-  const translateX = dotX.interpolate({
-    inputRange:  [0, 1],
-    outputRange: [0, SW * 0.38],
-  });
+  // ── Markers ───────────────────────────────────────────────
+  const markers: MapMarker[] = [
+    {
+      id:       "partner",
+      lat:      pLat,
+      lng:      pLng,
+      title:    mode === "ride" ? "Your Driver" : "Delivery Partner",
+      subtitle: `${partnerInitials} · ETA ~${etaMinutes} min`,
+      icon:     "partner",
+      isLive:   true,
+      isOpen:   true,
+    },
+    {
+      id:       "customer",
+      lat:      cLat,
+      lng:      cLng,
+      title:    mode === "pickup" ? "Store" : "Your Location",
+      icon:     "customer",
+      isOpen:   true,
+    },
+  ];
 
   return (
-    <View style={[styles.mapWrap, { backgroundColor: isDark ? "#0A1628" : "#E8F4FD", borderColor: colors.border }]}>
+    <View style={[styles.wrap, { borderColor: colors.border }]}>
 
-      {/* Top-left: map label */}
-      <View style={[styles.mapLabel, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Ionicons name="map-outline" size={12} color={colors.primary} />
-        <Text style={[styles.mapLabelText, { color: colors.subText, fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
-          Mappls Live Map
-        </Text>
-      </View>
+      {/* ── Real Mappls map ── */}
+      <MapplsWebView
+        ref={mapRef}
+        height={MAP_H}
+        center={{ lat: centerLat, lng: centerLng }}
+        zoom={14}
+        markers={markers}
+        routeLine={[{ lat: pLat, lng: pLng }, { lat: cLat, lng: cLng }]}
+        isDark={isDark}
+      />
 
-      {/* Mock road / route background */}
-      <View style={styles.routeContainer}>
-        {/* Road surface */}
-        <View style={[styles.road, { backgroundColor: isDark ? "#1E3A5F" : "#CBD5E1" }]} />
-        {/* Dashed centre line */}
-        <View style={styles.dashRow}>
-          {Array.from({ length: 8 }).map((_, i) => (
-            <View key={i} style={[styles.dash, { backgroundColor: isDark ? "#3B82F6" : "#94A3B8" }]} />
-          ))}
-        </View>
-
-        {/* Animated partner dot */}
-        <Animated.View style={[styles.partnerDot, { backgroundColor: partnerColor, transform: [{ translateX }] }]}>
-          <Text style={[styles.partnerInitials, { fontFamily: typography.fontFamily.bold, fontSize: 9 }]}>
-            {partnerInitials}
-          </Text>
-        </Animated.View>
-
-        {/* Customer pin (destination) */}
-        <View style={[styles.destinationPin, { backgroundColor: colors.primary }]}>
-          <Ionicons name="home" size={11} color="#fff" />
-        </View>
-      </View>
-
-      {/* ETA overlay */}
-      <View style={[styles.etaBubble, { backgroundColor: cfg.color, }]}>
+      {/* ── ETA overlay ── */}
+      <View style={[styles.etaBubble, { backgroundColor: cfg.color }]}>
         <Ionicons name={cfg.icon as any} size={13} color="#fff" />
         <Text style={[styles.etaText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.xs }]}>
           ~{etaMinutes} min
         </Text>
       </View>
 
-      {/* Bottom: Mappls attribution */}
+      {/* ── Mappls attribution ── */}
       <View style={[styles.attribution, { backgroundColor: colors.card + "CC" }]}>
         <Text style={[styles.attributionText, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: 9 }]}>
           Live map powered by Mappls (MapMyIndia)
@@ -108,82 +130,15 @@ export default function TrackingMapPlaceholder({
 }
 
 const styles = StyleSheet.create({
-  mapWrap: {
-    height:       200,
+  wrap: {
+    height:       MAP_H,
     borderRadius: 16,
     borderWidth:  1,
     overflow:     "hidden",
     position:     "relative",
   },
 
-  mapLabel: {
-    position:          "absolute",
-    top:               10,
-    left:              10,
-    flexDirection:     "row",
-    alignItems:        "center",
-    gap:               5,
-    paddingHorizontal: 9,
-    paddingVertical:   4,
-    borderRadius:      8,
-    borderWidth:       1,
-    zIndex:            10,
-  },
-  mapLabelText: {},
-
-  // Fake road
-  routeContainer: {
-    position:       "absolute",
-    top:            "38%",
-    left:           "8%",
-    right:          "8%",
-    alignItems:     "flex-start",
-    justifyContent: "center",
-  },
-  road: {
-    height:       26,
-    borderRadius: 13,
-    width:        "100%",
-  },
-  dashRow: {
-    position:       "absolute",
-    flexDirection:  "row",
-    alignItems:     "center",
-    justifyContent: "space-evenly",
-    width:          "100%",
-    gap:            4,
-  },
-  dash: {
-    width:        16,
-    height:       2,
-    borderRadius: 1,
-    opacity:      0.5,
-  },
-
-  partnerDot: {
-    position:       "absolute",
-    top:            3,
-    left:           6,
-    width:          20,
-    height:         20,
-    borderRadius:   10,
-    alignItems:     "center",
-    justifyContent: "center",
-    elevation:      4,
-  },
-  partnerInitials: { color: "#fff" },
-
-  destinationPin: {
-    position:       "absolute",
-    top:            3,
-    right:          6,
-    width:          20,
-    height:         20,
-    borderRadius:   10,
-    alignItems:     "center",
-    justifyContent: "center",
-  },
-
+  // ETA card — floats top-right over the map
   etaBubble: {
     position:          "absolute",
     top:               10,
@@ -194,9 +149,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical:   5,
     borderRadius:      20,
+    zIndex:            10,
+    elevation:         4,
   },
   etaText: { color: "#fff" },
 
+  // Attribution
   attribution: {
     position:        "absolute",
     bottom:          0,
@@ -204,6 +162,7 @@ const styles = StyleSheet.create({
     right:           0,
     paddingVertical: 4,
     alignItems:      "center",
+    zIndex:          10,
   },
   attributionText: {},
 });
