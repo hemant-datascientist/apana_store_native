@@ -18,7 +18,7 @@
 //     GET /stores/nearby when you swap the stub.
 // ============================================================
 
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Dimensions, ActivityIndicator,
@@ -75,18 +75,18 @@ export default function MapViewFeed() {
   // ── Filter + selection state ──────────────────────────────
   const [activeCat,   setActiveCat]   = useState("all");
   const [selectedPin, setSelectedPin] = useState<StoreMapPin | null>(null);
-  const [mapReady,    setMapReady]    = useState(false);
 
-  // ── Filtered pins ─────────────────────────────────────────
-  const visiblePins = activeCat === "all"
-    ? pins
-    : pins.filter(p => p.category === activeCat);
+  // ── Filtered pins (memoised so markers array ref is stable) ──
+  const visiblePins = useMemo(
+    () => (activeCat === "all" ? pins : pins.filter(p => p.category === activeCat)),
+    [pins, activeCat],
+  );
 
-  // ── Sync filter changes → map markers after map is ready ──
-  useEffect(() => {
-    if (!mapReady) return;
-    mapRef.current?.setMarkers(visiblePins.map(pinToMarker));
-  }, [visiblePins, mapReady]);
+  // ── Markers for the map (memoised — MapplsWebView auto-syncs) ──
+  const markers = useMemo(
+    () => visiblePins.map(pinToMarker),
+    [visiblePins],
+  );
 
   // ── Map event handlers ────────────────────────────────────
   const handleMarkerPress = useCallback((id: string) => {
@@ -149,11 +149,20 @@ export default function MapViewFeed() {
         height={MAP_H}
         center={{ lat: DEFAULT_LAT, lng: DEFAULT_LNG }}
         zoom={DEFAULT_ZOOM}
-        markers={visiblePins.map(pinToMarker)}
+        markers={markers}
         showUserDot
         onMarkerPress={handleMarkerPress}
         onMapPress={handleMapPress}
-        onMapReady={() => setMapReady(true)}
+        onMapError={(reason) => {
+          // Translate raw SDK error codes into user-friendly copy
+          const msg =
+            reason.startsWith("mappls_undefined")      ? "Map SDK could not load. Please check your internet connection." :
+            reason.startsWith("cdn_load_failed")       ? "Map servers unreachable. Please check your internet connection." :
+            reason.startsWith("init_timeout")          ? "Map took too long to start. Please retry." :
+            reason.startsWith("map_construct_failed")  ? "Map failed to initialise. Please retry." :
+            "Map is unavailable right now. Please retry.";
+          setFetchErr(msg);
+        }}
         isDark={isDark}
       />
 

@@ -1,17 +1,20 @@
 // ============================================================
 // SEARCH RESULTS HEADER — Apana Store
 //
-// Sticky top bar for the search results screen:
+// Top bar for the search results screen:
 //   [←]  [🔍 <editable query>  ✕]
-//   "X results for 'query'"
 //
-// The search input is auto-focused on mount so the user can
-// immediately refine their query.
+// Auto-focus behaviour:
+//   • If the user arrives with a pre-filled query (came from the
+//     home search bar), the input is NOT focused — they want to
+//     read results, not type again.
+//   • If the user lands here with an empty query, the input IS
+//     focused so the keyboard opens and they can type right away.
 // ============================================================
 
 import React, { useRef, useEffect } from "react";
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  View, TextInput, TouchableOpacity, StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
@@ -21,23 +24,26 @@ interface SearchResultsHeaderProps {
   query:         string;
   onChangeQuery: (q: string) => void;
   onBack:        () => void;
-  resultCount:   number;
 }
 
 export default function SearchResultsHeader({
-  query, onChangeQuery, onBack, resultCount,
+  query, onChangeQuery, onBack,
 }: SearchResultsHeaderProps) {
   const { colors } = useTheme();
-  const inputRef = useRef<TextInput>(null);
+  const inputRef   = useRef<TextInput>(null);
 
-  // Auto-focus the input on mount so the user can type immediately
+  // Focus the input only when arriving with a blank query.
+  // Snapshot the initial query in a ref so we don't re-fire focus
+  // when the user later clears it to edit.
+  const initialBlankRef = useRef(query.trim().length === 0);
   useEffect(() => {
+    if (!initialBlankRef.current) return;
     const t = setTimeout(() => inputRef.current?.focus(), 150);
     return () => clearTimeout(t);
   }, []);
 
   return (
-    <View style={[styles.wrap, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+    <View style={[styles.wrap, { backgroundColor: colors.card }]}>
 
       {/* ── Search row ── */}
       <View style={styles.row}>
@@ -47,6 +53,7 @@ export default function SearchResultsHeader({
           style={[styles.iconBtn, { backgroundColor: colors.background }]}
           onPress={onBack}
           activeOpacity={0.75}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <Ionicons name="arrow-back" size={20} color={colors.text} />
         </TouchableOpacity>
@@ -59,6 +66,8 @@ export default function SearchResultsHeader({
             value={query}
             onChangeText={onChangeQuery}
             returnKeyType="search"
+            autoCorrect={false}
+            autoCapitalize="none"
             style={[styles.input, { color: colors.text, fontFamily: typography.fontFamily.regular, fontSize: typography.size.sm }]}
             placeholderTextColor={colors.subText}
             placeholder="Search products & stores…"
@@ -70,25 +79,13 @@ export default function SearchResultsHeader({
           )}
         </View>
       </View>
-
-      {/* ── Result count ── */}
-      {query.trim().length > 0 && (
-        <Text style={[styles.count, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-          {resultCount} result{resultCount !== 1 ? "s" : ""} for{" "}
-          <Text style={[styles.queryBold, { color: colors.text, fontFamily: typography.fontFamily.semiBold }]}>
-            "{query.trim()}"
-          </Text>
-        </Text>
-      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: {
-    borderBottomWidth: 1,
-    paddingBottom:     10,
-    gap:               6,
+    paddingBottom: 10,
   },
   row: {
     flexDirection:     "row",
@@ -112,15 +109,11 @@ const styles = StyleSheet.create({
     borderRadius:      12,
     borderWidth:       1,
     paddingHorizontal: 12,
-    paddingVertical:    9,
+    paddingVertical:   9,
     gap:               8,
   },
   input: {
     flex:    1,
     padding: 0,
   },
-  count: {
-    paddingHorizontal: 16,
-  },
-  queryBold: {},
 });

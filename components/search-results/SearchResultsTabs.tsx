@@ -2,7 +2,11 @@
 // SEARCH RESULTS TABS — Apana Store
 //
 // Products | Stores tab toggle with count badges.
-// Active tab shows a filled pill; inactive is ghost.
+// Active tab = filled pill with primary colour; inactive = ghost.
+//
+// Rendered inside the shared toolbar wrapper in the screen — this
+// component intentionally has no outer border / card background,
+// so the toolbar reads as a single grouped surface.
 // ============================================================
 
 import React from "react";
@@ -30,7 +34,7 @@ export default function SearchResultsTabs({
   ];
 
   return (
-    <View style={[styles.wrap, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+    <View style={styles.wrap}>
       <View style={[styles.bar, { backgroundColor: colors.background }]}>
         {tabs.map(tab => {
           const isActive = tab.key === activeTab;
@@ -39,9 +43,7 @@ export default function SearchResultsTabs({
               key={tab.key}
               style={[
                 styles.tab,
-                isActive
-                  ? { backgroundColor: colors.primary }
-                  : { backgroundColor: "transparent" },
+                isActive && { backgroundColor: colors.primary },
               ]}
               onPress={() => onSelect(tab.key)}
               activeOpacity={0.8}
@@ -49,18 +51,25 @@ export default function SearchResultsTabs({
               <Text style={[
                 styles.label,
                 {
-                  color: isActive ? "#fff" : colors.subText,
+                  color:      isActive ? "#fff" : colors.subText,
                   fontFamily: isActive ? typography.fontFamily.semiBold : typography.fontFamily.regular,
-                  fontSize: typography.size.sm,
+                  fontSize:   typography.size.sm,
                 },
               ]}>
                 {tab.label}
               </Text>
               {tab.count > 0 && (
-                <View style={[styles.badge, { backgroundColor: isActive ? "rgba(255,255,255,0.25)" : colors.border }]}>
+                <View style={[
+                  styles.badge,
+                  { backgroundColor: isActive ? "rgba(255,255,255,0.25)" : colors.border },
+                ]}>
                   <Text style={[
                     styles.badgeText,
-                    { color: isActive ? "#fff" : colors.subText, fontFamily: typography.fontFamily.bold, fontSize: typography.size.ss },
+                    {
+                      color:      isActive ? "#fff" : colors.subText,
+                      fontFamily: typography.fontFamily.bold,
+                      fontSize:   typography.size.ss,
+                    },
                   ]}>
                     {tab.count}
                   </Text>
@@ -76,23 +85,22 @@ export default function SearchResultsTabs({
 
 const styles = StyleSheet.create({
   wrap: {
-    borderBottomWidth: 1,
     paddingHorizontal: 16,
-    paddingVertical:   10,
+    paddingBottom:     8,
   },
   bar: {
-    flexDirection:  "row",
-    borderRadius:   14,
-    padding:        4,
+    flexDirection: "row",
+    borderRadius:  14,
+    padding:       4,
   },
   tab: {
-    flex:              1,
-    flexDirection:     "row",
-    alignItems:        "center",
-    justifyContent:    "center",
-    gap:               6,
-    paddingVertical:   9,
-    borderRadius:      10,
+    flex:            1,
+    flexDirection:   "row",
+    alignItems:      "center",
+    justifyContent:  "center",
+    gap:             6,
+    paddingVertical: 9,
+    borderRadius:    10,
   },
   label: {},
   badge: {

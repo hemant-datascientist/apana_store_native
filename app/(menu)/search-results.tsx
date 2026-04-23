@@ -6,29 +6,27 @@
 // Route: /search-results?q=<query>
 //
 // Flow:
-//   User types → 350 ms debounce → fetchSearchResults() →
-//   loading spinner → Products grid or Stores list
+//   URL ?q=<query> → debounced (350 ms) fetchSearchResults()
+//   → loading spinner → Products grid or Stores list
 //
 // Backend: GET /search?q=<query>&sort=<sort>
 //   Swap fetchSearchResults() stub with real fetch — no screen changes.
 //
 // Layout:
-//   [SafeArea] SearchResultsHeader  (back + editable input + count)
-//   SearchResultsTabs               (Products | Stores)
-//   SearchSortBar                   (Relevance | Price | Rating)
-//   ScrollView
-//     Loading  → ActivityIndicator
-//     Error    → error message + retry
-//     Products → 2-column grid of SearchProductCard
-//     Stores   → list of SearchStoreCard
-//     Empty    → SearchEmptyState (blank query or no results)
+//   ┌──────────────────────────┐  ← grouped toolbar (one surface,
+//   │ Header (back + input)    │    one bottom divider, subtle
+//   │ Products | Stores tabs   │    elevation)
+//   │ Sort chips               │
+//   └──────────────────────────┘
+//   Content (loading / error / empty / grid / list)
 // ============================================================
 
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   View, ScrollView, ActivityIndicator,
-  Text, StyleSheet, StatusBar, Alert,
+  Text, TouchableOpacity, StyleSheet, StatusBar, Alert,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 
@@ -66,11 +64,12 @@ export default function SearchResultsScreen() {
   // ── Results state (driven by the service) ─────────────────
   const [products, setProducts] = useState<SearchProductResult[]>([]);
   const [stores,   setStores]   = useState<SearchStoreResult[]>([]);
-  const [loading,  setLoading]  = useState(false);
+  // Start in loading state if we already have a query — otherwise
+  // the empty state would briefly flash during the debounce window.
+  const [loading,  setLoading]  = useState(qParam.trim().length > 0);
   const [fetchErr, setFetchErr] = useState<string | null>(null);
 
   // ── Debounced search — fires on query or sort change ──────
-  // Uses a ref to track the latest cancelled state across renders.
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const runSearch = useCallback((q: string, s: SearchSort) => {
@@ -106,20 +105,12 @@ export default function SearchResultsScreen() {
   }, []);
 
   useEffect(() => {
-    // Clear any pending debounce timer
     if (debounceRef.current) clearTimeout(debounceRef.current);
-
-    debounceRef.current = setTimeout(() => {
-      runSearch(query, sort);
-    }, DEBOUNCE_MS);
-
+    debounceRef.current = setTimeout(() => runSearch(query, sort), DEBOUNCE_MS);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [query, sort, runSearch]);
-
-  // ── Computed totals for tab badges ───────────────────────
-  const totalCount = tab === "products" ? products.length : stores.length;
 
   // ── Handlers ─────────────────────────────────────────────
   const handleProductPress = useCallback((id: string) => {
@@ -164,33 +155,30 @@ export default function SearchResultsScreen() {
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.card} />
 
-      {/* ── Header ── */}
-      <SafeAreaView style={{ backgroundColor: colors.card }} edges={["top"]}>
-        <SearchResultsHeader
-          query={query}
-          onChangeQuery={setQuery}
-          onBack={() => router.back()}
-          resultCount={totalCount}
-        />
+      {/* ── Toolbar (single grouped surface) ── */}
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: colors.card }}>
+        <View style={[styles.toolbar, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+          <SearchResultsHeader
+            query={query}
+            onChangeQuery={setQuery}
+            onBack={() => router.back()}
+          />
+          <SearchResultsTabs
+            activeTab={tab}
+            onSelect={setTab}
+            productCount={products.length}
+            storeCount={stores.length}
+          />
+          <SearchSortBar activeSort={sort} onSelect={setSort} />
+        </View>
       </SafeAreaView>
-
-      {/* ── Tab bar ── */}
-      <SearchResultsTabs
-        activeTab={tab}
-        onSelect={setTab}
-        productCount={products.length}
-        storeCount={stores.length}
-      />
-
-      {/* ── Sort bar ── */}
-      <SearchSortBar activeSort={sort} onSelect={setSort} />
 
       {/* ── Loading state ── */}
       {loading && (
         <View style={styles.centred}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.sm }]}>
-            Searching…
+            Searching for "{query.trim()}"…
           </Text>
         </View>
       )}
@@ -198,18 +186,23 @@ export default function SearchResultsScreen() {
       {/* ── Error state ── */}
       {!loading && !!fetchErr && (
         <View style={styles.centred}>
+          <Ionicons name="warning-outline" size={36} color={colors.danger} />
           <Text style={[styles.errTitle, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.md }]}>
             Search Failed
           </Text>
           <Text style={[styles.errSub, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.sm }]}>
             {fetchErr}
           </Text>
-          <Text
-            style={[styles.retryLink, { color: colors.primary, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}
+          <TouchableOpacity
+            style={[styles.retryBtn, { backgroundColor: colors.primary }]}
             onPress={handleRetry}
+            activeOpacity={0.85}
           >
-            Retry
-          </Text>
+            <Ionicons name="refresh-outline" size={15} color="#fff" />
+            <Text style={[styles.retryText, { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
+              Retry
+            </Text>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -245,7 +238,7 @@ export default function SearchResultsScreen() {
                   />
                 </View>
               ))}
-              {/* Pad the last odd row */}
+              {/* Pad the last odd row so a single card doesn't stretch */}
               {row.length === 1 && <View style={styles.gridCell} />}
             </View>
           ))}
@@ -278,6 +271,19 @@ export default function SearchResultsScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
 
+  // Toolbar — only surface with a bottom divider + subtle shadow.
+  // All sub-toolbars (header, tabs, sort) are now border-less so
+  // the whole group reads as one card instead of three stripes.
+  toolbar: {
+    borderBottomWidth: 1,
+    // Elevation / shadow for a soft lift under the toolbar.
+    shadowColor:   "#000",
+    shadowOpacity: 0.04,
+    shadowRadius:  6,
+    shadowOffset:  { width: 0, height: 2 },
+    elevation:     2,
+  },
+
   // Loading / error
   centred: {
     flex:           1,
@@ -286,10 +292,21 @@ const styles = StyleSheet.create({
     gap:            10,
     padding:        32,
   },
-  loadingText: { marginTop: 4 },
+  loadingText: { marginTop: 4, textAlign: "center" },
   errTitle:    {},
   errSub:      { textAlign: "center", lineHeight: 20 },
-  retryLink:   { marginTop: 4 },
+
+  // Retry button — matches the pattern used by MapViewFeed
+  retryBtn: {
+    flexDirection:     "row",
+    alignItems:        "center",
+    gap:               6,
+    paddingHorizontal: 20,
+    paddingVertical:   10,
+    borderRadius:      10,
+    marginTop:         4,
+  },
+  retryText: { color: "#fff" },
 
   // Grid layout
   gridContent: {

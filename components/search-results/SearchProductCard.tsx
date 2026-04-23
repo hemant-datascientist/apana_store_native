@@ -3,11 +3,12 @@
 //
 // 2-column product card shown in the Products tab of search results.
 // Layout:
-//   [Icon placeholder — full width with badge overlay]
+//   [Thumbnail (icon placeholder) — badge top-left, discount top-right]
 //   Name (2 lines max)
-//   Price + MRP + discount %
-//   ⭐ Rating + store name
-//   [Add to Cart] button
+//   Category
+//   Price + MRP strike-through
+//   ⭐ Rating · store name
+//   [Add] button (primary, full-width)
 // ============================================================
 
 import React from "react";
@@ -23,6 +24,7 @@ interface SearchProductCardProps {
   onAddCart: () => void;
 }
 
+// Round down; returns 0 if no discount (keeps the pill hidden)
 function discountPct(price: number, mrp: number): number {
   if (mrp <= price) return 0;
   return Math.round(((mrp - price) / mrp) * 100);
@@ -38,12 +40,12 @@ export default function SearchProductCard({ product, onPress, onAddCart }: Searc
       onPress={onPress}
       activeOpacity={0.88}
     >
-      {/* ── Image placeholder ── */}
+      {/* ── Thumbnail ── */}
       <View style={[styles.imagePlaceholder, { backgroundColor: product.iconBg }]}>
-        <Ionicons name={product.icon as any} size={40} color={colors.text} style={{ opacity: 0.5 }} />
+        <Ionicons name={product.icon as any} size={38} color={colors.text} style={{ opacity: 0.5 }} />
 
-        {/* Badge overlay */}
-        {product.badge && (
+        {/* Badge overlay (e.g. "FRESH", "BESTSELLER") */}
+        {!!product.badge && (
           <View style={[styles.badge, { backgroundColor: colors.primary }]}>
             <Text style={[styles.badgeText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.ss }]}>
               {product.badge}
@@ -51,9 +53,9 @@ export default function SearchProductCard({ product, onPress, onAddCart }: Searc
           </View>
         )}
 
-        {/* Discount pill */}
+        {/* Discount pill — uses theme success colour for consistency */}
         {pct > 0 && (
-          <View style={styles.discountPill}>
+          <View style={[styles.discountPill, { backgroundColor: colors.success }]}>
             <Text style={[styles.discountText, { fontFamily: typography.fontFamily.bold, fontSize: 9 }]}>
               {pct}% OFF
             </Text>
@@ -73,7 +75,10 @@ export default function SearchProductCard({ product, onPress, onAddCart }: Searc
         </Text>
 
         {/* Category */}
-        <Text style={[styles.cat, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: 10 }]}>
+        <Text
+          numberOfLines={1}
+          style={[styles.cat, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: 10 }]}
+        >
           {product.category}
         </Text>
 
@@ -83,7 +88,10 @@ export default function SearchProductCard({ product, onPress, onAddCart }: Searc
             ₹{product.price.toLocaleString("en-IN")}
           </Text>
           {pct > 0 && (
-            <Text style={[styles.mrp, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+            <Text
+              numberOfLines={1}
+              style={[styles.mrp, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}
+            >
               ₹{product.mrp.toLocaleString("en-IN")}
             </Text>
           )}
@@ -91,7 +99,7 @@ export default function SearchProductCard({ product, onPress, onAddCart }: Searc
 
         {/* Rating + store */}
         <View style={styles.metaRow}>
-          <Ionicons name="star" size={10} color="#F59E0B" />
+          <Ionicons name="star" size={10} color={colors.warning} />
           <Text style={[styles.rating, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: 10 }]}>
             {product.rating}
           </Text>
@@ -104,7 +112,7 @@ export default function SearchProductCard({ product, onPress, onAddCart }: Searc
         {/* Add to Cart */}
         <TouchableOpacity
           style={[styles.addBtn, { backgroundColor: colors.primary }]}
-          onPress={e => { e.stopPropagation?.(); onAddCart(); }}
+          onPress={(e) => { e.stopPropagation?.(); onAddCart(); }}
           activeOpacity={0.8}
         >
           <Ionicons name="add" size={14} color="#fff" />
@@ -125,9 +133,9 @@ const styles = StyleSheet.create({
     overflow:     "hidden",
   },
 
-  // Image area
+  // Thumbnail
   imagePlaceholder: {
-    height:         140,
+    height:         124,
     alignItems:     "center",
     justifyContent: "center",
     position:       "relative",
@@ -145,8 +153,7 @@ const styles = StyleSheet.create({
     position:          "absolute",
     top:               8,
     right:             8,
-    backgroundColor:   "#16A34A",
-    paddingHorizontal: 5,
+    paddingHorizontal: 6,
     paddingVertical:   2,
     borderRadius:      6,
   },
@@ -157,19 +164,15 @@ const styles = StyleSheet.create({
     padding: 10,
     gap:     5,
   },
-  name: {
-    lineHeight: 17,
-  },
-  cat: {},
+  name: { lineHeight: 17 },
+  cat:  {},
   priceRow: {
     flexDirection: "row",
     alignItems:    "baseline",
     gap:           5,
   },
   price: {},
-  mrp: {
-    textDecorationLine: "line-through",
-  },
+  mrp: { textDecorationLine: "line-through" },
   metaRow: {
     flexDirection: "row",
     alignItems:    "center",
@@ -177,21 +180,21 @@ const styles = StyleSheet.create({
   },
   rating: {},
   dot: {
-    width:        3,
-    height:       3,
-    borderRadius: 2,
+    width:            3,
+    height:           3,
+    borderRadius:     2,
     marginHorizontal: 2,
   },
   store: { flex: 1 },
 
   addBtn: {
-    flexDirection:     "row",
-    alignItems:        "center",
-    justifyContent:    "center",
-    gap:               4,
-    paddingVertical:   8,
-    borderRadius:      10,
-    marginTop:         2,
+    flexDirection:   "row",
+    alignItems:      "center",
+    justifyContent:  "center",
+    gap:             4,
+    paddingVertical: 8,
+    borderRadius:    10,
+    marginTop:       2,
   },
   addText: { color: "#fff" },
 });

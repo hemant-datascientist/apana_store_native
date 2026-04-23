@@ -37,5 +37,8 @@ export const MAPPLS_REV_GEOCODE_URL= `https://apis.mappls.com/advancedmaps/v1/${
 export const MAPPLS_ROUTE_URL      = "https://routable.mappls.com/lifeapi/routing/v1/route";
 
 // ── Map JS SDK CDN URLs (loaded inside the WebView) ──────────
-export const MAPPLS_MAP_SDK_JS  = `https://apis.mappls.com/advancedmaps/v1/${MAPPLS_REST_KEY}/map_sdk?layer=vector&v=3.0&ls=0`;
+// NOTE: only `v` (version) and `layer` (vector|raster) are
+// documented query params for map_sdk. Extra params can cause the
+// SDK bootstrap to skip registering the `window.mappls` global.
+export const MAPPLS_MAP_SDK_JS  = `https://apis.mappls.com/advancedmaps/v1/${MAPPLS_REST_KEY}/map_sdk?layer=vector&v=3.0`;
 export const MAPPLS_MAP_SDK_CSS = `https://apis.mappls.com/advancedmaps/v1/${MAPPLS_REST_KEY}/map_sdk_plugins?layer=vector&v=3.0`;
