@@ -21,7 +21,7 @@
 
 import React, { useState } from "react";
 import {
-  View, ScrollView, StyleSheet, Alert,
+  View, ScrollView, StyleSheet, Alert, Linking,
 } from "react-native";
 import { SafeAreaView }        from "react-native-safe-area-context";
 import { Ionicons }            from "@expo/vector-icons";
@@ -54,10 +54,15 @@ export default function StoreDetailScreen() {
   const [productSearch, setProductSearch] = useState("");
 
   // ── Actions ───────────────────────────────────────────────────
-  function handleDirections() {
-    Alert.alert(
-      "Directions",
-      `Opening directions to ${store.name}.\n(Mappls navigation integration coming soon.)`,
+  async function handleDirections() {
+    // Try Mappls app first (installed on most Indian devices with Mappls SDK).
+    // Falls back to Mappls web if app not installed.
+    const appUrl = `mappls://navigation?target_lat=${store.lat}&target_lng=${store.lng}&target_name=${encodeURIComponent(store.name)}`;
+    const webUrl = `https://www.mappls.com/direction?places=${store.lng},${store.lat}`;
+
+    const canOpenApp = await Linking.canOpenURL(appUrl).catch(() => false);
+    Linking.openURL(canOpenApp ? appUrl : webUrl).catch(() =>
+      Alert.alert("Maps Unavailable", "Could not open directions. Please try again."),
     );
   }
 

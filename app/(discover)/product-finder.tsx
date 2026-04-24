@@ -32,6 +32,14 @@ export default function ProductFinderScreen() {
   const router                            = useRouter();
   const [txnNumber, setTxnNumber]         = useState("");
   const [isFocused, setIsFocused]         = useState(false);
+  const [nameQuery, setNameQuery]         = useState("");
+  const [showSearch, setShowSearch]       = useState(false);
+
+  function handleNameSearch() {
+    const q = nameQuery.trim();
+    if (!q) return;
+    router.push(`/search-results?q=${encodeURIComponent(q)}` as any);
+  }
 
   return (
     <View style={styles.root}>
@@ -79,17 +87,44 @@ export default function ProductFinderScreen() {
           </Text>
         </View>
 
-        {/* ── Lookup by name button ── */}
-        <TouchableOpacity
-          style={styles.primaryBtn}
-          activeOpacity={0.85}
-          onPress={() => Alert.alert("Product Search", "Name-based search coming soon.")}
-        >
-          <Ionicons name="list-outline" size={20} color="#fff" />
-          <Text style={[styles.primaryBtnText, { fontFamily: typography.fontFamily.semiBold }]}>
-            Look up items by product name
-          </Text>
-        </TouchableOpacity>
+        {/* ── Lookup by name — inline search input ── */}
+        {showSearch ? (
+          <View style={[styles.nameSearchWrap, styles.inputWrap, { borderColor: BRAND_BLUE }]}>
+            <Text style={[styles.inputLabel, { fontFamily: typography.fontFamily.regular }]}>
+              Search by product name
+            </Text>
+            <View style={styles.nameSearchRow}>
+              <TextInput
+                style={[styles.nameSearchInput, { fontFamily: typography.fontFamily.regular }]}
+                value={nameQuery}
+                onChangeText={setNameQuery}
+                placeholder="e.g. Amul Butter, Dettol, Biscuits…"
+                placeholderTextColor="#9CA3AF"
+                autoFocus
+                returnKeyType="search"
+                onSubmitEditing={handleNameSearch}
+              />
+              <TouchableOpacity
+                style={[styles.nameSearchBtn, { backgroundColor: BRAND_BLUE }]}
+                onPress={handleNameSearch}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="search" size={18} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={styles.primaryBtn}
+            activeOpacity={0.85}
+            onPress={() => setShowSearch(true)}
+          >
+            <Ionicons name="list-outline" size={20} color="#fff" />
+            <Text style={[styles.primaryBtnText, { fontFamily: typography.fontFamily.semiBold }]}>
+              Look up items by product name
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {/* ── Scan button ── */}
         <TouchableOpacity
@@ -293,6 +328,30 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     color:    "#111827",
     padding:  0,
+  },
+
+  // ── Name search inline ──────────────────────────────────────
+  nameSearchWrap: {
+    gap: 8,
+  },
+  nameSearchRow: {
+    flexDirection: "row",
+    alignItems:    "center",
+    gap:           8,
+  },
+  nameSearchInput: {
+    flex:     1,
+    fontSize: 13.5,
+    color:    "#111827",
+    padding:  0,
+  },
+  nameSearchBtn: {
+    width:          38,
+    height:         38,
+    borderRadius:   10,
+    alignItems:     "center",
+    justifyContent: "center",
+    flexShrink:     0,
   },
 
   // ── Trust card ──────────────────────────────────────────────

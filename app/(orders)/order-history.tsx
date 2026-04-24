@@ -59,7 +59,19 @@ export default function OrderHistoryScreen() {
 
   // ── Actions ───────────────────────────────────────────────────
   function handleTrack(order: Order) {
-    Alert.alert("Track Order", `Live tracking for ${order.orderNo} coming soon.`);
+    // Build a minimal StoreOrderResult so order-tracking can render
+    // the store list / QR flow. Real data comes from backend later.
+    const storeOrders = [{
+      storeOrderId:   order.id,
+      storeId:        order.storeId,
+      storeName:      order.storeName,
+      subtotal:       order.total,
+      estimatedMins:  15,
+    }];
+    const so = encodeURIComponent(JSON.stringify(storeOrders));
+    router.push(
+      `/order-tracking?mode=${order.mode}&orderId=${order.id}&total=${order.total}&storeOrdersJson=${so}` as any,
+    );
   }
 
   function handleReorder(order: Order) {

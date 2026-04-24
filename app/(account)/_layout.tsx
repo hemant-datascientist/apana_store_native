@@ -13,6 +13,7 @@ export default function AccountLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="address-book"    />
+      <Stack.Screen name="add-address"     />
       <Stack.Screen name="payment-methods" />
       <Stack.Screen name="add-payment"     />
       <Stack.Screen name="favourite"       />

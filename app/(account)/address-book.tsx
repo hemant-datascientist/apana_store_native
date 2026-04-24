@@ -6,23 +6,27 @@
 // and pops the screen — HomeHeader + AllFeed update instantly.
 //
 // UI:
-//   • Header bar: back arrow + "Manage Address" + edit icon
-//   • Radio cards: icon + label + full address line + radio dot
+//   • Header bar: back arrow + "Manage Address" + add icon
+//   • Radio cards: icon + label + full address + edit action
 //   • OR divider
-//   • "+ Add New Address" button (coming soon)
+//   • "+ Add New Address" dashed button → /add-address?mode=add
+//
+// New/edited addresses returned from add-address via router
+// params (`newAddressJson`) are merged into local addresses state
+// so the list updates without a backend round-trip.
 //
 // Backend: GET /api/customer/addresses  (swap SAVED_ADDRESSES)
 //          PUT /api/customer/active-address  (swap setSelectedAddress)
 // ============================================================
 
-import React from "react";
+import React, { useState, useCallback } from "react";
 import {
   View, Text, TouchableOpacity, ScrollView, StyleSheet,
   StatusBar, Alert,
 } from "react-native";
 import { SafeAreaView }  from "react-native-safe-area-context";
 import { Ionicons }      from "@expo/vector-icons";
-import { useRouter }     from "expo-router";
+import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { typography }    from "../../theme/typography";
 import { useLocation }   from "../../context/LocationContext";
 import { SAVED_ADDRESSES, UserAddress } from "../../data/addressData";
@@ -33,9 +37,52 @@ export default function AddressBookScreen() {
   const router                               = useRouter();
   const { selectedAddress, setSelectedAddress } = useLocation();
 
+  // ── Local address list (starts from mock, updated on add/edit) ──
+  const [addresses, setAddresses] = useState<UserAddress[]>(SAVED_ADDRESSES);
+
+  // ── Pick up new/edited address returned from add-address screen ──
+  // expo-router passes params on router.setParams before back().
+  // useFocusEffect fires each time this screen comes back into focus.
+  const { newAddressJson } = useLocalSearchParams<{ newAddressJson?: string }>();
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!newAddressJson) return;
+      try {
+        const incoming: UserAddress = JSON.parse(newAddressJson);
+        setAddresses(prev => {
+          const exists = prev.findIndex(a => a.id === incoming.id);
+          if (exists >= 0) {
+            // Edit — replace in-place
+            const next = [...prev];
+            next[exists] = incoming;
+            return next;
+          }
+          // Add — append
+          return [...prev, incoming];
+        });
+      } catch { /* malformed param — ignore */ }
+    }, [newAddressJson]),
+  );
+
   function handleSelect(addr: UserAddress) {
     setSelectedAddress(addr);
     router.back();
+  }
+
+  function handleDelete(addr: UserAddress) {
+    Alert.alert(
+      "Delete Address",
+      `Remove "${addr.label}" address?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text:    "Delete",
+          style:   "destructive",
+          onPress: () => setAddresses(prev => prev.filter(a => a.id !== addr.id)),
+        },
+      ],
+    );
   }
 
   return (
@@ -46,7 +93,7 @@ export default function AddressBookScreen() {
       <SafeAreaView style={styles.header} edges={["top"]}>
         <TouchableOpacity
           onPress={() => router.back()}
-          style={styles.backBtn}
+          style={styles.headerBtn}
           activeOpacity={0.75}
         >
           <Ionicons name="arrow-back" size={22} color="#fff" />
@@ -57,11 +104,11 @@ export default function AddressBookScreen() {
         </Text>
 
         <TouchableOpacity
-          style={styles.editBtn}
+          style={styles.headerBtn}
           activeOpacity={0.75}
-          onPress={() => Alert.alert("Edit", "Address editing coming soon.")}
+          onPress={() => router.push("/add-address?mode=add" as any)}
         >
-          <Ionicons name="create-outline" size={20} color="#fff" />
+          <Ionicons name="add" size={24} color="#fff" />
         </TouchableOpacity>
       </SafeAreaView>
 
@@ -72,7 +119,7 @@ export default function AddressBookScreen() {
       >
 
         {/* ── Saved address cards ── */}
-        {SAVED_ADDRESSES.map(addr => {
+        {addresses.map(addr => {
           const isSelected = selectedAddress.id === addr.id;
 
           return (
@@ -82,7 +129,7 @@ export default function AddressBookScreen() {
               activeOpacity={0.8}
               onPress={() => handleSelect(addr)}
             >
-              {/* Icon + text */}
+              {/* Icon */}
               <View style={[styles.iconWrap, { backgroundColor: isSelected ? BRAND_BLUE : "#F1F5F9" }]}>
                 <Ionicons
                   name={addr.icon as any}
@@ -91,27 +138,45 @@ export default function AddressBookScreen() {
                 />
               </View>
 
+              {/* Text */}
               <View style={styles.cardBody}>
                 <Text style={[styles.addrLabel, {
                   fontFamily: typography.fontFamily.bold,
-                  color: isSelected ? BRAND_BLUE : "#111827",
+                  color:      isSelected ? BRAND_BLUE : "#111827",
                 }]}>
                   {addr.label}
                 </Text>
 
-                <Text
-                  numberOfLines={1}
-                  style={[styles.addrLine, { fontFamily: typography.fontFamily.regular }]}
-                >
+                <Text numberOfLines={1} style={[styles.addrLine, { fontFamily: typography.fontFamily.regular }]}>
                   {addr.line1}, {addr.line2}
                 </Text>
 
-                <Text
-                  numberOfLines={1}
-                  style={[styles.addrCity, { fontFamily: typography.fontFamily.medium }]}
-                >
+                <Text numberOfLines={1} style={[styles.addrCity, { fontFamily: typography.fontFamily.medium }]}>
                   {addr.city}, {addr.state} – {addr.pincode}
                 </Text>
+              </View>
+
+              {/* Actions column */}
+              <View style={styles.actions}>
+                {/* Edit */}
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => router.push(`/add-address?mode=edit&id=${addr.id}` as any)}
+                  hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="create-outline" size={17} color="#6B7280" />
+                </TouchableOpacity>
+
+                {/* Delete */}
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => handleDelete(addr)}
+                  hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="trash-outline" size={17} color="#EF4444" />
+                </TouchableOpacity>
               </View>
 
               {/* Radio dot */}
@@ -133,7 +198,7 @@ export default function AddressBookScreen() {
         <TouchableOpacity
           style={styles.addBtn}
           activeOpacity={0.82}
-          onPress={() => Alert.alert("Add Address", "Address form coming soon.")}
+          onPress={() => router.push("/add-address?mode=add" as any)}
         >
           <Ionicons name="add-circle-outline" size={20} color={BRAND_BLUE} />
           <Text style={[styles.addText, { fontFamily: typography.fontFamily.semiBold }]}>
@@ -154,29 +219,28 @@ const styles = StyleSheet.create({
 
   // ── Header ──────────────────────────────────────────────────
   header: {
-    backgroundColor:    BRAND_BLUE,
-    flexDirection:      "row",
-    alignItems:         "center",
-    paddingHorizontal:  16,
-    paddingBottom:      14,
-    gap:                10,
+    backgroundColor:   BRAND_BLUE,
+    flexDirection:     "row",
+    alignItems:        "center",
+    paddingHorizontal: 8,
+    paddingBottom:     14,
+    gap:               4,
   },
-  backBtn: {
-    padding: 2,
+  headerBtn: {
+    width:          44,
+    height:         44,
+    alignItems:     "center",
+    justifyContent: "center",
   },
   headerTitle: {
     flex:     1,
     fontSize: 17,
     color:    "#fff",
-  },
-  editBtn: {
-    padding: 2,
+    textAlign: "center",
   },
 
   // ── Scroll ──────────────────────────────────────────────────
-  scroll: {
-    flex: 1,
-  },
+  scroll: { flex: 1 },
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop:        20,
@@ -201,7 +265,7 @@ const styles = StyleSheet.create({
     elevation:       2,
   },
   cardSelected: {
-    borderColor: BRAND_BLUE,
+    borderColor:   BRAND_BLUE,
     shadowOpacity: 0.12,
   },
 
@@ -211,37 +275,38 @@ const styles = StyleSheet.create({
     borderRadius:   10,
     alignItems:     "center",
     justifyContent: "center",
+    flexShrink:     0,
   },
 
   cardBody: {
     flex: 1,
     gap:  2,
   },
-  addrLabel: {
-    fontSize: 14,
-  },
-  addrLine: {
-    fontSize: 12,
-    color:    "#6B7280",
-  },
-  addrCity: {
-    fontSize: 12,
-    color:    "#374151",
+  addrLabel: { fontSize: 14 },
+  addrLine:  { fontSize: 12, color: "#6B7280" },
+  addrCity:  { fontSize: 12, color: "#374151" },
+
+  // Edit + Delete
+  actions: { gap: 4, flexShrink: 0 },
+  actionBtn: {
+    width:          28,
+    height:         28,
+    alignItems:     "center",
+    justifyContent: "center",
   },
 
   // Radio button
   radio: {
-    width:        20,
-    height:       20,
-    borderRadius: 10,
-    borderWidth:  2,
-    borderColor:  "#D1D5DB",
-    alignItems:   "center",
+    width:          20,
+    height:         20,
+    borderRadius:   10,
+    borderWidth:    2,
+    borderColor:    "#D1D5DB",
+    alignItems:     "center",
     justifyContent: "center",
+    flexShrink:     0,
   },
-  radioSelected: {
-    borderColor: BRAND_BLUE,
-  },
+  radioSelected: { borderColor: BRAND_BLUE },
   radioInner: {
     width:           10,
     height:          10,
@@ -256,15 +321,8 @@ const styles = StyleSheet.create({
     gap:           10,
     marginVertical: 4,
   },
-  orLine: {
-    flex:            1,
-    height:          1,
-    backgroundColor: "#E5E7EB",
-  },
-  orText: {
-    fontSize: 12,
-    color:    "#9CA3AF",
-  },
+  orLine: { flex: 1, height: 1, backgroundColor: "#E5E7EB" },
+  orText: { fontSize: 12, color: "#9CA3AF" },
 
   // ── Add button ───────────────────────────────────────────────
   addBtn: {
