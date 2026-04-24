@@ -54,12 +54,22 @@ export default function RootLayout() {
         <LocationProvider>
           <CartProvider>
           <Stack screenOptions={{ headerShown: false }}>
-            {/* Main tab group — the primary customer experience */}
-            <Stack.Screen name="(tabs)" />
-            {/* Menu + utility screens — about-us, address-book, favourite, product-finder, scanner, sell-ondc, store-live, store-qr */}
-            <Stack.Screen name="(menu)" />
-            {/* Auth + account screens — get-started, login, create-account, otp, edit-profile, notifications */}
-            <Stack.Screen name="(auth)" />
+            {/* Auth flow — get-started, login, otp, create-account, edit-profile */}
+            <Stack.Screen name="(auth)"     />
+            {/* Bottom tab bar — Home, Category, Cart, Bharat, Profile */}
+            <Stack.Screen name="(tabs)"     />
+            {/* Store browsing — store-detail, store-live, store-qr */}
+            <Stack.Screen name="(store)"    />
+            {/* Checkout flow — checkout, checkout-payment, order-tracking, order-qr, order-collected, invoice */}
+            <Stack.Screen name="(checkout)" />
+            {/* Order history */}
+            <Stack.Screen name="(orders)"   />
+            {/* Account management — address-book, payment-methods, add-payment, favourite */}
+            <Stack.Screen name="(account)"  />
+            {/* Discovery — search-results, product-detail, product-finder, scanner, brands, offer-zone, new-launchers */}
+            <Stack.Screen name="(discover)" />
+            {/* Info + settings — about-us, help-support, sell-ondc, rate-us, language, notifications */}
+            <Stack.Screen name="(info)"     />
           </Stack>
           </CartProvider>
         </LocationProvider>

@@ -12,8 +12,9 @@
 //   Payment method selector (radio list)
 //   Security assurance strip
 //   "Pay ₹X" sticky CTA → calls placeOrder() → navigates to:
-//     Pickup:          /order-qr
-//     Delivery / Ride: /order-tracking
+//     /order-tracking (all modes — pickup gets reorderable store
+//     list with per-store QR buttons, delivery/ride gets sticky
+//     combined-QR bar)
 //
 // Backend: POST /customer/orders  →  PlaceOrderResponse
 // ============================================================
@@ -40,11 +41,16 @@ import {
 
 import CheckoutPaymentSelector from "../../components/checkout/CheckoutPaymentSelector";
 
-// ── COD is valid for ALL modes:
-//    pickup   → customer pays cash at the store counter on arrival
-//    delivery → delivery partner collects cash at the door
-//    ride     → rider collects cash on arrival
-function getEligibleMethods(_mode: FulfillmentMode) {
+// ── Payment-method gating by fulfillment mode ────────────────
+// COD is allowed ONLY for delivery (delivery partner collects cash
+// at the door). For pickup + ride the customer pays the store/rider
+// directly via a non-COD method or chooses "Pay at store" prepaid
+// alternative — we hide COD entirely so the radio list can't surface
+// an unsupported option.
+function getEligibleMethods(mode: FulfillmentMode) {
+  if (mode === "pickup" || mode === "ride") {
+    return MOCK_PAYMENT_METHODS.filter(m => m.type !== "cod");
+  }
   return MOCK_PAYMENT_METHODS;
 }
 
@@ -107,7 +113,12 @@ export default function CheckoutPaymentScreen() {
 
   // ── Confirm payment → place order → navigate ─────────────────
   // placeOrder() → POST /customer/orders
-  async function handlePay() {
+  //
+  // `overrideMethodId` lets the "Skip — Pay at Store" CTA bypass the
+  // selected radio method. We send a sentinel `"skip"` so the backend
+  // can mark the order as unpaid (customer settles directly with the
+  // store/rider). Only allowed for pickup + ride.
+  async function handlePay(overrideMethodId?: string) {
     setPayError(null);
     setPlacing(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -127,7 +138,7 @@ export default function CheckoutPaymentScreen() {
       const req: PlaceOrderRequest = {
         mode,
         addressId:       addrId || null,
-        paymentMethodId: selectedPayment.id,
+        paymentMethodId: overrideMethodId ?? selectedPayment.id,
         storeOrders,
         promoCode,
         note,
@@ -289,10 +300,7 @@ export default function CheckoutPaymentScreen() {
                 Pay with Cash on Delivery
               </Text>
               <Text style={[styles.codSub, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-                {mode === "pickup"
-                ? `Pay ₹${total.toFixed(0)} cash at the store counter when you collect your order.`
-                : `Keep exact change ready (₹${total.toFixed(0)}). The ${mode === "ride" ? "rider" : "delivery partner"} will collect cash when they arrive.`
-              }
+                Keep exact change ready (₹{total.toFixed(0)}). The delivery partner will collect cash when they arrive.
               </Text>
             </View>
           </View>
@@ -317,7 +325,11 @@ export default function CheckoutPaymentScreen() {
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* ── Sticky Pay CTA ── */}
+      {/* ── Sticky Pay CTA ──
+           Pickup + ride get a "Skip — Pay at Store" outline button
+           in addition to "Pay Now" — the customer can settle directly
+           with the store / rider on arrival. Delivery only shows
+           "Pay Now" (COD radio inside the list handles cash-at-door). */}
       <SafeAreaView
         style={[styles.ctaBar, { backgroundColor: modeCfg.color }]}
         edges={["bottom"]}
@@ -332,20 +344,42 @@ export default function CheckoutPaymentScreen() {
             </Text>
           </View>
 
-          <TouchableOpacity
-            style={[styles.ctaBtn, { backgroundColor: "rgba(255,255,255,0.2)", opacity: placing ? 0.6 : 1 }]}
-            onPress={handlePay}
-            disabled={placing}
-            activeOpacity={0.85}
-          >
-            {placing
-              ? <ActivityIndicator size="small" color="#fff" />
-              : <Ionicons name={isCod ? "cash-outline" : "lock-closed-outline"} size={18} color="#fff" />
-            }
-            <Text style={[styles.ctaBtnText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-              {placing ? "Placing Order…" : isCod ? "Place Order (COD)" : "Confirm & Pay"}
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.ctaBtnRow}>
+            {/* Skip — pickup + ride only. Bypasses prepaid; customer pays
+                 store/rider directly on arrival. */}
+            {(mode === "pickup" || mode === "ride") && (
+              <TouchableOpacity
+                style={[
+                  styles.skipBtn,
+                  { borderColor: "rgba(255,255,255,0.55)", opacity: placing ? 0.6 : 1 },
+                ]}
+                onPress={() => handlePay("skip")}
+                disabled={placing}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="walk-outline" size={16} color="#fff" />
+                <Text style={[styles.skipBtnText, { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
+                  Skip · Pay at {mode === "ride" ? "Pickup" : "Store"}
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Primary Pay CTA */}
+            <TouchableOpacity
+              style={[styles.ctaBtn, { backgroundColor: "rgba(255,255,255,0.2)", opacity: placing ? 0.6 : 1 }]}
+              onPress={() => handlePay()}
+              disabled={placing}
+              activeOpacity={0.85}
+            >
+              {placing
+                ? <ActivityIndicator size="small" color="#fff" />
+                : <Ionicons name={isCod ? "cash-outline" : "lock-closed-outline"} size={18} color="#fff" />
+              }
+              <Text style={[styles.ctaBtnText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
+                {placing ? "Placing…" : isCod ? "Place (COD)" : "Pay Now"}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </SafeAreaView>
     </View>
@@ -500,12 +534,34 @@ const styles = StyleSheet.create({
   },
   ctaMethod: { color: "rgba(255,255,255,0.75)", marginBottom: 2 },
   ctaAmount: { color: "#fff" },
+
+  // Right-side button stack — holds Skip + Pay (or just Pay)
+  ctaBtnRow: {
+    flex:           1,
+    flexDirection:  "row",
+    alignItems:     "center",
+    justifyContent: "flex-end",
+    gap:            8,
+  },
+
+  // Skip — Pay at Store / Pickup (outline)
+  skipBtn: {
+    flexDirection:     "row",
+    alignItems:        "center",
+    gap:               6,
+    paddingHorizontal: 12,
+    paddingVertical:   12,
+    borderRadius:      14,
+    borderWidth:       1,
+  },
+  skipBtnText: { color: "#fff" },
+
   ctaBtn: {
-    flex:              1,
     flexDirection:     "row",
     alignItems:        "center",
     justifyContent:    "center",
     gap:               8,
+    paddingHorizontal: 16,
     paddingVertical:   14,
     borderRadius:      14,
   },

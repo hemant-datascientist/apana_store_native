@@ -38,22 +38,30 @@ export default function OrderCollectedScreen() {
   const router             = useRouter();
 
   // ── Params ────────────────────────────────────────────────
+  // For pickup we receive a "tracking context" trio so we can
+  // navigate back to /order-tracking with the just-collected
+  // storeId merged into `visitedJson`. If `trackingStoreOrdersJson`
+  // is absent we fall back to "Back to Home".
   const {
-    orderId:             orderIdParam,
-    storeOrderId:        storeOrderIdParam,
-    storeId:             storeIdParam,
-    mode:                modeParam,
-    total:               totalParam,
-    storeName:           storeNameParam,
-    remainingStoresJson: remainingParam = "",
+    orderId:                  orderIdParam,
+    storeOrderId:             storeOrderIdParam,
+    storeId:                  storeIdParam,
+    mode:                     modeParam,
+    total:                    totalParam,
+    storeName:                storeNameParam,
+    trackingStoreOrdersJson:  trackingStoreOrdersParam = "",
+    trackingVisitedJson:      trackingVisitedParam     = "",
+    trackingSequenceJson:     trackingSequenceParam    = "",
   } = useLocalSearchParams<{
-    orderId?:              string;
-    storeOrderId?:         string;
-    storeId?:              string;
-    mode?:                 string;
-    total?:                string;
-    storeName?:            string;
-    remainingStoresJson?:  string;
+    orderId?:                  string;
+    storeOrderId?:             string;
+    storeId?:                  string;
+    mode?:                     string;
+    total?:                    string;
+    storeName?:                string;
+    trackingStoreOrdersJson?:  string;
+    trackingVisitedJson?:      string;
+    trackingSequenceJson?:     string;
   }>();
 
   const mode         = (modeParam ?? "pickup") as FulfillmentMode;
@@ -68,14 +76,34 @@ export default function OrderCollectedScreen() {
   const modeCfg  = FULFILLMENT_CONFIG[mode];
   const agent    = MOCK_AGENTS[mode];
 
-  // ── Remaining pickup stores — drives "Next Store" CTA ────────
-  // remainingParam is already decoded by expo-router; parse as-is.
-  const remainingStores = useMemo<StoreOrderResult[]>(() => {
-    if (!remainingParam) return [];
-    try { return JSON.parse(remainingParam); }
+  // ── Tracking context — drives "Next Store" vs "Back to Home" ──
+  // Parse the full store list + previously-visited set we received.
+  // After this collection, we add `storeId` to visited and pass
+  // everything back to /order-tracking so the customer can resume.
+  const allStores = useMemo<StoreOrderResult[]>(() => {
+    if (!trackingStoreOrdersParam) return [];
+    try { return JSON.parse(trackingStoreOrdersParam); }
     catch { return []; }
-  }, [remainingParam]);
-  const hasNextStore = mode === "pickup" && remainingStores.length > 0;
+  }, [trackingStoreOrdersParam]);
+
+  const previouslyVisited = useMemo<string[]>(() => {
+    if (!trackingVisitedParam) return [];
+    try { return JSON.parse(trackingVisitedParam) as string[]; }
+    catch { return []; }
+  }, [trackingVisitedParam]);
+
+  // Merge this store into visited (idempotent — Set dedupes)
+  const updatedVisited = useMemo<string[]>(() => {
+    if (!storeId) return previouslyVisited;
+    const set = new Set(previouslyVisited);
+    set.add(storeId);
+    return Array.from(set);
+  }, [previouslyVisited, storeId]);
+
+  const remainingCount = mode === "pickup"
+    ? allStores.filter(s => !updatedVisited.includes(s.storeId)).length
+    : 0;
+  const hasNextStore = mode === "pickup" && remainingCount > 0;
 
   // Freeze timestamp to mount time
   const scannedAt = useMemo(() => new Date(), []);
@@ -185,15 +213,23 @@ export default function OrderCollectedScreen() {
             </Text>
           </TouchableOpacity>
 
-          {/* Primary CTA — "Next Store" if more pickup stores remain, else "Back to Home" */}
+          {/* Primary CTA — back to /order-tracking with merged visited
+               set (pickup), else "Back to Home" (delivery / ride / done). */}
           <TouchableOpacity
             style={[styles.primaryBtn, { backgroundColor: cfg.heroColor }]}
             onPress={() => {
-              if (hasNextStore) {
-                // Re-encode remainingParam (already decoded) for next order-tracking URL
-                const encoded = encodeURIComponent(remainingParam);
-                router.push(
-                  `/order-tracking?mode=pickup&orderId=${orderId}&total=${totalAmt}&storeOrdersJson=${encoded}` as any,
+              if (mode === "pickup" && allStores.length > 0) {
+                // Always return to tracking — even if all stores are
+                // collected — so the customer sees the "Order Complete"
+                // state with all rows ✓ before going home.
+                const so  = encodeURIComponent(trackingStoreOrdersParam || "[]");
+                const vis = encodeURIComponent(JSON.stringify(updatedVisited));
+                const seq = trackingSequenceParam
+                  ? `&sequenceJson=${encodeURIComponent(trackingSequenceParam)}`
+                  : "";
+                router.replace(
+                  `/order-tracking?mode=pickup&orderId=${orderId}&total=${totalAmt}` +
+                  `&storeOrdersJson=${so}&visitedJson=${vis}${seq}` as any,
                 );
               } else {
                 router.replace("/(tabs)");
@@ -203,7 +239,11 @@ export default function OrderCollectedScreen() {
           >
             <Ionicons name={hasNextStore ? "navigate-outline" : "home-outline"} size={16} color="#fff" />
             <Text style={[styles.primaryText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-              {hasNextStore ? `Next Store (${remainingStores.length} left)` : "Back to Home"}
+              {hasNextStore
+                ? `Next Store (${remainingCount} left)`
+                : mode === "pickup" && allStores.length > 0
+                  ? "All Collected — View Order"
+                  : "Back to Home"}
             </Text>
           </TouchableOpacity>
         </View>

@@ -52,19 +52,28 @@ export default function OrderQrScreen() {
   const router             = useRouter();
   const { cart }           = useCart();
 
-  // ── Params from checkout ──────────────────────────────────
+  // ── Params from checkout / tracking ───────────────────────
+  // For pickup re-entries from /order-tracking we receive three
+  // extra params (`trackingStoreOrdersJson`, `trackingVisitedJson`,
+  // `trackingSequenceJson`) that we forward verbatim to
+  // /order-collected so it can navigate back to the tracking screen
+  // with the just-collected store added to `visitedJson`.
   const {
-    mode:               modeParam,
-    orderId:            orderIdParam,
-    total:              totalParam,
-    storeOrdersJson:    storeOrdersParam,
-    remainingStoresJson: remainingParam = "",
+    mode:                       modeParam,
+    orderId:                    orderIdParam,
+    total:                      totalParam,
+    storeOrdersJson:            storeOrdersParam,
+    trackingStoreOrdersJson:    trackingStoreOrdersParam = "",
+    trackingVisitedJson:        trackingVisitedParam     = "",
+    trackingSequenceJson:       trackingSequenceParam    = "",
   } = useLocalSearchParams<{
-    mode?:                string;
-    orderId?:             string;
-    total?:               string;
-    storeOrdersJson?:     string;
-    remainingStoresJson?: string;
+    mode?:                     string;
+    orderId?:                  string;
+    total?:                    string;
+    storeOrdersJson?:          string;
+    trackingStoreOrdersJson?:  string;
+    trackingVisitedJson?:      string;
+    trackingSequenceJson?:     string;
   }>();
 
   const mode     = (modeParam ?? "delivery") as FulfillmentMode;
@@ -237,14 +246,18 @@ export default function OrderQrScreen() {
                 placedAt={placedAt}
                 qrFilePath={storeQrPaths[so.storeOrderId] ?? null}
                 onSimulateScan={() => {
-                  // Re-encode remainingParam (already decoded by expo-router) for next URL.
-                  // If no remaining stores, omit the param so order-collected shows "Back to Home".
-                  // storeId is forwarded so order-collected can pass it to the invoice screen.
+                  // storeId is forwarded so order-collected can pass it
+                  // to the invoice screen.
+                  // The three `tracking*` params are carried through so
+                  // /order-collected can navigate back to /order-tracking
+                  // with this storeId merged into `visitedJson`.
                   const base = `/order-collected?storeOrderId=${so.storeOrderId}&storeId=${so.storeId}&orderId=${orderId}&mode=${mode}&total=${so.subtotal}&storeName=${encodeURIComponent(so.storeName)}`;
-                  const url  = remainingParam
-                    ? `${base}&remainingStoresJson=${encodeURIComponent(remainingParam)}`
-                    : base;
-                  router.push(url as any);
+                  const ctx = trackingStoreOrdersParam
+                    ? `&trackingStoreOrdersJson=${encodeURIComponent(trackingStoreOrdersParam)}` +
+                      `&trackingVisitedJson=${encodeURIComponent(trackingVisitedParam || "[]")}` +
+                      (trackingSequenceParam ? `&trackingSequenceJson=${encodeURIComponent(trackingSequenceParam)}` : "")
+                    : "";
+                  router.push((base + ctx) as any);
                 }}
                 onViewInvoice={() =>
                   router.push(`/invoice?storeOrderId=${so.storeOrderId}&storeId=${so.storeId}` as any)
