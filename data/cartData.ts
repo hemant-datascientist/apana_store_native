@@ -28,41 +28,45 @@ export interface CartStore {
   items:       CartItem[];
 }
 
+// IDs aligned to canonical s1–s5 per CLAUDE.md so per-store invoices,
+// QR codes, and tracking screens resolve to the correct store name
+// across all data files (storeDetailData, nearbyMapData, invoiceData…).
 export const INITIAL_CART: CartStore[] = [
   {
-    id:        "cs1",
-    name:      "Laxmi Vegetable Mart",
-    type:      "Grocery",
-    typeColor: "#026451",
-    typeBg:    "#DCFCE7",
+    id:          "s1",
+    name:        "Sharma General Store",
+    type:        "Grocery",
+    typeColor:   "#166534",
+    typeBg:      "#D1FAE5",
     fulfillment: "pickup",
     items: [
-      { id:"i1", name:"Fresh Potatoes",   unit:"1 kg",   price: 35,  qty:2, icon:"earth-outline",       bg:"#FEF3C7" },
-      { id:"i2", name:"Tomatoes",         unit:"500 g",  price: 22,  qty:1, icon:"radio-button-on",     bg:"#FEE2E2" },
-      { id:"i3", name:"Onions",           unit:"1 kg",   price: 28,  qty:1, icon:"ellipse-outline",     bg:"#FCE7F3" },
+      { id:"i1", name:"Fresh Potatoes",    unit:"1 kg",    price: 35,  qty:2, icon:"earth-outline",       bg:"#FEF3C7" },
+      { id:"i2", name:"Tomatoes",          unit:"500 g",   price: 22,  qty:1, icon:"radio-button-on",     bg:"#FEE2E2" },
+      { id:"i3", name:"Onions",            unit:"1 kg",    price: 28,  qty:1, icon:"ellipse-outline",     bg:"#FCE7F3" },
     ],
   },
   {
-    id:        "cs2",
-    name:      "Apollo Pharmacy",
-    type:      "Pharmacy",
-    typeColor: "#1D4746",
-    typeBg:    "#CCFBF1",
+    id:          "s3",
+    name:        "Gupta Medical Store",
+    type:        "Pharmacy",
+    typeColor:   "#0F5132",
+    typeBg:      "#DCFCE7",
     fulfillment: "delivery",
     items: [
-      { id:"i4", name:"Dettol Handwash",  unit:"250 ml", price: 89,  qty:1, icon:"water-outline",       bg:"#DBEAFE" },
-      { id:"i5", name:"Vitamin C Tablets",unit:"60 tabs",price:145,  qty:1, icon:"fitness-outline",     bg:"#DCFCE7" },
+      { id:"i4", name:"Dettol Handwash",   unit:"250 ml",  price: 89,  qty:1, icon:"water-outline",       bg:"#DBEAFE" },
+      { id:"i5", name:"Vitamin C Tablets", unit:"60 tabs", price:145,  qty:1, icon:"fitness-outline",     bg:"#DCFCE7" },
     ],
   },
   {
-    id:        "cs3",
-    name:      "Meridian Ice Cream",
-    type:      "Ice Cream",
-    typeColor: "#803E96",
-    typeBg:    "#F3E8FF",
+    id:          "s5",
+    name:        "Fresh Bakes",
+    type:        "Food & Drink",
+    typeColor:   "#92400E",
+    typeBg:      "#FEF3C7",
     fulfillment: "pickup",
     items: [
-      { id:"i6", name:"Vanilla Cone",     unit:"1 piece",price: 40,  qty:2, icon:"ice-cream-outline",   bg:"#FCE7F3" },
+      { id:"i6", name:"Butter Croissant",  unit:"1 piece", price: 45,  qty:2, icon:"cafe-outline",        bg:"#FEF3C7" },
+      { id:"i7", name:"Sourdough Loaf",    unit:"500 g",   price:120,  qty:1, icon:"restaurant-outline", bg:"#FDE68A" },
     ],
   },
 ];
