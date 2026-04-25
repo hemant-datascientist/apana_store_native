@@ -3,10 +3,12 @@
 //
 // Route group layout for all auth and account screens:
 //   get-started, login, create-account, otp, location-access,
-//   edit-profile, notifications
+//   edit-profile
 //
 // All screens manage their own headers via AuthHeader,
 // so the Stack navigator runs header-less.
+// NOTE: notifications is NOT registered here — it lives in (info)/notifications.tsx
+// so that router.push("/notifications") from the bell icon resolves correctly.
 // ============================================================
 
 import { Stack } from "expo-router";
@@ -20,7 +22,6 @@ export default function AuthLayout() {
       <Stack.Screen name="otp"             />
       <Stack.Screen name="location-access"/>
       <Stack.Screen name="edit-profile"   />
-      <Stack.Screen name="notifications"  />
     </Stack>
   );
 }
