@@ -2,6 +2,11 @@ node_modules/
 .expo/
 dist/
 web-build/
+
+# Auto-generated from apana-contracts/openapi/customer.yaml
+# Regenerate via: cd ../apana-contracts && npm run gen:ts:customer
+types/api.ts
+
 *.jks
 *.p8
 *.p12
