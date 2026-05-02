@@ -1,0 +1,28 @@
+# Skip host node_modules — image runs `npm ci` so its own copy is canonical
+node_modules
+npm-debug.log*
+
+# Local Expo state — should never enter the image
+.expo
+.expo-shared
+dist
+web-build
+ios
+android
+
+# Local env (compose passes env via env_file/environment)
+.env
+.env.local
+.env.*.local
+
+# Dev artifacts
+*.log
+.DS_Store
+.git
+.gitignore
+.vscode
+.idea
+.metro-health-check*
+
+# Generated TS types — regenerated from contracts via codegen
+types/api.ts

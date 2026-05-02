@@ -1,0 +1,40 @@
+# Standalone compose for Customer FE.
+#
+# Use this for solo work on the customer app:
+#   docker compose up
+#
+# For full-ecosystem dev (backend + 3 FE), use the root compose:
+#   cd .. && docker compose up customer
+#
+# .env vars (set in this dir before `docker compose up`):
+#   LAN_IP                       — host LAN IP (so Expo Go on phone reaches Metro)
+#   EXPO_PUBLIC_API_MODE         — mock | local | prod  (default: mock)
+#   EXPO_PUBLIC_TOWER_IP         — backend host on LAN  (default: 192.168.1.50)
+
+services:
+  customer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: apana-customer
+    ports:
+      # Metro bundler (must match Dockerfile EXPOSE)
+      - "8081:8081"
+      # Legacy Expo dev tools (older Expo Go versions still hit these)
+      - "19000:19000"
+      - "19001:19001"
+      - "19002:19002"
+    environment:
+      # Phone scans QR -> Expo Go fetches bundle from THIS hostname.
+      # Must be a LAN IP reachable from phone, NOT localhost (which is the container).
+      REACT_NATIVE_PACKAGER_HOSTNAME: ${LAN_IP:-host.docker.internal}
+      EXPO_PUBLIC_API_MODE: ${EXPO_PUBLIC_API_MODE:-mock}
+      EXPO_PUBLIC_TOWER_IP: ${EXPO_PUBLIC_TOWER_IP:-192.168.1.50}
+    volumes:
+      # Bind source for hot-reload edits
+      - .:/app
+      # Anonymous volume keeps container's own node_modules (avoids host pollution)
+      - /app/node_modules
+    restart: unless-stopped
+    stdin_open: true     # keep TTY so Expo's interactive UI works
+    tty: true
