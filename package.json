@@ -17,6 +17,7 @@
     "@react-navigation/bottom-tabs": "^7.15.5",
     "@react-navigation/elements": "^2.9.15",
     "@react-navigation/native": "^7.1.33",
+    "MapplsRNDemo": "https://github.com/mappls-api/mappls-react-native-sdk",
     "expo": "^55.0.19",
     "expo-blur": "~55.0.14",
     "expo-camera": "~55.0.16",
