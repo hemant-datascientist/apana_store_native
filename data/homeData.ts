@@ -19,7 +19,7 @@ export const MOCK_LOCATION: UserLocation = {
   pincode: "411001",
 };
 
-export const STORES_LIVE_COUNT = 410;
+export const STORES_LIVE_COUNT = 12500000;
 
 // ── Discovery mode toggle ──────────────────────────────────────
 

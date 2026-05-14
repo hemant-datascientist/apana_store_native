@@ -32,6 +32,11 @@ export default function ServiceStoreCard({ store, onCall, onDirection, onViewInf
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <TouchableOpacity 
+        activeOpacity={0.8}
+        onPress={() => onViewInfo(store)}
+        style={styles.cardPressable}
+      >
 
       {/* LIVE badge */}
       <View style={styles.liveBadge}>
@@ -125,7 +130,8 @@ export default function ServiceStoreCard({ store, onCall, onDirection, onViewInf
 
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
+  </View>
   );
 }
 
@@ -137,6 +143,9 @@ const styles = StyleSheet.create({
     borderWidth:        1,
     overflow:          "hidden",
     position:          "relative",
+  },
+  cardPressable: {
+    // cover
   },
 
   // LIVE badge

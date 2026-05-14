@@ -9,6 +9,7 @@ export interface StateInfo {
   key:  string;
   name: string;
   abbr: string;
+  storesLive: number;
 }
 
 export interface RegionGroup {
@@ -24,13 +25,13 @@ export const REGION_GROUPS: RegionGroup[] = [
     key:   "north",
     title: "Northern States",
     states: [
-      { key: "jk",          name: "Jammu & Kashmir",   abbr: "J&K" },
-      { key: "himachal",    name: "Himachal Pradesh",  abbr: "HP"  },
-      { key: "punjab",      name: "Punjab",             abbr: "PB"  },
-      { key: "haryana",     name: "Haryana",            abbr: "HR"  },
-      { key: "delhi",       name: "Delhi",              abbr: "DL"  },
-      { key: "uttarakhand", name: "Uttarakhand",        abbr: "UK"  },
-      { key: "up",          name: "Uttar Pradesh",      abbr: "UP"  },
+      { key: "jk",          name: "Jammu & Kashmir",   abbr: "J&K", storesLive: 125000 },
+      { key: "himachal",    name: "Himachal Pradesh",  abbr: "HP",  storesLive: 85000 },
+      { key: "punjab",      name: "Punjab",             abbr: "PB",  storesLive: 450000 },
+      { key: "haryana",     name: "Haryana",            abbr: "HR",  storesLive: 320000 },
+      { key: "delhi",       name: "Delhi",              abbr: "DL",  storesLive: 580000 },
+      { key: "uttarakhand", name: "Uttarakhand",        abbr: "UK",  storesLive: 140000 },
+      { key: "up",          name: "Uttar Pradesh",      abbr: "UP",  storesLive: 1850000 },
     ],
   },
 
@@ -39,8 +40,8 @@ export const REGION_GROUPS: RegionGroup[] = [
     key:   "central",
     title: "Central States",
     states: [
-      { key: "mp", name: "Madhya Pradesh", abbr: "MP" },
-      { key: "cg", name: "Chhattisgarh",  abbr: "CG" },
+      { key: "mp", name: "Madhya Pradesh", abbr: "MP", storesLive: 840000 },
+      { key: "cg", name: "Chhattisgarh",  abbr: "CG", storesLive: 290000 },
     ],
   },
 
@@ -49,10 +50,10 @@ export const REGION_GROUPS: RegionGroup[] = [
     key:   "west",
     title: "Western States",
     states: [
-      { key: "rajasthan",   name: "Rajasthan",   abbr: "RJ" },
-      { key: "gujarat",     name: "Gujarat",      abbr: "GJ" },
-      { key: "maharashtra", name: "Maharashtra",  abbr: "MH" },
-      { key: "goa",         name: "Goa",          abbr: "GA" },
+      { key: "rajasthan",   name: "Rajasthan",   abbr: "RJ", storesLive: 670000 },
+      { key: "gujarat",     name: "Gujarat",      abbr: "GJ", storesLive: 920000 },
+      { key: "maharashtra", name: "Maharashtra",  abbr: "MH", storesLive: 1450000 },
+      { key: "goa",         name: "Goa",          abbr: "GA", storesLive: 45000 },
     ],
   },
 
@@ -61,10 +62,10 @@ export const REGION_GROUPS: RegionGroup[] = [
     key:   "east",
     title: "Eastern States",
     states: [
-      { key: "bihar",      name: "Bihar",       abbr: "BR" },
-      { key: "jharkhand",  name: "Jharkhand",   abbr: "JH" },
-      { key: "odisha",     name: "Odisha",      abbr: "OD" },
-      { key: "westbengal", name: "West Bengal", abbr: "WB" },
+      { key: "bihar",      name: "Bihar",       abbr: "BR", storesLive: 980000 },
+      { key: "jharkhand",  name: "Jharkhand",   abbr: "JH", storesLive: 340000 },
+      { key: "odisha",     name: "Odisha",      abbr: "OD", storesLive: 410000 },
+      { key: "westbengal", name: "West Bengal", abbr: "WB", storesLive: 1120000 },
     ],
   },
 
@@ -73,14 +74,14 @@ export const REGION_GROUPS: RegionGroup[] = [
     key:   "northeast",
     title: "North-Eastern States",
     states: [
-      { key: "sikkim",    name: "Sikkim",             abbr: "SK" },
-      { key: "arunachal", name: "Arunachal Pradesh",  abbr: "AR" },
-      { key: "assam",     name: "Assam",              abbr: "AS" },
-      { key: "nagaland",  name: "Nagaland",           abbr: "NL" },
-      { key: "meghalaya", name: "Meghalaya",          abbr: "ML" },
-      { key: "manipur",   name: "Manipur",            abbr: "MN" },
-      { key: "mizoram",   name: "Mizoram",            abbr: "MZ" },
-      { key: "tripura",   name: "Tripura",            abbr: "TR" },
+      { key: "sikkim",    name: "Sikkim",             abbr: "SK", storesLive: 12000 },
+      { key: "arunachal", name: "Arunachal Pradesh",  abbr: "AR", storesLive: 18000 },
+      { key: "assam",     name: "Assam",              abbr: "AS", storesLive: 280000 },
+      { key: "nagaland",  name: "Nagaland",           abbr: "NL", storesLive: 22000 },
+      { key: "meghalaya", name: "Meghalaya",          abbr: "ML", storesLive: 28000 },
+      { key: "manipur",   name: "Manipur",            abbr: "MN", storesLive: 25000 },
+      { key: "mizoram",   name: "Mizoram",            abbr: "MZ", storesLive: 15000 },
+      { key: "tripura",   name: "Tripura",            abbr: "TR", storesLive: 32000 },
     ],
   },
 
@@ -89,12 +90,12 @@ export const REGION_GROUPS: RegionGroup[] = [
     key:   "south",
     title: "Southern States",
     states: [
-      { key: "ap",         name: "Andhra Pradesh", abbr: "AP" },
-      { key: "telangana",  name: "Telangana",      abbr: "TS" },
-      { key: "karnataka",  name: "Karnataka",      abbr: "KA" },
-      { key: "kerala",     name: "Kerala",         abbr: "KL" },
-      { key: "tamilnadu",  name: "Tamil Nadu",     abbr: "TN" },
-      { key: "puducherry", name: "Puducherry",     abbr: "PY" },
+      { key: "ap",         name: "Andhra Pradesh", abbr: "AP", storesLive: 890000 },
+      { key: "telangana",  name: "Telangana",      abbr: "TS", storesLive: 1040000 },
+      { key: "karnataka",  name: "Karnataka",      abbr: "KA", storesLive: 1320000 },
+      { key: "kerala",     name: "Kerala",         abbr: "KL", storesLive: 760000 },
+      { key: "tamilnadu",  name: "Tamil Nadu",     abbr: "TN", storesLive: 1480000 },
+      { key: "puducherry", name: "Puducherry",     abbr: "PY", storesLive: 42000 },
     ],
   },
 
@@ -103,11 +104,11 @@ export const REGION_GROUPS: RegionGroup[] = [
     key:   "uts",
     title: "Union Territories",
     states: [
-      { key: "chandigarh",  name: "Chandigarh",           abbr: "CH" },
-      { key: "dnh",         name: "Dadra & Nagar Haveli", abbr: "DN" },
-      { key: "damandiu",    name: "Daman & Diu",          abbr: "DD" },
-      { key: "lakshadweep", name: "Lakshadweep",          abbr: "LD" },
-      { key: "andaman",     name: "Andaman & Nicobar",    abbr: "AN" },
+      { key: "chandigarh",  name: "Chandigarh",           abbr: "CH", storesLive: 64000 },
+      { key: "dnh",         name: "Dadra & Nagar Haveli", abbr: "DN", storesLive: 15000 },
+      { key: "damandiu",    name: "Daman & Diu",          abbr: "DD", storesLive: 12000 },
+      { key: "lakshadweep", name: "Lakshadweep",          abbr: "LD", storesLive: 4500 },
+      { key: "andaman",     name: "Andaman & Nicobar",    abbr: "AN", storesLive: 18000 },
     ],
   },
 ];

@@ -13,6 +13,7 @@ import { typography } from "../../../theme/typography";
 import useTheme from "../../../theme/useTheme";
 import StateSvg from "./StateSvg";
 import { StateInfo } from "../../../data/bharatData";
+import { formatCount } from "../../../utils/formatUtils";
 
 interface StateCardProps {
   state:    StateInfo;
@@ -42,11 +43,19 @@ export default function StateCard({ state, primary, onPress }: StateCardProps) {
 
       {/* State name */}
       <Text
-        style={[styles.name, { color: colors.subText, fontFamily: typography.fontFamily.medium }]}
-        numberOfLines={2}
+        style={[styles.name, { color: colors.text, fontFamily: typography.fontFamily.bold }]}
+        numberOfLines={1}
       >
         {state.name}
       </Text>
+
+      {/* Stores Live Count */}
+      <View style={styles.liveRow}>
+        <View style={styles.liveDot} />
+        <Text style={[styles.liveCount, { color: colors.primary, fontFamily: typography.fontFamily.semiBold }]}>
+          {formatCount(state.storesLive)} Live
+        </Text>
+      </View>
 
     </TouchableOpacity>
   );
@@ -74,5 +83,20 @@ const styles = StyleSheet.create({
     fontSize:   9.5,
     textAlign:  "center",
     lineHeight: 13,
+    marginBottom: 2,
+  },
+  liveRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  liveDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: "#22C55E", // Green
+  },
+  liveCount: {
+    fontSize: 8.5,
   },
 });

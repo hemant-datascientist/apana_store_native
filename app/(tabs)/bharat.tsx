@@ -19,6 +19,7 @@ import {
   View, Text, ScrollView, StyleSheet, Alert, StatusBar, Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
@@ -35,9 +36,17 @@ const MAP_WIDTH = Math.round(SW * 0.60);
 
 export default function BharatScreen() {
   const { colors, isDark } = useTheme();
+  const router = useRouter();
 
   function handleStatePress(state: StateInfo) {
-    Alert.alert(state.name, `Explore stores in ${state.name} — coming soon.`);
+    router.push({
+      pathname: "/state-detail",
+      params: { 
+        stateKey: state.key, 
+        name: state.name,
+        storesLive: state.storesLive.toString()
+      }
+    } as any);
   }
 
   return (

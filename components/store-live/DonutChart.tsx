@@ -52,16 +52,18 @@ function arcPath(
 // ── Component ─────────────────────────────────────────────────
 interface DonutChartProps {
   data: StoreTypeData[];
+  totalLive?: number;
 }
 
-export default function DonutChart({ data }: DonutChartProps) {
+export default function DonutChart({ data, totalLive }: DonutChartProps) {
+  const currentTotal = totalLive || TOTAL_LIVE;
   // Build segments with start/end angles
   type Seg = StoreTypeData & { startDeg: number; endDeg: number; pct: number };
   const segments: Seg[] = [];
   let cursor = 0;
 
   data.forEach(item => {
-    const pct      = item.liveCount / TOTAL_LIVE;
+    const pct      = item.liveCount / currentTotal;
     const spanDeg  = pct * 360;
     const startDeg = cursor + GAP_DEG / 2;
     const endDeg   = cursor + spanDeg - GAP_DEG / 2;

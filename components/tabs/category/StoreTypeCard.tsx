@@ -12,6 +12,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { StoreType } from "../../../data/categoryData";
 import useTheme from "../../../theme/useTheme";
 import { typography } from "../../../theme/typography";
@@ -32,11 +33,25 @@ export default function StoreTypeCard({ item, width, onPress }: StoreTypeCardPro
       onPress={() => onPress(item)}
       activeOpacity={0.8}
     >
-      {/* ── Image area ── */}
+      {/* ── Image / Skeleton area ── */}
       <View style={[styles.imgArea, { backgroundColor: item.color, height: imgHeight }]}>
 
-        {/* Centered large icon */}
-        <Ionicons name={item.icon as any} size={52} color="rgba(0,0,0,0.22)" />
+        {/* Skeleton icon (underlay) */}
+        <View style={StyleSheet.absoluteFillObject}>
+          <View style={styles.skeletonContainer}>
+            <Ionicons name={item.icon as any} size={52} color="rgba(0,0,0,0.12)" />
+          </View>
+        </View>
+
+        {/* Remote image */}
+        {item.imageUrl && (
+          <Image
+            source={item.imageUrl}
+            style={StyleSheet.absoluteFillObject}
+            contentFit="cover"
+            transition={300}
+          />
+        )}
 
         {/* Bottom gradient overlay strip */}
         <View style={styles.overlay} />
@@ -82,6 +97,11 @@ const styles = StyleSheet.create({
     alignItems:     "center",
     justifyContent: "center",
     position:       "relative",
+  },
+  skeletonContainer: {
+    flex:           1,
+    alignItems:     "center",
+    justifyContent: "center",
   },
   overlay: {
     position:        "absolute",

@@ -12,7 +12,7 @@
 
 import React from "react";
 import {
-  View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert,
+  View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert, Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
@@ -49,7 +49,7 @@ export default function GroceryProductGrid({ section }: GroceryProductGridProps)
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Ionicons name={section.icon as any} size={17} color={section.iconColor} />
-          <Text style={[styles.headerTitle, { color: "#111827", fontFamily: typography.fontFamily.bold, fontSize: typography.size.base }]}>
+          <Text style={[styles.headerTitle, { color: "#111827", fontFamily: typography.fontFamily.bold, fontSize: typography.size.md }]}>
             {section.title}
           </Text>
         </View>
@@ -101,7 +101,15 @@ function ProductCard({ product, accentColor }: ProductCardProps) {
     >
       {/* Image placeholder */}
       <View style={[styles.imgArea, { backgroundColor: product.bg, height: IMG_H }]}>
-        <Ionicons name={product.icon as any} size={42} color="rgba(0,0,0,0.22)" />
+        {product.imageUrl ? (
+          <Image
+            source={{ uri: product.imageUrl }}
+            style={{ width: "100%", height: "100%" }}
+            resizeMode="cover"
+          />
+        ) : (
+          <Ionicons name={product.icon as any} size={42} color="rgba(0,0,0,0.22)" />
+        )}
 
         {/* Badge */}
         {product.badge && (

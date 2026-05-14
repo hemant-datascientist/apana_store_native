@@ -15,7 +15,7 @@ import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity, StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
@@ -23,10 +23,23 @@ import { STORE_LIVE_DATA, TOTAL_LIVE } from "../../data/storeLiveData";
 import DonutChart    from "../../components/store-live/DonutChart";
 import HorizontalBars from "../../components/store-live/HorizontalBars";
 import StoreTable    from "../../components/store-live/StoreTable";
+import { formatCount } from "../../utils/formatUtils";
+
 
 export default function StoreLiveScreen() {
   const { colors, isDark } = useTheme();
   const router = useRouter();
+  const { stateName, storesLive } = useLocalSearchParams<{ stateName?:string; storesLive?:string }>();
+
+  const isStateSpecific = !!stateName;
+  const currentTotal    = isStateSpecific ? parseInt(storesLive || "0", 10) : TOTAL_LIVE;
+  const ratio           = currentTotal / TOTAL_LIVE;
+
+  const currentData = STORE_LIVE_DATA.map(d => ({
+    ...d,
+    liveCount:   Math.round(d.liveCount * ratio),
+    closedCount: Math.round(d.closedCount * ratio),
+  }));
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -42,7 +55,7 @@ export default function StoreLiveScreen() {
         </TouchableOpacity>
 
         <Text style={[styles.headerTitle, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg }]}>
-          Store Live
+          {isStateSpecific ? `${stateName} Store Live` : "All India Store Live"}
         </Text>
 
         <TouchableOpacity style={styles.headerBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
@@ -60,12 +73,12 @@ export default function StoreLiveScreen() {
         <View style={[styles.liveChip, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.liveDot} />
           <Text style={[styles.liveText, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
-            Stores Live – {TOTAL_LIVE.toLocaleString("en-IN")}
+            {isStateSpecific ? `${stateName} Stores Live` : "All India Stores Live"} – {formatCount(currentTotal)}
           </Text>
         </View>
 
         {/* Donut chart */}
-        <DonutChart data={STORE_LIVE_DATA} />
+        <DonutChart data={currentData} totalLive={currentTotal} />
 
         {/* Section label */}
         <Text style={[styles.sectionLabel, { color: colors.subText, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
@@ -73,7 +86,7 @@ export default function StoreLiveScreen() {
         </Text>
 
         {/* Horizontal bars */}
-        <HorizontalBars data={STORE_LIVE_DATA} />
+        <HorizontalBars data={currentData} totalLive={currentTotal} />
 
         {/* Section label */}
         <Text style={[styles.sectionLabel, { color: colors.subText, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs, marginTop: 20 }]}>
@@ -81,7 +94,7 @@ export default function StoreLiveScreen() {
         </Text>
 
         {/* Data table */}
-        <StoreTable data={STORE_LIVE_DATA} />
+        <StoreTable data={currentData} totalLive={currentTotal} />
 
       </ScrollView>
     </View>

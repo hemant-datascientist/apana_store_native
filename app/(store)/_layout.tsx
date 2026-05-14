@@ -15,6 +15,8 @@ export default function StoreLayout() {
       <Stack.Screen name="store-detail" />
       <Stack.Screen name="store-live"   />
       <Stack.Screen name="store-qr"     />
+      <Stack.Screen name="state-detail" />
+      <Stack.Screen name="store-categories" />
     </Stack>
   );
 }

@@ -31,6 +31,11 @@ export default function B2CStoreCard({ store, onDirection, onViewItems, onWebsit
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <TouchableOpacity 
+        activeOpacity={0.8}
+        onPress={() => onViewItems(store)}
+        style={styles.cardPressable}
+      >
 
       {/* LIVE badge — top right */}
       <View style={styles.liveBadge}>
@@ -139,7 +144,8 @@ export default function B2CStoreCard({ store, onDirection, onViewItems, onWebsit
 
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
+  </View>
   );
 }
 
@@ -151,6 +157,9 @@ const styles = StyleSheet.create({
     borderWidth:        1,
     overflow:          "hidden",
     position:          "relative",
+  },
+  cardPressable: {
+    // cover
   },
 
   // LIVE

@@ -10,13 +10,17 @@ import { View, Text, StyleSheet } from "react-native";
 import { StoreTypeData, TOTAL_LIVE } from "../../data/storeLiveData";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
+import { formatCount } from "../../utils/formatUtils";
 
 interface StoreTableProps {
   data: StoreTypeData[];
+  totalLive?: number;
 }
 
-export default function StoreTable({ data }: StoreTableProps) {
+export default function StoreTable({ data, totalLive }: StoreTableProps) {
   const { colors } = useTheme();
+
+  const currentTotal = totalLive || TOTAL_LIVE;
 
   const totalClosed = data.reduce((s, d) => s + d.closedCount, 0);
 
@@ -68,7 +72,7 @@ export default function StoreTable({ data }: StoreTableProps) {
               fontFamily: typography.fontFamily.bold,
               fontSize:   typography.size.sm,
             }]}>
-              {item.liveCount}
+              {formatCount(item.liveCount)}
             </Text>
 
             {/* Closed count */}
@@ -77,7 +81,7 @@ export default function StoreTable({ data }: StoreTableProps) {
               fontFamily: typography.fontFamily.bold,
               fontSize:   typography.size.sm,
             }]}>
-              {item.closedCount}
+              {formatCount(item.closedCount)}
             </Text>
           </View>
         );
@@ -97,14 +101,14 @@ export default function StoreTable({ data }: StoreTableProps) {
           fontFamily: typography.fontFamily.bold,
           fontSize:   typography.size.md,
         }]}>
-          {TOTAL_LIVE}
+          {formatCount(currentTotal)}
         </Text>
         <Text style={[styles.colNum, {
           color:      "#EF4444",
           fontFamily: typography.fontFamily.bold,
           fontSize:   typography.size.sm,
         }]}>
-          {totalClosed}
+          {formatCount(totalClosed)}
         </Text>
       </View>
 
@@ -124,6 +128,9 @@ const styles = StyleSheet.create({
     alignItems:        "center",
     paddingVertical:   10,
     paddingHorizontal: 12,
+  },
+  headerCell: {
+    // empty base style for consistency
   },
   dataRow: {
     flexDirection:     "row",
@@ -154,7 +161,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   colNum: {
-    width:     54,
+    width:     64,
     textAlign: "center",
   },
 });

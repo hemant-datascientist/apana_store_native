@@ -23,7 +23,7 @@ import React, { useState } from "react";
 import {
   View, ScrollView, StyleSheet, Alert, Linking,
 } from "react-native";
-import { SafeAreaView }        from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons }            from "@expo/vector-icons";
 import { TouchableOpacity }    from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -48,6 +48,7 @@ export default function StoreDetailScreen() {
   const { colors }         = useTheme();
   const router             = useRouter();
   const { id }             = useLocalSearchParams<{ id?: string }>();
+  const insets             = useSafeAreaInsets();
 
   const store = getStoreById(id ?? DEFAULT_STORE_ID);
 
@@ -89,42 +90,41 @@ export default function StoreDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top"]}>
-
-      {/* ── Back button floating over hero ── */}
-      <View style={styles.headerBar}>
-        <TouchableOpacity
-          style={[styles.backBtn, { backgroundColor: "rgba(0,0,0,0.35)" }]}
-          onPress={() => router.back()}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="arrow-back" size={20} color="#fff" />
-        </TouchableOpacity>
-
-        <Text style={[styles.headerTitle, {
-          color:      "#fff",
-          fontFamily: typography.fontFamily.semiBold,
-          fontSize:   typography.size.md,
-        }]}
-          numberOfLines={1}
-        >
-          {store.name}
-        </Text>
-
-        <TouchableOpacity
-          style={[styles.backBtn, { backgroundColor: "rgba(0,0,0,0.35)" }]}
-          activeOpacity={0.8}
-          onPress={() => Alert.alert("Share", "Share store link coming soon.")}
-        >
-          <Ionicons name="share-outline" size={20} color="#fff" />
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["bottom"]}>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
+        {/* ── Back button floating over hero ── */}
+        <View style={[styles.headerBar, { paddingTop: Math.max(insets.top, 16), backgroundColor: store.heroBg }]}>
+          <TouchableOpacity
+            style={[styles.backBtn, { backgroundColor: "rgba(0,0,0,0.35)" }]}
+            onPress={() => router.back()}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="arrow-back" size={20} color="#fff" />
+          </TouchableOpacity>
+
+          <Text style={[styles.headerTitle, {
+            color:      "#fff",
+            fontFamily: typography.fontFamily.semiBold,
+            fontSize:   typography.size.md,
+          }]}
+            numberOfLines={1}
+          >
+            {store.name}
+          </Text>
+
+          <TouchableOpacity
+            style={[styles.backBtn, { backgroundColor: "rgba(0,0,0,0.35)" }]}
+            activeOpacity={0.8}
+            onPress={() => Alert.alert("Share", "Share store link coming soon.")}
+          >
+            <Ionicons name="share-outline" size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
 
         {/* ── Hero banner ── */}
         <StoreHeroBanner store={store} />
@@ -147,19 +147,20 @@ export default function StoreDetailScreen() {
           onSubmit={handleSearchSubmit}
         />
 
-        {/* ── Opening hours ── */}
-        <StoreHoursCard hours={store.hours} />
-
-        {/* ── Contact info ── */}
-        <StoreContactCard store={store} />
-
         {/* ── Product categories ── */}
         <StoreProductCategories
           categories={store.categories}
           storeColor={store.heroBg}
           query={productSearch}
           onSelect={handleCategorySelect}
+          onViewAll={() => router.push(`/store-categories?id=${store.id}`)}
         />
+
+        {/* ── Opening hours ── */}
+        <StoreHoursCard hours={store.hours} />
+
+        {/* ── Contact info ── */}
+        <StoreContactCard store={store} />
 
       </ScrollView>
     </SafeAreaView>
@@ -169,13 +170,8 @@ export default function StoreDetailScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
 
-  // ── Floating header bar overlaid on hero ──
+  // ── Header bar overlaid on hero ──
   headerBar: {
-    position:          "absolute",
-    top:               0,
-    left:              0,
-    right:             0,
-    zIndex:            20,
     flexDirection:     "row",
     alignItems:        "center",
     justifyContent:    "space-between",

@@ -10,6 +10,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { SubCategory } from "../../../data/categoryData";
 import useTheme from "../../../theme/useTheme";
 import { typography } from "../../../theme/typography";
@@ -22,6 +23,7 @@ interface SubCategoryCardProps {
 
 export default function SubCategoryCard({ item, width, onPress }: SubCategoryCardProps) {
   const { colors } = useTheme();
+  const tileSize = width - 16;
 
   return (
     <TouchableOpacity
@@ -29,9 +31,26 @@ export default function SubCategoryCard({ item, width, onPress }: SubCategoryCar
       onPress={() => onPress(item)}
       activeOpacity={0.75}
     >
-      {/* Colored image tile */}
-      <View style={[styles.tile, { backgroundColor: item.color, width: width - 16, height: width - 16 }]}>
-        <Ionicons name={item.icon as any} size={34} color="rgba(0,0,0,0.38)" />
+      {/* ── Image / Skeleton tile ── */}
+      <View style={[styles.tile, { backgroundColor: item.color, width: tileSize, height: tileSize }]}>
+        
+        {/* Skeleton icon (always present in background) */}
+        <View style={StyleSheet.absoluteFillObject}>
+          <View style={styles.skeletonContainer}>
+            <Ionicons name={item.icon as any} size={34} color="rgba(0,0,0,0.18)" />
+          </View>
+        </View>
+
+        {/* Remote image (fetched from backend) */}
+        {item.imageUrl && (
+          <Image
+            source={item.imageUrl}
+            style={StyleSheet.absoluteFillObject}
+            contentFit="cover"
+            transition={300}
+          />
+        )}
+
       </View>
 
       {/* Label */}
@@ -59,6 +78,12 @@ const styles = StyleSheet.create({
   },
   tile: {
     borderRadius:   10,
+    alignItems:     "center",
+    justifyContent: "center",
+    overflow:       "hidden",
+  },
+  skeletonContainer: {
+    flex:           1,
     alignItems:     "center",
     justifyContent: "center",
   },

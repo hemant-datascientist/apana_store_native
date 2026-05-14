@@ -17,11 +17,11 @@ import { typography } from "../../../../theme/typography";
 import useTheme from "../../../../theme/useTheme";
 import { HERO_STORES, NEARBY_STORES, NearbyStore, HeroStore } from "../../../../data/nearbyStoresData";
 import NearbyHeroBanner from "./NearbyHeroBanner";
-import StoreListCard    from "./StoreListCard";
+import StoreListCard from "./StoreListCard";
 
 export default function NearbyStoresFeed() {
   const { colors } = useTheme();
-  const router     = useRouter();
+  const router = useRouter();
 
   function handleHeroPress(store: HeroStore) {
     router.push(`/store-detail?id=${store.id}`);
@@ -43,7 +43,7 @@ export default function NearbyStoresFeed() {
 
       {/* Section label */}
       <View style={styles.sectionRow}>
-        <Text style={[styles.sectionLabel, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.base }]}>
+        <Text style={[styles.sectionLabel, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.md }]}>
           Stores Near You
         </Text>
         <Text style={[styles.sectionCount, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
@@ -70,12 +70,12 @@ const styles = StyleSheet.create({
   root: {},
 
   sectionRow: {
-    flexDirection:     "row",
-    alignItems:        "baseline",
-    justifyContent:    "space-between",
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
-    marginTop:          16,
-    marginBottom:       10,
+    marginTop: 16,
+    marginBottom: 10,
   },
   sectionLabel: {},
   sectionCount: {},

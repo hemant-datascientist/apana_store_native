@@ -13,6 +13,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../theme/typography";
 import { UserLocation } from "../../../data/homeData";
+import { formatCount } from "../../../utils/formatUtils";
 
 interface HomeHeaderProps {
   location:        UserLocation;
@@ -41,7 +42,7 @@ export default function HomeHeader({ location, storesLive, onLocationPress, onSt
       <TouchableOpacity style={styles.liveBadge} onPress={onStoreLivePress} activeOpacity={0.75}>
         <View style={styles.liveDot} />
         <Text style={[styles.liveText, { fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
-          Stores Live – {storesLive.toLocaleString("en-IN")}
+          Stores Live – {formatCount(storesLive)}
         </Text>
       </TouchableOpacity>
 

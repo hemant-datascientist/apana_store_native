@@ -42,6 +42,9 @@ export interface StoreDetail {
   lng:          number;
   hours:        StoreHours[];
   categories:   StoreProductCategory[];
+  ownerName:    string;
+  ownerPhoto:   string;   // image URL or asset
+  ownerMessage: string;   // slogan or message
 }
 
 // ── Day helpers ───────────────────────────────────────────────
@@ -96,6 +99,9 @@ export const MOCK_STORES: Record<string, StoreDetail> = {
       { key: "personal",   label: "Personal Care",        icon: "medkit-outline",      productCount: 34  },
       { key: "household",  label: "Household Items",      icon: "home-outline",        productCount: 29  },
     ],
+    ownerName:  "Rajesh Sharma",
+    ownerPhoto: "https://randomuser.me/api/portraits/men/32.jpg",
+    ownerMessage: "Namaste! We provide the freshest groceries with a smile. Your satisfaction is our tradition.",
   },
 
   s2: {
@@ -134,8 +140,11 @@ export const MOCK_STORES: Record<string, StoreDetail> = {
       { key: "laptops",    label: "Laptops & PCs",        icon: "laptop-outline",         productCount: 28  },
       { key: "tv",         label: "TVs & Displays",       icon: "tv-outline",             productCount: 19  },
       { key: "cameras",    label: "Cameras",              icon: "camera-outline",         productCount: 15  },
-      { key: "accessories",label: "Accessories",          icon: "cable-car-outline",      productCount: 112 },
+      { key: "accessories",label: "Accessories",          icon: "cube-outline",      productCount: 112 },
     ],
+    ownerName:  "Vikram Malhotra",
+    ownerPhoto: "https://randomuser.me/api/portraits/men/44.jpg",
+    ownerMessage: "Latest tech at your doorstep. Helping you stay connected with the best gadgets since 2012.",
   },
 
   s3: {
@@ -174,6 +183,9 @@ export const MOCK_STORES: Record<string, StoreDetail> = {
       { key: "baby",       label: "Baby Care",              icon: "happy-outline",       productCount: 38  },
       { key: "devices",    label: "Health Devices",         icon: "pulse-outline",       productCount: 24  },
     ],
+    ownerName:  "Dr. Arun Gupta",
+    ownerPhoto: "https://randomuser.me/api/portraits/men/22.jpg",
+    ownerMessage: "Your health is our priority. Genuine medicines and expert advice, always here for you.",
   },
 
   s4: {
@@ -213,6 +225,9 @@ export const MOCK_STORES: Record<string, StoreDetail> = {
       { key: "footwear",   label: "Footwear",               icon: "footsteps-outline",   productCount: 46  },
       { key: "accessories",label: "Accessories & Bags",     icon: "bag-outline",         productCount: 73  },
     ],
+    ownerName:  "Sanjana Rao",
+    ownerPhoto: "https://randomuser.me/api/portraits/women/45.jpg",
+    ownerMessage: "Wear your confidence. Curating the best trends to make you look and feel extraordinary.",
   },
 
   s5: {
@@ -251,6 +266,9 @@ export const MOCK_STORES: Record<string, StoreDetail> = {
       { key: "beverages",  label: "Beverages",              icon: "wine-outline",         productCount: 15  },
       { key: "meals",      label: "Meals & Thali",          icon: "restaurant-outline",   productCount: 12  },
     ],
+    ownerName:  "Chef Sameer",
+    ownerPhoto: "https://randomuser.me/api/portraits/men/85.jpg",
+    ownerMessage: "Baked with love, served with joy. Experience the warmth of home in every single bite.",
   },
 };
 

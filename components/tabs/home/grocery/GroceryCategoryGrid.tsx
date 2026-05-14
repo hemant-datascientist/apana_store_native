@@ -8,7 +8,7 @@
 
 import React, { useState } from "react";
 import {
-  View, Text, TouchableOpacity, StyleSheet, Dimensions,
+  View, Text, TouchableOpacity, StyleSheet, Dimensions, Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
@@ -58,11 +58,22 @@ export default function GroceryCategoryGrid({ categories, onSelect }: GroceryCat
                 { backgroundColor: cat.bg, width: CELL_W, height: IMG_H },
                 isActive && { borderColor: GROCERY_GREEN, borderWidth: 2 },
               ]}>
+                {/* Fallback Icon */}
                 <Ionicons
                   name={cat.icon as any}
                   size={32}
                   color={isActive ? GROCERY_GREEN : "rgba(0,0,0,0.35)"}
+                  style={{ position: "absolute", zIndex: 0 }}
                 />
+
+                {/* Main Image Overlay */}
+                {cat.imageUrl && (
+                  <Image
+                    source={{ uri: cat.imageUrl }}
+                    style={{ width: "100%", height: "100%", borderRadius: 10, zIndex: 1 }}
+                    resizeMode="cover"
+                  />
+                )}
               </View>
 
               {/* Label */}

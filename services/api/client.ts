@@ -19,7 +19,7 @@ import type { paths } from "../../types/api";
 
 // ── Resolve base URL from env (Expo bakes EXPO_PUBLIC_* at build time) ──
 const API_MODE = process.env.EXPO_PUBLIC_API_MODE ?? "mock";
-const TOWER_IP = process.env.EXPO_PUBLIC_TOWER_IP ?? "192.168.1.50";
+const TOWER_IP = process.env.EXPO_PUBLIC_TOWER_IP ?? "10.153.78.94";
 
 export const API_BASE_URL =
   API_MODE === "prod"

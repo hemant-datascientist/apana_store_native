@@ -28,6 +28,11 @@ export default function StoreListCard({ store, onDirection, onViewItems }: Store
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <TouchableOpacity 
+        activeOpacity={0.8}
+        onPress={() => onViewItems(store)}
+        style={styles.cardPressable}
+      >
 
       {/* LIVE badge — absolute top-right */}
       {store.isLive && (
@@ -118,7 +123,8 @@ export default function StoreListCard({ store, onDirection, onViewItems }: Store
 
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
+  </View>
   );
 }
 
@@ -130,6 +136,9 @@ const styles = StyleSheet.create({
     borderWidth:        1,
     overflow:          "hidden",
     position:          "relative",
+  },
+  cardPressable: {
+    // Ensuring the whole area is covered
   },
 
   // LIVE badge

@@ -14,16 +14,18 @@ import { typography } from "../../theme/typography";
 
 interface HorizontalBarsProps {
   data: StoreTypeData[];
+  totalLive?: number;
 }
 
-export default function HorizontalBars({ data }: HorizontalBarsProps) {
+export default function HorizontalBars({ data, totalLive }: HorizontalBarsProps) {
   const { colors } = useTheme();
   const maxCount   = Math.max(...data.map(d => d.liveCount));
+  const currentTotal = totalLive || TOTAL_LIVE;
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
       {data.map((item, i) => {
-        const pct      = (item.liveCount / TOTAL_LIVE) * 100;
+        const pct      = (item.liveCount / currentTotal) * 100;
         const barWidth = (item.liveCount / maxCount) * 100; // relative to widest bar
         const isLast   = i === data.length - 1;
 

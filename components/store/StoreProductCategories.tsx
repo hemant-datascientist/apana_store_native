@@ -29,8 +29,8 @@ interface StoreProductCategoriesProps {
 }
 
 export default function StoreProductCategories({
-  categories, storeColor, query, onSelect,
-}: StoreProductCategoriesProps) {
+  categories, storeColor, query, onSelect, onViewAll,
+}: StoreProductCategoriesProps & { onViewAll?: () => void }) {
   const { colors } = useTheme();
 
   const filtered = query.trim()
@@ -43,20 +43,32 @@ export default function StoreProductCategories({
     <View>
       {/* ── Section header ── */}
       <View style={styles.sectionHeader}>
-        <Text style={[styles.sectionTitle, {
-          color:      colors.text,
-          fontFamily: typography.fontFamily.bold,
-          fontSize:   typography.size.lg,
-        }]}>
-          Product Categories
-        </Text>
-        <Text style={[styles.sectionCount, {
-          color:      colors.subText,
-          fontFamily: typography.fontFamily.regular,
-          fontSize:   typography.size.xs,
-        }]}>
-          {filtered.length} categories
-        </Text>
+        <View>
+          <Text style={[styles.sectionTitle, {
+            color:      colors.text,
+            fontFamily: typography.fontFamily.bold,
+            fontSize:   typography.size.lg,
+          }]}>
+            Product Categories
+          </Text>
+          <Text style={[styles.sectionCount, {
+            color:      colors.subText,
+            fontFamily: typography.fontFamily.regular,
+            fontSize:   typography.size.xs,
+          }]}>
+            {filtered.length} categories
+          </Text>
+        </View>
+
+        <TouchableOpacity 
+          onPress={onViewAll}
+          style={[styles.viewAllBtn, { backgroundColor: storeColor + "10" }]}
+        >
+          <Text style={[styles.viewAllText, { color: storeColor, fontFamily: typography.fontFamily.semiBold }]}>
+            View All
+          </Text>
+          <Ionicons name="chevron-forward" size={14} color={storeColor} />
+        </TouchableOpacity>
       </View>
 
       {/* ── Category card ── */}
@@ -129,7 +141,7 @@ export default function StoreProductCategories({
 const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection:     "row",
-    alignItems:        "baseline",
+    alignItems:        "center",
     justifyContent:    "space-between",
     paddingHorizontal: 16,
     paddingTop:        4,
@@ -137,6 +149,18 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {},
   sectionCount: {},
+
+  viewAllBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+  },
+  viewAllText: {
+    fontSize: 12,
+  },
 
   card: {
     marginHorizontal: 16,
