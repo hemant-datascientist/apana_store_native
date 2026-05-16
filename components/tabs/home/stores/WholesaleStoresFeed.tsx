@@ -11,6 +11,7 @@
 
 import React from "react";
 import { View, Text, Alert, StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
 import { typography } from "../../../../theme/typography";
 import useTheme from "../../../../theme/useTheme";
 import {
@@ -22,6 +23,7 @@ import StoreListCard       from "./StoreListCard";
 
 export default function WholesaleStoresFeed() {
   const { colors } = useTheme();
+  const router = useRouter();
 
   function handlePromoPress(promo: WholesalePromo) {
     Alert.alert(promo.brandName, "Wholesale offer page coming soon.");
@@ -31,8 +33,12 @@ export default function WholesaleStoresFeed() {
     Alert.alert("Direction", `Getting directions to ${store.name} — coming soon.`);
   }
 
+  function handleStorePress(store: WholesaleStore) {
+    router.push(`/store-detail?id=${store.id}`);
+  }
+
   function handleViewItems(store: WholesaleStore) {
-    Alert.alert(store.name, "Bulk catalogue coming soon.");
+    router.push(`/store-categories?id=${store.id}`);
   }
 
   return (
@@ -56,6 +62,7 @@ export default function WholesaleStoresFeed() {
         <StoreListCard
           key={store.id}
           store={{ ...store, isLive: false }}
+          onPress={() => handleStorePress(store)}
           onDirection={() => handleDirection(store)}
           onViewItems={() => handleViewItems(store)}
         />

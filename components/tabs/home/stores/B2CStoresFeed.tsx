@@ -11,6 +11,7 @@
 
 import React from "react";
 import { View, Text, Alert, StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
 import useTheme from "../../../../theme/useTheme";
@@ -20,6 +21,7 @@ import B2CStoreCard  from "./B2CStoreCard";
 
 export default function B2CStoresFeed() {
   const { colors } = useTheme();
+  const router = useRouter();
 
   function handlePromoPress(promo: B2CPromo) {
     Alert.alert(promo.headline, "Brand category page coming soon.");
@@ -29,8 +31,12 @@ export default function B2CStoresFeed() {
     Alert.alert("Direction", `Directions to ${store.name} — coming soon.`);
   }
 
+  function handleStorePress(store: B2CStore) {
+    router.push(`/store-detail?id=${store.id}`);
+  }
+
   function handleViewItems(store: B2CStore) {
-    Alert.alert(store.name, "Product catalogue coming soon.");
+    router.push(`/store-categories?id=${store.id}`);
   }
 
   function handleWebsite(store: B2CStore) {
@@ -61,6 +67,7 @@ export default function B2CStoresFeed() {
         <B2CStoreCard
           key={store.id}
           store={store}
+          onPress={handleStorePress}
           onDirection={handleDirection}
           onViewItems={handleViewItems}
           onWebsite={handleWebsite}

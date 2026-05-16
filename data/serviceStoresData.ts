@@ -65,15 +65,18 @@ export const SERVICE_PROMOS: ServicePromo[] = [
 // ── Service Store Cards ────────────────────────────────────────
 
 export interface ServiceStore {
-  id:         string;
-  name:       string;
-  rating:     number;
-  reviews:    number;
-  distanceKm: number;
-  website:    boolean;
-  bgColor:    string;    // placeholder thumbnail bg
-  icon:       string;    // Ionicons for thumbnail
-  phone:      string;    // for Call Now
+  id:           string;
+  name:         string;
+  rating:       number;
+  reviews:      number;
+  distanceKm:   number;
+  website:      boolean;
+  bgColor:      string;    // placeholder thumbnail bg
+  icon:         string;    // Ionicons for thumbnail
+  phone:        string;    // for Call Now
+  ownerName:    string;
+  ownerPhoto:   string;
+  ownerMessage: string;
 }
 
 export const SERVICE_STORES: ServiceStore[] = [
@@ -87,6 +90,9 @@ export const SERVICE_STORES: ServiceStore[] = [
     bgColor:    "#FEF3C7",
     icon:       "flash-outline",
     phone:      "+91 98765 43210",
+    ownerName:  "Sai Kumar",
+    ownerPhoto: "https://randomuser.me/api/portraits/men/1.jpg",
+    ownerMessage: "Professional electrical services for your home and office. Available 24/7 for emergencies.",
   },
   {
     id:         "sv2",
@@ -98,6 +104,9 @@ export const SERVICE_STORES: ServiceStore[] = [
     bgColor:    "#FCE7F3",
     icon:       "cut-outline",
     phone:      "+91 98765 43211",
+    ownerName:  "Deepa Jogi",
+    ownerPhoto: "https://randomuser.me/api/portraits/women/2.jpg",
+    ownerMessage: "Expert styling and beauty treatments tailored for you. Step out with confidence!",
   },
   {
     id:         "sv3",
@@ -109,6 +118,9 @@ export const SERVICE_STORES: ServiceStore[] = [
     bgColor:    "#DBEAFE",
     icon:       "water-outline",
     phone:      "+91 98765 43212",
+    ownerName:  "Sameer Shah",
+    ownerPhoto: "https://randomuser.me/api/portraits/men/3.jpg",
+    ownerMessage: "Premium laundry and dry cleaning services. We care for your clothes as much as you do.",
   },
   {
     id:         "sv4",
@@ -120,6 +132,9 @@ export const SERVICE_STORES: ServiceStore[] = [
     bgColor:    "#E0F2FE",
     icon:       "man-outline",
     phone:      "+91 98765 43213",
+    ownerName:  "Anil Kapoor",
+    ownerPhoto: "https://randomuser.me/api/portraits/men/4.jpg",
+    ownerMessage: "Grooming redefined. Best styles at the most affordable prices in the city.",
   },
   {
     id:         "sv5",
@@ -131,6 +146,9 @@ export const SERVICE_STORES: ServiceStore[] = [
     bgColor:    "#FEF3C7",
     icon:       "shirt-outline",
     phone:      "+91 98765 43214",
+    ownerName:  "Karan Singh",
+    ownerPhoto: "https://randomuser.me/api/portraits/men/5.jpg",
+    ownerMessage: "Express laundry service with home delivery. Quality you can trust.",
   },
   {
     id:         "sv6",
@@ -142,6 +160,9 @@ export const SERVICE_STORES: ServiceStore[] = [
     bgColor:    "#FEE2E2",
     icon:       "medkit-outline",
     phone:      "+91 98765 43215",
+    ownerName:  "Dr. Sravanthi",
+    ownerPhoto: "https://randomuser.me/api/portraits/women/6.jpg",
+    ownerMessage: "Comprehensive healthcare for your family. Expert doctors and compassionate care.",
   },
   {
     id:         "sv7",
@@ -153,6 +174,9 @@ export const SERVICE_STORES: ServiceStore[] = [
     bgColor:    "#FCE7F3",
     icon:       "sparkles-outline",
     phone:      "+91 98765 43216",
+    ownerName:  "Priya Mehra",
+    ownerPhoto: "https://randomuser.me/api/portraits/women/7.jpg",
+    ownerMessage: "Transforming beauty with a touch of elegance. Specializing in bridal and party makeup.",
   },
   {
     id:         "sv8",
@@ -164,6 +188,9 @@ export const SERVICE_STORES: ServiceStore[] = [
     bgColor:    "#DCFCE7",
     icon:       "barbell-outline",
     phone:      "+91 98765 43217",
+    ownerName:  "Rahul Varma",
+    ownerPhoto: "https://randomuser.me/api/portraits/men/8.jpg",
+    ownerMessage: "Your journey to fitness starts here. State-of-the-art equipment and personal training.",
   },
   {
     id:         "sv9",
@@ -175,5 +202,8 @@ export const SERVICE_STORES: ServiceStore[] = [
     bgColor:    "#ECFDF5",
     icon:       "bug-outline",
     phone:      "+91 98765 43218",
+    ownerName:  "Suresh G.",
+    ownerPhoto: "https://randomuser.me/api/portraits/men/9.jpg",
+    ownerMessage: "Eco-friendly pest control solutions. Keep your home safe and pest-free.",
   },
 ];

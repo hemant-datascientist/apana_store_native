@@ -19,18 +19,19 @@ import { NearbyStore } from "../../../../data/nearbyStoresData";
 
 interface StoreListCardProps {
   store:         NearbyStore;
+  onPress:       (store: NearbyStore) => void;
   onDirection:   (store: NearbyStore) => void;
   onViewItems:   (store: NearbyStore) => void;
 }
 
-export default function StoreListCard({ store, onDirection, onViewItems }: StoreListCardProps) {
+export default function StoreListCard({ store, onPress, onDirection, onViewItems }: StoreListCardProps) {
   const { colors } = useTheme();
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <TouchableOpacity 
         activeOpacity={0.8}
-        onPress={() => onViewItems(store)}
+        onPress={() => onPress(store)}
         style={styles.cardPressable}
       >
 

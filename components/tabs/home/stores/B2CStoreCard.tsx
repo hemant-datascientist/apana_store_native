@@ -20,12 +20,13 @@ import { B2CStore } from "../../../../data/b2cStoresData";
 
 interface B2CStoreCardProps {
   store:       B2CStore;
+  onPress:     (store: B2CStore) => void;
   onDirection: (store: B2CStore) => void;
   onViewItems: (store: B2CStore) => void;
   onWebsite:   (store: B2CStore) => void;
 }
 
-export default function B2CStoreCard({ store, onDirection, onViewItems, onWebsite }: B2CStoreCardProps) {
+export default function B2CStoreCard({ store, onPress, onDirection, onViewItems, onWebsite }: B2CStoreCardProps) {
   const { colors } = useTheme();
   const [expanded, setExpanded] = useState(false);
 
@@ -33,7 +34,7 @@ export default function B2CStoreCard({ store, onDirection, onViewItems, onWebsit
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <TouchableOpacity 
         activeOpacity={0.8}
-        onPress={() => onViewItems(store)}
+        onPress={() => onPress(store)}
         style={styles.cardPressable}
       >
 

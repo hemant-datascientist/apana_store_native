@@ -107,7 +107,7 @@ export default function StoreHeroBanner({ store }: StoreHeroBannerProps) {
               {store.ownerName}
             </Text>
             <Text style={[styles.modalSub, { color: colors.subText, fontFamily: typography.fontFamily.medium }]}>
-              Store Owner
+              {store.representativeTitle}
             </Text>
 
             {/* Divider */}

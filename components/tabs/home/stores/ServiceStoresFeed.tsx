@@ -18,8 +18,11 @@ import { SERVICE_PROMOS, SERVICE_STORES, ServicePromo, ServiceStore } from "../.
 import ServiceHeroBanner from "./ServiceHeroBanner";
 import ServiceStoreCard  from "./ServiceStoreCard";
 
+import { useRouter } from "expo-router";
+
 export default function ServiceStoresFeed() {
   const { colors } = useTheme();
+  const router = useRouter();
 
   function handlePromoPress(promo: ServicePromo) {
     Alert.alert(promo.headline, "Service category page coming soon.");
@@ -34,7 +37,7 @@ export default function ServiceStoresFeed() {
   }
 
   function handleViewInfo(store: ServiceStore) {
-    Alert.alert(store.name, "Full store info page coming soon.");
+    router.push(`/service-detail?id=${store.id}`);
   }
 
   return (

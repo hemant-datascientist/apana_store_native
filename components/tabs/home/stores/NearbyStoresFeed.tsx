@@ -27,12 +27,16 @@ export default function NearbyStoresFeed() {
     router.push(`/store-detail?id=${store.id}`);
   }
 
+  function handleStorePress(store: NearbyStore) {
+    router.push(`/store-detail?id=${store.id}`);
+  }
+
   function handleDirection(store: NearbyStore) {
     Alert.alert("Direction", `Getting directions to ${store.name} — coming soon.`);
   }
 
   function handleViewItems(store: NearbyStore) {
-    router.push(`/store-detail?id=${store.id}`);
+    router.push(`/store-categories?id=${store.id}`);
   }
 
   return (
@@ -56,6 +60,7 @@ export default function NearbyStoresFeed() {
         <StoreListCard
           key={store.id}
           store={store}
+          onPress={handleStorePress}
           onDirection={handleDirection}
           onViewItems={handleViewItems}
         />
