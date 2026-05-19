@@ -14,6 +14,7 @@ import { useRouter }      from "expo-router";
 import { typography }     from "../../../../theme/typography";
 import SectionHeader      from "./SectionHeader";
 import { PopularStore }   from "../../../../data/allFeedData";
+import useTheme           from "../../../../theme/useTheme";
 
 interface PopularStoresSectionProps {
   stores: PopularStore[];
@@ -25,6 +26,8 @@ const IMG_H        = 88;
 
 export default function PopularStoresSection({ stores }: PopularStoresSectionProps) {
   const router = useRouter();
+  // Theme so store cards + name/rating stay readable in dark mode
+  const { colors } = useTheme();
 
   return (
     <View style={styles.root}>
@@ -44,7 +47,7 @@ export default function PopularStoresSection({ stores }: PopularStoresSectionPro
         {stores.map(s => (
           <TouchableOpacity
             key={s.id}
-            style={styles.card}
+            style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
             activeOpacity={0.8}
             onPress={() => router.push(`/store-detail?id=${s.id}`)}
           >
@@ -62,7 +65,7 @@ export default function PopularStoresSection({ stores }: PopularStoresSectionPro
 
             {/* Info */}
             <View style={styles.info}>
-              <Text numberOfLines={1} style={[styles.name, { fontFamily: typography.fontFamily.bold }]}>
+              <Text numberOfLines={1} style={[styles.name, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>
                 {s.name}
               </Text>
 
@@ -73,15 +76,15 @@ export default function PopularStoresSection({ stores }: PopularStoresSectionPro
               {/* Location + rating row */}
               <View style={styles.metaRow}>
                 <View style={styles.locRow}>
-                  <Ionicons name="location-outline" size={10} color="#9CA3AF" />
-                  <Text style={[styles.area, { fontFamily: typography.fontFamily.regular }]}>
+                  <Ionicons name="location-outline" size={10} color={colors.subText} />
+                  <Text style={[styles.area, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>
                     {s.area}
                   </Text>
                 </View>
 
                 <View style={styles.ratingRow}>
                   <Ionicons name="star" size={10} color="#F59E0B" />
-                  <Text style={[styles.rating, { fontFamily: typography.fontFamily.semiBold }]}>
+                  <Text style={[styles.rating, { color: colors.text, fontFamily: typography.fontFamily.semiBold }]}>
                     {s.rating.toFixed(1)}
                   </Text>
                 </View>
@@ -109,9 +112,8 @@ const styles = StyleSheet.create({
     width:           CARD_W,
     borderRadius:    12,
     overflow:        "hidden",
-    backgroundColor: "#fff",
+    // backgroundColor + borderColor set inline from theme
     borderWidth:     1,
-    borderColor:     "#E5E7EB",
     shadowColor:     "#000",
     shadowOffset:    { width: 0, height: 1 },
     shadowOpacity:   0.07,
@@ -143,7 +145,6 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 12,
-    color:    "#111827",
   },
   category: {
     fontSize: 10.5,
@@ -163,7 +164,6 @@ const styles = StyleSheet.create({
   },
   area: {
     fontSize: 9.5,
-    color:    "#9CA3AF",
     flex:     1,
   },
   ratingRow: {
@@ -173,6 +173,5 @@ const styles = StyleSheet.create({
   },
   rating: {
     fontSize: 10.5,
-    color:    "#374151",
   },
 });

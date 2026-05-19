@@ -234,15 +234,15 @@ export default function CheckoutPaymentScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Error banner ── */}
+        {/* ── Error banner — dangerLight/danger tokens flip with theme ── */}
         {!!payError && (
-          <View style={[styles.errorBanner, { backgroundColor: "#FEE2E2", borderColor: "#FCA5A5" }]}>
-            <Ionicons name="alert-circle-outline" size={16} color="#DC2626" />
-            <Text style={[styles.errorText, { color: "#DC2626", fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs, flex: 1 }]}>
+          <View style={[styles.errorBanner, { backgroundColor: colors.dangerLight, borderColor: colors.danger }]}>
+            <Ionicons name="alert-circle-outline" size={16} color={colors.danger} />
+            <Text style={[styles.errorText, { color: colors.danger, fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs, flex: 1 }]}>
               {payError}
             </Text>
             <TouchableOpacity onPress={() => setPayError(null)}>
-              <Ionicons name="close" size={16} color="#DC2626" />
+              <Ionicons name="close" size={16} color={colors.danger} />
             </TouchableOpacity>
           </View>
         )}
@@ -291,15 +291,15 @@ export default function CheckoutPaymentScreen() {
           onSelect={setSelectedPayment}
         />
 
-        {/* ── COD info strip — shown only when Cash on Delivery is selected ── */}
+        {/* ── COD info strip — warning tokens so amber surface reads cleanly in dark ── */}
         {isCod && (
-          <View style={[styles.codStrip, { backgroundColor: "#FEF9C3", borderColor: "#FCD34D" }]}>
-            <Ionicons name="cash-outline" size={18} color="#D97706" />
+          <View style={[styles.codStrip, { backgroundColor: colors.warningLight, borderColor: colors.warning + "70" }]}>
+            <Ionicons name="cash-outline" size={18} color={colors.warning} />
             <View style={{ flex: 1 }}>
-              <Text style={[styles.codTitle, { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
+              <Text style={[styles.codTitle, { color: colors.warning, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
                 Pay with Cash on Delivery
               </Text>
-              <Text style={[styles.codSub, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+              <Text style={[styles.codSub, { color: colors.warning, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
                 Keep exact change ready (₹{total.toFixed(0)}). The delivery partner will collect cash when they arrive.
               </Text>
             </View>
@@ -500,8 +500,8 @@ const styles = StyleSheet.create({
     borderRadius:   14,
     borderWidth:    1,
   },
-  codTitle: { color: "#92400E", marginBottom: 3 },
-  codSub:   { color: "#92400E", lineHeight: 18 },
+  codTitle: { marginBottom: 3 }, // color set inline from theme
+  codSub:   { lineHeight: 18 },  // color set inline from theme
 
   // Security
   securityCard: {

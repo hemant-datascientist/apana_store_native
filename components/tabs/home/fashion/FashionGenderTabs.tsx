@@ -15,6 +15,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
 import { FashionGender, FashionGenderConfig } from "../../../../data/fashionData";
+import useTheme from "../../../../theme/useTheme";
 
 interface FashionGenderTabsProps {
   genders:   FashionGenderConfig[];
@@ -31,6 +32,11 @@ const TAB_W         = Math.floor((SW - H_PAD * 2 - GAPS) / 4);
 export default function FashionGenderTabs({
   genders, activeKey, onChange, accent,
 }: FashionGenderTabsProps) {
+  // Theme so inactive tab surface/label/icon-bg adapts to dark mode
+  const { colors, isDark } = useTheme();
+  // Subtle muted bg for icon-circle + kids-badge — slightly lighter than card
+  const mutedBg = isDark ? "rgba(255,255,255,0.08)" : "#EBEBEB";
+  const kidsBg  = isDark ? "rgba(255,255,255,0.10)" : "#F3F4F6";
   return (
     <View style={styles.root}>
       {genders.map(g => {
@@ -43,7 +49,7 @@ export default function FashionGenderTabs({
               { width: TAB_W },
               isActive
                 ? { backgroundColor: accent, borderColor: accent }
-                : { backgroundColor: "#F9FAFB", borderColor: "#E5E7EB" },
+                : { backgroundColor: colors.card, borderColor: colors.border },
             ]}
             activeOpacity={0.75}
             onPress={() => onChange(g.key)}
@@ -51,12 +57,12 @@ export default function FashionGenderTabs({
             {/* Silhouette icon */}
             <View style={[
               styles.iconWrap,
-              { backgroundColor: isActive ? "rgba(255,255,255,0.18)" : "#EBEBEB" },
+              { backgroundColor: isActive ? "rgba(255,255,255,0.18)" : mutedBg },
             ]}>
               <Ionicons
                 name={g.icon as any}
                 size={24}
-                color={isActive ? "#fff" : "#6B7280"}
+                color={isActive ? "#fff" : colors.subText}
               />
             </View>
 
@@ -64,7 +70,7 @@ export default function FashionGenderTabs({
             <Text style={[
               styles.label,
               {
-                color:      isActive ? "#fff" : "#374151",
+                color:      isActive ? "#fff" : colors.text,
                 fontFamily: isActive
                   ? typography.fontFamily.bold
                   : typography.fontFamily.medium,
@@ -77,12 +83,12 @@ export default function FashionGenderTabs({
             {g.subLabel && (
               <View style={[
                 styles.kidsBadge,
-                { backgroundColor: isActive ? "rgba(255,255,255,0.22)" : "#F3F4F6" },
+                { backgroundColor: isActive ? "rgba(255,255,255,0.22)" : kidsBg },
               ]}>
                 <Text style={[
                   styles.kidsText,
                   {
-                    color:      isActive ? "#fff" : "#6B7280",
+                    color:      isActive ? "#fff" : colors.subText,
                     fontFamily: typography.fontFamily.semiBold,
                   },
                 ]}>

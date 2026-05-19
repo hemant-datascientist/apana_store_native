@@ -76,14 +76,14 @@ export default function TrackingPartnerCard({ partner, mode }: TrackingPartnerCa
           )}
         </View>
 
-        {/* Action buttons */}
+        {/* Action buttons — success token for call so it stays green-on-green in dark */}
         <View style={styles.actions}>
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: "#22C55E" + "15", borderColor: "#22C55E" + "40" }]}
+            style={[styles.actionBtn, { backgroundColor: colors.successLight, borderColor: colors.success + "40" }]}
             onPress={() => Alert.alert("Call", `Calling ${partner.phone}`)}
             activeOpacity={0.75}
           >
-            <Ionicons name="call-outline" size={18} color="#22C55E" />
+            <Ionicons name="call-outline" size={18} color={colors.success} />
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionBtn, { backgroundColor: colors.primary + "15", borderColor: colors.primary + "40" }]}

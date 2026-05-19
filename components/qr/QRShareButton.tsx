@@ -24,6 +24,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as Sharing  from "expo-sharing";
 import { typography } from "../../theme/typography";
+import useTheme       from "../../theme/useTheme";
 
 interface QRShareButtonProps {
   filePath:    string | null;   // null while QRGenerator is still working
@@ -36,6 +37,7 @@ export default function QRShareButton({
   filePath, dialogTitle, color, style,
 }: QRShareButtonProps) {
   const [sharing, setSharing] = useState(false);
+  const { colors } = useTheme();
 
   const ready    = filePath !== null;
   const disabled = !ready || sharing;
@@ -73,7 +75,7 @@ export default function QRShareButton({
     <TouchableOpacity
       style={[
         styles.btn,
-        { backgroundColor: disabled ? "#CBD5E1" : color },
+        { backgroundColor: disabled ? colors.border : color },
         style,
       ]}
       onPress={handlePress}

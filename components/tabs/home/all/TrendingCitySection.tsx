@@ -23,6 +23,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { typography }        from "../../../../theme/typography";
 import SectionHeader         from "./SectionHeader";
 import { TrendingCityItem }  from "../../../../data/allFeedData";
+import useTheme              from "../../../../theme/useTheme";
 
 interface TrendingCitySectionProps {
   city:  string;
@@ -43,6 +44,8 @@ function chunk<T>(arr: T[], size: number): T[][] {
 }
 
 export default function TrendingCitySection({ city, items }: TrendingCitySectionProps) {
+  // Theme so name/tag invert in dark mode
+  const { colors } = useTheme();
   const rows = chunk(items, COLS);
 
   return (
@@ -71,7 +74,7 @@ export default function TrendingCitySection({ city, items }: TrendingCitySection
                 {/* Name */}
                 <Text
                   numberOfLines={2}
-                  style={[styles.name, { fontFamily: typography.fontFamily.semiBold }]}
+                  style={[styles.name, { color: colors.text, fontFamily: typography.fontFamily.semiBold }]}
                 >
                   {item.name}
                 </Text>
@@ -79,7 +82,7 @@ export default function TrendingCitySection({ city, items }: TrendingCitySection
                 {/* Tag */}
                 <Text
                   numberOfLines={1}
-                  style={[styles.tag, { fontFamily: typography.fontFamily.regular }]}
+                  style={[styles.tag, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}
                 >
                   {item.tag}
                 </Text>
@@ -127,14 +130,12 @@ const styles = StyleSheet.create({
 
   name: {
     fontSize:   11,
-    color:      "#111827",
     textAlign:  "center",
     lineHeight: 14,
     width:      CELL_W,
   },
   tag: {
     fontSize:  9.5,
-    color:     "#9CA3AF",
     textAlign: "center",
     width:     CELL_W,
   },

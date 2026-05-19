@@ -223,19 +223,19 @@ export default function CheckoutScreen() {
       {/* ── Scrollable content ── */}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
-        {/* ── Error banner — shown when placeOrder() rejects ── */}
+        {/* ── Error banner — dangerLight/danger tokens flip with theme ── */}
         {!!orderError && (
-          <View style={[styles.errorBanner, { backgroundColor: "#FEE2E2", borderColor: "#FCA5A5" }]}>
-            <Ionicons name="alert-circle-outline" size={16} color="#DC2626" />
+          <View style={[styles.errorBanner, { backgroundColor: colors.dangerLight, borderColor: colors.danger }]}>
+            <Ionicons name="alert-circle-outline" size={16} color={colors.danger} />
             <Text style={[styles.errorText, {
-              color:      "#DC2626",
+              color:      colors.danger,
               fontFamily: typography.fontFamily.medium,
               fontSize:   typography.size.xs,
             }]}>
               {orderError}
             </Text>
             <TouchableOpacity onPress={() => setOrderError(null)}>
-              <Ionicons name="close" size={16} color="#DC2626" />
+              <Ionicons name="close" size={16} color={colors.danger} />
             </TouchableOpacity>
           </View>
         )}
@@ -263,11 +263,11 @@ export default function CheckoutScreen() {
           />
         )}
 
-        {/* ── Pickup info banner ── */}
+        {/* ── Pickup info banner — success tokens for dark-mode safety ── */}
         {mode === "pickup" && (
-          <View style={[styles.pickupNote, { backgroundColor: "#DCFCE7", borderColor: "#16A34A" }]}>
-            <Ionicons name="walk-outline" size={18} color="#16A34A" />
-            <Text style={[styles.pickupNoteText, { color: "#15803D", fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
+          <View style={[styles.pickupNote, { backgroundColor: colors.successLight, borderColor: colors.success }]}>
+            <Ionicons name="walk-outline" size={18} color={colors.success} />
+            <Text style={[styles.pickupNoteText, { color: colors.success, fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
               You'll collect your order directly from the store. Show your order QR at the counter.
             </Text>
           </View>

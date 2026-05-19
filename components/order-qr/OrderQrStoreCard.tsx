@@ -160,10 +160,10 @@ export default function OrderQrStoreCard({
           </Text>
         </View>
 
-        {/* Expiry */}
-        <View style={[styles.expiryChip, { backgroundColor: "#FEF3C7" }]}>
-          <Ionicons name="hourglass-outline" size={11} color="#D97706" />
-          <Text style={[styles.expiryText, { color: "#D97706", fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.ss }]}>
+        {/* Expiry — warning tokens for amber state surface in both themes */}
+        <View style={[styles.expiryChip, { backgroundColor: colors.warningLight }]}>
+          <Ionicons name="hourglass-outline" size={11} color={colors.warning} />
+          <Text style={[styles.expiryText, { color: colors.warning, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.ss }]}>
             Valid until {expiryStr}
           </Text>
         </View>

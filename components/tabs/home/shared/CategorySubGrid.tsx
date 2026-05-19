@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
+import useTheme       from "../../../../theme/useTheme";
 
 export interface SubCat {
   key:   string;
@@ -38,6 +39,8 @@ const CELL_W        = Math.floor((SW - H_PAD * 2 - COL_GAP * (COLS - 1)) / COLS)
 const IMG_H         = Math.floor(CELL_W * 0.88);
 
 export default function CategorySubGrid({ title, subCats, accent }: CategorySubGridProps) {
+  // Theme so title + label invert in dark mode
+  const { colors } = useTheme();
   const [active, setActive] = useState<string | null>(null);
 
   function handlePress(cat: SubCat) {
@@ -50,7 +53,7 @@ export default function CategorySubGrid({ title, subCats, accent }: CategorySubG
 
       {/* Optional section title */}
       {title && (
-        <Text style={[styles.title, { fontFamily: typography.fontFamily.bold }]}>
+        <Text style={[styles.title, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>
           {title}
         </Text>
       )}
@@ -83,7 +86,7 @@ export default function CategorySubGrid({ title, subCats, accent }: CategorySubG
                 style={[
                   styles.label,
                   {
-                    color:      isActive ? accent : "#374151",
+                    color:      isActive ? accent : colors.text,
                     fontFamily: isActive
                       ? typography.fontFamily.semiBold
                       : typography.fontFamily.regular,
@@ -110,7 +113,6 @@ const styles = StyleSheet.create({
 
   title: {
     fontSize:     15,
-    color:        "#111827",
     marginBottom: 12,
     textAlign:    "center",
   },

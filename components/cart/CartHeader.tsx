@@ -32,10 +32,10 @@ export default function CartHeader({ totalItems, onClear }: CartHeaderProps) {
         </View>
       </View>
 
-      {/* Clear all */}
+      {/* Clear all — danger token keeps red destructive intent in both themes */}
       <TouchableOpacity onPress={onClear} activeOpacity={0.7} style={styles.clearBtn}>
-        <Ionicons name="trash-outline" size={18} color="#EF4444" />
-        <Text style={[styles.clearText, { fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
+        <Ionicons name="trash-outline" size={18} color={colors.danger} />
+        <Text style={[styles.clearText, { color: colors.danger, fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
           Clear
         </Text>
       </TouchableOpacity>
@@ -68,5 +68,5 @@ const styles = StyleSheet.create({
     alignItems:    "center",
     gap:           4,
   },
-  clearText: { color: "#EF4444" },
+  clearText: {}, // color set inline from theme
 });

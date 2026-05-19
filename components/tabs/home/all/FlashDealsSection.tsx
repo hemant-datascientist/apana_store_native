@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
 import SectionHeader  from "./SectionHeader";
 import { FlashDeal }  from "../../../../data/allFeedData";
+import useTheme       from "../../../../theme/useTheme";
 
 interface FlashDealsSectionProps {
   deals: FlashDeal[];
@@ -30,6 +31,8 @@ function fmt(n: number) {
 }
 
 export default function FlashDealsSection({ deals }: FlashDealsSectionProps) {
+  // Theme-driven so card surfaces + product names invert in dark mode
+  const { colors, isDark } = useTheme();
   return (
     <View style={styles.root}>
       <View style={styles.header}>
@@ -46,7 +49,17 @@ export default function FlashDealsSection({ deals }: FlashDealsSectionProps) {
         contentContainerStyle={styles.scroll}
       >
         {deals.map(d => (
-          <View key={d.id} style={styles.card}>
+          <View
+            key={d.id}
+            style={[
+              styles.card,
+              {
+                backgroundColor: colors.card,
+                // Keep red tint in light mode; soften to theme border in dark
+                borderColor: isDark ? colors.border : "#FEE2E2",
+              },
+            ]}
+          >
 
             {/* Image placeholder */}
             <TouchableOpacity
@@ -66,10 +79,10 @@ export default function FlashDealsSection({ deals }: FlashDealsSectionProps) {
 
             {/* Info */}
             <View style={styles.info}>
-              <Text numberOfLines={2} style={[styles.name, { fontFamily: typography.fontFamily.semiBold }]}>
+              <Text numberOfLines={2} style={[styles.name, { color: colors.text, fontFamily: typography.fontFamily.semiBold }]}>
                 {d.name}
               </Text>
-              <Text numberOfLines={1} style={[styles.unit, { fontFamily: typography.fontFamily.regular }]}>
+              <Text numberOfLines={1} style={[styles.unit, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>
                 {d.unit}
               </Text>
 
@@ -115,9 +128,8 @@ const styles = StyleSheet.create({
     width:           CARD_W,
     borderRadius:    10,
     overflow:        "hidden",
-    backgroundColor: "#fff",
+    // backgroundColor + borderColor now set inline from theme
     borderWidth:     1,
-    borderColor:     "#FEE2E2",
     shadowColor:     "#DC2626",
     shadowOffset:    { width: 0, height: 1 },
     shadowOpacity:   0.08,
@@ -157,12 +169,10 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize:   11,
-    color:      "#111827",
     lineHeight: 14,
   },
   unit: {
     fontSize:     9.5,
-    color:        "#9CA3AF",
     marginBottom: 2,
   },
   original: {

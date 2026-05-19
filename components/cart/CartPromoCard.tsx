@@ -45,27 +45,28 @@ export default function CartPromoCard({
 
       {/* ── Applied state ── */}
       {appliedPromo ? (
-        <View style={[styles.appliedPill, { backgroundColor: "#DCFCE7", borderColor: "#16A34A" }]}>
+        // success tokens so the pill flips correctly in dark mode
+        <View style={[styles.appliedPill, { backgroundColor: colors.successLight, borderColor: colors.success }]}>
           <View style={styles.appliedLeft}>
-            <Ionicons name="checkmark-circle" size={18} color="#16A34A" />
+            <Ionicons name="checkmark-circle" size={18} color={colors.success} />
             <View>
-              <Text style={[styles.appliedCode, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm, color: "#15803D" }]}>
+              <Text style={[styles.appliedCode, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm, color: colors.success }]}>
                 {appliedPromo}
               </Text>
-              <Text style={[styles.appliedLabel, { fontFamily: typography.fontFamily.regular, fontSize: 10.5, color: "#16A34A" }]}>
+              <Text style={[styles.appliedLabel, { fontFamily: typography.fontFamily.regular, fontSize: 10.5, color: colors.success }]}>
                 {promoLabel} — You save ₹{discountAmt}
               </Text>
             </View>
           </View>
           <TouchableOpacity onPress={onRemove} activeOpacity={0.7}>
-            <Ionicons name="close-circle-outline" size={20} color="#16A34A" />
+            <Ionicons name="close-circle-outline" size={20} color={colors.success} />
           </TouchableOpacity>
         </View>
 
       ) : (
         <>
           {/* ── Input row ── */}
-          <View style={[styles.inputRow, { borderColor: promoError ? "#EF4444" : colors.border }]}>
+          <View style={[styles.inputRow, { borderColor: promoError ? colors.danger : colors.border }]}>
             <TextInput
               style={[styles.input, { color: colors.text, fontFamily: typography.fontFamily.medium, fontSize: typography.size.sm }]}
               placeholder="Enter promo code"
@@ -89,7 +90,8 @@ export default function CartPromoCard({
 
           {/* Error or hint */}
           {promoError ? (
-            <Text style={[styles.error, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+            // danger token keeps error legible across themes
+            <Text style={[styles.error, { color: colors.danger, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
               {promoError}
             </Text>
           ) : (
@@ -152,5 +154,5 @@ const styles = StyleSheet.create({
   applyText: { color: "#fff" },
 
   hint:  {},
-  error: { color: "#EF4444" },
+  error: {}, // color set inline from theme
 });

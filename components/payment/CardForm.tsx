@@ -149,7 +149,7 @@ export default function CardForm({ onAdd }: CardFormProps) {
         <Text style={[styles.fieldLabel, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
           Card Number
         </Text>
-        <View style={[styles.inputRow, { borderColor: errors.cardNumber ? "#EF4444" : colors.border, backgroundColor: colors.background }]}>
+        <View style={[styles.inputRow, { borderColor: errors.cardNumber ? colors.danger : colors.border, backgroundColor: colors.background }]}>
           <Ionicons name="card-outline" size={18} color={colors.subText} />
           <TextInput
             style={[styles.input, { color: colors.text, fontFamily: typography.fontFamily.regular, fontSize: typography.size.sm }]}
@@ -169,7 +169,7 @@ export default function CardForm({ onAdd }: CardFormProps) {
             </View>
           )}
         </View>
-        {!!errors.cardNumber && <Text style={[styles.errorText, { color: "#EF4444" }]}>{errors.cardNumber}</Text>}
+        {!!errors.cardNumber && <Text style={[styles.errorText, { color: colors.danger }]}>{errors.cardNumber}</Text>}
       </View>
 
       {/* ── Expiry + CVV row ── */}
@@ -179,7 +179,7 @@ export default function CardForm({ onAdd }: CardFormProps) {
           <Text style={[styles.fieldLabel, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
             Expiry (MM/YY)
           </Text>
-          <View style={[styles.inputRow, { borderColor: errors.expiry ? "#EF4444" : colors.border, backgroundColor: colors.background }]}>
+          <View style={[styles.inputRow, { borderColor: errors.expiry ? colors.danger : colors.border, backgroundColor: colors.background }]}>
             <Ionicons name="calendar-outline" size={16} color={colors.subText} />
             <TextInput
               ref={expiryRef}
@@ -193,7 +193,7 @@ export default function CardForm({ onAdd }: CardFormProps) {
               returnKeyType="next"
             />
           </View>
-          {!!errors.expiry && <Text style={[styles.errorText, { color: "#EF4444" }]}>{errors.expiry}</Text>}
+          {!!errors.expiry && <Text style={[styles.errorText, { color: colors.danger }]}>{errors.expiry}</Text>}
         </View>
 
         {/* CVV */}
@@ -201,7 +201,7 @@ export default function CardForm({ onAdd }: CardFormProps) {
           <Text style={[styles.fieldLabel, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
             CVV
           </Text>
-          <View style={[styles.inputRow, { borderColor: errors.cvv ? "#EF4444" : colors.border, backgroundColor: colors.background }]}>
+          <View style={[styles.inputRow, { borderColor: errors.cvv ? colors.danger : colors.border, backgroundColor: colors.background }]}>
             <Ionicons name="lock-closed-outline" size={16} color={colors.subText} />
             <TextInput
               ref={cvvRef}
@@ -219,7 +219,7 @@ export default function CardForm({ onAdd }: CardFormProps) {
               <Ionicons name={cvvVisible ? "eye-off-outline" : "eye-outline"} size={16} color={colors.subText} />
             </TouchableOpacity>
           </View>
-          {!!errors.cvv && <Text style={[styles.errorText, { color: "#EF4444" }]}>{errors.cvv}</Text>}
+          {!!errors.cvv && <Text style={[styles.errorText, { color: colors.danger }]}>{errors.cvv}</Text>}
         </View>
       </View>
 
@@ -228,7 +228,7 @@ export default function CardForm({ onAdd }: CardFormProps) {
         <Text style={[styles.fieldLabel, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
           Name on Card
         </Text>
-        <View style={[styles.inputRow, { borderColor: errors.name ? "#EF4444" : colors.border, backgroundColor: colors.background }]}>
+        <View style={[styles.inputRow, { borderColor: errors.name ? colors.danger : colors.border, backgroundColor: colors.background }]}>
           <Ionicons name="person-outline" size={17} color={colors.subText} />
           <TextInput
             ref={nameRef}
@@ -241,7 +241,7 @@ export default function CardForm({ onAdd }: CardFormProps) {
             returnKeyType="done"
           />
         </View>
-        {!!errors.name && <Text style={[styles.errorText, { color: "#EF4444" }]}>{errors.name}</Text>}
+        {!!errors.name && <Text style={[styles.errorText, { color: colors.danger }]}>{errors.name}</Text>}
       </View>
 
       {/* ── Save card toggle ── */}

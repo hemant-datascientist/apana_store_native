@@ -14,6 +14,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons }   from "@expo/vector-icons";
 import { typography } from "../../theme/typography";
+import useTheme       from "../../theme/useTheme";
 import { OnboardingSlide } from "../../data/onboardingData";
 
 interface OnboardingSlideProps {
@@ -22,6 +23,7 @@ interface OnboardingSlideProps {
 }
 
 export default function OnboardingSlideCard({ slide, width }: OnboardingSlideProps) {
+  const { colors } = useTheme();
   return (
     <View style={[styles.slide, { width }]}>
       {/* ── Icon in colored rounded square ── */}
@@ -42,6 +44,7 @@ export default function OnboardingSlideCard({ slide, width }: OnboardingSlidePro
       <Text style={[styles.body, {
         fontFamily: typography.fontFamily.regular,
         fontSize:   typography.size.sm,
+        color:      colors.subText,
       }]}>
         {slide.body}
       </Text>
@@ -74,7 +77,7 @@ const styles = StyleSheet.create({
     lineHeight: 30,
   },
   body: {
-    color:      "#6B7280",
+    // color set inline from theme
     textAlign:  "center",
     lineHeight: 22,
   },

@@ -307,11 +307,11 @@ export default function ScannerScreen() {
         <Animated.View
           style={[
             styles.resultCard,
-            { transform: [{ translateY: slideAnim }] },
+            { backgroundColor: colors.card, transform: [{ translateY: slideAnim }] },
           ]}
         >
           {/* Handle bar */}
-          <View style={styles.resultHandle} />
+          <View style={[styles.resultHandle, { backgroundColor: colors.border }]} />
 
           {/* Success icon + type */}
           <View style={styles.resultHeader}>
@@ -322,7 +322,7 @@ export default function ScannerScreen() {
               <Text style={[styles.resultType, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.xs, color: "#16A34A" }]}>
                 {result.type?.toUpperCase().replace(/_/g, " ")} DETECTED
               </Text>
-              <Text style={[styles.resultValue, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.base, color: "#111827" }]}
+              <Text style={[styles.resultValue, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.base, color: colors.text }]}
                 numberOfLines={2}
               >
                 {result.data}
@@ -347,12 +347,12 @@ export default function ScannerScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.resultBtn, styles.resultBtnOutline, { borderColor: "#E5E7EB" }]}
+              style={[styles.resultBtn, styles.resultBtnOutline, { borderColor: colors.border }]}
               activeOpacity={0.75}
               onPress={handleScanAgain}
             >
-              <Ionicons name="scan-outline" size={16} color="#374151" />
-              <Text style={[styles.resultBtnText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm, color: "#374151" }]}>
+              <Ionicons name="scan-outline" size={16} color={colors.text} />
+              <Text style={[styles.resultBtnText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm, color: colors.text }]}>
                 Scan Again
               </Text>
             </TouchableOpacity>
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
     bottom:          0,
     left:            0,
     right:           0,
-    backgroundColor: "#fff",
+    // bg set inline from theme
     borderTopLeftRadius:  24,
     borderTopRightRadius: 24,
     paddingHorizontal:    20,
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
     width:           36,
     height:          4,
     borderRadius:    2,
-    backgroundColor: "#E5E7EB",
+    // bg set inline from theme
     marginBottom:    16,
   },
   resultHeader: {

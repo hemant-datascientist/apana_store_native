@@ -22,6 +22,7 @@ import {
 import { SafeAreaView }  from "react-native-safe-area-context";
 import { Ionicons }      from "@expo/vector-icons";
 import { useRouter }     from "expo-router";
+import useTheme          from "../../theme/useTheme";
 import { typography }    from "../../theme/typography";
 
 const BRAND_BLUE = "#0F4C81";
@@ -29,6 +30,7 @@ const { width: SW } = Dimensions.get("window");
 const CIRCLE_SIZE = SW * 0.42;
 
 export default function ProductFinderScreen() {
+  const { colors }                        = useTheme();
   const router                            = useRouter();
   const [txnNumber, setTxnNumber]         = useState("");
   const [isFocused, setIsFocused]         = useState(false);
@@ -42,7 +44,7 @@ export default function ProductFinderScreen() {
   }
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor={BRAND_BLUE} />
 
       {/* ── Header ── */}
@@ -82,24 +84,24 @@ export default function ProductFinderScreen() {
             </View>
           </View>
 
-          <Text style={[styles.emptyTitle, { fontFamily: typography.fontFamily.semiBold }]}>
+          <Text style={[styles.emptyTitle, { color: colors.text, fontFamily: typography.fontFamily.semiBold }]}>
             No products added yet
           </Text>
         </View>
 
         {/* ── Lookup by name — inline search input ── */}
         {showSearch ? (
-          <View style={[styles.nameSearchWrap, styles.inputWrap, { borderColor: BRAND_BLUE }]}>
-            <Text style={[styles.inputLabel, { fontFamily: typography.fontFamily.regular }]}>
+          <View style={[styles.nameSearchWrap, styles.inputWrap, { backgroundColor: colors.card, borderColor: BRAND_BLUE }]}>
+            <Text style={[styles.inputLabel, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>
               Search by product name
             </Text>
             <View style={styles.nameSearchRow}>
               <TextInput
-                style={[styles.nameSearchInput, { fontFamily: typography.fontFamily.regular }]}
+                style={[styles.nameSearchInput, { color: colors.text, fontFamily: typography.fontFamily.regular }]}
                 value={nameQuery}
                 onChangeText={setNameQuery}
                 placeholder="e.g. Amul Butter, Dettol, Biscuits…"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.subText}
                 autoFocus
                 returnKeyType="search"
                 onSubmitEditing={handleNameSearch}
@@ -128,7 +130,7 @@ export default function ProductFinderScreen() {
 
         {/* ── Scan button ── */}
         <TouchableOpacity
-          style={styles.outlineBtn}
+          style={[styles.outlineBtn, { backgroundColor: colors.card }]}
           activeOpacity={0.85}
           onPress={() => router.push("/scanner")}
         >
@@ -139,14 +141,14 @@ export default function ProductFinderScreen() {
         </TouchableOpacity>
 
         {/* ── Transaction / receipt number ── */}
-        <View style={[styles.inputWrap, isFocused && styles.inputFocused]}>
-          <Text style={[styles.inputLabel, { fontFamily: typography.fontFamily.regular }]}>
+        <View style={[styles.inputWrap, { backgroundColor: colors.card, borderColor: colors.border }, isFocused && styles.inputFocused]}>
+          <Text style={[styles.inputLabel, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>
             Transaction or receipt number (optional)
           </Text>
           <TextInput
-            style={[styles.input, { fontFamily: typography.fontFamily.regular }]}
+            style={[styles.input, { color: colors.text, fontFamily: typography.fontFamily.regular }]}
             placeholder="Enter transaction or receipt number"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.subText}
             value={txnNumber}
             onChangeText={setTxnNumber}
             onFocus={() => setIsFocused(true)}
@@ -156,15 +158,15 @@ export default function ProductFinderScreen() {
         </View>
 
         {/* ── Trust badge card ── */}
-        <View style={styles.trustCard}>
-          <Text style={[styles.trustText, { fontFamily: typography.fontFamily.regular }]}>
+        <View style={[styles.trustCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.trustText, { color: colors.text, fontFamily: typography.fontFamily.regular }]}>
             "Shop with confidence. Every product on Apana Store is verified via{" "}
-            <Text style={[styles.trustBold, { fontFamily: typography.fontFamily.bold }]}>GS1 India</Text>
+            <Text style={[styles.trustBold, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>GS1 India</Text>
             {" "}and{" "}
-            <Text style={[styles.trustBold, { fontFamily: typography.fontFamily.bold }]}>Fssai ✅</Text>
+            <Text style={[styles.trustBold, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>Fssai ✅</Text>
             , ensuring you receive only genuine, brand-certified items. No fakes, no errors—just authentic
             products from trusted sellers delivered straight to your door through the{" "}
-            <Text style={[styles.trustBold, { fontFamily: typography.fontFamily.bold }]}>ONDC Network</Text>
+            <Text style={[styles.trustBold, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>ONDC Network</Text>
             ."
           </Text>
 
@@ -199,7 +201,7 @@ export default function ProductFinderScreen() {
 const styles = StyleSheet.create({
   root: {
     flex:            1,
-    backgroundColor: "#F8FAFC",
+    // bg set inline from theme
   },
 
   // ── Header ──────────────────────────────────────────────────
@@ -271,7 +273,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 15,
-    color:    "#374151",
+    // color set inline from theme
   },
 
   // ── Primary button ──────────────────────────────────────────
@@ -295,7 +297,7 @@ const styles = StyleSheet.create({
     alignItems:      "center",
     justifyContent:  "center",
     gap:             10,
-    backgroundColor: "#fff",
+    // bg set inline from theme
     borderRadius:    12,
     paddingVertical: 14,
     borderWidth:     1.5,
@@ -308,10 +310,9 @@ const styles = StyleSheet.create({
 
   // ── Input ───────────────────────────────────────────────────
   inputWrap: {
-    backgroundColor: "#fff",
+    // bg + border set inline from theme
     borderRadius:    12,
     borderWidth:     1,
-    borderColor:     "#E5E7EB",
     paddingHorizontal: 14,
     paddingTop:       12,
     paddingBottom:    10,
@@ -322,11 +323,11 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 11.5,
-    color:    "#9CA3AF",
+    // color set inline from theme
   },
   input: {
     fontSize: 13.5,
-    color:    "#111827",
+    // color set inline from theme
     padding:  0,
   },
 
@@ -342,7 +343,7 @@ const styles = StyleSheet.create({
   nameSearchInput: {
     flex:     1,
     fontSize: 13.5,
-    color:    "#111827",
+    // color set inline from theme
     padding:  0,
   },
   nameSearchBtn: {
@@ -356,20 +357,19 @@ const styles = StyleSheet.create({
 
   // ── Trust card ──────────────────────────────────────────────
   trustCard: {
-    backgroundColor: "#fff",
+    // bg + border set inline from theme
     borderRadius:    14,
     padding:         16,
     borderWidth:     1,
-    borderColor:     "#E5E7EB",
     gap:             12,
   },
   trustText: {
     fontSize:   13,
-    color:      "#374151",
+    // color set inline from theme
     lineHeight: 21,
   },
   trustBold: {
-    color: "#111827",
+    // color set inline from theme
   },
   trustLogos: {
     flexDirection:  "row",

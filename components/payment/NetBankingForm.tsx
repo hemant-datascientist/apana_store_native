@@ -176,11 +176,11 @@ export default function NetBankingForm({ onAdd }: NetBankingFormProps) {
         )}
       </View>
 
-      {/* ── Error ── */}
+      {/* ── Error — danger token survives dark mode ── */}
       {!!error && (
         <View style={styles.errorRow}>
-          <Ionicons name="alert-circle-outline" size={13} color="#EF4444" />
-          <Text style={[styles.errorText, { color: "#EF4444", fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+          <Ionicons name="alert-circle-outline" size={13} color={colors.danger} />
+          <Text style={[styles.errorText, { color: colors.danger, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
             {error}
           </Text>
         </View>

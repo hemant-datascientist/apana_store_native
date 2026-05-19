@@ -13,6 +13,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
 import { GrocerySubCategory } from "../../../../data/groceryData";
+import useTheme from "../../../../theme/useTheme";
 
 interface GroceryCategoryGridProps {
   categories: GrocerySubCategory[];
@@ -29,6 +30,8 @@ const IMG_H          = CELL_W * 0.85;   // slightly shorter than square
 const GROCERY_GREEN  = "#026451";
 
 export default function GroceryCategoryGrid({ categories, onSelect }: GroceryCategoryGridProps) {
+  // Theme so sub-category label flips in dark mode
+  const { colors } = useTheme();
   const [active, setActive] = useState<string | null>(null);
 
   function handlePress(cat: GrocerySubCategory) {
@@ -82,7 +85,7 @@ export default function GroceryCategoryGrid({ categories, onSelect }: GroceryCat
                 style={[
                   styles.label,
                   {
-                    color:      isActive ? GROCERY_GREEN : "#374151",
+                    color:      isActive ? GROCERY_GREEN : colors.text,
                     fontFamily: isActive
                       ? typography.fontFamily.semiBold
                       : typography.fontFamily.regular,

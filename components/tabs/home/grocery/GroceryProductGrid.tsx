@@ -17,6 +17,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
 import { GroceryProduct, GrocerySection } from "../../../../data/groceryData";
+import useTheme from "../../../../theme/useTheme";
 
 interface GroceryProductGridProps {
   section: GrocerySection;
@@ -40,6 +41,8 @@ function chunk<T>(arr: T[], size: number): T[][] {
 }
 
 export default function GroceryProductGrid({ section }: GroceryProductGridProps) {
+  // Theme so section title flips in dark mode
+  const { colors } = useTheme();
   const rows = chunk(section.products, COLS);
 
   return (
@@ -49,7 +52,7 @@ export default function GroceryProductGrid({ section }: GroceryProductGridProps)
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Ionicons name={section.icon as any} size={17} color={section.iconColor} />
-          <Text style={[styles.headerTitle, { color: "#111827", fontFamily: typography.fontFamily.bold, fontSize: typography.size.md }]}>
+          <Text style={[styles.headerTitle, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.md }]}>
             {section.title}
           </Text>
         </View>
@@ -93,9 +96,11 @@ interface ProductCardProps {
 }
 
 function ProductCard({ product, accentColor }: ProductCardProps) {
+  // Theme so card surface + name invert in dark mode
+  const { colors } = useTheme();
   return (
     <TouchableOpacity
-      style={[styles.card, { width: CARD_W }]}
+      style={[styles.card, { width: CARD_W, backgroundColor: colors.card, borderColor: colors.border }]}
       activeOpacity={0.8}
       onPress={() => Alert.alert(product.name, `${product.price} — Product detail coming soon.`)}
     >
@@ -125,7 +130,7 @@ function ProductCard({ product, accentColor }: ProductCardProps) {
       <View style={styles.info}>
         <Text
           numberOfLines={2}
-          style={[styles.name, { color: "#111827", fontFamily: typography.fontFamily.semiBold, fontSize: 11.5 }]}
+          style={[styles.name, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: 11.5 }]}
         >
           {product.name}
         </Text>
@@ -176,9 +181,8 @@ const styles = StyleSheet.create({
   card: {
     borderRadius:    10,
     overflow:        "hidden",
-    backgroundColor: "#fff",
+    // backgroundColor + borderColor set inline from theme
     borderWidth:     1,
-    borderColor:     "#F3F4F6",
     shadowColor:     "#000",
     shadowOffset:    { width: 0, height: 1 },
     shadowOpacity:   0.06,

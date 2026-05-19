@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { typography }  from "../../../../theme/typography";
 import SectionHeader   from "./SectionHeader";
 import { HomeProduct } from "../../../../data/allFeedData";
+import useTheme        from "../../../../theme/useTheme";
 
 interface ProductHScrollSectionProps {
   icon:        string;
@@ -32,6 +33,8 @@ function fmt(n: number) {
 export default function ProductHScrollSection({
   icon, title, accentColor, products,
 }: ProductHScrollSectionProps) {
+  // Theme so card surface + name/unit invert in dark mode
+  const { colors } = useTheme();
   return (
     <View style={styles.root}>
       <View style={styles.header}>
@@ -44,7 +47,7 @@ export default function ProductHScrollSection({
         contentContainerStyle={styles.scroll}
       >
         {products.map(p => (
-          <View key={p.id} style={styles.card}>
+          <View key={p.id} style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
 
             {/* Image placeholder */}
             <TouchableOpacity
@@ -64,10 +67,10 @@ export default function ProductHScrollSection({
 
             {/* Info */}
             <View style={styles.info}>
-              <Text numberOfLines={2} style={[styles.name, { fontFamily: typography.fontFamily.semiBold }]}>
+              <Text numberOfLines={2} style={[styles.name, { color: colors.text, fontFamily: typography.fontFamily.semiBold }]}>
                 {p.name}
               </Text>
-              <Text numberOfLines={1} style={[styles.unit, { fontFamily: typography.fontFamily.regular }]}>
+              <Text numberOfLines={1} style={[styles.unit, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>
                 {p.unit}
               </Text>
 
@@ -108,9 +111,8 @@ const styles = StyleSheet.create({
     width:           CARD_W,
     borderRadius:    10,
     overflow:        "hidden",
-    backgroundColor: "#fff",
+    // backgroundColor + borderColor set inline from theme
     borderWidth:     1,
-    borderColor:     "#F3F4F6",
     shadowColor:     "#000",
     shadowOffset:    { width: 0, height: 1 },
     shadowOpacity:   0.06,
@@ -143,12 +145,10 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize:   11,
-    color:      "#111827",
     lineHeight: 14,
   },
   unit: {
     fontSize: 9.5,
-    color:    "#9CA3AF",
   },
 
   priceRow: {

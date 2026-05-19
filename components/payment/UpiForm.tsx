@@ -111,7 +111,8 @@ export default function UpiForm({ onAdd }: UpiFormProps) {
       <View style={[
         styles.inputWrap,
         {
-          borderColor:     error ? "#EF4444" : isValid ? "#22C55E" : colors.border,
+          // danger/success tokens keep validation state legible in both themes
+          borderColor:     error ? colors.danger : isValid ? colors.success : colors.border,
           backgroundColor: colors.background,
         },
       ]}>
@@ -127,15 +128,15 @@ export default function UpiForm({ onAdd }: UpiFormProps) {
           returnKeyType="done"
         />
         {isValid && (
-          <Ionicons name="checkmark-circle" size={18} color="#22C55E" />
+          <Ionicons name="checkmark-circle" size={18} color={colors.success} />
         )}
       </View>
 
       {/* Error */}
       {!!error && (
         <View style={styles.errorRow}>
-          <Ionicons name="alert-circle-outline" size={13} color="#EF4444" />
-          <Text style={[styles.errorText, { color: "#EF4444", fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+          <Ionicons name="alert-circle-outline" size={13} color={colors.danger} />
+          <Text style={[styles.errorText, { color: colors.danger, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
             {error}
           </Text>
         </View>

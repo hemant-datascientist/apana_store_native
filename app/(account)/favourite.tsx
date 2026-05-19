@@ -28,6 +28,7 @@ import {
 import { SafeAreaView }      from "react-native-safe-area-context";
 import { Ionicons }          from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import useTheme             from "../../theme/useTheme";
 import { typography }        from "../../theme/typography";
 import { FAVOURITE_STORES }  from "../../data/profileData";
 import {
@@ -35,6 +36,7 @@ import {
   FAVOURITE_DELIVERIES, FavouriteDelivery,
 } from "../../data/favouriteData";
 
+// Deliberate dark-navy chrome — header is a brand surface
 const BRAND_BLUE  = "#0F4C81";
 const { width: SW } = Dimensions.get("window");
 
@@ -63,16 +65,20 @@ function Initials({ name, bg }: { name: string; bg: string }) {
   const letters = name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
   return (
     <View style={[styles.avatar, { backgroundColor: bg }]}>
-      <Text style={[styles.avatarText, { fontFamily: typography.fontFamily.bold }]}>{letters}</Text>
+      {/* Avatar bg is a deliberate accent fill — keep white text for contrast */}
+      <Text style={[styles.avatarText, { fontFamily: typography.fontFamily.bold, color: "#fff" }]}>
+        {letters}
+      </Text>
     </View>
   );
 }
 
 // ── Store card ────────────────────────────────────────────────
 function StoreCard({ store }: { store: typeof FAVOURITE_STORES[0] }) {
+  const { colors } = useTheme();
   return (
     <TouchableOpacity
-      style={styles.listCard}
+      style={[styles.listCard, { backgroundColor: colors.card, borderColor: colors.border }]}
       activeOpacity={0.8}
       onPress={() => Alert.alert(store.name, `${store.category} · ${store.area}`)}
     >
@@ -81,21 +87,22 @@ function StoreCard({ store }: { store: typeof FAVOURITE_STORES[0] }) {
       </View>
 
       <View style={styles.cardBody}>
-        <Text style={[styles.cardName, { fontFamily: typography.fontFamily.semiBold }]}>
+        <Text style={[styles.cardName, { fontFamily: typography.fontFamily.semiBold, color: colors.text }]}>
           {store.name}
         </Text>
-        <Text style={[styles.cardSub, { fontFamily: typography.fontFamily.regular }]}>
+        <Text style={[styles.cardSub, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
           {store.category} · {store.area}
         </Text>
         <View style={styles.metaRow}>
-          <Ionicons name="star" size={11} color="#F59E0B" />
-          <Text style={[styles.metaText, { fontFamily: typography.fontFamily.medium }]}>
+          <Ionicons name="star" size={11} color={colors.warning} />
+          <Text style={[styles.metaText, { fontFamily: typography.fontFamily.medium, color: colors.subText }]}>
             {store.rating}
           </Text>
-          <View style={[styles.openBadge, { backgroundColor: store.open ? "#DCFCE7" : "#F3F4F6" }]}>
+          {/* Status pill uses success/border tokens so both light & dark modes read cleanly */}
+          <View style={[styles.openBadge, { backgroundColor: store.open ? colors.successLight : colors.border }]}>
             <Text style={[styles.openText, {
               fontFamily: typography.fontFamily.semiBold,
-              color: store.open ? "#15803D" : "#6B7280",
+              color: store.open ? colors.success : colors.subText,
             }]}>
               {store.open ? "Open" : "Closed"}
             </Text>
@@ -108,7 +115,7 @@ function StoreCard({ store }: { store: typeof FAVOURITE_STORES[0] }) {
         onPress={() => Alert.alert("Remove", `Remove ${store.name} from favourites?`)}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        <Ionicons name="heart" size={20} color="#EF4444" />
+        <Ionicons name="heart" size={20} color={colors.danger} />
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -116,9 +123,10 @@ function StoreCard({ store }: { store: typeof FAVOURITE_STORES[0] }) {
 
 // ── Rider card ────────────────────────────────────────────────
 function RiderCard({ rider }: { rider: FavouriteRider }) {
+  const { colors } = useTheme();
   return (
     <TouchableOpacity
-      style={styles.listCard}
+      style={[styles.listCard, { backgroundColor: colors.card, borderColor: colors.border }]}
       activeOpacity={0.8}
       onPress={() => Alert.alert(rider.name, `${rider.vehicle} · ${rider.vehicleNo}`)}
     >
@@ -126,7 +134,7 @@ function RiderCard({ rider }: { rider: FavouriteRider }) {
 
       <View style={styles.cardBody}>
         <View style={styles.nameRow}>
-          <Text style={[styles.cardName, { fontFamily: typography.fontFamily.semiBold }]}>
+          <Text style={[styles.cardName, { fontFamily: typography.fontFamily.semiBold, color: colors.text }]}>
             {rider.name}
           </Text>
           <View style={[styles.badge, { backgroundColor: rider.badgeBg }]}>
@@ -135,24 +143,24 @@ function RiderCard({ rider }: { rider: FavouriteRider }) {
             </Text>
           </View>
         </View>
-        <Text style={[styles.cardSub, { fontFamily: typography.fontFamily.regular }]}>
+        <Text style={[styles.cardSub, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
           {rider.vehicle} · {rider.vehicleNo}
         </Text>
         <View style={styles.metaRow}>
-          <Ionicons name="star" size={11} color="#F59E0B" />
-          <Text style={[styles.metaText, { fontFamily: typography.fontFamily.medium }]}>
+          <Ionicons name="star" size={11} color={colors.warning} />
+          <Text style={[styles.metaText, { fontFamily: typography.fontFamily.medium, color: colors.subText }]}>
             {rider.rating.toFixed(1)}
           </Text>
-          <Text style={[styles.metaDot, { fontFamily: typography.fontFamily.regular }]}>·</Text>
-          <Text style={[styles.metaText, { fontFamily: typography.fontFamily.regular }]}>
+          <Text style={[styles.metaDot, { fontFamily: typography.fontFamily.regular, color: colors.border }]}>·</Text>
+          <Text style={[styles.metaText, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
             {rider.totalRides} rides
           </Text>
           <View style={[styles.availBadge, {
-            backgroundColor: rider.available ? "#DCFCE7" : "#F3F4F6",
+            backgroundColor: rider.available ? colors.successLight : colors.border,
           }]}>
             <Text style={[styles.availText, {
               fontFamily: typography.fontFamily.semiBold,
-              color: rider.available ? "#15803D" : "#9CA3AF",
+              color: rider.available ? colors.success : colors.subText,
             }]}>
               {rider.available ? "Available" : "Busy"}
             </Text>
@@ -172,7 +180,7 @@ function RiderCard({ rider }: { rider: FavouriteRider }) {
           onPress={() => Alert.alert("Remove", `Remove ${rider.name} from favourites?`)}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Ionicons name="heart" size={18} color="#EF4444" />
+          <Ionicons name="heart" size={18} color={colors.danger} />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -181,9 +189,10 @@ function RiderCard({ rider }: { rider: FavouriteRider }) {
 
 // ── Delivery card ─────────────────────────────────────────────
 function DeliveryCard({ partner }: { partner: FavouriteDelivery }) {
+  const { colors } = useTheme();
   return (
     <TouchableOpacity
-      style={styles.listCard}
+      style={[styles.listCard, { backgroundColor: colors.card, borderColor: colors.border }]}
       activeOpacity={0.8}
       onPress={() => Alert.alert(partner.name, `${partner.vehicle} · ${partner.vehicleNo}`)}
     >
@@ -191,7 +200,7 @@ function DeliveryCard({ partner }: { partner: FavouriteDelivery }) {
 
       <View style={styles.cardBody}>
         <View style={styles.nameRow}>
-          <Text style={[styles.cardName, { fontFamily: typography.fontFamily.semiBold }]}>
+          <Text style={[styles.cardName, { fontFamily: typography.fontFamily.semiBold, color: colors.text }]}>
             {partner.name}
           </Text>
           <View style={[styles.badge, { backgroundColor: partner.badgeBg }]}>
@@ -200,25 +209,25 @@ function DeliveryCard({ partner }: { partner: FavouriteDelivery }) {
             </Text>
           </View>
         </View>
-        <Text style={[styles.cardSub, { fontFamily: typography.fontFamily.regular }]}>
+        <Text style={[styles.cardSub, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
           {partner.vehicle} · {partner.vehicleNo}
         </Text>
         <View style={styles.metaRow}>
-          <Ionicons name="star" size={11} color="#F59E0B" />
-          <Text style={[styles.metaText, { fontFamily: typography.fontFamily.medium }]}>
+          <Ionicons name="star" size={11} color={colors.warning} />
+          <Text style={[styles.metaText, { fontFamily: typography.fontFamily.medium, color: colors.subText }]}>
             {partner.rating.toFixed(1)}
           </Text>
-          <Text style={[styles.metaDot, { fontFamily: typography.fontFamily.regular }]}>·</Text>
-          <Ionicons name="time-outline" size={11} color="#9CA3AF" />
-          <Text style={[styles.metaText, { fontFamily: typography.fontFamily.regular }]}>
+          <Text style={[styles.metaDot, { fontFamily: typography.fontFamily.regular, color: colors.border }]}>·</Text>
+          <Ionicons name="time-outline" size={11} color={colors.subText} />
+          <Text style={[styles.metaText, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
             avg {partner.avgDeliveryTime}
           </Text>
           <View style={[styles.availBadge, {
-            backgroundColor: partner.available ? "#DCFCE7" : "#F3F4F6",
+            backgroundColor: partner.available ? colors.successLight : colors.border,
           }]}>
             <Text style={[styles.availText, {
               fontFamily: typography.fontFamily.semiBold,
-              color: partner.available ? "#15803D" : "#9CA3AF",
+              color: partner.available ? colors.success : colors.subText,
             }]}>
               {partner.available ? "Available" : "Busy"}
             </Text>
@@ -238,7 +247,7 @@ function DeliveryCard({ partner }: { partner: FavouriteDelivery }) {
           onPress={() => Alert.alert("Remove", `Remove ${partner.name} from favourites?`)}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Ionicons name="heart" size={18} color="#EF4444" />
+          <Ionicons name="heart" size={18} color={colors.danger} />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -249,15 +258,17 @@ function DeliveryCard({ partner }: { partner: FavouriteDelivery }) {
 function EmptyState({ icon, title, sub, cta, onCta }: {
   icon: string; title: string; sub: string; cta: string; onCta: () => void;
 }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.emptyWrap}>
+      {/* Empty hero is a deliberate brand surface — white icon on brand fill is the intended look */}
       <View style={styles.emptyCircle}>
         <Ionicons name={icon as any} size={52} color="#fff" />
       </View>
-      <Text style={[styles.emptyTitle, { fontFamily: typography.fontFamily.semiBold }]}>
+      <Text style={[styles.emptyTitle, { fontFamily: typography.fontFamily.semiBold, color: colors.text }]}>
         {title}
       </Text>
-      <Text style={[styles.emptySub, { fontFamily: typography.fontFamily.regular }]}>
+      <Text style={[styles.emptySub, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
         {sub}
       </Text>
       <TouchableOpacity style={styles.browseBtn} activeOpacity={0.85} onPress={onCta}>
@@ -272,6 +283,7 @@ function EmptyState({ icon, title, sub, cta, onCta }: {
 // ── Main screen ───────────────────────────────────────────────
 export default function FavouriteScreen() {
   const router           = useRouter();
+  const { colors }       = useTheme();
   const params           = useLocalSearchParams<{ tab?: string }>();
   const initialTab       = (params.tab as FavTab) ?? "products";
   const [activeTab, setActiveTab] = useState<FavTab>(initialTab);
@@ -282,7 +294,7 @@ export default function FavouriteScreen() {
       case "stores":
         return (
           <View style={styles.list}>
-            <Text style={[styles.countLabel, { fontFamily: typography.fontFamily.regular }]}>
+            <Text style={[styles.countLabel, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
               {FAVOURITE_STORES.length} saved stores
             </Text>
             {FAVOURITE_STORES.map(s => <StoreCard key={s.id} store={s} />)}
@@ -292,7 +304,7 @@ export default function FavouriteScreen() {
       case "riders":
         return (
           <View style={styles.list}>
-            <Text style={[styles.countLabel, { fontFamily: typography.fontFamily.regular }]}>
+            <Text style={[styles.countLabel, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
               {FAVOURITE_RIDERS.length} saved riders
             </Text>
             {FAVOURITE_RIDERS.map(r => <RiderCard key={r.id} rider={r} />)}
@@ -302,7 +314,7 @@ export default function FavouriteScreen() {
       case "delivery":
         return (
           <View style={styles.list}>
-            <Text style={[styles.countLabel, { fontFamily: typography.fontFamily.regular }]}>
+            <Text style={[styles.countLabel, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
               {FAVOURITE_DELIVERIES.length} saved delivery partners
             </Text>
             {FAVOURITE_DELIVERIES.map(d => <DeliveryCard key={d.id} partner={d} />)}
@@ -324,7 +336,7 @@ export default function FavouriteScreen() {
   }
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor={BRAND_BLUE} />
 
       {/* ── Header ── */}
@@ -390,7 +402,7 @@ export default function FavouriteScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#F8FAFC" },
+  root: { flex: 1 }, // backgroundColor set inline from theme
 
   // ── Header ──────────────────────────────────────────────────
   header: {
@@ -445,19 +457,18 @@ const styles = StyleSheet.create({
   // ── List ────────────────────────────────────────────────────
   list: { gap: 10 },
   countLabel: {
-    fontSize: 12, color: "#9CA3AF", marginBottom: 4,
+    fontSize: 12, marginBottom: 4, // color inline from theme
   },
 
   // ── List card (shared) ───────────────────────────────────────
   listCard: {
     flexDirection:   "row",
     alignItems:      "center",
-    backgroundColor: "#fff",
+    // backgroundColor + borderColor set inline from theme
     borderRadius:    14,
     padding:         14,
     gap:             12,
     borderWidth:     1,
-    borderColor:     "#E5E7EB",
     shadowColor:     "#000",
     shadowOffset:    { width: 0, height: 1 },
     shadowOpacity:   0.06,
@@ -480,18 +491,18 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
     flexShrink: 0,
   },
-  avatarText: { fontSize: 16, color: "#374151" },
+  avatarText: { fontSize: 16 }, // color inline (white on accent fill)
 
   // Card body
   cardBody: { flex: 1, gap: 3 },
   nameRow: {
     flexDirection: "row", alignItems: "center", gap: 7, flexWrap: "wrap",
   },
-  cardName: { fontSize: 14, color: "#111827" },
-  cardSub:  { fontSize: 12, color: "#6B7280" },
+  cardName: { fontSize: 14 }, // color inline from theme
+  cardSub:  { fontSize: 12 }, // color inline from theme
   metaRow:  { flexDirection: "row", alignItems: "center", gap: 5, flexWrap: "wrap", marginTop: 2 },
-  metaText: { fontSize: 11.5, color: "#6B7280" },
-  metaDot:  { fontSize: 11, color: "#D1D5DB" },
+  metaText: { fontSize: 11.5 }, // color inline from theme
+  metaDot:  { fontSize: 11 },   // color inline from theme
 
   // Badges
   badge: {
@@ -528,9 +539,9 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
     marginBottom: 4,
   },
-  emptyTitle: { fontSize: 16, color: "#111827", textAlign: "center" },
+  emptyTitle: { fontSize: 16, textAlign: "center" }, // color inline from theme
   emptySub: {
-    fontSize: 13, color: "#6B7280", textAlign: "center", lineHeight: 20,
+    fontSize: 13, textAlign: "center", lineHeight: 20, // color inline from theme
   },
   browseBtn: {
     backgroundColor: BRAND_BLUE, borderRadius: 24,

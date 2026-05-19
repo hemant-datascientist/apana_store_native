@@ -120,11 +120,11 @@ export default function InvoiceScreen() {
             )}
           </View>
 
-          {/* Paid badge — only shown when invoice is loaded */}
+          {/* Paid badge — success tokens flip with theme */}
           {invoice ? (
-            <View style={[styles.verifiedPill, { backgroundColor: "#DCFCE7", borderColor: "#86EFAC" }]}>
-              <Ionicons name="checkmark-circle" size={12} color="#16A34A" />
-              <Text style={[styles.verifiedText, { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.ss }]}>
+            <View style={[styles.verifiedPill, { backgroundColor: colors.successLight, borderColor: colors.success + "70" }]}>
+              <Ionicons name="checkmark-circle" size={12} color={colors.success} />
+              <Text style={[styles.verifiedText, { color: colors.success, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.ss }]}>
                 Paid
               </Text>
             </View>
@@ -145,11 +145,11 @@ export default function InvoiceScreen() {
         </View>
       )}
 
-      {/* ── Error state ────────────────────────────────────────── */}
+      {/* ── Error state — danger tokens for dark-mode safe error surface ── */}
       {!loading && !!fetchErr && (
         <View style={styles.centred}>
-          <View style={[styles.errorIcon, { backgroundColor: "#FEF2F2", borderColor: "#FCA5A5" }]}>
-            <Ionicons name="alert-circle-outline" size={36} color="#EF4444" />
+          <View style={[styles.errorIcon, { backgroundColor: colors.dangerLight, borderColor: colors.danger + "70" }]}>
+            <Ionicons name="alert-circle-outline" size={36} color={colors.danger} />
           </View>
           <Text style={[styles.errorTitle, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.md }]}>
             Could Not Load Invoice
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     borderWidth:       1,
     flexShrink:        0,
   },
-  verifiedText: { color: "#16A34A" },
+  verifiedText: {}, // color set inline from theme
 
   // Loading / error
   centred: {

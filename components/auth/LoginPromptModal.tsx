@@ -27,6 +27,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../theme/typography";
+import useTheme       from "../../theme/useTheme";
 
 const BRAND_BLUE = "#0F4C81";
 const { height: SH } = Dimensions.get("window");
@@ -66,6 +67,7 @@ export default function LoginPromptModal({
 }: LoginPromptModalProps) {
   const slideAnim = useRef(new Animated.Value(SH)).current;
   const fadeAnim  = useRef(new Animated.Value(0)).current;
+  const { colors } = useTheme();
 
   const config = REASON_CONFIG[reason];
 
@@ -113,21 +115,21 @@ export default function LoginPromptModal({
       </Animated.View>
 
       {/* ── Sheet ── */}
-      <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}>
+      <Animated.View style={[styles.sheet, { backgroundColor: colors.card, transform: [{ translateY: slideAnim }] }]}>
 
         {/* Drag handle */}
-        <View style={styles.handle} />
+        <View style={[styles.handle, { backgroundColor: colors.border }]} />
 
         {/* Icon */}
-        <View style={styles.iconWrap}>
+        <View style={[styles.iconWrap, { backgroundColor: colors.primaryLight }]}>
           <Ionicons name={config.icon as any} size={36} color={BRAND_BLUE} />
         </View>
 
         {/* Copy */}
-        <Text style={[styles.title, { fontFamily: typography.fontFamily.bold }]}>
+        <Text style={[styles.title, { fontFamily: typography.fontFamily.bold, color: colors.text }]}>
           {config.title}
         </Text>
-        <Text style={[styles.body, { fontFamily: typography.fontFamily.regular }]}>
+        <Text style={[styles.body, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
           {config.body}
         </Text>
 
@@ -140,7 +142,7 @@ export default function LoginPromptModal({
           ].map((b, i) => (
             <View key={i} style={styles.benefit}>
               <Ionicons name={b.icon as any} size={18} color={BRAND_BLUE} />
-              <Text style={[styles.benefitText, { fontFamily: typography.fontFamily.regular }]}>
+              <Text style={[styles.benefitText, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
                 {b.text}
               </Text>
             </View>
@@ -157,7 +159,7 @@ export default function LoginPromptModal({
 
         {/* Continue browsing */}
         <TouchableOpacity style={styles.skipBtn} activeOpacity={0.7} onPress={onClose}>
-          <Text style={[styles.skipText, { fontFamily: typography.fontFamily.regular }]}>
+          <Text style={[styles.skipText, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
             Continue browsing
           </Text>
         </TouchableOpacity>
@@ -180,7 +182,7 @@ const styles = StyleSheet.create({
     bottom:            0,
     left:              0,
     right:             0,
-    backgroundColor:   "#fff",
+    // backgroundColor set inline from theme
     borderTopLeftRadius:  28,
     borderTopRightRadius: 28,
     paddingHorizontal: 28,
@@ -198,7 +200,7 @@ const styles = StyleSheet.create({
     width:           40,
     height:          4,
     borderRadius:    2,
-    backgroundColor: "#E5E7EB",
+    // backgroundColor set inline from theme
     marginBottom:    24,
   },
 
@@ -207,7 +209,7 @@ const styles = StyleSheet.create({
     width:           72,
     height:          72,
     borderRadius:    22,
-    backgroundColor: "#EFF6FF",
+    // backgroundColor set inline from theme
     alignItems:      "center",
     justifyContent:  "center",
     marginBottom:    16,
@@ -216,13 +218,13 @@ const styles = StyleSheet.create({
   // Copy
   title: {
     fontSize:     20,
-    color:        "#111827",
+    // color set inline from theme
     textAlign:    "center",
     marginBottom: 10,
   },
   body: {
     fontSize:     14,
-    color:        "#6B7280",
+    // color set inline from theme
     textAlign:    "center",
     lineHeight:   22,
     marginBottom: 20,
@@ -241,7 +243,7 @@ const styles = StyleSheet.create({
   },
   benefitText: {
     fontSize:  11,
-    color:     "#6B7280",
+    // color set inline from theme
     textAlign: "center",
   },
 
@@ -273,7 +275,7 @@ const styles = StyleSheet.create({
   },
   skipText: {
     fontSize: 14,
-    color:    "#9CA3AF",
+    // color set inline from theme
     textDecorationLine: "underline",
   },
 });

@@ -20,15 +20,17 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons }     from "@expo/vector-icons";
 import { useRouter }    from "expo-router";
 import { typography }   from "../../theme/typography";
+import useTheme         from "../../theme/useTheme";
 
 const BRAND_BLUE = "#0F4C81";
 const CARD_BLUE  = "#1A5E9A";
 
 export default function SellOndcScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor={BRAND_BLUE} />
 
       {/* ── Header ── */}
@@ -58,24 +60,24 @@ export default function SellOndcScreen() {
 
         {/* ── Sell on Apana Store action card ── */}
         <TouchableOpacity
-          style={styles.actionCard}
+          style={[styles.actionCard, { backgroundColor: colors.card, borderColor: colors.border }]}
           activeOpacity={0.85}
           onPress={() => Alert.alert("Sell on Apana Store", "Seller registration coming soon.")}
         >
-          <View style={styles.actionIconWrap}>
+          <View style={[styles.actionIconWrap, { backgroundColor: colors.primaryLight }]}>
             <Ionicons name="trending-up" size={26} color={BRAND_BLUE} />
           </View>
 
           <View style={styles.actionBody}>
-            <Text style={[styles.actionTitle, { fontFamily: typography.fontFamily.bold }]}>
+            <Text style={[styles.actionTitle, { fontFamily: typography.fontFamily.bold, color: colors.text }]}>
               Sell on Apana Store
             </Text>
-            <Text style={[styles.actionSub, { fontFamily: typography.fontFamily.regular }]}>
+            <Text style={[styles.actionSub, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
               Reach thousands of nearby customers and grow your business today.
             </Text>
           </View>
 
-          <Ionicons name="chevron-forward" size={22} color="#6B7280" />
+          <Ionicons name="chevron-forward" size={22} color={colors.subText} />
         </TouchableOpacity>
 
         {/* ── ONDC info card ── */}
@@ -118,7 +120,7 @@ export default function SellOndcScreen() {
 const styles = StyleSheet.create({
   root: {
     flex:            1,
-    backgroundColor: "#F8FAFC",
+    // backgroundColor set inline from theme
   },
 
   // ── Header ──────────────────────────────────────────────────
@@ -157,12 +159,11 @@ const styles = StyleSheet.create({
   actionCard: {
     flexDirection:   "row",
     alignItems:      "center",
-    backgroundColor: "#fff",
+    // backgroundColor + borderColor set inline from theme
     borderRadius:    16,
     padding:         16,
     gap:             14,
     borderWidth:     1,
-    borderColor:     "#E5E7EB",
     shadowColor:     "#000",
     shadowOffset:    { width: 0, height: 1 },
     shadowOpacity:   0.07,
@@ -173,7 +174,7 @@ const styles = StyleSheet.create({
     width:          50,
     height:         50,
     borderRadius:   14,
-    backgroundColor: "#EFF6FF",
+    // backgroundColor set inline from theme
     alignItems:     "center",
     justifyContent: "center",
     flexShrink:     0,
@@ -181,11 +182,11 @@ const styles = StyleSheet.create({
   actionBody: { flex: 1, gap: 3 },
   actionTitle: {
     fontSize: 15,
-    color:    "#111827",
+    // color set inline from theme
   },
   actionSub: {
     fontSize:   12.5,
-    color:      "#6B7280",
+    // color set inline from theme
     lineHeight: 18,
   },
 

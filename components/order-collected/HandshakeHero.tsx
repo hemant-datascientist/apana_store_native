@@ -8,6 +8,7 @@
 import React, { useEffect, useRef } from "react";
 import { View, Text, Animated, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 
 interface HandshakeHeroProps {
@@ -19,6 +20,7 @@ interface HandshakeHeroProps {
 }
 
 export default function HandshakeHero({ icon, color, bg, title, subtitle }: HandshakeHeroProps) {
+  const { colors } = useTheme();
   // ── Pulse animations ──────────────────────────────────────
   const ring1 = useRef(new Animated.Value(0)).current;
   const ring2 = useRef(new Animated.Value(0)).current;
@@ -86,11 +88,11 @@ export default function HandshakeHero({ icon, color, bg, title, subtitle }: Hand
         </Text>
       </Animated.View>
 
-      {/* ── Title & subtitle ── */}
-      <Text style={[styles.title, { color: "#111827", fontFamily: typography.fontFamily.bold, fontSize: typography.size.xl }]}>
+      {/* ── Title & subtitle — theme tokens so text stays readable in dark mode ── */}
+      <Text style={[styles.title, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.xl }]}>
         {title}
       </Text>
-      <Text style={[styles.subtitle, { color: "#6B7280", fontFamily: typography.fontFamily.regular, fontSize: typography.size.sm }]}>
+      <Text style={[styles.subtitle, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.sm }]}>
         {subtitle}
       </Text>
     </View>

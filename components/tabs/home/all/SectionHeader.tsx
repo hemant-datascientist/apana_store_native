@@ -9,6 +9,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
+import useTheme from "../../../../theme/useTheme";
 
 interface SectionHeaderProps {
   icon:        string;
@@ -20,11 +21,13 @@ interface SectionHeaderProps {
 export default function SectionHeader({
   icon, title, accentColor, onSeeAll,
 }: SectionHeaderProps) {
+  // Pull theme so title flips with light/dark mode instead of staying near-black
+  const { colors } = useTheme();
   return (
     <View style={styles.row}>
       <View style={styles.left}>
         <Ionicons name={icon as any} size={17} color={accentColor} />
-        <Text style={[styles.title, { fontFamily: typography.fontFamily.bold }]}>
+        <Text style={[styles.title, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>
           {title}
         </Text>
       </View>
@@ -54,7 +57,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 15,
-    color:    "#111827",
   },
   seeAll: {
     fontSize: 12,

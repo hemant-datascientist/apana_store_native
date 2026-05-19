@@ -65,7 +65,7 @@ export default function HandshakeRating({ agentName, agentRole, modeColor }: Han
         {/* Show chosen stars read-only */}
         <View style={styles.starRow}>
           {[1, 2, 3, 4, 5].map(i => (
-            <Ionicons key={i} name={i <= stars ? "star" : "star-outline"} size={22} color="#F59E0B" />
+            <Ionicons key={i} name={i <= stars ? "star" : "star-outline"} size={22} color={colors.warning} />
           ))}
         </View>
       </View>
@@ -100,7 +100,7 @@ export default function HandshakeRating({ agentName, agentRole, modeColor }: Han
               <Ionicons
                 name={i <= stars ? "star" : "star-outline"}
                 size={32}
-                color={i <= stars ? "#F59E0B" : colors.border}
+                color={i <= stars ? colors.warning : colors.border}
               />
             </TouchableOpacity>
           ))}

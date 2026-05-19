@@ -17,6 +17,7 @@ import { SafeAreaView }  from "react-native-safe-area-context";
 import { Ionicons }      from "@expo/vector-icons";
 import { useRouter }     from "expo-router";
 import { typography }    from "../../theme/typography";
+import useTheme          from "../../theme/useTheme";
 
 const BRAND_BLUE = "#0F4C81";
 const CARD_BLUE  = "#1A5E9A";
@@ -32,9 +33,10 @@ const SOCIALS = [
 
 export default function AboutUsScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor={BRAND_BLUE} />
 
       {/* ── Header ── */}
@@ -81,7 +83,7 @@ export default function AboutUsScreen() {
         </View>
 
         {/* ── Our Story ── */}
-        <Text style={[styles.sectionTitle, { fontFamily: typography.fontFamily.bold }]}>
+        <Text style={[styles.sectionTitle, { fontFamily: typography.fontFamily.bold, color: colors.text }]}>
           Our Story
         </Text>
 
@@ -108,7 +110,7 @@ export default function AboutUsScreen() {
         </View>
 
         {/* ── Connect ── */}
-        <Text style={[styles.sectionTitle, { fontFamily: typography.fontFamily.bold }]}>
+        <Text style={[styles.sectionTitle, { fontFamily: typography.fontFamily.bold, color: colors.text }]}>
           Connect
         </Text>
 
@@ -128,7 +130,7 @@ export default function AboutUsScreen() {
           {SOCIALS.map(s => (
             <TouchableOpacity
               key={s.key}
-              style={styles.socialBtn}
+              style={[styles.socialBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
               activeOpacity={0.8}
               onPress={() => Alert.alert(s.label, `${s.label} page coming soon.`)}
             >
@@ -138,7 +140,7 @@ export default function AboutUsScreen() {
         </View>
 
         {/* ── Version footer ── */}
-        <Text style={[styles.version, { fontFamily: typography.fontFamily.regular }]}>
+        <Text style={[styles.version, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
           Apana Store v1.0.0 · Made in India
         </Text>
 
@@ -150,7 +152,7 @@ export default function AboutUsScreen() {
 const styles = StyleSheet.create({
   root: {
     flex:            1,
-    backgroundColor: "#F8FAFC",
+    // backgroundColor set inline from theme
   },
 
   // ── Header ──────────────────────────────────────────────────
@@ -216,7 +218,7 @@ const styles = StyleSheet.create({
   // ── Section title ────────────────────────────────────────────
   sectionTitle: {
     fontSize: 18,
-    color:    "#111827",
+    // color set inline from theme
   },
 
   // ── Story card ───────────────────────────────────────────────
@@ -278,7 +280,8 @@ const styles = StyleSheet.create({
     width:          42,
     height:         42,
     borderRadius:   21,
-    backgroundColor: "#F1F5F9",
+    borderWidth:    1,
+    // backgroundColor + borderColor set inline from theme
     alignItems:     "center",
     justifyContent: "center",
   },
@@ -286,7 +289,7 @@ const styles = StyleSheet.create({
   // ── Footer ──────────────────────────────────────────────────
   version: {
     fontSize:  12,
-    color:     "#9CA3AF",
+    // color set inline from theme
     textAlign: "center",
     marginTop: 4,
   },

@@ -13,6 +13,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
 import { FashionSubCat } from "../../../../data/fashionData";
+import useTheme from "../../../../theme/useTheme";
 
 interface FashionSubCategoryGridProps {
   subCats: FashionSubCat[];
@@ -27,6 +28,8 @@ const CELL_W        = Math.floor((SW - H_PAD * 2 - COL_GAP * (COLS - 1)) / COLS)
 const IMG_H         = Math.floor(CELL_W * 0.88);
 
 export default function FashionSubCategoryGrid({ subCats, accent }: FashionSubCategoryGridProps) {
+  // Theme so sub-category label flips in dark mode
+  const { colors } = useTheme();
   const [active, setActive] = useState<string | null>(null);
 
   function handlePress(cat: FashionSubCat) {
@@ -65,7 +68,7 @@ export default function FashionSubCategoryGrid({ subCats, accent }: FashionSubCa
                 style={[
                   styles.label,
                   {
-                    color:      isActive ? accent : "#374151",
+                    color:      isActive ? accent : colors.text,
                     fontFamily: isActive
                       ? typography.fontFamily.semiBold
                       : typography.fontFamily.regular,

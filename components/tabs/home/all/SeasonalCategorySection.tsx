@@ -14,6 +14,7 @@ import { Ionicons }        from "@expo/vector-icons";
 import { typography }      from "../../../../theme/typography";
 import SectionHeader       from "./SectionHeader";
 import { SeasonalCat }     from "../../../../data/allFeedData";
+import useTheme            from "../../../../theme/useTheme";
 
 interface SeasonalCategorySectionProps {
   season:     string;       // e.g. "Summer 2026"
@@ -31,6 +32,8 @@ const IMG_H         = Math.floor(CELL_W * 0.90);
 export default function SeasonalCategorySection({
   season, categories, accent,
 }: SeasonalCategorySectionProps) {
+  // Theme so label inverts in dark mode
+  const { colors } = useTheme();
   return (
     <View style={styles.root}>
       <SectionHeader
@@ -53,7 +56,7 @@ export default function SeasonalCategorySection({
 
             <Text
               numberOfLines={2}
-              style={[styles.label, { fontFamily: typography.fontFamily.semiBold, color: "#374151" }]}
+              style={[styles.label, { fontFamily: typography.fontFamily.semiBold, color: colors.text }]}
             >
               {cat.label}
             </Text>

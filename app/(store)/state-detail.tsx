@@ -45,11 +45,12 @@ const TABS = [
 
 // ── Section Header (matches home screen style) ─────────────────
 function SectionHeader({ icon, title, accent, onSeeAll }: { icon:string; title:string; accent:string; onSeeAll?:()=>void }) {
+  const { colors } = useTheme();
   return (
     <View style={sh.row}>
       <View style={sh.left}>
         <Ionicons name={icon as any} size={17} color={accent} />
-        <Text style={[sh.title, { fontFamily: typography.fontFamily.bold }]}>{title}</Text>
+        <Text style={[sh.title, { fontFamily: typography.fontFamily.bold, color: colors.text }]}>{title}</Text>
       </View>
       <TouchableOpacity onPress={onSeeAll ?? (() => Alert.alert(title, "Full list coming soon."))}>
         <Text style={[sh.seeAll, { color: accent, fontFamily: typography.fontFamily.semiBold }]}>See All</Text>
@@ -60,7 +61,7 @@ function SectionHeader({ icon, title, accent, onSeeAll }: { icon:string; title:s
 const sh = StyleSheet.create({
   row:   { flexDirection:"row", alignItems:"center", justifyContent:"space-between", marginBottom:12, paddingHorizontal:16 },
   left:  { flexDirection:"row", alignItems:"center", gap:6 },
-  title: { fontSize:15, color:"#111827" },
+  title: { fontSize:15 }, // color set inline from theme
   seeAll:{ fontSize:12 },
 });
 
@@ -88,7 +89,7 @@ function ProductSection({ accent, products }: { accent:string; products:StatePro
           </View>
           <View style={ps.info}>
             <Text numberOfLines={2} style={[ps.name, { fontFamily: typography.fontFamily.semiBold, color: colors.text }]}>{p.name}</Text>
-            <Text numberOfLines={1} style={[ps.unit, { fontFamily: typography.fontFamily.regular }]}>{p.unit}</Text>
+            <Text numberOfLines={1} style={[ps.unit, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>{p.unit}</Text>
             <View style={ps.priceRow}>
               <Text style={[ps.price, { color: accent, fontFamily: typography.fontFamily.bold }]}>
                 ₹{p.price.toLocaleString("en-IN")}
@@ -113,7 +114,7 @@ const ps = StyleSheet.create({
   badgeTxt: { color:"#fff", fontSize:8 },
   info:     { padding:7, paddingTop:6, gap:2 },
   name:     { fontSize:11, lineHeight:14 },
-  unit:     { fontSize:9.5, color:"#9CA3AF" },
+  unit:     { fontSize:9.5 }, // color set inline from theme
   priceRow: { flexDirection:"row", alignItems:"center", justifyContent:"space-between", marginTop:4 },
   price:    { fontSize:12 },
   addBtn:   { width:24, height:24, borderRadius:6, alignItems:"center", justifyContent:"center" },
@@ -140,8 +141,8 @@ function StoreSection({ accent, stores }: { accent:string; stores:StateStore[] }
             <Text numberOfLines={1} style={[ss.cat, { color: accent, fontFamily: typography.fontFamily.medium }]}>{s.category}</Text>
             <View style={ss.meta}>
               <View style={ss.locRow}>
-                <Ionicons name="location-outline" size={10} color="#9CA3AF" />
-                <Text style={[ss.area, { fontFamily: typography.fontFamily.regular }]}>{s.area}</Text>
+                <Ionicons name="location-outline" size={10} color={colors.subText} />
+                <Text style={[ss.area, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>{s.area}</Text>
               </View>
               <View style={ss.ratingRow}>
                 <Ionicons name="star" size={10} color="#F59E0B" />
@@ -165,7 +166,7 @@ const ss = StyleSheet.create({
   cat:       { fontSize:10.5 },
   meta:      { flexDirection:"row", alignItems:"center", justifyContent:"space-between", marginTop:3 },
   locRow:    { flexDirection:"row", alignItems:"center", gap:2, flex:1 },
-  area:      { fontSize:9.5, color:"#9CA3AF", flex:1 },
+  area:      { fontSize:9.5, flex:1 }, // color set inline from theme
   ratingRow: { flexDirection:"row", alignItems:"center", gap:2 },
   rating:    { fontSize:10.5 },
 });
@@ -185,7 +186,7 @@ function StateDetailSkeleton() {
   }, []);
 
   const SkeletonBlock = ({ style }: { style: any }) => (
-    <Animated.View style={[style, { backgroundColor: "#E5E7EB", opacity: pulseAnim, borderRadius: 8 }]} />
+    <Animated.View style={[style, { backgroundColor: colors.border, opacity: pulseAnim, borderRadius: 8 }]} />
   );
 
   return (
@@ -394,7 +395,7 @@ export default function StateDetailScreen() {
                   params: { key: cat.key, title: cat.label }
                 } as any)}
               >
-                <View style={[styles.subImg, { backgroundColor: cat.bg, height: CELL_W }]}>
+                <View style={[styles.subImg, { backgroundColor: cat.bg, height: CELL_W, borderColor: colors.border }]}>
                   <Ionicons name={cat.icon as any} size={28} color="rgba(0,0,0,0.22)" />
                 </View>
                 <Text numberOfLines={2} style={[styles.subLabel, { fontFamily: typography.fontFamily.semiBold, color: colors.text }]}>

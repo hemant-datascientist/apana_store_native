@@ -28,9 +28,11 @@ import {
 import { SafeAreaView }  from "react-native-safe-area-context";
 import { Ionicons }      from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import useTheme         from "../../theme/useTheme";
 import { typography }    from "../../theme/typography";
 import { SAVED_ADDRESSES, UserAddress } from "../../data/addressData";
 
+// Deliberate dark-navy header — brand chrome, not body text
 const BRAND_BLUE = "#0F4C81";
 
 // ── Label options ─────────────────────────────────────────────
@@ -41,6 +43,7 @@ const LABEL_OPTIONS: { label: string; icon: string }[] = [
 ];
 
 // ── Field component ───────────────────────────────────────────
+// Reads theme so input surfaces/text flip correctly in dark mode
 function Field({
   label, value, onChange, placeholder, keyboardType, maxLength,
 }: {
@@ -51,18 +54,24 @@ function Field({
   keyboardType?: "default" | "numeric" | "phone-pad";
   maxLength?: number;
 }) {
+  const { colors } = useTheme();
   const [focused, setFocused] = useState(false);
   return (
-    <View style={[styles.field, focused && styles.fieldFocused]}>
-      <Text style={[styles.fieldLabel, { fontFamily: typography.fontFamily.regular }]}>
+    <View
+      style={[
+        styles.field,
+        { backgroundColor: colors.card, borderColor: focused ? BRAND_BLUE : colors.border },
+      ]}
+    >
+      <Text style={[styles.fieldLabel, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
         {label}
       </Text>
       <TextInput
-        style={[styles.fieldInput, { fontFamily: typography.fontFamily.regular }]}
+        style={[styles.fieldInput, { fontFamily: typography.fontFamily.regular, color: colors.text }]}
         value={value}
         onChangeText={onChange}
         placeholder={placeholder ?? label}
-        placeholderTextColor="#9CA3AF"
+        placeholderTextColor={colors.subText}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         keyboardType={keyboardType ?? "default"}
@@ -74,7 +83,8 @@ function Field({
 }
 
 export default function AddAddressScreen() {
-  const router = useRouter();
+  const router       = useRouter();
+  const { colors }   = useTheme();
 
   const { mode = "add", id } = useLocalSearchParams<{
     mode?: "add" | "edit";
@@ -132,7 +142,7 @@ export default function AddAddressScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.root}
+      style={[styles.root, { backgroundColor: colors.background }]}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <StatusBar barStyle="light-content" backgroundColor={BRAND_BLUE} />
@@ -157,7 +167,7 @@ export default function AddAddressScreen() {
 
         {/* ── Label picker ── */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { fontFamily: typography.fontFamily.semiBold }]}>
+          <Text style={[styles.sectionTitle, { fontFamily: typography.fontFamily.semiBold, color: colors.text }]}>
             Address Type
           </Text>
           <View style={styles.labelRow}>
@@ -166,9 +176,10 @@ export default function AddAddressScreen() {
               return (
                 <TouchableOpacity
                   key={opt.label}
+                  // Pill surface flips with theme; active uses brand accent
                   style={[
                     styles.labelPill,
-                    active && { backgroundColor: BRAND_BLUE, borderColor: BRAND_BLUE },
+                    { backgroundColor: active ? BRAND_BLUE : colors.card, borderColor: active ? BRAND_BLUE : colors.border },
                   ]}
                   onPress={() => setSelectedLabel(opt.label)}
                   activeOpacity={0.8}
@@ -176,11 +187,11 @@ export default function AddAddressScreen() {
                   <Ionicons
                     name={opt.icon as any}
                     size={16}
-                    color={active ? "#fff" : "#6B7280"}
+                    color={active ? "#fff" : colors.subText}
                   />
                   <Text style={[styles.labelPillText, {
                     fontFamily: typography.fontFamily.semiBold,
-                    color:      active ? "#fff" : "#374151",
+                    color:      active ? "#fff" : colors.text,
                   }]}>
                     {opt.label}
                   </Text>
@@ -192,7 +203,7 @@ export default function AddAddressScreen() {
 
         {/* ── Form fields ── */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { fontFamily: typography.fontFamily.semiBold }]}>
+          <Text style={[styles.sectionTitle, { fontFamily: typography.fontFamily.semiBold, color: colors.text }]}>
             Address Details
           </Text>
 
@@ -255,8 +266,8 @@ export default function AddAddressScreen() {
 
 const styles = StyleSheet.create({
   root: {
-    flex:            1,
-    backgroundColor: "#F8FAFC",
+    flex: 1,
+    // backgroundColor set inline from theme
   },
 
   // ── Header ──
@@ -294,8 +305,8 @@ const styles = StyleSheet.create({
   section: { gap: 12 },
   sectionTitle: {
     fontSize: 13,
-    color:    "#374151",
     marginBottom: 2,
+    // color set inline from theme
   },
 
   // ── Label pills ──
@@ -312,8 +323,7 @@ const styles = StyleSheet.create({
     paddingVertical:   10,
     borderRadius:      12,
     borderWidth:       1.5,
-    borderColor:       "#E5E7EB",
-    backgroundColor:   "#fff",
+    // backgroundColor + borderColor set inline from theme
   },
   labelPillText: {
     fontSize: 13,
@@ -321,24 +331,22 @@ const styles = StyleSheet.create({
 
   // ── Form field ──
   field: {
-    backgroundColor:   "#fff",
+    // backgroundColor + borderColor set inline from theme
     borderRadius:      12,
     borderWidth:       1,
-    borderColor:       "#E5E7EB",
     paddingHorizontal: 14,
     paddingTop:        10,
     paddingBottom:     10,
     gap:               3,
   },
-  fieldFocused: { borderColor: BRAND_BLUE },
   fieldLabel: {
     fontSize: 11,
-    color:    "#9CA3AF",
+    // color set inline from theme
   },
   fieldInput: {
     fontSize: 14,
-    color:    "#111827",
     padding:  0,
+    // color set inline from theme
   },
 
   // ── Save button ──
