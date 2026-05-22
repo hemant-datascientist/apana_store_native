@@ -71,7 +71,10 @@
           "confPath": "./assets/mappls/mappls.a.conf",
           "olfPath": "./assets/mappls/mappls.a.olf"
         }
-      ]
+      ],
+      "expo-image",
+      "expo-sharing",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true,

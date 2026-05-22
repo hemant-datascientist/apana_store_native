@@ -12,12 +12,24 @@
 
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import IndiaMapIcon from "./IndiaMapIcon";
+
+// Minimal shape of the props expo-router's <Tabs tabBar={...}> passes —
+// only the fields this bar reads. Local type avoids a direct
+// @react-navigation/* dependency, which expo-router dropped in SDK 56.
+interface TabBarProps {
+  state: {
+    index: number;
+    routes: { key: string; name: string }[];
+  };
+  navigation: {
+    navigate: (name: string) => void;
+  };
+}
 
 // ── Dimensions ────────────────────────────────────────────────
 const TAB_HEIGHT = 72;   // visible bar height (dp, excl. safe area)
@@ -40,7 +52,7 @@ const TABS: {
 export default function BottomNavBar({
   state,
   navigation,
-}: BottomTabBarProps) {
+}: TabBarProps) {
   const { colors } = useTheme();
   const insets     = useSafeAreaInsets();
 
