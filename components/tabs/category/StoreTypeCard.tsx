@@ -37,24 +37,25 @@ export default function StoreTypeCard({ item, width, onPress }: StoreTypeCardPro
       <View style={[styles.imgArea, { backgroundColor: item.color, height: imgHeight }]}>
 
         {/* Skeleton icon (underlay) */}
-        <View style={StyleSheet.absoluteFillObject}>
+        <View style={StyleSheet.absoluteFill}>
           <View style={styles.skeletonContainer}>
             <Ionicons name={item.icon as any} size={52} color="rgba(0,0,0,0.12)" />
           </View>
         </View>
 
-        {/* Remote image */}
-        {item.imageUrl && (
+        {/* Image — expo-image handles require() assets, objects and URIs */}
+        {item.imageUrl != null && item.imageUrl !== "" && (
           <Image
-            source={item.imageUrl}
-            style={StyleSheet.absoluteFillObject}
+            source={
+              typeof item.imageUrl === "string"
+                ? { uri: item.imageUrl }
+                : item.imageUrl
+            }
+            style={StyleSheet.absoluteFill}
             contentFit="cover"
             transition={300}
           />
         )}
-
-        {/* Bottom gradient overlay strip */}
-        <View style={styles.overlay} />
 
       </View>
 
@@ -90,26 +91,20 @@ const styles = StyleSheet.create({
   card: {
     borderRadius:  14,
     borderWidth:    1,
-    overflow:      "hidden",
   },
   imgArea: {
     width:          "100%",
     alignItems:     "center",
     justifyContent: "center",
     position:       "relative",
+    overflow:       "hidden", // Prevents image bleeding into text area
+    borderTopLeftRadius: 13,
+    borderTopRightRadius: 13,
   },
   skeletonContainer: {
     flex:           1,
     alignItems:     "center",
     justifyContent: "center",
-  },
-  overlay: {
-    position:        "absolute",
-    bottom:           0,
-    left:             0,
-    right:            0,
-    height:           28,
-    backgroundColor: "rgba(0,0,0,0.07)",
   },
   textArea: {
     paddingHorizontal: 10,

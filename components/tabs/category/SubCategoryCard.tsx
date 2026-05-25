@@ -35,17 +35,21 @@ export default function SubCategoryCard({ item, width, onPress }: SubCategoryCar
       <View style={[styles.tile, { backgroundColor: item.color, width: tileSize, height: tileSize }]}>
         
         {/* Skeleton icon (always present in background) */}
-        <View style={StyleSheet.absoluteFillObject}>
+        <View style={StyleSheet.absoluteFill}>
           <View style={styles.skeletonContainer}>
             <Ionicons name={item.icon as any} size={34} color="rgba(0,0,0,0.18)" />
           </View>
         </View>
 
-        {/* Remote image (fetched from backend) */}
-        {item.imageUrl && (
+        {/* Image — expo-image handles require() assets, objects and URIs */}
+        {item.imageUrl != null && item.imageUrl !== "" && (
           <Image
-            source={item.imageUrl}
-            style={StyleSheet.absoluteFillObject}
+            source={
+              typeof item.imageUrl === "string"
+                ? { uri: item.imageUrl }
+                : item.imageUrl
+            }
+            style={StyleSheet.absoluteFill}
             contentFit="cover"
             transition={300}
           />
