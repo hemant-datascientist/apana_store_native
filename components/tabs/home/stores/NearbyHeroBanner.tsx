@@ -5,8 +5,8 @@
 // Each card:
 //   • Dark-tinted store photo background (placeholder: gradient)
 //   • Store name (large white bold)
-//   • ⭐ rating chip  +  "View Store ↓" link
-//   • Category list (white, small)
+//   • ⭐ rating chip  +  "View Store" link (with forward arrow, beautifully aligned)
+//   • Category list (white, inline dot-separated row)
 //   • Two-tone bottom bar: city (dark) | "Near your Home" (green)
 // ============================================================
 
@@ -89,30 +89,38 @@ export default function NearbyHeroBanner({ stores, onPress }: NearbyHeroBannerPr
                 >
                   {store.name}
                 </Text>
+                
+                {/* Aligned Rating and View Store row */}
                 <View style={styles.ratingRow}>
                   <View style={styles.ratingBadge}>
-                    <Ionicons name="star" size={11} color="#FFD700" />
-                    <Text style={[styles.ratingText, { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
+                    <Ionicons name="star" size={11} color="#FFD700" style={{ marginRight: 2 }} />
+                    <Text style={[styles.ratingText, { fontFamily: typography.fontFamily.semiBold, fontSize: 10.5, lineHeight: 14 }]}>
                       {store.rating} Stars
                     </Text>
                   </View>
-                  <TouchableOpacity onPress={() => onPress(store)}>
-                    <Text style={[styles.viewStore, { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
-                      View Store ↓
+                  
+                  <TouchableOpacity 
+                    onPress={() => onPress(store)}
+                    style={styles.viewStoreTouchable}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.viewStoreText, { fontFamily: typography.fontFamily.bold, fontSize: 11 }]}>
+                      View Store
                     </Text>
+                    <Ionicons name="chevron-forward" size={12} color="#FFD700" style={{ marginLeft: 2 }} />
                   </TouchableOpacity>
                 </View>
               </View>
 
-              {/* Categories */}
-              <View style={styles.catList}>
+              {/* Categories listed in a clean inline dot-separated row */}
+              <View style={styles.catRow}>
                 {store.categories.map((cat, i) => (
-                  <Text
-                    key={i}
-                    style={[styles.catItem, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}
-                  >
-                    {cat}
-                  </Text>
+                  <React.Fragment key={i}>
+                    {i > 0 && <Text style={styles.bullet}>•</Text>}
+                    <Text style={[styles.catItem, { fontFamily: typography.fontFamily.medium, fontSize: 11 }]}>
+                      {cat}
+                    </Text>
+                  </React.Fragment>
                 ))}
               </View>
 
@@ -198,12 +206,11 @@ const styles = StyleSheet.create({
   ratingRow: {
     flexDirection: "row",
     alignItems:    "center",
-    gap:           10,
+    gap:           12,
   },
   ratingBadge: {
     flexDirection:     "row",
     alignItems:        "center",
-    gap:                4,
     backgroundColor:   "rgba(0,0,0,0.35)",
     paddingHorizontal: 8,
     paddingVertical:   3,
@@ -212,17 +219,33 @@ const styles = StyleSheet.create({
   ratingText: {
     color: "#fff",
   },
-  viewStore: {
-    color:           "#FFD700",
-    textDecorationLine: "underline",
+  viewStoreTouchable: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.25)",
+  },
+  viewStoreText: {
+    color: "#FFD700",
   },
 
-  catList: {
-    gap: 2,
+  catRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    marginTop: 4,
+  },
+  bullet: {
+    color: "rgba(255,255,255,0.4)",
+    fontSize: 10,
+    marginHorizontal: 5,
   },
   catItem: {
-    color:      "rgba(255,255,255,0.85)",
-    lineHeight: 17,
+    color: "rgba(255,255,255,0.9)",
   },
 
   // Bottom bar

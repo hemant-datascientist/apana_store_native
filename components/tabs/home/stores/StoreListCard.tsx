@@ -240,19 +240,25 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: "row",
     gap:            8,
-    marginTop:      2,
+    marginTop:      6,
   },
   btn: {
     flexDirection:     "row",
     alignItems:        "center",
-    gap:                4,
-    paddingHorizontal: 10,
-    paddingVertical:    6,
+    justifyContent:    "center",
+    gap:                6,
+    paddingHorizontal: 12,
+    paddingVertical:    7,
     borderRadius:      20,
+    flex:               1,
   },
   btnOutline: {
     borderWidth: 1,
   },
   btnFill:    {},
-  btnText:    {},
+  btnText:    {
+    lineHeight: 16,
+  },
 });
+
+
