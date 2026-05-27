@@ -99,15 +99,15 @@ export default function NearbyHeroBanner({ stores, onPress }: NearbyHeroBannerPr
                 </View>
               </View>
 
-              {/* Categories — dot-separated */}
+              {/* Categories — vertical bullet list */}
               <View style={styles.catRow}>
                 {store.categories.map((cat, i) => (
-                  <React.Fragment key={i}>
-                    {i > 0 && <Text style={styles.bullet}> • </Text>}
+                  <View key={i} style={styles.catItemRow}>
+                    <Text style={styles.bullet}>•</Text>
                     <Text style={[styles.catTxt, { fontFamily: typography.fontFamily.regular, fontSize: 11.5 }]}>
                       {cat}
                     </Text>
-                  </React.Fragment>
+                  </View>
                 ))}
               </View>
 
@@ -179,13 +179,13 @@ const styles = StyleSheet.create({
     gap:               8,
   },
 
-  // Store name (flex:1) + rating pill on same row
+  // Store name + rating pill close to each other on the same row
   nameRow: {
     flexDirection: "row",
     alignItems:    "center",
+    justifyContent: "flex-start",
   },
   storeName: {
-    flex:  1,            // takes all remaining space, truncates if needed
     color: "#fff",
   },
   ratingPill: {
@@ -196,25 +196,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical:   3,
     borderRadius:      20,
-    marginLeft:        8,  // small gap from store name
-    flexShrink:        0,  // never shrinks — always visible
+    marginLeft:        8,  // keeps it close to the name
+    flexShrink:        0,  // never shrinks
   },
   ratingTxt: {
     color: "#FFD700",
   },
 
-  // Category row
+  // Vertical Category List
   catRow: {
+    flexDirection: "column",
+    alignItems:    "flex-start",
+    gap:           4,
+  },
+  catItemRow: {
     flexDirection: "row",
     alignItems:    "center",
-    flexWrap:      "wrap",
   },
   catTxt: {
     color: "rgba(255,255,255,0.88)",
   },
   bullet: {
-    color:    "rgba(255,255,255,0.45)",
-    fontSize: 11,
+    color:        "rgba(255,255,255,0.6)",
+    marginRight:  6,
+    fontSize:     11,
   },
 
   // ── Two-tone bottom bar ────────────────────────────────────
