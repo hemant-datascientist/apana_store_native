@@ -16,7 +16,7 @@
 
 import React from "react";
 import {
-  View, Text, ScrollView, StyleSheet, Alert, StatusBar, Dimensions,
+  View, Text, ScrollView, StyleSheet, Alert, StatusBar, Dimensions, TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
