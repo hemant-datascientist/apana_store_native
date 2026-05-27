@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   scrim: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(0,0,0,0.52)",
   },
   drawer: {

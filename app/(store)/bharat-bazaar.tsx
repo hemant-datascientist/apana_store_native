@@ -806,7 +806,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   quickViewOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(255,255,255,0.75)",
     alignItems: "center",
     justifyContent: "center",
@@ -941,6 +941,9 @@ const styles = StyleSheet.create({
   },
 
   // Slider Mock
+  sliderSimulator: {
+    gap: 8,
+  },
   sliderTrack: {
     width: "100%",
     height: 6,
