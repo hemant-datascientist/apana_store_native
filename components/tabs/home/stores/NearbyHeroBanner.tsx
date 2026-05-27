@@ -79,18 +79,6 @@ export default function NearbyHeroBanner({ stores, onPress }: NearbyHeroBannerPr
               <Ionicons name={store.icon as any} size={56} color="rgba(255,255,255,0.07)" />
             </View>
 
-            {/* ── "View Store →" pill — absolute TOP-RIGHT ── */}
-            <TouchableOpacity
-              onPress={() => onPress(store)}
-              style={styles.viewStoreBtn}
-              activeOpacity={0.75}
-            >
-              <Text style={[styles.viewStoreTxt, { fontFamily: typography.fontFamily.bold, fontSize: 11 }]}>
-                View Store
-              </Text>
-              <Ionicons name="chevron-forward" size={11} color="#FFD700" />
-            </TouchableOpacity>
-
             {/* ── Body content ── */}
             <View style={styles.body}>
 
@@ -181,34 +169,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  // ── View Store button — absolute top-right ─────────────────
-  viewStoreBtn: {
-    position:          "absolute",
-    top:               10,
-    right:             10,
-    zIndex:            10,
-    flexDirection:     "row",
-    alignItems:        "center",
-    gap:               4,
-    backgroundColor:   "rgba(0,0,0,0.50)",
-    paddingHorizontal: 10,
-    paddingVertical:   5,
-    borderRadius:      12,
-    borderWidth:       1,
-    borderColor:       "rgba(255,215,0,0.45)",
-  },
-  viewStoreTxt: {
-    color: "#FFD700",
-  },
 
   // ── Body (fills space above bottom bar) ────────────────────
   body: {
     flex:              1,
     paddingTop:        14,
     paddingHorizontal: 16,
-    // right pad to prevent text going under the View Store button
-    paddingRight:      118,
-    justifyContent:    "center",
+    justifyContent:    "flex-start",
     gap:               8,
   },
 
