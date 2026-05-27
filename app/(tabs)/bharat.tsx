@@ -125,7 +125,19 @@ export default function BharatScreen() {
           {/* Map + legend */}
           <IndiaMapSvg mapWidth={MAP_WIDTH} />
 
-          <View style={{ height: 4 }} />
+          {/* Button to navigate to Bharat Bazaar */}
+          <TouchableOpacity
+            style={styles.bazaarBtn}
+            activeOpacity={0.85}
+            onPress={() => router.push("/(store)/bharat-bazaar")}
+          >
+            <Ionicons name="basket" size={16} color="#fff" />
+            <Text style={[styles.bazaarBtnTxt, { fontFamily: typography.fontFamily.semiBold }]}>
+              Explore National Bharat Bazaar →
+            </Text>
+          </TouchableOpacity>
+
+          <View style={{ height: 2 }} />
         </View>
 
         {/* Section intro */}
@@ -248,6 +260,24 @@ const styles = StyleSheet.create({
   introText: {
     flex:       1,
     lineHeight: 18,
+  },
+  bazaarBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.22)",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 24,
+    marginTop: 10,
+    width: "100%",
+    gap: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
+  },
+  bazaarBtnTxt: {
+    color: "#fff",
+    fontSize: 13,
   },
 
   // Content
