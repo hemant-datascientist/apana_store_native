@@ -349,10 +349,73 @@ export default function BharatBazaarScreen() {
           </View>
         </View>
 
-        {/* 3. Sourced Sells Collection */}
+        {/* 3. E-commerce Product Grid (Amazon/Flipkart Style) */}
         <View style={styles.section}>
-          <SectionHeader icon="cart-outline" title="National Trending Products" accent={tab.color} />
-          <ProductSection accent={tab.color} products={filteredProducts} />
+          <SectionHeader icon="grid-outline" title="All Sourced Items Across India" accent={tab.color} />
+          
+          <View style={styles.gridContainer}>
+            {filteredProducts.map(p => (
+              <TouchableOpacity
+                key={p.id}
+                style={[styles.gridCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+                activeOpacity={0.85}
+                onPress={() => router.push({
+                  pathname: "/(store)/state-detail",
+                  params: { stateKey: p.stateKey, name: p.state, storesLive: "5" }
+                } as any)}
+              >
+                {/* Image / Thumbnail Area */}
+                <View style={[styles.gridImg, { backgroundColor: p.bg }]}>
+                  <Ionicons name={p.icon as any} size={44} color="rgba(0,0,0,0.18)" />
+                  
+                  {/* Origin State Badge */}
+                  <View style={styles.gridStateBadge}>
+                    <Ionicons name="location" size={10} color="#fff" />
+                    <Text style={styles.gridStateTxt}>{p.state}</Text>
+                  </View>
+
+                  {p.badge && (
+                    <View style={styles.gridTagBadge}>
+                      <Text style={styles.gridTagTxt}>{p.badge}</Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Details Area */}
+                <View style={styles.gridInfo}>
+                  <Text numberOfLines={2} style={[styles.gridName, { fontFamily: typography.fontFamily.semiBold, color: colors.text }]}>
+                    {p.name}
+                  </Text>
+                  
+                  {/* Rating / Review Row */}
+                  <View style={styles.ratingRow}>
+                    <Ionicons name="star" size={12} color="#F59E0B" />
+                    <Text style={[styles.ratingVal, { fontFamily: typography.fontFamily.bold, color: colors.text }]}>4.8</Text>
+                    <Text style={[styles.reviewsCount, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
+                      (120+)
+                    </Text>
+                  </View>
+
+                  {/* Pricing and Action */}
+                  <View style={styles.gridPriceRow}>
+                    <View>
+                      <Text style={[styles.gridPrice, { color: tab.color, fontFamily: typography.fontFamily.bold }]}>
+                        ₹{p.price.toLocaleString("en-IN")}
+                      </Text>
+                      <Text style={styles.gridDelivery}>3-Day Delivery</Text>
+                    </View>
+                    
+                    <TouchableOpacity 
+                      style={[styles.gridAddBtn, { backgroundColor: tab.color }]}
+                      onPress={() => Alert.alert("Added", `${p.name} added to cart.`)}
+                    >
+                      <Ionicons name="cart-outline" size={14} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
         {/* 4. Sourced Shops Collection */}
@@ -421,4 +484,103 @@ const styles = StyleSheet.create({
   subCell: { alignItems: "center", gap: 5 },
   subImg: { width: "100%", borderRadius: 10, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#F3F4F6" },
   subLabel: { fontSize: 10, textAlign: "center", lineHeight: 13 },
+
+  // e-Commerce Amazon/Flipkart Grid styles
+  gridContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  gridCard: {
+    width: (SW - 32 - 8) / 2, // Perfect 2-column width with margins
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: "hidden",
+    marginBottom: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  gridImg: {
+    width: "100%",
+    height: 128,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  gridStateBadge: {
+    position: "absolute",
+    bottom: 6,
+    left: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.65)",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    gap: 2,
+  },
+  gridStateTxt: {
+    color: "#fff",
+    fontSize: 9,
+    fontWeight: "bold",
+  },
+  gridTagBadge: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    backgroundColor: "#F59E0B",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  gridTagTxt: {
+    color: "#fff",
+    fontSize: 8.5,
+    fontWeight: "bold",
+  },
+  gridInfo: {
+    padding: 10,
+    gap: 4,
+  },
+  gridName: {
+    fontSize: 12.5,
+    lineHeight: 16,
+    height: 32, // keeps alignment perfect in two rows
+  },
+  ratingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  ratingVal: {
+    fontSize: 11,
+  },
+  reviewsCount: {
+    fontSize: 10,
+  },
+  gridPriceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 4,
+  },
+  gridPrice: {
+    fontSize: 14.5,
+  },
+  gridDelivery: {
+    fontSize: 9,
+    color: "#16A34A",
+  },
+  gridAddBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });
