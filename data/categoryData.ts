@@ -360,7 +360,7 @@ export interface StoreType {
 }
 
 export const STORE_TYPES: StoreType[] = [
-  { key: "grocery_store", label: "Grocery Store", icon: "basket-outline", color: "#DCFCE7", sub: "Supermarkets & Kirana", imageUrl: getAssetUrl("Home/Products/Grocery/vegetables.png") },
+  { key: "grocery_store", label: "Grocery Store", icon: "basket-outline", color: "#DCFCE7", sub: "Supermarkets & Kirana", imageUrl: require("../assets/images/category/stores/grocery_store.png") },
   { key: "convenience", label: "Convenience Store", icon: "storefront-outline", color: "#DBEAFE", sub: "General & Daily Needs", imageUrl: require("../assets/images/category/stores/convenience_store.png") },
   { key: "fashion_store", label: "Fashion Store", icon: "shirt-outline", color: "#FCE7F3", sub: "Clothing & Apparel", imageUrl: require("../assets/images/category/stores/fashion_store.png") },
   { key: "jewellery", label: "Jewellery Store", icon: "diamond-outline", color: "#FEF3C7", sub: "Gold, Silver & More", imageUrl: require("../assets/images/category/stores/jewellery_store.png") },
