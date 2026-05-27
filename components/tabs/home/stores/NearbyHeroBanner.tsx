@@ -1,13 +1,14 @@
 // ============================================================
 // NEARBY HERO BANNER — Apana Store (Home Screen, Stores Mode)
 //
-// Full-width auto-scrolling carousel of featured nearby stores.
-// Each card:
-//   • Dark-tinted store photo background (placeholder: gradient)
-//   • Store name (large white bold)
-//   • ⭐ rating chip  +  "View Store" link (with forward arrow, beautifully aligned)
-//   • Category list (white, inline dot-separated row)
-//   • Two-tone bottom bar: city (dark) | "Near your Home" (green)
+// Layout per card:
+//   [View Store →]  ← absolute, top-right
+//   ┌─────────────────────────────┐
+//   │  Store Name        ⭐ 4.8  │  ← name (flex:1) + rating (fixed right)
+//   │  Cat1 • Cat2 • Cat3        │
+//   ├──────────────┬──────────────┤
+//   │   City       │ Near Home   │  ← two-tone bottom bar
+//   └──────────────┴──────────────┘
 // ============================================================
 
 import React, { useRef, useState, useEffect } from "react";
@@ -25,16 +26,16 @@ interface NearbyHeroBannerProps {
 }
 
 const { width: SW } = Dimensions.get("window");
-const CARD_W  = SW - 32;    // full width minus 16 margin each side
-const CARD_H  = 180;
-const GAP     = 12;
+const CARD_W     = SW - 32;   // 16px margin each side
+const CARD_H     = 180;
+const BOTTOM_H   = 34;
+const GAP        = 12;
 
 export default function NearbyHeroBanner({ stores, onPress }: NearbyHeroBannerProps) {
-  const scrollRef  = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollView>(null);
   const [active, setActive] = useState(0);
-  const timerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timerRef  = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Auto-scroll every 3.5 s
   useEffect(() => {
     timerRef.current = setInterval(() => {
       setActive(prev => {
@@ -70,54 +71,52 @@ export default function NearbyHeroBanner({ stores, onPress }: NearbyHeroBannerPr
             onPress={() => onPress(store)}
             activeOpacity={0.9}
           >
-            {/* Dark gradient overlay */}
-            <View style={[styles.overlay, { backgroundColor: store.accentColor + "CC" }]} />
+            {/* Colour overlay */}
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: store.accentColor + "CC" }]} />
 
-            {/* Placeholder centre icon */}
-            <View style={styles.placeholderIcon}>
-              <Ionicons name={store.icon as any} size={52} color="rgba(255,255,255,0.08)" />
+            {/* Faint centre icon watermark */}
+            <View style={[StyleSheet.absoluteFill, styles.iconCenter]}>
+              <Ionicons name={store.icon as any} size={56} color="rgba(255,255,255,0.07)" />
             </View>
 
-            {/* Content */}
-            <View style={styles.content}>
+            {/* ── "View Store →" pill — absolute TOP-RIGHT ── */}
+            <TouchableOpacity
+              onPress={() => onPress(store)}
+              style={styles.viewStoreBtn}
+              activeOpacity={0.75}
+            >
+              <Text style={[styles.viewStoreTxt, { fontFamily: typography.fontFamily.bold, fontSize: 11 }]}>
+                View Store
+              </Text>
+              <Ionicons name="chevron-forward" size={11} color="#FFD700" />
+            </TouchableOpacity>
 
-              {/* Store name + rating row */}
+            {/* ── Body content ── */}
+            <View style={styles.body}>
+
+              {/* Row: store name (flex:1 left) + ⭐ rating (right) */}
               <View style={styles.nameRow}>
                 <Text
                   style={[styles.storeName, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg }]}
                   numberOfLines={1}
+                  ellipsizeMode="tail"
                 >
                   {store.name}
                 </Text>
-                
-                {/* Aligned Rating and View Store row */}
-                <View style={styles.ratingRow}>
-                  <View style={styles.ratingBadge}>
-                    <Ionicons name="star" size={11} color="#FFD700" style={{ marginRight: 2 }} />
-                    <Text style={[styles.ratingText, { fontFamily: typography.fontFamily.semiBold, fontSize: 10.5, lineHeight: 14 }]}>
-                      {store.rating} Stars
-                    </Text>
-                  </View>
-                  
-                  <TouchableOpacity 
-                    onPress={() => onPress(store)}
-                    style={styles.viewStoreTouchable}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[styles.viewStoreText, { fontFamily: typography.fontFamily.bold, fontSize: 11 }]}>
-                      View Store
-                    </Text>
-                    <Ionicons name="chevron-forward" size={12} color="#FFD700" style={{ marginLeft: 2 }} />
-                  </TouchableOpacity>
+                <View style={styles.ratingPill}>
+                  <Ionicons name="star" size={11} color="#FFD700" />
+                  <Text style={[styles.ratingTxt, { fontFamily: typography.fontFamily.semiBold, fontSize: 11 }]}>
+                    {store.rating}
+                  </Text>
                 </View>
               </View>
 
-              {/* Categories listed in a clean inline dot-separated row */}
+              {/* Categories — dot-separated */}
               <View style={styles.catRow}>
                 {store.categories.map((cat, i) => (
                   <React.Fragment key={i}>
-                    {i > 0 && <Text style={styles.bullet}>•</Text>}
-                    <Text style={[styles.catItem, { fontFamily: typography.fontFamily.medium, fontSize: 11 }]}>
+                    {i > 0 && <Text style={styles.bullet}> • </Text>}
+                    <Text style={[styles.catTxt, { fontFamily: typography.fontFamily.regular, fontSize: 11.5 }]}>
                       {cat}
                     </Text>
                   </React.Fragment>
@@ -126,15 +125,15 @@ export default function NearbyHeroBanner({ stores, onPress }: NearbyHeroBannerPr
 
             </View>
 
-            {/* Two-tone bottom bar */}
+            {/* ── Two-tone bottom bar ── */}
             <View style={styles.bottomBar}>
-              <View style={styles.bottomLeft}>
-                <Text style={[styles.bottomText, { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
+              <View style={styles.bottomCity}>
+                <Text style={[styles.bottomTxt, { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
                   {store.city}
                 </Text>
               </View>
-              <View style={styles.bottomRight}>
-                <Text style={[styles.bottomText, { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
+              <View style={styles.bottomNear}>
+                <Text style={[styles.bottomTxt, { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
                   {store.nearLabel}
                 </Text>
               </View>
@@ -149,12 +148,7 @@ export default function NearbyHeroBanner({ stores, onPress }: NearbyHeroBannerPr
         {stores.map((_, i) => (
           <View
             key={i}
-            style={[
-              styles.dot,
-              i === active
-                ? styles.dotActive
-                : styles.dotInactive,
-            ]}
+            style={[styles.dot, i === active ? styles.dotActive : styles.dotInactive]}
           />
         ))}
       </View>
@@ -172,104 +166,112 @@ const styles = StyleSheet.create({
     gap:               GAP,
   },
 
-  // Card
+  // ── Card ──────────────────────────────────────────────────
   card: {
     width:        CARD_W,
     height:       CARD_H,
     borderRadius: 14,
     overflow:     "hidden",
-    position:     "relative",
+    // flex column so body grows and bottomBar sits at bottom
+    flexDirection: "column",
   },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  placeholderIcon: {
-    ...StyleSheet.absoluteFillObject,
+
+  iconCenter: {
     alignItems:     "center",
     justifyContent: "center",
   },
 
-  // Content
-  content: {
-    flex:              1,
-    paddingTop:        14,
-    paddingHorizontal: 16,
-    paddingBottom:      4,
-  },
-  nameRow: {
-    marginBottom: 8,
-  },
-  storeName: {
-    color:        "#fff",
-    marginBottom: 4,
-  },
-  ratingRow: {
-    flexDirection: "row",
-    alignItems:    "center",
-    gap:           12,
-  },
-  ratingBadge: {
+  // ── View Store button — absolute top-right ─────────────────
+  viewStoreBtn: {
+    position:          "absolute",
+    top:               10,
+    right:             10,
+    zIndex:            10,
     flexDirection:     "row",
     alignItems:        "center",
-    backgroundColor:   "rgba(0,0,0,0.35)",
-    paddingHorizontal: 8,
-    paddingVertical:   3,
-    borderRadius:      20,
-  },
-  ratingText: {
-    color: "#fff",
-  },
-  viewStoreTouchable: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    gap:               4,
+    backgroundColor:   "rgba(0,0,0,0.50)",
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.25)",
+    paddingVertical:   5,
+    borderRadius:      12,
+    borderWidth:       1,
+    borderColor:       "rgba(255,215,0,0.45)",
   },
-  viewStoreText: {
+  viewStoreTxt: {
     color: "#FFD700",
   },
 
-  catRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    marginTop: 4,
-  },
-  bullet: {
-    color: "rgba(255,255,255,0.4)",
-    fontSize: 10,
-    marginHorizontal: 5,
-  },
-  catItem: {
-    color: "rgba(255,255,255,0.9)",
+  // ── Body (fills space above bottom bar) ────────────────────
+  body: {
+    flex:              1,
+    paddingTop:        14,
+    paddingHorizontal: 16,
+    // right pad to prevent text going under the View Store button
+    paddingRight:      118,
+    justifyContent:    "center",
+    gap:               8,
   },
 
-  // Bottom bar
+  // Store name (flex:1) + rating pill on same row
+  nameRow: {
+    flexDirection: "row",
+    alignItems:    "center",
+  },
+  storeName: {
+    flex:  1,            // takes all remaining space, truncates if needed
+    color: "#fff",
+  },
+  ratingPill: {
+    flexDirection:     "row",
+    alignItems:        "center",
+    gap:               4,
+    backgroundColor:   "rgba(0,0,0,0.45)",
+    paddingHorizontal: 8,
+    paddingVertical:   3,
+    borderRadius:      20,
+    marginLeft:        8,  // small gap from store name
+    flexShrink:        0,  // never shrinks — always visible
+  },
+  ratingTxt: {
+    color: "#FFD700",
+  },
+
+  // Category row
+  catRow: {
+    flexDirection: "row",
+    alignItems:    "center",
+    flexWrap:      "wrap",
+  },
+  catTxt: {
+    color: "rgba(255,255,255,0.88)",
+  },
+  bullet: {
+    color:    "rgba(255,255,255,0.45)",
+    fontSize: 11,
+  },
+
+  // ── Two-tone bottom bar ────────────────────────────────────
   bottomBar: {
     flexDirection: "row",
-    height:        34,
+    height:        BOTTOM_H,
   },
-  bottomLeft: {
+  bottomCity: {
     flex:            2,
     backgroundColor: "rgba(0,0,0,0.60)",
     alignItems:      "center",
     justifyContent:  "center",
   },
-  bottomRight: {
+  bottomNear: {
     flex:            3,
     backgroundColor: "#16A34A",
     alignItems:      "center",
     justifyContent:  "center",
   },
-  bottomText: {
+  bottomTxt: {
     color: "#fff",
   },
 
-  // Dots
+  // ── Dots ──────────────────────────────────────────────────
   dots: {
     flexDirection:  "row",
     justifyContent: "center",
