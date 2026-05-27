@@ -58,7 +58,15 @@ const BAZAAR_PRODUCTS: BazaarProduct[] = [
   { id: "p5", name: "Pure Paithani Saree", unit: "Yeola Silk · Maharashtra", price: 8500, bg: "#FCE7F3", icon: "shirt-outline", badge: "GI Tag", state: "Maharashtra", stateKey: "maharashtra" },
   { id: "p6", name: "Kolhapuri Chappals", unit: "Handmade · Maharashtra", price: 899, bg: "#FFEDD5", icon: "walk-outline", badge: "Leather", state: "Maharashtra", stateKey: "maharashtra" },
   { id: "p7", name: "Wayanad Cardamom Jar", unit: "Spice · Kerala", price: 450, bg: "#FEE2E2", icon: "flame-outline", badge: "Aromatic", state: "Kerala", stateKey: "kerala" },
-  { id: "p8", name: "Monpa Handmade Notebook", unit: "A5 · Arunachal", price: 599, bg: "#EDE9FE", icon: "document-text-outline", badge: "Eco Craft", state: "Arunachal", stateKey: "arunachal" }
+  { id: "p8", name: "Monpa Handmade Notebook", unit: "A5 · Arunachal", price: 599, bg: "#EDE9FE", icon: "document-text-outline", badge: "Eco Craft", state: "Arunachal", stateKey: "arunachal" },
+  // Additional national sourced items representing states
+  { id: "p9", name: "Kashmiri Saffron (Kesar)", unit: "1g Premium · Kashmir", price: 299, bg: "#FEF3C7", icon: "leaf-outline", badge: "GI Tag", state: "Jammu & Kashmir", stateKey: "jk" },
+  { id: "p10", name: "Kasavu Wedding Saree", unit: "Kerala Handloom", price: 3499, bg: "#FCE7F3", icon: "shirt-outline", badge: "Heritage", state: "Kerala", stateKey: "kerala" },
+  { id: "p11", name: "Cuttack Silver Filigree", unit: "Earrings Set · Odisha", price: 1250, bg: "#DBEAFE", icon: "gift-outline", badge: "Craft", state: "Odisha", stateKey: "odisha" },
+  { id: "p12", name: "Tanjore Gold Foil Painting", unit: "Mini Frame · Tamil Nadu", price: 2499, bg: "#FFEDD5", icon: "image-outline", badge: "Royal Art", state: "Tamil Nadu", stateKey: "tamilnadu" },
+  { id: "p13", name: "Large Cardamom Pack", unit: "250g Spice · Sikkim", price: 450, bg: "#DCFCE7", icon: "leaf-outline", badge: "Pure", state: "Sikkim", stateKey: "sikkim" },
+  { id: "p14", name: "Darwinbox HR Suite", unit: "SaaS License · Telangana", price: 1500, bg: "#DBEAFE", icon: "cloud-outline", badge: "Startup", state: "Telangana", stateKey: "telangana" },
+  { id: "p15", name: "Skyroot Model Rocket", unit: "Collector Miniature", price: 999, bg: "#DBEAFE", icon: "rocket-outline", badge: "SpaceTech", state: "Telangana", stateKey: "telangana" }
 ];
 
 // National sourced stores
@@ -243,9 +251,9 @@ export default function BharatBazaarScreen() {
 
   // Filtering products according to active selection tabs
   const filteredProducts = BAZAAR_PRODUCTS.filter(p => {
-    if (activeTab === "looms") return p.icon === "shirt-outline";
-    if (activeTab === "crafts") return p.icon === "document-text-outline" || p.icon === "layers-outline" || p.icon === "walk-outline";
-    if (activeTab === "food") return p.icon === "cafe-outline" || p.icon === "flame-outline";
+    if (activeTab === "looms") return p.icon === "shirt-outline" || p.icon === "walk-outline";
+    if (activeTab === "crafts") return p.icon === "document-text-outline" || p.icon === "layers-outline" || p.icon === "gift-outline" || p.icon === "image-outline";
+    if (activeTab === "food") return p.icon === "cafe-outline" || p.icon === "flame-outline" || p.icon === "leaf-outline";
     return true;
   });
 
