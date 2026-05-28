@@ -81,12 +81,12 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
     color: "#EC4899",
     icon: "ice-cream-outline",
     subs: [
-      { key: "icecream_cups", label: "Ice Cream Cups", icon: "ice-cream-outline", color: "#FCE7F3", imageUrl: "" },
-      { key: "bars", label: "Ice Cream Bars & Cones", icon: "snow-outline", color: "#DBEAFE", imageUrl: "" },
-      { key: "kulfi", label: "Kulfi & Falooda", icon: "sparkles-outline", color: "#FEF3C7", imageUrl: "" },
-      { key: "frozen_dessert", label: "Frozen Desserts", icon: "sparkles-outline", color: "#EDE9FE", imageUrl: "" },
-      { key: "yogurt", label: "Yogurt & Smoothies", icon: "beaker-outline", color: "#DCFCE7", imageUrl: "" },
-      { key: "frozen_snacks", label: "Frozen Snacks & Rolls", icon: "fast-food-outline", color: "#FFEDD5", imageUrl: "" },
+      { key: "icecream_cups", label: "Ice Cream Cups", icon: "ice-cream-outline", color: "#FCE7F3", imageUrl: require("../assets/images/category/products/icecream_cups.png") },
+      { key: "bars", label: "Ice Cream Bars & Cones", icon: "snow-outline", color: "#DBEAFE", imageUrl: require("../assets/images/category/products/bars.png") },
+      { key: "kulfi", label: "Kulfi & Falooda", icon: "sparkles-outline", color: "#FEF3C7", imageUrl: require("../assets/images/category/products/kulfi.png") },
+      { key: "frozen_dessert", label: "Frozen Desserts", icon: "sparkles-outline", color: "#EDE9FE", imageUrl: require("../assets/images/category/products/frozen_dessert.png") },
+      { key: "yogurt", label: "Yogurt & Smoothies", icon: "beaker-outline", color: "#DCFCE7", imageUrl: require("../assets/images/category/products/yogurt.png") },
+      { key: "frozen_snacks", label: "Frozen Snacks & Rolls", icon: "fast-food-outline", color: "#FFEDD5", imageUrl: require("../assets/images/category/products/frozen_snacks.png") },
     ],
   },
 
