@@ -137,7 +137,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
     color: "#2563EB",
     icon: "headset-outline",
     subs: [
-      { key: "headphones", label: "Headphones & Earbuds", icon: "headset-outline", color: "#DBEAFE", imageUrl: "" },
+      { key: "headphones", label: "Headphones & Earbuds", icon: "headset-outline", color: "#DBEAFE", imageUrl: require("../assets/images/category/products/headphones.png") },
       { key: "speakers", label: "Speakers & Soundbars", icon: "volume-high-outline", color: "#DCFCE7", imageUrl: "" },
       { key: "cameras", label: "Cameras & Photography", icon: "camera-outline", color: "#FEF3C7", imageUrl: "" },
       { key: "laptops", label: "Laptops & PCs", icon: "laptop-outline", color: "#EDE9FE", imageUrl: "" },
