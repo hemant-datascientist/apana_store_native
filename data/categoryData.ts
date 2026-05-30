@@ -303,9 +303,9 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
       { key: "car_care", label: "Car Care & Cleaning", icon: "sparkles-outline", color: "#DCFCE7", imageUrl: require("../assets/images/category/products/car_care.png") },
       { key: "tyres", label: "Tyres & Wheels", icon: "radio-button-off-outline", color: "#F3F4F6", imageUrl: require("../assets/images/category/products/tyres.png") },
       { key: "spare_parts", label: "Spare Parts", icon: "construct-outline", color: "#FFEDD5", imageUrl: require("../assets/images/category/products/spare_parts.png") },
-      { key: "car_audio", label: "Car Audio & Electronics", icon: "volume-high-outline", color: "#EDE9FE", imageUrl: "" },
-      { key: "ev_charging", label: "EV Charging Accessories", icon: "flash-outline", color: "#DCFCE7", imageUrl: "" },
-      { key: "oils_fluids", label: "Engine Oils & Fluids", icon: "beaker-outline", color: "#FEF3C7", imageUrl: "" },
+      { key: "car_audio", label: "Car Audio & Electronics", icon: "volume-high-outline", color: "#EDE9FE", imageUrl: require("../assets/images/category/products/car_audio.png") },
+      { key: "ev_charging", label: "EV Charging Accessories", icon: "flash-outline", color: "#DCFCE7", imageUrl: require("../assets/images/category/products/ev_charging.png") },
+      { key: "oils_fluids", label: "Engine Oils & Fluids", icon: "beaker-outline", color: "#FEF3C7", imageUrl: require("../assets/images/category/products/oils_fluids.png") },
     ],
   },
 
