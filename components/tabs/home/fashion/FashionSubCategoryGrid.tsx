@@ -8,7 +8,7 @@
 
 import React, { useState } from "react";
 import {
-  View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert,
+  View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert, Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
@@ -59,7 +59,16 @@ export default function FashionSubCategoryGrid({ subCats, accent }: FashionSubCa
                   name={cat.icon as any}
                   size={30}
                   color={isActive ? accent : "rgba(0,0,0,0.30)"}
+                  style={{ position: "absolute", zIndex: 0 }}
                 />
+
+                {cat.imageUrl && (
+                  <Image
+                    source={typeof cat.imageUrl === "string" ? { uri: cat.imageUrl } : cat.imageUrl}
+                    style={{ width: "100%", height: "100%", borderRadius: 10, zIndex: 1 }}
+                    resizeMode="cover"
+                  />
+                )}
               </View>
 
               {/* Label */}
