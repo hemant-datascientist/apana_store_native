@@ -340,9 +340,9 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
       { key: "musical", label: "Musical Instruments", icon: "musical-notes-outline", color: "#FCE7F3", imageUrl: require("../assets/images/category/products/musical.png") },
       { key: "art_craft", label: "Art & Craft", icon: "brush-outline", color: "#FFF7ED", imageUrl: require("../assets/images/category/products/art_craft.png") },
       { key: "travel_acc", label: "Travel Accessories", icon: "airplane-outline", color: "#DBEAFE", imageUrl: require("../assets/images/category/products/travel_acc.png") },
-      { key: "gifting", label: "Gifting & Greeting Cards", icon: "gift-outline", color: "#FCE7F3", imageUrl: "" },
-      { key: "office_supply", label: "Office Supplies", icon: "briefcase-outline", color: "#F3F4F6", imageUrl: "" },
-      { key: "recycle", label: "Recycling & Scrap", icon: "refresh-circle-outline", color: "#DCFCE7", imageUrl: "" },
+      { key: "gifting", label: "Gifting & Greeting Cards", icon: "gift-outline", color: "#FCE7F3", imageUrl: require("../assets/images/category/products/gifting.png") },
+      { key: "office_supply", label: "Office Supplies", icon: "briefcase-outline", color: "#F3F4F6", imageUrl: require("../assets/images/category/products/office_supply.png") },
+      { key: "recycle", label: "Recycling & Scrap", icon: "refresh-circle-outline", color: "#DCFCE7", imageUrl: require("../assets/images/category/products/recycle.png") },
     ],
   },
 ];
