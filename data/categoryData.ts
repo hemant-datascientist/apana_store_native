@@ -322,7 +322,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
       { key: "flowers_garland", label: "Flowers & Garlands", icon: "flower-outline", color: "#DCFCE7", imageUrl: require("../assets/images/category/products/flowers_garland.png") },
       { key: "diyas", label: "Diyas & Candles", icon: "bulb-outline", color: "#FFEDD5", imageUrl: require("../assets/images/category/products/diyas.png") },
       { key: "sacred_books", label: "Sacred Books & Scriptures", icon: "book-outline", color: "#DBEAFE", imageUrl: require("../assets/images/category/products/sacred_books.png") },
-      { key: "pooja_dress", label: "Pooja & Festival Wear", icon: "shirt-outline", color: "#FCE7F3", imageUrl: require("../assets/images/category/products/pooja_dress.png") },,
+      { key: "pooja_dress", label: "Pooja & Festival Wear", icon: "shirt-outline", color: "#FCE7F3", imageUrl: require("../assets/images/category/products/pooja_dress.png") },
     ],
   },
 
@@ -342,7 +342,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
       { key: "travel_acc", label: "Travel Accessories", icon: "airplane-outline", color: "#DBEAFE", imageUrl: require("../assets/images/category/products/travel_acc.png") },
       { key: "gifting", label: "Gifting & Greeting Cards", icon: "gift-outline", color: "#FCE7F3", imageUrl: "" },
       { key: "office_supply", label: "Office Supplies", icon: "briefcase-outline", color: "#F3F4F6", imageUrl: "" },
-      { key: "recycle", label: "Recycling & Scrap", icon: "refresh-circle-outline", color: "#DCFCE7", imageUrl: "" },,
+      { key: "recycle", label: "Recycling & Scrap", icon: "refresh-circle-outline", color: "#DCFCE7", imageUrl: "" },
     ],
   },
 ];
