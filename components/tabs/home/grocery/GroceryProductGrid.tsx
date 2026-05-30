@@ -108,7 +108,7 @@ function ProductCard({ product, accentColor }: ProductCardProps) {
       <View style={[styles.imgArea, { backgroundColor: product.bg, height: IMG_H }]}>
         {product.imageUrl ? (
           <Image
-            source={{ uri: product.imageUrl }}
+            source={typeof product.imageUrl === "string" ? { uri: product.imageUrl } : product.imageUrl}
             style={{ width: "100%", height: "100%" }}
             resizeMode="cover"
           />

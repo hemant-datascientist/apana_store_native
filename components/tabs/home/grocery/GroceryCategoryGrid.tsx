@@ -72,7 +72,7 @@ export default function GroceryCategoryGrid({ categories, onSelect }: GroceryCat
                 {/* Main Image Overlay */}
                 {cat.imageUrl && (
                   <Image
-                    source={{ uri: cat.imageUrl }}
+                    source={typeof cat.imageUrl === "string" ? { uri: cat.imageUrl } : cat.imageUrl}
                     style={{ width: "100%", height: "100%", borderRadius: 10, zIndex: 1 }}
                     resizeMode="cover"
                   />
