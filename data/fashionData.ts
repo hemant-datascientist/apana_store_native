@@ -51,7 +51,7 @@ export const FASHION_GENDERS: FashionGenderConfig[] = [
       { key: "blazers",     label: "Blazer",       icon: "business-outline",         bg: "#DBEAFE", imageUrl: require("../assets/images/fashion/blazer.png") },
       { key: "kurti",       label: "Kurti",        icon: "shirt-outline",            bg: "#FCE7F3", imageUrl: require("../assets/images/fashion/men_kurta.png") },
       { key: "sportswear",  label: "Sportswear",   icon: "football-outline",         bg: "#DCFCE7", imageUrl: require("../assets/images/fashion/men_sportswear.png") },
-      { key: "mencare",     label: "Men's Care",   icon: "medkit-outline",           bg: "#FEE2E2", imageUrl: require("../assets/images/fashion/men_grooming.png") },
+      { key: "mencare",     label: "Men's Care",   icon: "medkit-outline",           bg: "#FEE2E2", imageUrl: require("../assets/images/fashion/men_care.png") },
     ],
   },
 
