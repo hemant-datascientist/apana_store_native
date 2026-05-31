@@ -96,7 +96,7 @@ export const FASHION_GENDERS: FashionGenderConfig[] = [
       { key: "bottomwear",  label: "Bottom-wear",  icon: "reorder-three-outline",    bg: "#DCFCE7", imageUrl: require("../assets/images/fashion/boy_bottom_wear.png") },
       { key: "footwear",    label: "Footwear",     icon: "walk-outline",             bg: "#FEF3C7", imageUrl: require("../assets/images/fashion/boy_footwear.png") },
       { key: "caps",        label: "Caps",         icon: "happy-outline",            bg: "#EDE9FE" },
-      { key: "schoolwear",  label: "School Wear",  icon: "school-outline",           bg: "#DBEAFE" },
+      { key: "schoolwear",  label: "School Wear",  icon: "school-outline",           bg: "#DBEAFE", imageUrl: require("../assets/images/fashion/boy_schoolwear.png") },
       { key: "watches",     label: "Watches",      icon: "time-outline",             bg: "#FFEDD5", imageUrl: require("../assets/images/fashion/boy_watch.png") },
       { key: "socks",       label: "Socks",        icon: "footsteps-outline",        bg: "#ECFDF5" },
       { key: "jackets",     label: "Jackets",      icon: "layers-outline",           bg: "#F3F4F6" },
