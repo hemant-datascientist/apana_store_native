@@ -17,10 +17,10 @@ import { MOCK_LOCATION }  from "../../../../data/homeData";
 const ACCENT = "#0437B1";
 
 const SUB_CATS: SubCat[] = [
-  { key: "mobiles",    label: "Mobiles",        icon: "phone-portrait-outline",   bg: "#DBEAFE" },
-  { key: "tablets",    label: "Tablets",         icon: "tablet-portrait-outline",  bg: "#EDE9FE" },
-  { key: "cases",      label: "Cases",           icon: "phone-landscape-outline",  bg: "#DCFCE7" },
-  { key: "earbuds",    label: "Earbuds",         icon: "headset-outline",          bg: "#FEF3C7" },
+  { key: "mobiles",    label: "Mobiles",        icon: "phone-portrait-outline",   bg: "#DBEAFE", imageUrl: require("../../../../assets/images/category/products/home_mobiles.png") },
+  { key: "tablets",    label: "Tablets",         icon: "tablet-portrait-outline",  bg: "#EDE9FE", imageUrl: require("../../../../assets/images/category/products/home_tablets.png") },
+  { key: "cases",      label: "Cases",           icon: "phone-landscape-outline",  bg: "#DCFCE7", imageUrl: require("../../../../assets/images/category/products/home_cases.png") },
+  { key: "earbuds",    label: "Earbuds",         icon: "headset-outline",          bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_earbuds.png") },
   { key: "feature",    label: "Feature Phone",   icon: "call-outline",             bg: "#FFEDD5" },
   { key: "screenguard",label: "Screenguard",     icon: "shield-outline",           bg: "#F3F4F6" },
   { key: "recharge",   label: "Recharge & SIM",  icon: "card-outline",             bg: "#FCE7F3" },
