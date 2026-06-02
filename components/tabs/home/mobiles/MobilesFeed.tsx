@@ -23,8 +23,8 @@ const SUB_CATS: SubCat[] = [
   { key: "earbuds",    label: "Earbuds",         icon: "headset-outline",          bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_earbuds.png") },
   { key: "feature",    label: "Feature Phone",   icon: "call-outline",             bg: "#FFEDD5", imageUrl: require("../../../../assets/images/category/products/home_feature.png") },
   { key: "screenguard",label: "Screenguard",     icon: "shield-outline",           bg: "#F3F4F6", imageUrl: require("../../../../assets/images/category/products/home_screenguard.png") },
-  { key: "recharge",   label: "Recharge & SIM",  icon: "card-outline",             bg: "#FCE7F3" },
-  { key: "accessories",label: "Accessories",     icon: "pricetag-outline",         bg: "#E0F2FE" },
+  { key: "recharge",   label: "Recharge & SIM",  icon: "card-outline",             bg: "#FCE7F3", imageUrl: require("../../../../assets/images/category/products/home_recharge.png") },
+  { key: "accessories",label: "Accessories",     icon: "pricetag-outline",         bg: "#E0F2FE", imageUrl: require("../../../../assets/images/category/products/home_accessories.png") },
 ];
 
 export default function MobilesFeed() {

@@ -44,7 +44,7 @@ export const CATEGORIES: Category[] = [
   { key: "appliances",  label: "Appliances",       icon: "tv-outline",                          color: "#2C5282"  },
   { key: "beauty",      label: "Beauty",           icon: "flower-outline",                      color: "#402A62"  },
   { key: "sports",      label: "Sports",           icon: "football-outline",                    color: "#B45309"  },
-  { key: "home",        label: "Home",             icon: "home-outline",                        color: "#7C4438"  },
+  { key: "home",        label: "Home Decor",       icon: "home-outline",                        color: "#7C4438"  },
   { key: "pharmacy",    label: "Pharmacy",         icon: "medkit-outline",                      color: "#1D4746"  },
   { key: "food",        label: "Food & Drink",     icon: "restaurant-outline",                  color: "#6F4C81"  },
   { key: "books",       label: "Books",            icon: "book-outline",                        color: "#933A00"  },

@@ -19,8 +19,8 @@ import { MOCK_LOCATION }  from "../../../../data/homeData";
 const ACCENT = "#2C5282";
 
 const APPLIANCE_CATS: SubCat[] = [
-  { key: "tv",         label: "TV",               icon: "tv-outline",              bg: "#DBEAFE" },
-  { key: "fridge",     label: "Refrigerator",     icon: "snow-outline",            bg: "#E0F2FE" },
+  { key: "tv",         label: "TV",               icon: "tv-outline",              bg: "#DBEAFE", imageUrl: require("../../../../assets/images/category/products/home_tv.png") },
+  { key: "fridge",     label: "Refrigerator",     icon: "snow-outline",            bg: "#E0F2FE", imageUrl: require("../../../../assets/images/category/products/home_fridge.png") },
   { key: "ac",         label: "Air Conditioner",  icon: "thermometer-outline",     bg: "#EDE9FE" },
   { key: "mixer",      label: "Mixer Grinder",    icon: "restaurant-outline",      bg: "#FEF3C7" },
   { key: "speakers",   label: "Speakers",         icon: "musical-notes-outline",   bg: "#FFEDD5" },
