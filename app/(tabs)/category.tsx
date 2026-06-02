@@ -25,6 +25,7 @@ import HomeSearchBar   from "../../components/tabs/home/HomeSearchBar";
 import DiscoveryToggle from "../../components/tabs/home/DiscoveryToggle";
 import CategorySection from "../../components/tabs/category/CategorySection";
 import StoreTypeGrid   from "../../components/tabs/category/StoreTypeGrid";
+import ApcBrowseBanner from "../../components/apc/ApcBrowseBanner";
 
 export default function CategoryScreen() {
   const { colors } = useTheme();
@@ -75,8 +76,10 @@ export default function CategoryScreen() {
             onPress={item => Alert.alert(item.label, `${item.sub} — coming soon.`)}
           />
         ) : (
-          /* Products mode — grouped 3-col subcategory tiles */
-          CATEGORY_GROUPS.map(group => (
+          /* Products mode — APC browser entry, then grouped 3-col subcategory tiles */
+          <>
+          <ApcBrowseBanner />
+          {CATEGORY_GROUPS.map(group => (
             <CategorySection
               key={group.key}
               group={group}
@@ -87,7 +90,8 @@ export default function CategoryScreen() {
                 )
               }
             />
-          ))
+          ))}
+          </>
         )}
       </ScrollView>
 

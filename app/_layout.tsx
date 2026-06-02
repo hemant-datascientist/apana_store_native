@@ -68,6 +68,8 @@ export default function RootLayout() {
             <Stack.Screen name="(account)"  />
             {/* Discovery — search-results, product-detail, product-finder, scanner, brands, offer-zone, new-launchers */}
             <Stack.Screen name="(discover)" />
+            {/* APC browser — §27 cross-retail category taxonomy (index + node) */}
+            <Stack.Screen name="(apc)"      />
             {/* Info + settings — about-us, help-support, sell-ondc, rate-us, language, notifications */}
             <Stack.Screen name="(info)"     />
           </Stack>

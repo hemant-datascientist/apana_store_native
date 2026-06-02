@@ -1,0 +1,75 @@
+// ============================================================
+// APC SERVICE — Apana Store (Customer App)
+//
+// Read-only client for the public APC taxonomy (§27 N-level tree).
+// Mirrors the registry browser (apana_registry_web/lib/apc.ts) so the
+// customer app walks the same cross-retail classification.
+//
+// APC lives on its own BE surface (/api/apc/*), NOT the customer
+// contract — so this is a standalone fetch client, not openapi-fetch.
+//
+// Base URL resolves from env (Expo bakes EXPO_PUBLIC_* at build):
+//   EXPO_PUBLIC_APC_API_URL  -> explicit override (any mode)
+//   prod                     -> https://api.apana.in/api/apc
+//   else                     -> http://<TOWER_IP>:8000/api/apc
+//
+// NOTE: never request apc_to_gpc_map / any GPC field — the public API
+// does not expose it (§27.1 legal), and neither does this client.
+// ============================================================
+
+const API_MODE = process.env.EXPO_PUBLIC_API_MODE ?? "mock";
+const TOWER_IP = process.env.EXPO_PUBLIC_TOWER_IP ?? "10.153.78.94";
+
+export const APC_BASE_URL =
+  process.env.EXPO_PUBLIC_APC_API_URL ??
+  (API_MODE === "prod"
+    ? "https://api.apana.in/api/apc"
+    : `http://${TOWER_IP}:8000/api/apc`);
+
+// ── Tree node shapes (snake_case — matches BE payload) ──────
+export interface ApcTreeNode {
+  code: string;
+  parent_code: string | null;
+  depth: number;
+  name: string;
+  name_hi: string | null;
+  slug: string;
+  path: string;
+  source: string; // 'google' | 'apana'
+  is_leaf: boolean;
+  attributes: Record<string, unknown>;
+}
+
+export interface ApcNodeContext {
+  node: ApcTreeNode;
+  children: ApcTreeNode[];
+  ancestors: ApcTreeNode[]; // root → parent
+}
+
+// ── Fetch helper — never trusts a non-2xx response ──────────
+async function getJson<T>(path: string): Promise<T> {
+  const res = await fetch(`${APC_BASE_URL}${path}`);
+  if (!res.ok) throw new Error(`APC ${path} -> ${res.status}`);
+  return (await res.json()) as T;
+}
+
+// Top-level segments (parent_code IS NULL).
+export async function getTreeRoots(): Promise<ApcTreeNode[]> {
+  return (await getJson<{ items: ApcTreeNode[] }>("/tree/roots")).items;
+}
+
+// Node + its children + ancestor chain (for breadcrumb).
+export async function getTreeNode(code: string): Promise<ApcNodeContext> {
+  return getJson<ApcNodeContext>(`/tree/node/${encodeURIComponent(code)}`);
+}
+
+// Name search across the tree (q >= 2 chars enforced by BE).
+export async function searchTree(q: string, limit = 30): Promise<ApcTreeNode[]> {
+  const query = q.trim();
+  if (query.length < 2) return [];
+  return (
+    await getJson<{ items: ApcTreeNode[] }>(
+      `/tree/search?q=${encodeURIComponent(query)}&limit=${limit}`,
+    )
+  ).items;
+}
