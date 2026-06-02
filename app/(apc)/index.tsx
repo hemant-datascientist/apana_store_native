@@ -109,7 +109,7 @@ export default function ApcBrowserScreen() {
               No categories match "{query.trim()}".
             </Text>
           ) : (
-            results.map((n) => <ApcNodeRow key={n.code} node={n} />)
+            results.map((n, i) => <ApcNodeRow key={n.code} node={n} index={i} />)
           )}
         </ScrollView>
       ) : (
@@ -119,8 +119,8 @@ export default function ApcBrowserScreen() {
             const right = roots[r * 2 + 1];
             return (
               <View key={r} style={styles.gridRow}>
-                <ApcSegmentCard node={left} />
-                {right ? <ApcSegmentCard node={right} /> : <View style={{ flex: 1 }} />}
+                <ApcSegmentCard node={left} index={r * 2} />
+                {right ? <ApcSegmentCard node={right} index={r * 2 + 1} /> : <View style={{ flex: 1 }} />}
               </View>
             );
           })}

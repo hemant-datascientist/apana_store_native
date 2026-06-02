@@ -18,11 +18,22 @@ import { TouchableOpacity } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
-import { getTreeNode, type ApcNodeContext } from "../../services/apc";
+import { getTreeNode, nodeApcCode, type ApcNodeContext } from "../../services/apc";
 import ApcBreadcrumb from "../../components/apc/ApcBreadcrumb";
 import ApcNodeRow from "../../components/apc/ApcNodeRow";
 
 const ACCENT = "#0F4C81";
+
+// Internal attribute keys surfaced through dedicated UI, not the facts panel.
+const HIDDEN_ATTRS = new Set(["child_count", "icon", "apc_level", "apc_code", "grocery_bridge"]);
+function humanLabel(k: string): string {
+  return k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+function factEntries(attrs: Record<string, unknown>): [string, string][] {
+  return Object.entries(attrs)
+    .filter(([k, v]) => !HIDDEN_ATTRS.has(k) && v !== null && v !== undefined && v !== false && v !== "")
+    .map(([k, v]) => [humanLabel(k), v === true ? "Yes" : String(v)]);
+}
 
 export default function ApcNodeScreen() {
   const { colors } = useTheme();
@@ -89,6 +100,34 @@ export default function ApcNodeScreen() {
             <Text style={[styles.path, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>{node.path}</Text>
           </View>
 
+          {/* ── Catalog code (bridged grocery node) ── */}
+          {nodeApcCode(node) ? (
+            <View style={[styles.codeChip, { backgroundColor: colors.primaryLight, borderColor: colors.border }]}>
+              <Text style={[styles.codeChipText, { color: colors.primary, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
+                Catalog code · {nodeApcCode(node)}
+              </Text>
+            </View>
+          ) : null}
+
+          {/* ── Facts panel ── */}
+          {(() => {
+            const facts = factEntries(node.attributes);
+            if (facts.length === 0) return null;
+            return (
+              <View style={[styles.facts, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                {facts.map(([k, v], i) => (
+                  <View
+                    key={k}
+                    style={[styles.factRow, i < facts.length - 1 && { borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth }]}
+                  >
+                    <Text style={[styles.factKey, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>{k}</Text>
+                    <Text style={[styles.factVal, { color: colors.text, fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>{v}</Text>
+                  </View>
+                ))}
+              </View>
+            );
+          })()}
+
           {/* ── Children / leaf note ── */}
           {ctx.children.length > 0 ? (
             <>
@@ -96,7 +135,7 @@ export default function ApcNodeScreen() {
                 {ctx.children.length} SUB-CATEGOR{ctx.children.length === 1 ? "Y" : "IES"}
               </Text>
               <View style={styles.childList}>
-                {ctx.children.map((c) => <ApcNodeRow key={c.code} node={c} />)}
+                {ctx.children.map((c, i) => <ApcNodeRow key={c.code} node={c} index={i} />)}
               </View>
             </>
           ) : (
@@ -132,6 +171,12 @@ const styles = StyleSheet.create({
   title: { marginTop: 2 },
   hi: {},
   path: { marginTop: 4 },
+  codeChip: { alignSelf: "flex-start", marginTop: 14, borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  codeChipText: { letterSpacing: 0.3 },
+  facts: { marginTop: 16, borderWidth: 1, borderRadius: 14, paddingHorizontal: 14 },
+  factRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingVertical: 11 },
+  factKey: { flexShrink: 1 },
+  factVal: { textAlign: "right" },
   sectionLabel: { letterSpacing: 0.5, marginTop: 22, marginBottom: 10 },
   childList: { gap: 10 },
   leafCard: { marginTop: 20, borderWidth: 1, borderRadius: 14, padding: 16 },

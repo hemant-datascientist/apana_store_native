@@ -46,6 +46,59 @@ export interface ApcNodeContext {
   ancestors: ApcTreeNode[]; // root → parent
 }
 
+// ── Node attribute accessors (ingest packs these into `attributes`) ──
+export function nodeChildCount(n: ApcTreeNode): number {
+  const c = n.attributes?.child_count;
+  return typeof c === "number" ? c : 0;
+}
+export function nodeIcon(n: ApcTreeNode): string | null {
+  const i = n.attributes?.icon;
+  return typeof i === "string" ? i : null;
+}
+export function nodeApcCode(n: ApcTreeNode): string | null {
+  const c = n.attributes?.apc_code;
+  return typeof c === "string" ? c : null;
+}
+export type GroceryLevel = "class" | "family" | "variety";
+export function nodeApcLevel(n: ApcTreeNode): GroceryLevel | null {
+  const l = n.attributes?.apc_level;
+  return l === "class" || l === "family" || l === "variety" ? l : null;
+}
+
+// Curated emoji per node: its own icon, else a level glyph for bridged grocery,
+// else a keyword match on the name, else a neutral glyph.
+const SEGMENT_EMOJI: [RegExp, string][] = [
+  [/food|beverage|grocery|mandi/i, "🍎"],
+  [/apparel|clothing|wear/i, "👕"],
+  [/electronic/i, "📱"],
+  [/health|beauty|ayurveda/i, "💄"],
+  [/home|garden/i, "🏡"],
+  [/furniture/i, "🛋️"],
+  [/baby|toddler/i, "🍼"],
+  [/toys|games/i, "🧸"],
+  [/sport/i, "⚽"],
+  [/media|book/i, "📚"],
+  [/office/i, "🖇️"],
+  [/hardware|tool/i, "🔧"],
+  [/vehicle|automotive|part/i, "🚗"],
+  [/animal|pet/i, "🐾"],
+  [/arts|craft|hobby/i, "🎨"],
+  [/business|industrial/i, "🏭"],
+  [/camera|optic/i, "📷"],
+  [/luggage|bag/i, "🧳"],
+  [/software/i, "💿"],
+  [/religious|ceremon|pooja|festival/i, "🪔"],
+];
+export function nodeEmoji(n: ApcTreeNode): string {
+  const icon = nodeIcon(n);
+  if (icon) return icon;
+  const lvl = nodeApcLevel(n);
+  if (lvl === "variety") return "🔹";
+  if (lvl === "family") return "📂";
+  for (const [re, e] of SEGMENT_EMOJI) if (re.test(n.name)) return e;
+  return "▦";
+}
+
 // ── Fetch helper — never trusts a non-2xx response ──────────
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(`${APC_BASE_URL}${path}`);
