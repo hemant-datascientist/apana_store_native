@@ -21,6 +21,7 @@ import { typography } from "../../theme/typography";
 import { getTreeNode, nodeApcCode, type ApcNodeContext } from "../../services/apc";
 import ApcBreadcrumb from "../../components/apc/ApcBreadcrumb";
 import ApcNodeRow from "../../components/apc/ApcNodeRow";
+import ApcThumb from "../../components/apc/ApcThumb";
 
 const ACCENT = "#0F4C81";
 
@@ -81,6 +82,9 @@ export default function ApcNodeScreen() {
 
           {/* ── Node header ── */}
           <View style={styles.titleBlock}>
+            <View style={styles.thumbRow}>
+              <ApcThumb node={node} size={64} radius={16} emojiSize={34} />
+            </View>
             <View style={styles.codeRow}>
               <Text style={[styles.code, { color: colors.primary, fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
                 {node.code}
@@ -164,6 +168,7 @@ const styles = StyleSheet.create({
   note: { textAlign: "center" },
   body: { padding: 16 },
   titleBlock: { marginTop: 14, gap: 4 },
+  thumbRow: { marginBottom: 8 },
   codeRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   code: { letterSpacing: 0.5 },
   badge: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 1 },

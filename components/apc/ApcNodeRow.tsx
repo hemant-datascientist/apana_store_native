@@ -13,7 +13,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
-import { nodeEmoji, nodeChildCount, type ApcTreeNode } from "../../services/apc";
+import { nodeChildCount, type ApcTreeNode } from "../../services/apc";
+import ApcThumb from "./ApcThumb";
 
 interface ApcNodeRowProps {
   node: ApcTreeNode;
@@ -32,9 +33,7 @@ export default function ApcNodeRow({ node, index = 0 }: ApcNodeRowProps) {
         activeOpacity={0.75}
         onPress={() => router.push(`/(apc)/${node.code}` as any)}
       >
-        <View style={[styles.emojiWrap, { backgroundColor: colors.primaryLight }]}>
-          <Text style={styles.emoji}>{nodeEmoji(node)}</Text>
-        </View>
+        <ApcThumb node={node} size={38} radius={10} emojiSize={20} />
 
         <View style={styles.textCol}>
           <View style={styles.titleRow}>
@@ -77,8 +76,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 11,
   },
-  emojiWrap: { width: 38, height: 38, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  emoji: { fontSize: 20, lineHeight: 24 },
   textCol: { flex: 1, minWidth: 0 },
   titleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   name: { flexShrink: 1 },

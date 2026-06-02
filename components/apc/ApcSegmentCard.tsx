@@ -12,7 +12,8 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
-import { nodeEmoji, nodeChildCount, type ApcTreeNode } from "../../services/apc";
+import { nodeChildCount, type ApcTreeNode } from "../../services/apc";
+import ApcThumb from "./ApcThumb";
 
 interface ApcSegmentCardProps {
   node: ApcTreeNode;
@@ -32,8 +33,8 @@ export default function ApcSegmentCard({ node, index = 0 }: ApcSegmentCardProps)
         activeOpacity={0.75}
         onPress={() => router.push(`/(apc)/${node.code}` as any)}
       >
-        <View style={[styles.emojiWrap, { backgroundColor: colors.primaryLight }]}>
-          <Text style={styles.emoji}>{nodeEmoji(node)}</Text>
+        <View style={styles.thumb}>
+          <ApcThumb node={node} size={40} radius={12} emojiSize={22} />
         </View>
 
         <Text
@@ -75,8 +76,7 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 4,
   },
-  emojiWrap: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center", marginBottom: 6 },
-  emoji: { fontSize: 22, lineHeight: 26 },
+  thumb: { marginBottom: 6 },
   name: {},
   hi: {},
   metaRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: "auto", gap: 6 },

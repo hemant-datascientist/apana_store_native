@@ -55,6 +55,16 @@ export function nodeIcon(n: ApcTreeNode): string | null {
   const i = n.attributes?.icon;
   return typeof i === "string" ? i : null;
 }
+
+// BE origin (APC_BASE_URL minus /api/apc) — image_url values are BE-relative
+// ("/loose-media/assets/fruits/mango.png"); resolve to an absolute URL.
+const API_ORIGIN = APC_BASE_URL.replace(/\/api\/apc$/, "");
+export function nodeImage(n: ApcTreeNode): string | null {
+  const u = n.attributes?.image_url;
+  if (typeof u !== "string" || !u) return null;
+  if (/^https?:\/\//i.test(u)) return u;
+  return `${API_ORIGIN}${u.startsWith("/") ? "" : "/"}${u}`;
+}
 export function nodeApcCode(n: ApcTreeNode): string | null {
   const c = n.attributes?.apc_code;
   return typeof c === "string" ? c : null;
