@@ -21,16 +21,16 @@ const ACCENT = "#2C5282";
 const APPLIANCE_CATS: SubCat[] = [
   { key: "tv",         label: "TV",               icon: "tv-outline",              bg: "#DBEAFE", imageUrl: require("../../../../assets/images/category/products/home_tv.png") },
   { key: "fridge",     label: "Refrigerator",     icon: "snow-outline",            bg: "#E0F2FE", imageUrl: require("../../../../assets/images/category/products/home_fridge.png") },
-  { key: "ac",         label: "Air Conditioner",  icon: "thermometer-outline",     bg: "#EDE9FE" },
-  { key: "mixer",      label: "Mixer Grinder",    icon: "restaurant-outline",      bg: "#FEF3C7" },
-  { key: "speakers",   label: "Speakers",         icon: "musical-notes-outline",   bg: "#FFEDD5" },
-  { key: "microwave",  label: "Microwave",        icon: "flame-outline",           bg: "#FEE2E2" },
-  { key: "fan",        label: "Fan & Cooler",     icon: "sync-outline",            bg: "#DCFCE7" },
-  { key: "airfryer",   label: "Air Fryers",       icon: "flame-outline",           bg: "#FCE7F3" },
-  { key: "chimney",    label: "Chimney",          icon: "cloud-outline",           bg: "#F3F4F6" },
-  { key: "iron",       label: "Iron Presser",     icon: "shirt-outline",           bg: "#FFEDD5" },
-  { key: "vacuum",     label: "Vacuum Cleaner",   icon: "flash-outline",           bg: "#EDE9FE" },
-  { key: "washing",    label: "Washing Machine",  icon: "water-outline",           bg: "#DBEAFE" },
+  { key: "ac",         label: "Air Conditioner",  icon: "thermometer-outline",     bg: "#EDE9FE", imageUrl: require("../../../../assets/images/category/products/home_ac.png") },
+  { key: "mixer",      label: "Mixer Grinder",    icon: "restaurant-outline",      bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_mixer.png") },
+  { key: "speakers",   label: "Speakers",         icon: "musical-notes-outline",   bg: "#FFEDD5", imageUrl: require("../../../../assets/images/category/products/home_speakers.png") },
+  { key: "microwave",  label: "Microwave",        icon: "flame-outline",           bg: "#FEE2E2", imageUrl: require("../../../../assets/images/category/products/home_microwave.png") },
+  { key: "fan",        label: "Fan & Cooler",     icon: "sync-outline",            bg: "#DCFCE7", imageUrl: require("../../../../assets/images/category/products/home_fan.png") },
+  { key: "airfryer",   label: "Air Fryers",       icon: "flame-outline",           bg: "#FCE7F3", imageUrl: require("../../../../assets/images/category/products/home_airfryer.png") },
+  { key: "chimney",    label: "Chimney",          icon: "cloud-outline",           bg: "#F3F4F6", imageUrl: require("../../../../assets/images/category/products/home_chimney.png") },
+  { key: "iron",       label: "Iron Presser",     icon: "shirt-outline",           bg: "#FFEDD5", imageUrl: require("../../../../assets/images/category/products/home_iron.png") },
+  { key: "vacuum",     label: "Vacuum Cleaner",   icon: "flash-outline",           bg: "#EDE9FE", imageUrl: require("../../../../assets/images/category/products/home_vacuum.png") },
+  { key: "washing",    label: "Washing Machine",  icon: "water-outline",           bg: "#DBEAFE", imageUrl: require("../../../../assets/images/category/products/home_washing.png") },
 ];
 
 export default function AppliancesFeed() {
