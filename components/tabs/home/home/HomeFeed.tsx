@@ -13,8 +13,8 @@ import { MOCK_LOCATION }  from "../../../../data/homeData";
 const ACCENT = "#7C4438";
 
 const SUB_CATS: SubCat[] = [
-  { key: "bedding",    label: "Bedding",          icon: "bed-outline",             bg: "#DBEAFE" },
-  { key: "curtains",   label: "Curtains",         icon: "expand-outline",          bg: "#FEF3C7" },
+  { key: "bedding",    label: "Bedding",          icon: "bed-outline",             bg: "#DBEAFE", imageUrl: require("../../../../assets/images/category/products/home_bedding.png") },
+  { key: "curtains",   label: "Curtains",         icon: "expand-outline",          bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_curtains.png") },
   { key: "walldecor",  label: "Wall Decor",       icon: "image-outline",           bg: "#FCE7F3" },
   { key: "lighting",   label: "Lighting",         icon: "bulb-outline",            bg: "#FEF3C7" },
   { key: "cushions",   label: "Cushions",         icon: "square-outline",          bg: "#EDE9FE" },

@@ -22,9 +22,9 @@ const SUB_CATS: SubCat[] = [
   { key: "sunscreen",  label: "Sunscreen",        icon: "sunny-outline",           bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_sunscreen.png") },
   { key: "facewash",   label: "Face Wash",        icon: "water-outline",           bg: "#DCFCE7", imageUrl: require("../../../../assets/images/category/products/home_facewash.png") },
   { key: "moisturizer",label: "Moisturizer",      icon: "leaf-outline",            bg: "#ECFDF5", imageUrl: require("../../../../assets/images/category/products/home_moisturizer.png") },
-  { key: "lipcare",    label: "Lip Care",         icon: "heart-outline",           bg: "#FCE7F3" },
-  { key: "eyecare",    label: "Eye Care",         icon: "eye-outline",             bg: "#EDE9FE" },
-  { key: "bodycare",   label: "Body Care",        icon: "body-outline",            bg: "#FFEDD5" },
+  { key: "lipcare",    label: "Lip Care",         icon: "heart-outline",           bg: "#FCE7F3", imageUrl: require("../../../../assets/images/category/products/home_lipcare.png") },
+  { key: "eyecare",    label: "Eye Care",         icon: "eye-outline",             bg: "#EDE9FE", imageUrl: require("../../../../assets/images/category/products/home_eyecare.png") },
+  { key: "bodycare",   label: "Body Care",        icon: "body-outline",            bg: "#FFEDD5", imageUrl: require("../../../../assets/images/category/products/home_bodycare2.png") },
 ];
 
 export default function BeautyFeed() {
