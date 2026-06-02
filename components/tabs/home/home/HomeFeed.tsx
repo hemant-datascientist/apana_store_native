@@ -15,16 +15,16 @@ const ACCENT = "#7C4438";
 const SUB_CATS: SubCat[] = [
   { key: "bedding",    label: "Bedding",          icon: "bed-outline",             bg: "#DBEAFE", imageUrl: require("../../../../assets/images/category/products/home_bedding.png") },
   { key: "curtains",   label: "Curtains",         icon: "expand-outline",          bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_curtains.png") },
-  { key: "walldecor",  label: "Wall Decor",       icon: "image-outline",           bg: "#FCE7F3" },
-  { key: "lighting",   label: "Lighting",         icon: "bulb-outline",            bg: "#FEF3C7" },
-  { key: "cushions",   label: "Cushions",         icon: "square-outline",          bg: "#EDE9FE" },
-  { key: "rugs",       label: "Rugs & Carpets",   icon: "grid-outline",            bg: "#FFEDD5" },
-  { key: "storage",    label: "Kitchen Storage",  icon: "basket-outline",          bg: "#DCFCE7" },
-  { key: "bathroom",   label: "Bathroom",         icon: "water-outline",           bg: "#E0F2FE" },
-  { key: "candles",    label: "Candles",          icon: "flame-outline",           bg: "#FEE2E2" },
-  { key: "frames",     label: "Photo Frames",     icon: "image-outline",           bg: "#F3F4F6" },
-  { key: "clocks",     label: "Clocks",           icon: "time-outline",            bg: "#EDE9FE" },
-  { key: "garden",     label: "Garden",           icon: "leaf-outline",            bg: "#ECFDF5" },
+  { key: "walldecor",  label: "Wall Decor",       icon: "image-outline",           bg: "#FCE7F3", imageUrl: require("../../../../assets/images/category/products/home_walldecor.png") },
+  { key: "lighting",   label: "Lighting",         icon: "bulb-outline",            bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_lighting.png") },
+  { key: "cushions",   label: "Cushions",         icon: "square-outline",          bg: "#EDE9FE", imageUrl: require("../../../../assets/images/category/products/home_cushions.png") },
+  { key: "rugs",       label: "Rugs & Carpets",   icon: "grid-outline",            bg: "#FFEDD5", imageUrl: require("../../../../assets/images/category/products/home_rugs.png") },
+  { key: "storage",    label: "Kitchen Storage",  icon: "basket-outline",          bg: "#DCFCE7", imageUrl: require("../../../../assets/images/category/products/home_kitchen_storage.png") },
+  { key: "bathroom",   label: "Bathroom",         icon: "water-outline",           bg: "#E0F2FE", imageUrl: require("../../../../assets/images/category/products/home_bathroom.png") },
+  { key: "candles",    label: "Candles",          icon: "flame-outline",           bg: "#FEE2E2", imageUrl: require("../../../../assets/images/category/products/home_candles.png") },
+  { key: "frames",     label: "Photo Frames",     icon: "image-outline",           bg: "#F3F4F6", imageUrl: require("../../../../assets/images/category/products/home_frames.png") },
+  { key: "clocks",     label: "Clocks",           icon: "time-outline",            bg: "#EDE9FE", imageUrl: require("../../../../assets/images/category/products/home_clocks.png") },
+  { key: "garden",     label: "Garden",           icon: "leaf-outline",            bg: "#ECFDF5", imageUrl: require("../../../../assets/images/category/products/home_garden.png") },
 ];
 
 export default function HomeFeed() {
