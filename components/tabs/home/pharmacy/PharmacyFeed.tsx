@@ -20,11 +20,11 @@ const SUB_CATS: SubCat[] = [
   { key: "diabetes",   label: "Diabetes Care",    icon: "analytics-outline",       bg: "#EDE9FE", imageUrl: require("../../../../assets/images/category/products/home_diabetes.png") },
   { key: "ayurvedic",  label: "Ayurvedic",        icon: "leaf-outline",            bg: "#ECFDF5", imageUrl: require("../../../../assets/images/category/products/home_ayurvedic.png") },
   { key: "skinhair",   label: "Skin & Hair",      icon: "sparkles-outline",        bg: "#FCE7F3", imageUrl: require("../../../../assets/images/category/products/home_skinhair.png") },
-  { key: "pain",       label: "Pain Relief",      icon: "medical-outline",         bg: "#FEE2E2" },
-  { key: "digestive",  label: "Digestive",        icon: "nutrition-outline",       bg: "#FEF3C7" },
-  { key: "eyeear",     label: "Eye & Ear Care",   icon: "eye-outline",             bg: "#DBEAFE" },
-  { key: "firstaid",   label: "First Aid",        icon: "add-circle-outline",      bg: "#DCFCE7" },
-  { key: "surgical",   label: "Surgical",         icon: "cut-outline",             bg: "#F3F4F6" },
+  { key: "pain",       label: "Pain Relief",      icon: "medical-outline",         bg: "#FEE2E2", imageUrl: require("../../../../assets/images/category/products/home_pain.png") },
+  { key: "digestive",  label: "Digestive",        icon: "nutrition-outline",       bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_digestive.png") },
+  { key: "eyeear",     label: "Eye & Ear Care",   icon: "eye-outline",             bg: "#DBEAFE", imageUrl: require("../../../../assets/images/category/products/home_eyeear.png") },
+  { key: "firstaid",   label: "First Aid",        icon: "add-circle-outline",      bg: "#DCFCE7", imageUrl: require("../../../../assets/images/category/products/home_firstaid.png") },
+  { key: "surgical",   label: "Surgical",         icon: "cut-outline",             bg: "#F3F4F6", imageUrl: require("../../../../assets/images/category/products/home_surgical.png") },
 ];
 
 export default function PharmacyFeed() {
