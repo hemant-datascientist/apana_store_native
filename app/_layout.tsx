@@ -70,6 +70,8 @@ export default function RootLayout() {
             <Stack.Screen name="(discover)" />
             {/* APC browser — §27 cross-retail category taxonomy (index + node) */}
             <Stack.Screen name="(apc)"      />
+            {/* APC deep-link entry — /apc/<code> from registry "Shop on Apana" */}
+            <Stack.Screen name="apc"        />
             {/* Info + settings — about-us, help-support, sell-ondc, rate-us, language, notifications */}
             <Stack.Screen name="(info)"     />
           </Stack>
