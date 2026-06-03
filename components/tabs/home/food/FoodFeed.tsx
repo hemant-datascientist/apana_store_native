@@ -13,18 +13,18 @@ import { MOCK_LOCATION }  from "../../../../data/homeData";
 const ACCENT = "#6F4C81";
 
 const SUB_CATS: SubCat[] = [
-  { key: "restaurants",label: "Restaurants",      icon: "restaurant-outline",      bg: "#FFEDD5" },
-  { key: "cafes",      label: "Cafes",            icon: "cafe-outline",            bg: "#FEF3C7" },
-  { key: "snacks",     label: "Snacks",           icon: "fast-food-outline",       bg: "#FEE2E2" },
-  { key: "sweets",     label: "Sweets & Mithai",  icon: "gift-outline",            bg: "#FCE7F3" },
-  { key: "beverages",  label: "Beverages",        icon: "wine-outline",            bg: "#DBEAFE" },
-  { key: "bakery",     label: "Bakery",           icon: "storefront-outline",      bg: "#FEF3C7" },
-  { key: "street",     label: "Street Food",      icon: "cart-outline",            bg: "#FFEDD5" },
-  { key: "biryani",    label: "Biryani",          icon: "flame-outline",           bg: "#DCFCE7" },
-  { key: "juice",      label: "Juice Bars",       icon: "nutrition-outline",       bg: "#ECFDF5" },
-  { key: "icecream",   label: "Ice Cream",        icon: "ice-cream-outline",       bg: "#FCE7F3" },
-  { key: "healthy",    label: "Healthy Food",     icon: "leaf-outline",            bg: "#DCFCE7" },
-  { key: "party",      label: "Party Orders",     icon: "people-outline",          bg: "#EDE9FE" },
+  { key: "restaurants",label: "Restaurants",      icon: "restaurant-outline",      bg: "#FFEDD5", imageUrl: require("../../../../assets/images/category/products/home_food_restaurants.png") },
+  { key: "cafes",      label: "Cafes",            icon: "cafe-outline",            bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_food_cafes.png") },
+  { key: "snacks",     label: "Snacks",           icon: "fast-food-outline",       bg: "#FEE2E2", imageUrl: require("../../../../assets/images/category/products/home_food_snacks.png") },
+  { key: "sweets",     label: "Sweets & Mithai",  icon: "gift-outline",            bg: "#FCE7F3", imageUrl: require("../../../../assets/images/category/products/home_food_sweets.png") },
+  { key: "beverages",  label: "Beverages",        icon: "wine-outline",            bg: "#DBEAFE", imageUrl: require("../../../../assets/images/category/products/home_food_beverages.png") },
+  { key: "bakery",     label: "Bakery",           icon: "storefront-outline",      bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_food_bakery.png") },
+  { key: "street",     label: "Street Food",      icon: "cart-outline",            bg: "#FFEDD5", imageUrl: require("../../../../assets/images/category/products/home_food_street.png") },
+  { key: "biryani",    label: "Biryani",          icon: "flame-outline",           bg: "#DCFCE7", imageUrl: require("../../../../assets/images/category/products/home_food_biryani.png") },
+  { key: "juice",      label: "Juice Bars",       icon: "nutrition-outline",       bg: "#ECFDF5", imageUrl: require("../../../../assets/images/category/products/home_food_juice.png") },
+  { key: "icecream",   label: "Ice Cream",        icon: "ice-cream-outline",       bg: "#FCE7F3", imageUrl: require("../../../../assets/images/category/products/home_food_icecream.png") },
+  { key: "healthy",    label: "Healthy Food",     icon: "leaf-outline",            bg: "#DCFCE7", imageUrl: require("../../../../assets/images/category/products/home_food_healthy.png") },
+  { key: "party",      label: "Party Orders",     icon: "people-outline",          bg: "#EDE9FE", imageUrl: require("../../../../assets/images/category/products/home_food_party.png") },
 ];
 
 export default function FoodFeed() {
