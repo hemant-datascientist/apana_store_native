@@ -13,13 +13,13 @@ import { MOCK_LOCATION }  from "../../../../data/homeData";
 const ACCENT = "#1D4746";
 
 const SUB_CATS: SubCat[] = [
-  { key: "medicines",  label: "Medicines",        icon: "medkit-outline",          bg: "#FEE2E2" },
-  { key: "vitamins",   label: "Vitamins",         icon: "fitness-outline",         bg: "#DCFCE7" },
-  { key: "devices",    label: "Health Devices",   icon: "heart-outline",           bg: "#DBEAFE" },
-  { key: "babycare",   label: "Baby Care",        icon: "balloon-outline",         bg: "#FCE7F3" },
-  { key: "diabetes",   label: "Diabetes Care",    icon: "analytics-outline",       bg: "#EDE9FE" },
-  { key: "ayurvedic",  label: "Ayurvedic",        icon: "leaf-outline",            bg: "#ECFDF5" },
-  { key: "skinhair",   label: "Skin & Hair",      icon: "sparkles-outline",        bg: "#FCE7F3" },
+  { key: "medicines",  label: "Medicines",        icon: "medkit-outline",          bg: "#FEE2E2", imageUrl: require("../../../../assets/images/category/products/home_medicines.png") },
+  { key: "vitamins",   label: "Vitamins",         icon: "fitness-outline",         bg: "#DCFCE7", imageUrl: require("../../../../assets/images/category/products/home_vitamins.png") },
+  { key: "devices",    label: "Health Devices",   icon: "heart-outline",           bg: "#DBEAFE", imageUrl: require("../../../../assets/images/category/products/home_devices.png") },
+  { key: "babycare",   label: "Baby Care",        icon: "balloon-outline",         bg: "#FCE7F3", imageUrl: require("../../../../assets/images/category/products/home_ph_babycare.png") },
+  { key: "diabetes",   label: "Diabetes Care",    icon: "analytics-outline",       bg: "#EDE9FE", imageUrl: require("../../../../assets/images/category/products/home_diabetes.png") },
+  { key: "ayurvedic",  label: "Ayurvedic",        icon: "leaf-outline",            bg: "#ECFDF5", imageUrl: require("../../../../assets/images/category/products/home_ayurvedic.png") },
+  { key: "skinhair",   label: "Skin & Hair",      icon: "sparkles-outline",        bg: "#FCE7F3", imageUrl: require("../../../../assets/images/category/products/home_skinhair.png") },
   { key: "pain",       label: "Pain Relief",      icon: "medical-outline",         bg: "#FEE2E2" },
   { key: "digestive",  label: "Digestive",        icon: "nutrition-outline",       bg: "#FEF3C7" },
   { key: "eyeear",     label: "Eye & Ear Care",   icon: "eye-outline",             bg: "#DBEAFE" },
