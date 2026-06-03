@@ -21,10 +21,10 @@ const SUB_CATS: SubCat[] = [
   { key: "tables",     label: "Tables & Desks",   icon: "tablet-landscape-outline",bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_furn_tables.png") },
   { key: "tvunit",     label: "TV Units",         icon: "tv-outline",              bg: "#DBEAFE", imageUrl: require("../../../../assets/images/category/products/home_furn_tvunit.png") },
   { key: "shelves",    label: "Bookshelves",      icon: "library-outline",         bg: "#FFEDD5", imageUrl: require("../../../../assets/images/category/products/home_furn_shelves.png") },
-  { key: "outdoor",    label: "Outdoor Furniture",icon: "leaf-outline",            bg: "#ECFDF5" },
-  { key: "storage",    label: "Storage",          icon: "server-outline",          bg: "#F3F4F6" },
-  { key: "kids",       label: "Kids Furniture",   icon: "balloon-outline",         bg: "#FCE7F3" },
-  { key: "beanbags",   label: "Bean Bags",        icon: "ellipse-outline",         bg: "#EDE9FE" },
+  { key: "outdoor",    label: "Outdoor Furniture",icon: "leaf-outline",            bg: "#ECFDF5", imageUrl: require("../../../../assets/images/category/products/home_furn_outdoor.png") },
+  { key: "storage",    label: "Storage",          icon: "server-outline",          bg: "#F3F4F6", imageUrl: require("../../../../assets/images/category/products/home_furn_storage.png") },
+  { key: "kids",       label: "Kids Furniture",   icon: "balloon-outline",         bg: "#FCE7F3", imageUrl: require("../../../../assets/images/category/products/home_furn_kids.png") },
+  { key: "beanbags",   label: "Bean Bags",        icon: "ellipse-outline",         bg: "#EDE9FE", imageUrl: require("../../../../assets/images/category/products/home_furn_beanbags.png") },
 ];
 
 export default function FurnitureFeed() {
