@@ -13,7 +13,7 @@ import { MOCK_LOCATION }  from "../../../../data/homeData";
 const ACCENT = "#4A4A6A";
 
 const SUB_CATS: SubCat[] = [
-  { key: "pets",       label: "Pet Supplies",     icon: "paw-outline",             bg: "#FEF3C7" },
+  { key: "pets",       label: "Pet Supplies",     icon: "paw-outline",             bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_misc_pets.png") },
   { key: "baby",       label: "Baby Care",        icon: "balloon-outline",         bg: "#FCE7F3" },
   { key: "gifts",      label: "Gifts",            icon: "gift-outline",            bg: "#EDE9FE" },
   { key: "travel",     label: "Travel",           icon: "airplane-outline",        bg: "#DBEAFE" },
