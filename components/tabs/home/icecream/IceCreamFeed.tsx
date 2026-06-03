@@ -13,9 +13,9 @@ import { MOCK_LOCATION }  from "../../../../data/homeData";
 const ACCENT = "#803E96";
 
 const SUB_CATS: SubCat[] = [
-  { key: "cones",      label: "Cones",            icon: "ice-cream-outline",       bg: "#FCE7F3" },
-  { key: "cups",       label: "Cups & Tubs",      icon: "cafe-outline",            bg: "#DBEAFE" },
-  { key: "kulfi",      label: "Kulfi",            icon: "flame-outline",           bg: "#FEF3C7" },
+  { key: "cones",      label: "Cones",            icon: "ice-cream-outline",       bg: "#FCE7F3", imageUrl: require("../../../../assets/images/category/products/home_ice_cones.png") },
+  { key: "cups",       label: "Cups & Tubs",      icon: "cafe-outline",            bg: "#DBEAFE", imageUrl: require("../../../../assets/images/category/products/home_ice_cups.png") },
+  { key: "kulfi",      label: "Kulfi",            icon: "flame-outline",           bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_ice_kulfi.png") },
   { key: "stick",      label: "Stick Ice Cream",  icon: "remove-outline",          bg: "#DCFCE7" },
   { key: "family",     label: "Family Pack",      icon: "people-outline",          bg: "#EDE9FE" },
   { key: "party",      label: "Party Pack",       icon: "gift-outline",            bg: "#FCE7F3" },
