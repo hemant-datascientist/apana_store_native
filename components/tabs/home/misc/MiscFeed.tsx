@@ -14,16 +14,16 @@ const ACCENT = "#4A4A6A";
 
 const SUB_CATS: SubCat[] = [
   { key: "pets",       label: "Pet Supplies",     icon: "paw-outline",             bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_misc_pets.png") },
-  { key: "baby",       label: "Baby Care",        icon: "balloon-outline",         bg: "#FCE7F3" },
-  { key: "gifts",      label: "Gifts",            icon: "gift-outline",            bg: "#EDE9FE" },
-  { key: "travel",     label: "Travel",           icon: "airplane-outline",        bg: "#DBEAFE" },
-  { key: "luggage",    label: "Luggage",          icon: "briefcase-outline",       bg: "#F3F4F6" },
-  { key: "seasonal",   label: "Seasonal Decor",   icon: "sparkles-outline",        bg: "#FEF3C7" },
-  { key: "office",     label: "Office Supplies",  icon: "print-outline",           bg: "#DCFCE7" },
-  { key: "toys",       label: "Toys",             icon: "game-controller-outline", bg: "#FCE7F3" },
-  { key: "artcraft",   label: "Art & Craft",      icon: "color-palette-outline",   bg: "#ECFDF5" },
-  { key: "party",      label: "Party Supplies",   icon: "people-outline",          bg: "#FFEDD5" },
-  { key: "auto",       label: "Automotive",       icon: "car-outline",             bg: "#EDE9FE" },
+  { key: "baby",       label: "Baby Care",        icon: "balloon-outline",         bg: "#FCE7F3", imageUrl: require("../../../../assets/images/category/products/home_misc_baby.png") },
+  { key: "gifts",      label: "Gifts",            icon: "gift-outline",            bg: "#EDE9FE", imageUrl: require("../../../../assets/images/category/products/home_misc_gifts.png") },
+  { key: "travel",     label: "Travel",           icon: "airplane-outline",        bg: "#DBEAFE", imageUrl: require("../../../../assets/images/category/products/home_misc_travel.png") },
+  { key: "luggage",    label: "Luggage",          icon: "briefcase-outline",       bg: "#F3F4F6", imageUrl: require("../../../../assets/images/category/products/home_misc_luggage.png") },
+  { key: "seasonal",   label: "Seasonal Decor",   icon: "sparkles-outline",        bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_misc_seasonal.png") },
+  { key: "office",     label: "Office Supplies",  icon: "print-outline",           bg: "#DCFCE7", imageUrl: require("../../../../assets/images/category/products/home_misc_office.png") },
+  { key: "toys",       label: "Toys",             icon: "game-controller-outline", bg: "#FCE7F3", imageUrl: require("../../../../assets/images/category/products/home_misc_toys.png") },
+  { key: "artcraft",   label: "Art & Craft",      icon: "color-palette-outline",   bg: "#ECFDF5", imageUrl: require("../../../../assets/images/category/products/home_misc_artcraft.png") },
+  { key: "party",      label: "Party Supplies",   icon: "people-outline",          bg: "#FFEDD5", imageUrl: require("../../../../assets/images/category/products/home_misc_party.png") },
+  { key: "auto",       label: "Automotive",       icon: "car-outline",             bg: "#EDE9FE", imageUrl: require("../../../../assets/images/category/products/home_misc_auto.png") },
   { key: "garden",     label: "Gardening",        icon: "leaf-outline",            bg: "#DCFCE7" },
 ];
 
