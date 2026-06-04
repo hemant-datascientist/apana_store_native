@@ -24,7 +24,7 @@ const SUB_CATS: SubCat[] = [
   { key: "artcraft",   label: "Art & Craft",      icon: "color-palette-outline",   bg: "#ECFDF5", imageUrl: require("../../../../assets/images/category/products/home_misc_artcraft.png") },
   { key: "party",      label: "Party Supplies",   icon: "people-outline",          bg: "#FFEDD5", imageUrl: require("../../../../assets/images/category/products/home_misc_party.png") },
   { key: "auto",       label: "Automotive",       icon: "car-outline",             bg: "#EDE9FE", imageUrl: require("../../../../assets/images/category/products/home_misc_auto.png") },
-  { key: "garden",     label: "Gardening",        icon: "leaf-outline",            bg: "#DCFCE7" },
+  { key: "garden",     label: "Gardening",        icon: "leaf-outline",            bg: "#DCFCE7", imageUrl: require("../../../../assets/images/category/products/home_misc_gardening.png") },
 ];
 
 export default function MiscFeed() {
