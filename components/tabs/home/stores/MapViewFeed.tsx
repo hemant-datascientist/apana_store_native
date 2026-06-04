@@ -18,7 +18,7 @@
 //     GET /stores/nearby when you swap the stub.
 // ============================================================
 
-import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import React, { useState, useCallback, useRef, useMemo } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Dimensions, ActivityIndicator,
@@ -27,9 +27,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import useTheme from "../../../../theme/useTheme";
 import { typography } from "../../../../theme/typography";
-import { fetchNearbyMapPins, StoreMapPin } from "../../../../services/nearbyMapService";
-import { MAP_CATEGORY_FILTERS } from "../../../../data/nearbyMapData";
+import { MAP_CATEGORY_FILTERS, StoreMapPin } from "../../../../data/nearbyMapData";
 import { DEFAULT_LAT, DEFAULT_LNG, DEFAULT_ZOOM } from "../../../../config/mapplsConfig";
+import { useNearbyStores } from "../../../../hooks/useNearbyStores";
+import { clearCellCache } from "../../../../services/cellCache";
 import MapplsWebView, { MapMarker, MapplsWebViewHandle } from "../../../map/MapplsWebView";
 
 const { height: SH } = Dimensions.get("window");
@@ -54,23 +55,21 @@ export default function MapViewFeed() {
   const router             = useRouter();
   const mapRef             = useRef<MapplsWebViewHandle>(null);
 
-  // ── Data fetch ────────────────────────────────────────────
-  const [pins,     setPins]     = useState<StoreMapPin[]>([]);
-  const [loading,  setLoading]  = useState(true);
-  const [fetchErr, setFetchErr] = useState<string | null>(null);
+  // ── Nearby stores via the H3 cell cache (§19.3 / §19.6) ───
+  // Map centre → K=2 ring of cells (~600 m, the q-commerce radius) →
+  // cellCache (memory-first). Panning within a cell never refetches;
+  // revisits are instant.
+  // TODO: swap DEFAULT for live GPS from LocationContext.
+  const center = useMemo(() => ({ lat: DEFAULT_LAT, lng: DEFAULT_LNG }), []);
+  const { stores: pins, loading, error: storeErr } = useNearbyStores(center);
 
-  const loadPins = useCallback(() => {
-    setLoading(true);
-    setFetchErr(null);
+  // The Mappls SDK can fail to load independently of the store fetch.
+  const [mapErr, setMapErr] = useState<string | null>(null);
+  const fetchErr = storeErr ?? mapErr;
 
-    // TODO: pass real lat/lng from LocationContext / expo-location
-    fetchNearbyMapPins()
-      .then(data => setPins(data))
-      .catch(err  => setFetchErr(err?.message ?? "Could not load nearby stores."))
-      .finally(()  => setLoading(false));
-  }, []);
-
-  useEffect(() => { loadPins(); }, [loadPins]);
+  // Retry drops the cache + clears the map error; the hook refetches
+  // on the next cell read.
+  const loadPins = useCallback(() => { clearCellCache(); setMapErr(null); }, []);
 
   // ── Filter + selection state ──────────────────────────────
   const [activeCat,   setActiveCat]   = useState("all");
@@ -161,7 +160,7 @@ export default function MapViewFeed() {
             reason.startsWith("init_timeout")          ? "Map took too long to start. Please retry." :
             reason.startsWith("map_construct_failed")  ? "Map failed to initialise. Please retry." :
             "Map is unavailable right now. Please retry.";
-          setFetchErr(msg);
+          setMapErr(msg);
         }}
         isDark={isDark}
       />

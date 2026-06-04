@@ -46,8 +46,9 @@ import { StoreOrderResult }      from "../../services/checkoutService";
 import { CHECKOUT_STEPS }        from "../../data/checkoutData";
 import {
   TRACKING_STEPS, MOCK_ACTIVE_STEP, MOCK_ETA,
-  MOCK_PARTNERS, TRACKING_MODE_CONFIG,
+  MOCK_PARTNERS, TRACKING_MODE_CONFIG, MOCK_CUSTOMER_LOCATION,
 } from "../../data/orderTrackingData";
+import { useMockPartnerFix }    from "../../hooks/useMockPartnerFix";
 
 import TrackingProgress         from "../../components/order-tracking/TrackingProgress";
 import TrackingMapPlaceholder   from "../../components/order-tracking/TrackingMapPlaceholder";
@@ -79,6 +80,9 @@ export default function OrderTrackingScreen() {
 
   const mode    = modeParam as FulfillmentMode;
   const totalAmt= parseFloat(total);
+
+  // ── Live partner stream (§19.5) — mock WS fixes, smoothed by the map ──
+  const partnerFix = useMockPartnerFix(mode);
 
   // ── Parse storeOrders (expo-router already URL-decoded) ─────
   const storeOrdersRaw = useMemo<StoreOrderResult[]>(() => {
@@ -257,6 +261,8 @@ export default function OrderTrackingScreen() {
           etaMinutes={eta.minutes}
           partnerInitials={partner.initials}
           partnerColor={partner.avatarColor}
+          fix={partnerFix}
+          customerLocation={MOCK_CUSTOMER_LOCATION}
         />
 
         {/* ── Pickup-only: reorderable store list ── */}

@@ -33,6 +33,7 @@ import { typography }  from "../../theme/typography";
 import { FulfillmentMode } from "../../data/cartData";
 import { TRACKING_MODE_CONFIG } from "../../data/orderTrackingData";
 import MapplsWebView, { MapMarker, MapplsWebViewHandle } from "../map/MapplsWebView";
+import { usePartnerMarker, PartnerFix } from "../../hooks/usePartnerMarker";
 import {
   DEFAULT_LAT, DEFAULT_LNG,
 } from "../../config/mapplsConfig";
@@ -52,28 +53,37 @@ interface TrackingMapProps {
   etaMinutes:       number;
   partnerInitials:  string;
   partnerColor:     string;
-  // Real-time location — optional; defaults to Pune mock coords
+  // Live partner stream (§19.5). Fed sparse fixes; usePartnerMarker
+  // smooths them (Kalman + reckoning + hex-snap) into a 60fps marker.
+  fix?:              PartnerFix | null;
+  // Static fallbacks when no live fix is available.
   partnerLocation?:  { lat: number; lng: number };
   customerLocation?: { lat: number; lng: number };
 }
 
 export default function TrackingMapPlaceholder({
   mode, etaMinutes, partnerInitials, partnerColor,
-  partnerLocation, customerLocation,
+  fix, partnerLocation, customerLocation,
 }: TrackingMapProps) {
   const { colors, isDark } = useTheme();
   const cfg                = TRACKING_MODE_CONFIG[mode];
   const mapRef             = useRef<MapplsWebViewHandle>(null);
 
-  // ── Resolve locations (real or mock fallback) ─────────────
-  const pLat = partnerLocation?.lat  ?? DEFAULT_PARTNER_LAT;
-  const pLng = partnerLocation?.lng  ?? DEFAULT_PARTNER_LNG;
+  // ── Smoothed live marker (§19.5) — falls back to static coords ──
+  const marker = usePartnerMarker(fix ?? null);
+  const isStale = marker?.mode === "stale";
+
+  const pLat = marker?.lat ?? partnerLocation?.lat ?? DEFAULT_PARTNER_LAT;
+  const pLng = marker?.lng ?? partnerLocation?.lng ?? DEFAULT_PARTNER_LNG;
   const cLat = customerLocation?.lat ?? DEFAULT_CUSTOMER_LAT;
   const cLng = customerLocation?.lng ?? DEFAULT_CUSTOMER_LNG;
 
-  // ── Map centre — midpoint between partner and customer ────
-  const centerLat = (pLat + cLat) / 2;
-  const centerLng = (pLng + cLng) / 2;
+  // ── Map centre — stable midpoint from the START fix, not the live
+  // marker, so the map doesn't chase the rider every frame. ────────
+  const startPLat = partnerLocation?.lat ?? DEFAULT_PARTNER_LAT;
+  const startPLng = partnerLocation?.lng ?? DEFAULT_PARTNER_LNG;
+  const centerLat = (startPLat + cLat) / 2;
+  const centerLng = (startPLng + cLng) / 2;
 
   // ── Markers ───────────────────────────────────────────────
   const markers: MapMarker[] = [
@@ -82,9 +92,9 @@ export default function TrackingMapPlaceholder({
       lat:      pLat,
       lng:      pLng,
       title:    mode === "ride" ? "Your Driver" : "Delivery Partner",
-      subtitle: `${partnerInitials} · ETA ~${etaMinutes} min`,
+      subtitle: isStale ? `${partnerInitials} · locating…` : `${partnerInitials} · ETA ~${etaMinutes} min`,
       icon:     "partner",
-      isLive:   true,
+      isLive:   !isStale,
       isOpen:   true,
     },
     {
@@ -112,10 +122,10 @@ export default function TrackingMapPlaceholder({
       />
 
       {/* ── ETA overlay ── */}
-      <View style={[styles.etaBubble, { backgroundColor: cfg.color }]}>
-        <Ionicons name={cfg.icon as any} size={13} color="#fff" />
+      <View style={[styles.etaBubble, { backgroundColor: isStale ? colors.subText : cfg.color }]}>
+        <Ionicons name={isStale ? "navigate-outline" : (cfg.icon as keyof typeof Ionicons.glyphMap)} size={13} color="#fff" />
         <Text style={[styles.etaText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.xs }]}>
-          ~{etaMinutes} min
+          {isStale ? "Locating…" : `~${etaMinutes} min`}
         </Text>
       </View>
 

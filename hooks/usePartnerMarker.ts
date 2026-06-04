@@ -23,6 +23,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { latLngToCell, cellToLatLng, H3_RES } from "../services/h3";
+import { distanceMeters, movePoint } from "../lib/geo";
 
 // ── public types ──────────────────────────────────────────────
 export interface PartnerFix {
@@ -49,8 +50,6 @@ const KALMAN_MEASURE = 3; // kalmanjs "Q" — distrust noisy raw GPS
 const COMMIT_MS = 40; // ~25 fps state commits (rAF is 60 fps; throttled
 //                       to spare the RN bridge — visually identical for
 //                       a delivery marker)
-const EARTH_M = 6_371_000;
-const DEG = Math.PI / 180;
 
 // ── 1-D Kalman filter ─────────────────────────────────────────
 // Matches the kalmanjs convention used in the architecture spec:
@@ -82,40 +81,6 @@ class Kalman1D {
     this.estimate = Number.NaN;
     this.covariance = 0;
   }
-}
-
-// ── geo helpers ───────────────────────────────────────────────
-// Great-circle distance, metres.
-function distanceMeters(aLat: number, aLng: number, bLat: number, bLng: number): number {
-  const dLat = (bLat - aLat) * DEG;
-  const dLng = (bLng - aLng) * DEG;
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(aLat * DEG) * Math.cos(bLat * DEG) * Math.sin(dLng / 2) ** 2;
-  return 2 * EARTH_M * Math.asin(Math.sqrt(h));
-}
-
-// Move a point `meters` along a compass bearing.
-function movePoint(
-  lat: number,
-  lng: number,
-  bearingDeg: number,
-  meters: number,
-): { lat: number; lng: number } {
-  const br = bearingDeg * DEG;
-  const lat1 = lat * DEG;
-  const lng1 = lng * DEG;
-  const dr = meters / EARTH_M;
-  const lat2 = Math.asin(
-    Math.sin(lat1) * Math.cos(dr) + Math.cos(lat1) * Math.sin(dr) * Math.cos(br),
-  );
-  const lng2 =
-    lng1 +
-    Math.atan2(
-      Math.sin(br) * Math.sin(dr) * Math.cos(lat1),
-      Math.cos(dr) - Math.sin(lat1) * Math.sin(lat2),
-    );
-  return { lat: lat2 / DEG, lng: lng2 / DEG };
 }
 
 // ── hook ──────────────────────────────────────────────────────
