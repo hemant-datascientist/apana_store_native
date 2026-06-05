@@ -12,6 +12,11 @@
 //   - Hex-snap fallback when partner GPS dies (§19.5)
 // ============================================================
 
+// Side-effect import FIRST — installs a utf-16le-capable TextDecoder
+// before h3-js's emscripten glue constructs one at load time. Expo
+// SDK 55's TextDecoder throws RangeError on 'utf-16le' otherwise,
+// crashing the bundle the moment this module is imported.
+import "../polyfills/textDecoder";
 import {
   latLngToCell,
   cellToLatLng,
