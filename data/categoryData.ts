@@ -326,22 +326,235 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
     ],
   },
 
+  // ── Jewellery & Precious ──────────────────────────────────
+  // §29 gap-fill: promoted out of Miscellaneous so fine jewellery has a real
+  // discovery home (was only "Fashion Jewellery" sub). Icon-only until BE/assets.
+  {
+    key: "jewellery",
+    title: "Jewellery & Precious",
+    color: "#CA8A04",
+    icon: "diamond-outline",
+    subs: [
+      { key: "gold", label: "Gold Jewellery", icon: "ribbon-outline", color: "#FEF3C7" },
+      { key: "silver", label: "Silver Jewellery", icon: "sparkles-outline", color: "#F3F4F6" },
+      { key: "diamond", label: "Diamond", icon: "diamond-outline", color: "#DBEAFE" },
+      { key: "gemstone", label: "Gemstone & Stones", icon: "diamond-outline", color: "#F3E8FF" },
+      { key: "bridal", label: "Bridal & Wedding", icon: "heart-outline", color: "#FCE7F3" },
+      { key: "imitation", label: "Imitation Jewellery", icon: "pricetag-outline", color: "#FFEDD5" },
+      { key: "coins_bullion", label: "Coins & Bullion", icon: "cash-outline", color: "#FEF3C7" },
+      { key: "jwl_repair", label: "Jewellery Repair", icon: "construct-outline", color: "#DCFCE7" },
+    ],
+  },
+
+  // ── Eyewear ───────────────────────────────────────────────
+  {
+    key: "eyewear",
+    title: "Eyewear",
+    color: "#0EA5E9",
+    icon: "glasses-outline",
+    subs: [
+      { key: "eyeglasses", label: "Eyeglasses (Rx)", icon: "glasses-outline", color: "#DBEAFE" },
+      { key: "sunglasses", label: "Sunglasses", icon: "sunny-outline", color: "#FEF3C7" },
+      { key: "contacts", label: "Contact Lenses", icon: "ellipse-outline", color: "#DCFCE7" },
+      { key: "reading", label: "Reading Glasses", icon: "book-outline", color: "#FFEDD5" },
+      { key: "frames", label: "Frames", icon: "glasses-outline", color: "#EDE9FE" },
+      { key: "lens_care", label: "Lens Care", icon: "water-outline", color: "#DBEAFE" },
+      { key: "eyewear_cases", label: "Cases & Accessories", icon: "briefcase-outline", color: "#F3F4F6" },
+    ],
+  },
+
+  // ── Watches ───────────────────────────────────────────────
+  {
+    key: "watches",
+    title: "Watches",
+    color: "#475569",
+    icon: "watch-outline",
+    subs: [
+      { key: "mens_watch", label: "Men's Watches", icon: "man-outline", color: "#DBEAFE" },
+      { key: "womens_watch", label: "Women's Watches", icon: "woman-outline", color: "#FCE7F3" },
+      { key: "smartwatch", label: "Smartwatches", icon: "watch-outline", color: "#DCFCE7" },
+      { key: "couple_watch", label: "Couple Watches", icon: "heart-outline", color: "#FEE2E2" },
+      { key: "kids_watch", label: "Kids' Watches", icon: "happy-outline", color: "#FEF3C7" },
+      { key: "luxury_watch", label: "Luxury Watches", icon: "diamond-outline", color: "#EDE9FE" },
+      { key: "watch_repair", label: "Straps & Repair", icon: "construct-outline", color: "#F3F4F6" },
+    ],
+  },
+
+  // ── Pet Supplies ──────────────────────────────────────────
+  {
+    key: "pet",
+    title: "Pet Supplies",
+    color: "#D97706",
+    icon: "paw-outline",
+    subs: [
+      { key: "dog", label: "Dog Supplies", icon: "paw-outline", color: "#FFEDD5", imageUrl: require("../assets/images/category/products/pet_shop.png") },
+      { key: "cat", label: "Cat Supplies", icon: "paw-outline", color: "#FCE7F3" },
+      { key: "bird", label: "Bird Supplies", icon: "leaf-outline", color: "#DCFCE7" },
+      { key: "fish_aqua", label: "Fish & Aquarium", icon: "fish-outline", color: "#DBEAFE" },
+      { key: "pet_food", label: "Pet Food", icon: "nutrition-outline", color: "#DCFCE7", imageUrl: require("../assets/images/category/products/pet_food.png") },
+      { key: "grooming", label: "Grooming", icon: "cut-outline", color: "#FEF3C7" },
+      { key: "pet_acc", label: "Accessories", icon: "pricetag-outline", color: "#EDE9FE" },
+      { key: "pet_health", label: "Pet Health", icon: "medkit-outline", color: "#FEE2E2" },
+    ],
+  },
+
+  // ── Hardware & Tools ──────────────────────────────────────
+  {
+    key: "hardware",
+    title: "Hardware & Tools",
+    color: "#78716C",
+    icon: "hammer-outline",
+    subs: [
+      { key: "hand_tools", label: "Hand Tools", icon: "hammer-outline", color: "#FEF3C7" },
+      { key: "power_tools", label: "Power Tools", icon: "construct-outline", color: "#FFEDD5" },
+      { key: "fasteners", label: "Fasteners & Screws", icon: "build-outline", color: "#F3F4F6" },
+      { key: "plumbing", label: "Plumbing", icon: "water-outline", color: "#DBEAFE" },
+      { key: "safety_gear", label: "Safety Gear", icon: "shield-checkmark-outline", color: "#DCFCE7" },
+      { key: "adhesives", label: "Adhesives & Sealants", icon: "color-fill-outline", color: "#FEF3C7" },
+      { key: "measuring", label: "Measuring Tools", icon: "resize-outline", color: "#EDE9FE" },
+    ],
+  },
+
+  // ── Garden & Plants ───────────────────────────────────────
+  {
+    key: "garden",
+    title: "Garden & Plants",
+    color: "#15803D",
+    icon: "leaf-outline",
+    subs: [
+      { key: "live_plants", label: "Live Plants", icon: "leaf-outline", color: "#DCFCE7" },
+      { key: "garden_seeds", label: "Seeds & Bulbs", icon: "nutrition-outline", color: "#FEF3C7" },
+      { key: "pots", label: "Pots & Planters", icon: "cube-outline", color: "#FFEDD5" },
+      { key: "soil", label: "Soil & Fertilizer", icon: "color-fill-outline", color: "#F3E8FF" },
+      { key: "garden_tools", label: "Garden Tools", icon: "construct-outline", color: "#DBEAFE" },
+      { key: "garden_pest", label: "Pesticides", icon: "bug-outline", color: "#FEE2E2" },
+    ],
+  },
+
+  // ── Musical Instruments ───────────────────────────────────
+  {
+    key: "music",
+    title: "Musical Instruments",
+    color: "#7C3AED",
+    icon: "musical-notes-outline",
+    subs: [
+      { key: "string", label: "String", icon: "musical-note-outline", color: "#EDE9FE", imageUrl: require("../assets/images/category/products/musical.png") },
+      { key: "percussion", label: "Percussion", icon: "musical-notes-outline", color: "#FEF3C7" },
+      { key: "wind", label: "Wind", icon: "musical-note-outline", color: "#DBEAFE" },
+      { key: "keyboard", label: "Keyboard & Piano", icon: "musical-notes-outline", color: "#DCFCE7" },
+      { key: "traditional", label: "Traditional (Tabla / Harmonium)", icon: "musical-note-outline", color: "#FFEDD5" },
+      { key: "music_acc", label: "Accessories", icon: "pricetag-outline", color: "#F3F4F6" },
+    ],
+  },
+
+  // ── Paint & Finishes ──────────────────────────────────────
+  {
+    key: "paint",
+    title: "Paint & Finishes",
+    color: "#DB2777",
+    icon: "color-fill-outline",
+    subs: [
+      { key: "wall_paint", label: "Wall Paint", icon: "color-fill-outline", color: "#FCE7F3" },
+      { key: "primers", label: "Primers", icon: "color-fill-outline", color: "#F3F4F6" },
+      { key: "brushes", label: "Brushes & Rollers", icon: "brush-outline", color: "#FEF3C7" },
+      { key: "putty", label: "Putty & Fillers", icon: "cube-outline", color: "#FFEDD5" },
+      { key: "waterproofing", label: "Waterproofing", icon: "water-outline", color: "#DBEAFE" },
+      { key: "spray_paint", label: "Spray Paint", icon: "color-palette-outline", color: "#EDE9FE" },
+    ],
+  },
+
+  // ── Electrical & Lighting ─────────────────────────────────
+  {
+    key: "electrical",
+    title: "Electrical & Lighting",
+    color: "#EAB308",
+    icon: "bulb-outline",
+    subs: [
+      { key: "wires", label: "Wires & Cables", icon: "flash-outline", color: "#FEF3C7" },
+      { key: "switches", label: "Switches & Sockets", icon: "apps-outline", color: "#F3F4F6" },
+      { key: "bulbs", label: "Bulbs & Lighting", icon: "bulb-outline", color: "#FEF3C7" },
+      { key: "fans", label: "Fans", icon: "sync-outline", color: "#DBEAFE" },
+      { key: "mcb", label: "MCB & Boards", icon: "grid-outline", color: "#DCFCE7" },
+      { key: "extension", label: "Extension Boards", icon: "flash-outline", color: "#EDE9FE" },
+    ],
+  },
+
+  // ── Agriculture & Farming ─────────────────────────────────
+  {
+    key: "agriculture",
+    title: "Agriculture & Farming",
+    color: "#65A30D",
+    icon: "leaf-outline",
+    subs: [
+      { key: "agri_seeds", label: "Seeds", icon: "nutrition-outline", color: "#FEF3C7" },
+      { key: "fertilizers", label: "Fertilizers", icon: "color-fill-outline", color: "#DCFCE7" },
+      { key: "agri_pest", label: "Pesticides", icon: "bug-outline", color: "#FEE2E2" },
+      { key: "farm_tools", label: "Tools & Equipment", icon: "construct-outline", color: "#FFEDD5" },
+      { key: "irrigation", label: "Irrigation", icon: "water-outline", color: "#DBEAFE" },
+      { key: "cattle_feed", label: "Cattle Feed", icon: "nutrition-outline", color: "#F3E8FF" },
+    ],
+  },
+
+  // ── Paan, Tobacco & Mukhwas ───────────────────────────────
+  // Tobacco-free Paan/Supari/Mukhwas always-on; Cigarettes/Hookah are
+  // regulated → BE must geo + age gate before exposing (no-phantom for now).
+  {
+    key: "paan",
+    title: "Paan, Tobacco & Mukhwas",
+    color: "#059669",
+    icon: "leaf-outline",
+    subs: [
+      { key: "paan", label: "Paan", icon: "leaf-outline", color: "#DCFCE7" },
+      { key: "supari", label: "Supari", icon: "ellipse-outline", color: "#FEF3C7" },
+      { key: "mukhwas", label: "Mukhwas", icon: "sparkles-outline", color: "#FFEDD5" },
+      { key: "flavoured", label: "Flavoured (Tobacco-free)", icon: "rose-outline", color: "#FCE7F3" },
+      { key: "cigarettes", label: "Cigarettes", icon: "warning-outline", color: "#FEE2E2" },
+      { key: "hookah", label: "Hookah", icon: "flame-outline", color: "#F3F4F6" },
+    ],
+  },
+
+  // ── Gifts & Festive ───────────────────────────────────────
+  {
+    key: "gifts",
+    title: "Gifts & Festive",
+    color: "#E11D48",
+    icon: "gift-outline",
+    subs: [
+      { key: "hampers", label: "Gift Hampers", icon: "gift-outline", color: "#FCE7F3", imageUrl: require("../assets/images/category/products/gifting.png") },
+      { key: "cards", label: "Greeting Cards", icon: "card-outline", color: "#DBEAFE" },
+      { key: "decor", label: "Decor & Decoration", icon: "color-palette-outline", color: "#FEF3C7" },
+      { key: "festival_kits", label: "Festival Kits", icon: "sparkles-outline", color: "#FFEDD5" },
+      { key: "custom_gifts", label: "Customized Gifts", icon: "create-outline", color: "#EDE9FE" },
+      { key: "party", label: "Party Supplies", icon: "balloon-outline", color: "#FEE2E2" },
+    ],
+  },
+
+  // ── Office & Stationery ───────────────────────────────────
+  {
+    key: "office",
+    title: "Office & Stationery",
+    color: "#0F766E",
+    icon: "briefcase-outline",
+    subs: [
+      { key: "office_sup", label: "Office Supplies", icon: "briefcase-outline", color: "#F3F4F6", imageUrl: require("../assets/images/category/products/office_supply.png") },
+      { key: "printers", label: "Printers & Ink", icon: "print-outline", color: "#DBEAFE" },
+      { key: "paper", label: "Paper & Notebooks", icon: "document-text-outline", color: "#FEF3C7" },
+      { key: "filing", label: "Filing & Storage", icon: "folder-outline", color: "#FFEDD5" },
+      { key: "art_supplies", label: "Art Supplies", icon: "brush-outline", color: "#FCE7F3", imageUrl: require("../assets/images/category/products/art_craft.png") },
+    ],
+  },
+
   // ── Miscellaneous ─────────────────────────────────────────
+  // Trimmed to a genuine catch-all. Pet / Musical / Gifting / Office / Art /
+  // Auto-parts (dup of Automotive) promoted to their own §29 groups above.
   {
     key: "misc",
     title: "Miscellaneous",
     color: "#6B7280",
     icon: "ellipsis-horizontal-circle-outline",
     subs: [
-      { key: "pet_shop", label: "Pet Shop", icon: "paw-outline", color: "#FFEDD5", imageUrl: require("../assets/images/category/products/pet_shop.png") },
-      { key: "pet_food", label: "Pet Food & Accessories", icon: "fish-outline", color: "#DCFCE7", imageUrl: require("../assets/images/category/products/pet_food.png") },
       { key: "toys", label: "Toys & Games", icon: "game-controller-outline", color: "#DBEAFE", imageUrl: require("../assets/images/category/products/toys.png") },
-      { key: "auto_parts", label: "Auto Parts", icon: "car-outline", color: "#FEF3C7", imageUrl: require("../assets/images/category/products/auto_parts.png") },
-      { key: "musical", label: "Musical Instruments", icon: "musical-notes-outline", color: "#FCE7F3", imageUrl: require("../assets/images/category/products/musical.png") },
-      { key: "art_craft", label: "Art & Craft", icon: "brush-outline", color: "#FFF7ED", imageUrl: require("../assets/images/category/products/art_craft.png") },
       { key: "travel_acc", label: "Travel Accessories", icon: "airplane-outline", color: "#DBEAFE", imageUrl: require("../assets/images/category/products/travel_acc.png") },
-      { key: "gifting", label: "Gifting & Greeting Cards", icon: "gift-outline", color: "#FCE7F3", imageUrl: require("../assets/images/category/products/gifting.png") },
-      { key: "office_supply", label: "Office Supplies", icon: "briefcase-outline", color: "#F3F4F6", imageUrl: require("../assets/images/category/products/office_supply.png") },
       { key: "recycle", label: "Recycling & Scrap", icon: "refresh-circle-outline", color: "#DCFCE7", imageUrl: require("../assets/images/category/products/recycle.png") },
     ],
   },
