@@ -38,6 +38,7 @@ export interface StoreDetail {
   closesAt:     string;   // e.g. "9:00 PM"
   opensAt:      string;   // e.g. "9:00 AM" (shown when closed)
   isLive:       boolean;
+  foundingSeller?: boolean;  // Apana Founding Seller — 0% commission, price locked
   lat:          number;
   lng:          number;
   hours:        StoreHours[];
@@ -81,6 +82,7 @@ export const MOCK_STORES: Record<string, StoreDetail> = {
     closesAt:    "9:00 PM",
     opensAt:     "8:00 AM",
     isLive:      true,
+    foundingSeller: true,
     lat:         18.5308,
     lng:         73.8475,
     hours: [
@@ -253,6 +255,7 @@ export const MOCK_STORES: Record<string, StoreDetail> = {
     closesAt:    "10:00 PM",
     opensAt:     "7:00 AM",
     isLive:      true,
+    foundingSeller: true,
     lat:         18.5590,
     lng:         73.7868,
     hours: [
