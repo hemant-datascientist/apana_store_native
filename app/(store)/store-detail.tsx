@@ -19,13 +19,14 @@
 // Backend: GET /stores/:id
 // ============================================================
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View, ScrollView, StyleSheet, Alert, Linking,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons }            from "@expo/vector-icons";
 import { TouchableOpacity }    from "react-native";
+import * as Haptics            from "expo-haptics";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import useTheme                from "../../theme/useTheme";
 import { typography }          from "../../theme/typography";
@@ -35,6 +36,8 @@ import {
   DEFAULT_STORE_ID,
   StoreProductCategory,
 } from "../../data/storeDetailData";
+import { useFollow }           from "../../hooks/useFollow";
+import StoreShareSheet         from "../../components/store/StoreShareSheet";
 
 import StoreHeroBanner        from "../../components/store/StoreHeroBanner";
 import StoreInfoHeader        from "../../components/store/StoreInfoHeader";
@@ -47,12 +50,29 @@ import StoreProductCategories from "../../components/store/StoreProductCategorie
 export default function StoreDetailScreen() {
   const { colors }         = useTheme();
   const router             = useRouter();
-  const { id }             = useLocalSearchParams<{ id?: string }>();
+  const { id, follow }     = useLocalSearchParams<{ id?: string; follow?: string }>();
   const insets             = useSafeAreaInsets();
 
   const store = getStoreById(id ?? DEFAULT_STORE_ID);
 
   const [productSearch, setProductSearch] = useState("");
+  const [showShare, setShowShare] = useState(false);
+
+  const { following, toggle: toggleFollow } = useFollow(store.id);
+
+  // Scan-to-follow: a QR / link with ?follow=1 follows once on landing (§30).
+  const didAutoFollow = useRef(false);
+  useEffect(() => {
+    if (follow === "1" && !didAutoFollow.current && !following) {
+      didAutoFollow.current = true;
+      toggleFollow();
+    }
+  }, [follow, following, toggleFollow]);
+
+  function handleFollow() {
+    Haptics.selectionAsync();
+    toggleFollow();
+  }
 
   // ── Actions ───────────────────────────────────────────────────
   async function handleDirections() {
@@ -117,13 +137,27 @@ export default function StoreDetailScreen() {
             {store.name}
           </Text>
 
-          <TouchableOpacity
-            style={[styles.backBtn, { backgroundColor: "rgba(0,0,0,0.35)" }]}
-            activeOpacity={0.8}
-            onPress={() => Alert.alert("Share", "Share store link coming soon.")}
-          >
-            <Ionicons name="share-outline" size={20} color="#fff" />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={[styles.backBtn, { backgroundColor: "rgba(0,0,0,0.35)" }]}
+              activeOpacity={0.8}
+              onPress={handleFollow}
+            >
+              <Ionicons
+                name={following ? "heart" : "heart-outline"}
+                size={20}
+                color={following ? "#EF4444" : "#fff"}
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.backBtn, { backgroundColor: "rgba(0,0,0,0.35)" }]}
+              activeOpacity={0.8}
+              onPress={() => setShowShare(true)}
+            >
+              <Ionicons name="share-outline" size={20} color="#fff" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* ── Hero banner ── */}
@@ -163,6 +197,13 @@ export default function StoreDetailScreen() {
         <StoreContactCard store={store} />
 
       </ScrollView>
+
+      <StoreShareSheet
+        visible={showShare}
+        storeId={store.id}
+        storeName={store.name}
+        onClose={() => setShowShare(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -190,6 +231,10 @@ const styles = StyleSheet.create({
     flex:      1,
     textAlign: "center",
     marginHorizontal: 8,
+  },
+  headerActions: {
+    flexDirection: "row",
+    gap:           8,
   },
 
   // ── Scroll content ──

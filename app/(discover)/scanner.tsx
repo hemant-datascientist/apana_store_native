@@ -30,6 +30,7 @@ import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { typography } from "../../theme/typography";
 import useTheme from "../../theme/useTheme";
+import { parseStoreId } from "../../lib/storeShare";
 
 // ── Scan zone dimensions ──────────────────────────────────────
 const { width: SW, height: SH } = Dimensions.get("window");
@@ -85,6 +86,9 @@ export default function ScannerScreen() {
     inputRange:  [0, 1],
     outputRange: [0, SCAN_H - 2],
   });
+
+  // If the scanned code is an Apana store link, offer "Open Store" (§30).
+  const scannedStoreId = result ? parseStoreId(result.data) : null;
 
   // ── Handle scanned barcode ───────────────────────────────────
   const handleBarCodeScanned = useCallback((data: BarcodeScanningResult) => {
@@ -332,19 +336,32 @@ export default function ScannerScreen() {
 
           {/* Actions */}
           <View style={styles.resultActions}>
-            <TouchableOpacity
-              style={[styles.resultBtn, styles.resultBtnFill, { backgroundColor: colors.primary }]}
-              activeOpacity={0.85}
-              onPress={() => {
-                // Navigate to product search with scanned value
-                router.back();
-              }}
-            >
-              <Ionicons name="search-outline" size={16} color="#fff" />
-              <Text style={[styles.resultBtnText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm, color: "#fff" }]}>
-                Search Product
-              </Text>
-            </TouchableOpacity>
+            {scannedStoreId ? (
+              <TouchableOpacity
+                style={[styles.resultBtn, styles.resultBtnFill, { backgroundColor: colors.primary }]}
+                activeOpacity={0.85}
+                onPress={() => router.replace(`/store-detail?id=${scannedStoreId}&follow=1`)}
+              >
+                <Ionicons name="storefront-outline" size={16} color="#fff" />
+                <Text style={[styles.resultBtnText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm, color: "#fff" }]}>
+                  Open Store
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.resultBtn, styles.resultBtnFill, { backgroundColor: colors.primary }]}
+                activeOpacity={0.85}
+                onPress={() => {
+                  // Navigate to product search with scanned value
+                  router.back();
+                }}
+              >
+                <Ionicons name="search-outline" size={16} color="#fff" />
+                <Text style={[styles.resultBtnText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm, color: "#fff" }]}>
+                  Search Product
+                </Text>
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               style={[styles.resultBtn, styles.resultBtnOutline, { borderColor: colors.border }]}

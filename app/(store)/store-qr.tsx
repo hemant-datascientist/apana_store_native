@@ -24,6 +24,7 @@ import { SafeAreaView }                      from "react-native-safe-area-contex
 import { useRouter }                         from "expo-router";
 import * as Haptics                          from "expo-haptics";
 import { typography }                        from "../../theme/typography";
+import { parseStoreId }                      from "../../lib/storeShare";
 
 const { width: SW, height: SH } = Dimensions.get("window");
 const SCAN_SIZE = SW * 0.68;
@@ -46,7 +47,6 @@ export default function StoreQRScreen() {
   const [activeTab, setActiveTab] = useState<BottomTab>("scan");
 
   const scanAnim  = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(300)).current;
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -68,10 +68,16 @@ export default function StoreQRScreen() {
     if (scanned) return;
     setScanned(true);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Animated.spring(slideAnim, {
-      toValue: 0, useNativeDriver: true, tension: 60, friction: 10,
-    }).start();
-  }, [scanned]);
+
+    const storeId = parseStoreId(data.data);
+    if (storeId) {
+      // Open the store and follow it on landing — scan-to-follow (§30).
+      setTimeout(() => router.replace(`/store-detail?id=${storeId}&follow=1`), 650);
+    } else {
+      // Not an Apana store QR — let the user try again.
+      setTimeout(() => setScanned(false), 1200);
+    }
+  }, [scanned, router]);
 
   // ── No permission ──
   if (!permission) return <View style={styles.root} />;
