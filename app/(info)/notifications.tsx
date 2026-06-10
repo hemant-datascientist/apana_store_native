@@ -17,7 +17,7 @@
 import React, { useState, useMemo } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, StatusBar,
+  StyleSheet, StatusBar, Switch,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons }     from "@expo/vector-icons";
@@ -25,6 +25,7 @@ import { useRouter }    from "expo-router";
 
 import useTheme         from "../../theme/useTheme";
 import { typography }   from "../../theme/typography";
+import { useStoreUpdatesPref } from "../../hooks/useNotificationPrefs";
 import {
   MOCK_NOTIFICATIONS, NotifItem,
 } from "../../data/notificationsData";
@@ -34,6 +35,7 @@ export default function NotificationsScreen() {
   const router             = useRouter();
 
   const [items, setItems] = useState<NotifItem[]>(MOCK_NOTIFICATIONS);
+  const { storeUpdates, setStoreUpdates } = useStoreUpdatesPref();
 
   const unread  = useMemo(() => items.filter(n => !n.read),  [items]);
   const earlier = useMemo(() => items.filter(n =>  n.read),  [items]);
@@ -89,6 +91,27 @@ export default function NotificationsScreen() {
           )}
         </View>
       </SafeAreaView>
+
+      {/* ── Store-updates opt-out (§30 P4b) ── */}
+      <View style={[styles.prefRow, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <View style={[styles.prefIcon, { backgroundColor: colors.primary + "14" }]}>
+          <Ionicons name="storefront-outline" size={18} color={colors.primary} />
+        </View>
+        <View style={styles.prefText}>
+          <Text style={[styles.prefTitle, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
+            Store updates
+          </Text>
+          <Text style={[styles.prefSub, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+            Offers & news from shops you follow
+          </Text>
+        </View>
+        <Switch
+          value={storeUpdates}
+          onValueChange={setStoreUpdates}
+          trackColor={{ true: colors.primary, false: colors.border }}
+          thumbColor="#fff"
+        />
+      </View>
 
       {/* ── Notification list ── */}
       {items.length === 0 ? (
@@ -234,6 +257,26 @@ const styles = StyleSheet.create({
   },
   unreadBadgeText: { color: "#fff" },
   markAll: {},
+
+  // Store-updates opt-out row
+  prefRow: {
+    flexDirection:     "row",
+    alignItems:        "center",
+    gap:               12,
+    paddingHorizontal: 16,
+    paddingVertical:   12,
+    borderBottomWidth: 1,
+  },
+  prefIcon: {
+    width:          36,
+    height:         36,
+    borderRadius:   12,
+    alignItems:     "center",
+    justifyContent: "center",
+  },
+  prefText:  { flex: 1 },
+  prefTitle: {},
+  prefSub:   { marginTop: 1 },
 
   // Empty state
   emptyWrap: {

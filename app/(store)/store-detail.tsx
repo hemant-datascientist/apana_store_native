@@ -37,6 +37,7 @@ import {
   StoreProductCategory,
 } from "../../data/storeDetailData";
 import { useFollow }           from "../../hooks/useFollow";
+import { useStoreMute }        from "../../hooks/useNotificationPrefs";
 import StoreShareSheet         from "../../components/store/StoreShareSheet";
 
 import StoreHeroBanner        from "../../components/store/StoreHeroBanner";
@@ -59,6 +60,7 @@ export default function StoreDetailScreen() {
   const [showShare, setShowShare] = useState(false);
 
   const { following, toggle: toggleFollow } = useFollow(store.id);
+  const { muted, toggleMute } = useStoreMute(store.id);
 
   // Scan-to-follow: a QR / link with ?follow=1 follows once on landing (§30).
   const didAutoFollow = useRef(false);
@@ -72,6 +74,11 @@ export default function StoreDetailScreen() {
   function handleFollow() {
     Haptics.selectionAsync();
     toggleFollow();
+  }
+
+  function handleMute() {
+    Haptics.selectionAsync();
+    toggleMute();
   }
 
   // ── Actions ───────────────────────────────────────────────────
@@ -149,6 +156,21 @@ export default function StoreDetailScreen() {
                 color={following ? "#EF4444" : "#fff"}
               />
             </TouchableOpacity>
+
+            {/* Mute this store's updates — only relevant once following (§30 P4b) */}
+            {following && (
+              <TouchableOpacity
+                style={[styles.backBtn, { backgroundColor: "rgba(0,0,0,0.35)" }]}
+                activeOpacity={0.8}
+                onPress={handleMute}
+              >
+                <Ionicons
+                  name={muted ? "notifications-off" : "notifications-outline"}
+                  size={20}
+                  color={muted ? "#FCD34D" : "#fff"}
+                />
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               style={[styles.backBtn, { backgroundColor: "rgba(0,0,0,0.35)" }]}
