@@ -98,6 +98,21 @@ export default function ProfileScreen() {
           onPress={store => router.push(`/store-detail?id=${store.id}`)}
         />
 
+        {/* ── Following — stores the customer follows (§30) ── */}
+        <TouchableOpacity
+          style={[styles.entryRow, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={() => router.push("/following")}
+          activeOpacity={0.8}
+        >
+          <View style={[styles.entryIcon, { backgroundColor: "#EF444414" }]}>
+            <Ionicons name="heart" size={18} color="#EF4444" />
+          </View>
+          <Text style={[styles.entryLabel, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
+            Stores you follow
+          </Text>
+          <Ionicons name="chevron-forward" size={18} color={colors.subText} />
+        </TouchableOpacity>
+
         {/* ── My Delivery Boy — tapping card section links to Delivery tab ── */}
         <PartnerCard
           partner={MOCK_DELIVERY_BOY}
@@ -151,6 +166,25 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safe:    { flex: 1 },
   content: { paddingBottom: 32 },
+
+  entryRow: {
+    flexDirection:     "row",
+    alignItems:        "center",
+    gap:               12,
+    marginHorizontal:  16,
+    marginTop:         16,
+    padding:           14,
+    borderRadius:      14,
+    borderWidth:       1,
+  },
+  entryIcon: {
+    width:          36,
+    height:         36,
+    borderRadius:   12,
+    alignItems:     "center",
+    justifyContent: "center",
+  },
+  entryLabel: { flex: 1 },
 
   logoutWrap: {
     alignItems:        "center",

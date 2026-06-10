@@ -61,6 +61,10 @@ export function followCount(): number {
   return followed.size;
 }
 
+export function followedIds(): string[] {
+  return [...followed];
+}
+
 export function toggleFollow(id: string): void {
   if (!id) return;
   if (followed.has(id)) followed.delete(id);

@@ -5,7 +5,7 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
-import { subscribe, getVersion, isFollowing, toggleFollow } from "../lib/followStore";
+import { subscribe, getVersion, isFollowing, toggleFollow, followedIds } from "../lib/followStore";
 
 export interface UseFollow {
   following: boolean;
@@ -18,4 +18,10 @@ export function useFollow(storeId: string): UseFollow {
   const following = isFollowing(storeId);
   const toggle = useCallback(() => toggleFollow(storeId), [storeId]);
   return { following, toggle };
+}
+
+// Reactive list of followed store ids (for the Following screen).
+export function useFollowedIds(): string[] {
+  useSyncExternalStore(subscribe, getVersion, getVersion);
+  return followedIds();
 }

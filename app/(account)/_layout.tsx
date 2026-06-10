@@ -17,6 +17,7 @@ export default function AccountLayout() {
       <Stack.Screen name="payment-methods" />
       <Stack.Screen name="add-payment"     />
       <Stack.Screen name="favourite"       />
+      <Stack.Screen name="following"       />
     </Stack>
   );
 }
