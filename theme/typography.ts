@@ -26,6 +26,7 @@ export const typography = {
     ss:  10,  // Extra extra small — badges, micro labels
     xs:  12,  // Extra small — captions, helper text
     sm:  14,  // Small — secondary text, form labels
+    base: 16, // Base body (16px; used by some feeds/headers — alias of md)
     md:  16,  // Medium — default body text
     lg:  18,  // Large — section titles
     xl:  20,  // Extra large — screen headings
