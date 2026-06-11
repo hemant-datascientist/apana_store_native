@@ -439,11 +439,11 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
     icon: "musical-notes-outline",
     subs: [
       { key: "string", label: "String", icon: "musical-note-outline", color: "#EDE9FE", imageUrl: require("../assets/images/category/products/musical.png") },
-      { key: "percussion", label: "Percussion", icon: "musical-notes-outline", color: "#FEF3C7" },
-      { key: "wind", label: "Wind", icon: "musical-note-outline", color: "#DBEAFE" },
-      { key: "keyboard", label: "Keyboard & Piano", icon: "musical-notes-outline", color: "#DCFCE7" },
-      { key: "traditional", label: "Traditional (Tabla / Harmonium)", icon: "musical-note-outline", color: "#FFEDD5" },
-      { key: "music_acc", label: "Accessories", icon: "pricetag-outline", color: "#F3F4F6" },
+      { key: "percussion", label: "Percussion", icon: "musical-notes-outline", color: "#FEF3C7", imageUrl: require("../assets/images/category/products/percussion.png") },
+      { key: "wind", label: "Wind", icon: "musical-note-outline", color: "#DBEAFE", imageUrl: require("../assets/images/category/products/wind.png") },
+      { key: "keyboard", label: "Keyboard & Piano", icon: "musical-notes-outline", color: "#DCFCE7", imageUrl: require("../assets/images/category/products/keyboard.png") },
+      { key: "traditional", label: "Traditional (Tabla / Harmonium)", icon: "musical-note-outline", color: "#FFEDD5", imageUrl: require("../assets/images/category/products/traditional.png") },
+      { key: "music_acc", label: "Accessories", icon: "pricetag-outline", color: "#F3F4F6", imageUrl: require("../assets/images/category/products/music_acc.png") },
     ],
   },
 
