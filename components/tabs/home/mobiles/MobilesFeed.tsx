@@ -17,14 +17,14 @@ import { MOCK_LOCATION }  from "../../../../data/homeData";
 const ACCENT = "#0437B1";
 
 const SUB_CATS: SubCat[] = [
-  { key: "mobiles",    label: "Mobiles",        icon: "phone-portrait-outline",   bg: "#DBEAFE", imageUrl: require("../../../../assets/images/category/products/home_mobiles.png") },
-  { key: "tablets",    label: "Tablets",         icon: "tablet-portrait-outline",  bg: "#EDE9FE", imageUrl: require("../../../../assets/images/category/products/home_tablets.png") },
-  { key: "cases",      label: "Cases",           icon: "phone-landscape-outline",  bg: "#DCFCE7", imageUrl: require("../../../../assets/images/category/products/home_cases.png") },
-  { key: "earbuds",    label: "Earbuds",         icon: "headset-outline",          bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_earbuds.png") },
-  { key: "feature",    label: "Feature Phone",   icon: "call-outline",             bg: "#FFEDD5", imageUrl: require("../../../../assets/images/category/products/home_feature.png") },
-  { key: "screenguard",label: "Screenguard",     icon: "shield-outline",           bg: "#F3F4F6", imageUrl: require("../../../../assets/images/category/products/home_screenguard.png") },
-  { key: "recharge",   label: "Recharge & SIM",  icon: "card-outline",             bg: "#FCE7F3", imageUrl: require("../../../../assets/images/category/products/home_recharge.png") },
-  { key: "accessories",label: "Accessories",     icon: "pricetag-outline",         bg: "#E0F2FE", imageUrl: require("../../../../assets/images/category/products/home_accessories.png") },
+  { key: "mobiles",    label: "Mobiles",        icon: "phone-portrait-outline",   bg: "#DBEAFE", imageUrl: require("../../../../assets/images/category/products/home_mobiles.webp") },
+  { key: "tablets",    label: "Tablets",         icon: "tablet-portrait-outline",  bg: "#EDE9FE", imageUrl: require("../../../../assets/images/category/products/home_tablets.webp") },
+  { key: "cases",      label: "Cases",           icon: "phone-landscape-outline",  bg: "#DCFCE7", imageUrl: require("../../../../assets/images/category/products/home_cases.webp") },
+  { key: "earbuds",    label: "Earbuds",         icon: "headset-outline",          bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_earbuds.webp") },
+  { key: "feature",    label: "Feature Phone",   icon: "call-outline",             bg: "#FFEDD5", imageUrl: require("../../../../assets/images/category/products/home_feature.webp") },
+  { key: "screenguard",label: "Screenguard",     icon: "shield-outline",           bg: "#F3F4F6", imageUrl: require("../../../../assets/images/category/products/home_screenguard.webp") },
+  { key: "recharge",   label: "Recharge & SIM",  icon: "card-outline",             bg: "#FCE7F3", imageUrl: require("../../../../assets/images/category/products/home_recharge.webp") },
+  { key: "accessories",label: "Accessories",     icon: "pricetag-outline",         bg: "#E0F2FE", imageUrl: require("../../../../assets/images/category/products/home_accessories.webp") },
 ];
 
 export default function MobilesFeed() {

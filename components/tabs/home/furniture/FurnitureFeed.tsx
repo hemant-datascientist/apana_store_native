@@ -13,18 +13,18 @@ import { MOCK_LOCATION }  from "../../../../data/homeData";
 const ACCENT = "#6D4924";
 
 const SUB_CATS: SubCat[] = [
-  { key: "sofa",       label: "Sofa & Seating",   icon: "people-outline",          bg: "#FFEDD5", imageUrl: require("../../../../assets/images/category/products/home_furn_sofa.png") },
-  { key: "beds",       label: "Beds & Mattresses", icon: "bed-outline",             bg: "#DBEAFE", imageUrl: require("../../../../assets/images/category/products/home_furn_beds.png") },
-  { key: "wardrobes",  label: "Wardrobes",        icon: "layers-outline",          bg: "#EDE9FE", imageUrl: require("../../../../assets/images/category/products/home_furn_wardrobes.png") },
-  { key: "dining",     label: "Dining Sets",      icon: "restaurant-outline",      bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_furn_dining.png") },
-  { key: "chairs",     label: "Office Chairs",    icon: "desktop-outline",         bg: "#DCFCE7", imageUrl: require("../../../../assets/images/category/products/home_furn_chairs.png") },
-  { key: "tables",     label: "Tables & Desks",   icon: "tablet-landscape-outline",bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_furn_tables.png") },
-  { key: "tvunit",     label: "TV Units",         icon: "tv-outline",              bg: "#DBEAFE", imageUrl: require("../../../../assets/images/category/products/home_furn_tvunit.png") },
-  { key: "shelves",    label: "Bookshelves",      icon: "library-outline",         bg: "#FFEDD5", imageUrl: require("../../../../assets/images/category/products/home_furn_shelves.png") },
-  { key: "outdoor",    label: "Outdoor Furniture",icon: "leaf-outline",            bg: "#ECFDF5", imageUrl: require("../../../../assets/images/category/products/home_furn_outdoor.png") },
-  { key: "storage",    label: "Storage",          icon: "server-outline",          bg: "#F3F4F6", imageUrl: require("../../../../assets/images/category/products/home_furn_storage.png") },
-  { key: "kids",       label: "Kids Furniture",   icon: "balloon-outline",         bg: "#FCE7F3", imageUrl: require("../../../../assets/images/category/products/home_furn_kids.png") },
-  { key: "beanbags",   label: "Bean Bags",        icon: "ellipse-outline",         bg: "#EDE9FE", imageUrl: require("../../../../assets/images/category/products/home_furn_beanbags.png") },
+  { key: "sofa",       label: "Sofa & Seating",   icon: "people-outline",          bg: "#FFEDD5", imageUrl: require("../../../../assets/images/category/products/home_furn_sofa.webp") },
+  { key: "beds",       label: "Beds & Mattresses", icon: "bed-outline",             bg: "#DBEAFE", imageUrl: require("../../../../assets/images/category/products/home_furn_beds.webp") },
+  { key: "wardrobes",  label: "Wardrobes",        icon: "layers-outline",          bg: "#EDE9FE", imageUrl: require("../../../../assets/images/category/products/home_furn_wardrobes.webp") },
+  { key: "dining",     label: "Dining Sets",      icon: "restaurant-outline",      bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_furn_dining.webp") },
+  { key: "chairs",     label: "Office Chairs",    icon: "desktop-outline",         bg: "#DCFCE7", imageUrl: require("../../../../assets/images/category/products/home_furn_chairs.webp") },
+  { key: "tables",     label: "Tables & Desks",   icon: "tablet-landscape-outline",bg: "#FEF3C7", imageUrl: require("../../../../assets/images/category/products/home_furn_tables.webp") },
+  { key: "tvunit",     label: "TV Units",         icon: "tv-outline",              bg: "#DBEAFE", imageUrl: require("../../../../assets/images/category/products/home_furn_tvunit.webp") },
+  { key: "shelves",    label: "Bookshelves",      icon: "library-outline",         bg: "#FFEDD5", imageUrl: require("../../../../assets/images/category/products/home_furn_shelves.webp") },
+  { key: "outdoor",    label: "Outdoor Furniture",icon: "leaf-outline",            bg: "#ECFDF5", imageUrl: require("../../../../assets/images/category/products/home_furn_outdoor.webp") },
+  { key: "storage",    label: "Storage",          icon: "server-outline",          bg: "#F3F4F6", imageUrl: require("../../../../assets/images/category/products/home_furn_storage.webp") },
+  { key: "kids",       label: "Kids Furniture",   icon: "balloon-outline",         bg: "#FCE7F3", imageUrl: require("../../../../assets/images/category/products/home_furn_kids.webp") },
+  { key: "beanbags",   label: "Bean Bags",        icon: "ellipse-outline",         bg: "#EDE9FE", imageUrl: require("../../../../assets/images/category/products/home_furn_beanbags.webp") },
 ];
 
 export default function FurnitureFeed() {
