@@ -1,45 +1,69 @@
 // ============================================================
 // STORE LIVE SCREEN — Apana Store (Customer App)
 //
-// Accessible by tapping "Stores Live – 410" in HomeHeader.
+// Accessible by tapping "Stores Live – 410" in HomeHeader (all-India) or a
+// state's live badge (state scope). Data comes from useStoreLiveStats —
+// mock-bundled today, GET /stores/live-stats when the BE lands; this screen
+// renders the same StoreLiveStats either way.
 //
 // Sections:
-//   1. Live count chip
+//   1. Live count chip + "Updated Xm ago" snapshot time
 //   2. DonutChart       — store distribution pie
 //   3. HorizontalBars   — percentage bar list
 //   4. StoreTable       — Live | Close Now data table
+// States: first-load spinner · error + retry (stale data stays visible if
+// a poll fails) · pull-to-refresh.
 // ============================================================
 
 import React from "react";
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity, StatusBar,
+  ActivityIndicator, RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
-import { STORE_LIVE_DATA, TOTAL_LIVE } from "../../data/storeLiveData";
+import { useStoreLiveStats } from "../../hooks/useStoreLiveStats";
 import DonutChart    from "../../components/store-live/DonutChart";
 import HorizontalBars from "../../components/store-live/HorizontalBars";
 import StoreTable    from "../../components/store-live/StoreTable";
 import { formatCount } from "../../utils/formatUtils";
 
+// Snapshot age — "Just now / Xm ago / Xh ago"
+function asOfLabel(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "";
+  const mins = Math.max(0, Math.floor((Date.now() - then) / 60000));
+  if (mins < 1) return "Updated just now";
+  if (mins < 60) return `Updated ${mins}m ago`;
+  return `Updated ${Math.floor(mins / 60)}h ago`;
+}
 
 export default function StoreLiveScreen() {
   const { colors, isDark } = useTheme();
   const router = useRouter();
-  const { stateName, storesLive } = useLocalSearchParams<{ stateName?:string; storesLive?:string }>();
+  const { stateKey, stateName, storesLive } = useLocalSearchParams<{
+    stateKey?: string; stateName?: string; storesLive?: string;
+  }>();
 
   const isStateSpecific = !!stateName;
-  const currentTotal    = isStateSpecific ? parseInt(storesLive || "0", 10) : TOTAL_LIVE;
-  const ratio           = currentTotal / TOTAL_LIVE;
+  const { stats, isLoading, isError, refetch } = useStoreLiveStats({
+    stateKey,
+    stateName,
+    mockStateTotal: storesLive ? parseInt(storesLive, 10) : undefined,
+  });
 
-  const currentData = STORE_LIVE_DATA.map(d => ({
-    ...d,
-    liveCount:   Math.round(d.liveCount * ratio),
-    closedCount: Math.round(d.closedCount * ratio),
-  }));
+  const [refreshing, setRefreshing] = React.useState(false);
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    refetch();
+    // refetch resolves through the hook's state; brief visual ack is enough
+    setTimeout(() => setRefreshing(false), 600);
+  }, [refetch]);
+
+  const scopeLabel = isStateSpecific ? `${stateName} Stores Live` : "All India Stores Live";
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -58,45 +82,98 @@ export default function StoreLiveScreen() {
           {isStateSpecific ? `${stateName} Store Live` : "All India Store Live"}
         </Text>
 
-        <TouchableOpacity style={styles.headerBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Ionicons name="help-circle-outline" size={22} color={colors.text} />
+        <TouchableOpacity onPress={refetch} style={styles.headerBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Ionicons name="refresh-outline" size={22} color={colors.text} />
         </TouchableOpacity>
       </SafeAreaView>
 
-      {/* ── Content ── */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-      >
-
-        {/* Live count chip */}
-        <View style={[styles.liveChip, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={styles.liveDot} />
-          <Text style={[styles.liveText, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
-            {isStateSpecific ? `${stateName} Stores Live` : "All India Stores Live"} – {formatCount(currentTotal)}
+      {/* ── First load ── */}
+      {isLoading && !stats && (
+        <View style={styles.centerWrap}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.stateText, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.sm }]}>
+            Loading live store data…
           </Text>
         </View>
+      )}
 
-        {/* Donut chart */}
-        <DonutChart data={currentData} totalLive={currentTotal} />
+      {/* ── Error with nothing to show ── */}
+      {isError && !stats && !isLoading && (
+        <View style={styles.centerWrap}>
+          <Ionicons name="cloud-offline-outline" size={44} color={colors.subText} />
+          <Text style={[styles.stateText, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.md }]}>
+            Couldn't load live data
+          </Text>
+          <TouchableOpacity
+            style={[styles.retryBtn, { backgroundColor: colors.primary }]}
+            onPress={refetch}
+            activeOpacity={0.85}
+          >
+            <Text style={[styles.retryText, { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
+              Retry
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
-        {/* Section label */}
-        <Text style={[styles.sectionLabel, { color: colors.subText, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
-          DISTRIBUTION BY STORE TYPE
-        </Text>
+      {/* ── Content ── */}
+      {stats && (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.content}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          }
+        >
 
-        {/* Horizontal bars */}
-        <HorizontalBars data={currentData} totalLive={currentTotal} />
+          {/* Stale-data banner — poll failed but last snapshot still shown */}
+          {isError && (
+            <TouchableOpacity
+              style={[styles.staleBanner, { backgroundColor: colors.card, borderColor: colors.warning }]}
+              onPress={refetch}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="warning-outline" size={14} color={colors.warning} />
+              <Text style={[styles.staleText, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+                Live update failed — showing last data. Tap to retry.
+              </Text>
+            </TouchableOpacity>
+          )}
 
-        {/* Section label */}
-        <Text style={[styles.sectionLabel, { color: colors.subText, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs, marginTop: 20 }]}>
-          LIVE vs CLOSED
-        </Text>
+          {/* Live count chip */}
+          <View style={[styles.liveChip, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.liveDot} />
+            <Text style={[styles.liveText, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
+              {scopeLabel} – {formatCount(stats.totalLive)}
+            </Text>
+          </View>
 
-        {/* Data table */}
-        <StoreTable data={currentData} totalLive={currentTotal} />
+          {/* Snapshot time */}
+          <Text style={[styles.asOf, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+            {asOfLabel(stats.asOf)}
+          </Text>
 
-      </ScrollView>
+          {/* Donut chart */}
+          <DonutChart data={stats.breakdown} totalLive={stats.totalLive} />
+
+          {/* Section label */}
+          <Text style={[styles.sectionLabel, { color: colors.subText, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
+            DISTRIBUTION BY STORE TYPE
+          </Text>
+
+          {/* Horizontal bars */}
+          <HorizontalBars data={stats.breakdown} totalLive={stats.totalLive} />
+
+          {/* Section label */}
+          <Text style={[styles.sectionLabel, { color: colors.subText, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs, marginTop: 20 }]}>
+            LIVE vs CLOSED
+          </Text>
+
+          {/* Data table */}
+          <StoreTable data={stats.breakdown} totalLive={stats.totalLive} />
+
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -114,6 +191,37 @@ const styles = StyleSheet.create({
   },
   headerBtn:   { width: 36 },
   headerTitle: { flex: 1, textAlign: "center" },
+
+  // Loading / error states
+  centerWrap: {
+    flex:           1,
+    alignItems:     "center",
+    justifyContent: "center",
+    gap:            12,
+    paddingHorizontal: 32,
+  },
+  stateText: { textAlign: "center" },
+  retryBtn: {
+    paddingHorizontal: 28,
+    paddingVertical:   10,
+    borderRadius:      22,
+    marginTop:         4,
+  },
+  retryText: { color: "#fff" },
+
+  // Stale banner
+  staleBanner: {
+    flexDirection:    "row",
+    alignItems:       "center",
+    gap:               8,
+    marginHorizontal: 16,
+    marginBottom:     12,
+    paddingHorizontal: 12,
+    paddingVertical:    8,
+    borderRadius:      10,
+    borderWidth:        1,
+  },
+  staleText: { flex: 1 },
 
   // Content
   content: {
@@ -141,6 +249,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#22C55E",
   },
   liveText: {},
+
+  // Snapshot timestamp
+  asOf: {
+    alignSelf:    "center",
+    marginBottom: 4,
+  },
 
   // Section labels
   sectionLabel: {

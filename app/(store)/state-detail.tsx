@@ -328,7 +328,7 @@ export default function StateDetailScreen() {
             }]}>{stateName}</Text>
             <Ionicons name="chevron-down" size={14} color="#fff" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.liveBadge} onPress={() => router.push({ pathname: "/store-live", params: { stateName, storesLive: storesLiveNum.toString() } })}>
+          <TouchableOpacity style={styles.liveBadge} onPress={() => router.push({ pathname: "/store-live", params: { stateKey, stateName, storesLive: storesLiveNum.toString() } })}>
             <View style={styles.liveDot} />
             <Text style={[styles.liveTxt, { fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
               Stores Live – {formatCount(storesLiveNum)}
