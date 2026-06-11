@@ -3,8 +3,11 @@
 //
 // Top bar of the home screen hero section:
 //   Left:  home icon + "Area, State – Pincode" + chevron ▾
-//   Right: green pulse dot + "Stores Live – N"
+//   Right: status dot + "Stores Live – N"
+//          green = stores live · red = none live · grey = still loading
 //
+// storesLive: null while the live count loads — shows "…" and a grey
+// dot rather than claiming 0 (§19.8 no phantom data).
 // Tapping the location row opens the area-change sheet.
 // ============================================================
 
@@ -15,14 +18,21 @@ import { typography } from "../../../theme/typography";
 import { UserLocation } from "../../../data/homeData";
 import { formatCount } from "../../../utils/formatUtils";
 
+const DOT_LIVE    = "#22C55E";
+const DOT_NONE    = "#EF4444";
+const DOT_LOADING = "#9CA3AF";
+
 interface HomeHeaderProps {
   location:        UserLocation;
-  storesLive:      number;
+  storesLive:      number | null;
   onLocationPress: () => void;
   onStoreLivePress?: () => void;
 }
 
 export default function HomeHeader({ location, storesLive, onLocationPress, onStoreLivePress }: HomeHeaderProps) {
+  const dotColor =
+    storesLive == null ? DOT_LOADING : storesLive > 0 ? DOT_LIVE : DOT_NONE;
+
   return (
     <View style={styles.row}>
 
@@ -40,9 +50,9 @@ export default function HomeHeader({ location, storesLive, onLocationPress, onSt
 
       {/* ── Stores Live badge (tappable → Store Live screen) ── */}
       <TouchableOpacity style={styles.liveBadge} onPress={onStoreLivePress} activeOpacity={0.75}>
-        <View style={styles.liveDot} />
+        <View style={[styles.liveDot, { backgroundColor: dotColor }]} />
         <Text style={[styles.liveText, { fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
-          Stores Live – {formatCount(storesLive)}
+          Stores Live – {storesLive == null ? "…" : formatCount(storesLive)}
         </Text>
       </TouchableOpacity>
 
@@ -78,10 +88,9 @@ const styles = StyleSheet.create({
     gap:           6,
   },
   liveDot: {
-    width:           8,
-    height:          8,
-    borderRadius:    4,
-    backgroundColor: "#22C55E",
+    width:        8,
+    height:       8,
+    borderRadius: 4,
   },
   liveText: {
     color: "#fff",

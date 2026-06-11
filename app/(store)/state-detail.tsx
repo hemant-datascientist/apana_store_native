@@ -25,6 +25,7 @@ import HomeSearchBar    from "../../components/tabs/home/HomeSearchBar";
 import BannerCarousel  from "../../components/tabs/home/BannerCarousel";
 import MenuDrawer      from "../../components/tabs/home/MenuDrawer";
 import { handleMenuSelect } from "../../lib/menuNav";
+import { useStoreLiveStats } from "../../hooks/useStoreLiveStats";
 import { HEADER_BG }    from "../../data/homeData";
 import { fetchStateData, StateDetailData, StateProduct, StateStore } from "../../data/stateDetailData";
 import { Animated } from "react-native";
@@ -246,6 +247,17 @@ export default function StateDetailScreen() {
 
   const stateName  = (name as string) ?? "State";
   const storesLiveNum = parseInt(storesLive || "0", 10);
+
+  // Live state-scoped store count for the hero badge — real numbers in live
+  // mode, bundled bharat count in mock. null while loading → grey dot + "…".
+  const liveStats = useStoreLiveStats({
+    stateKey,
+    stateName,
+    mockStateTotal: storesLiveNum,
+  });
+  const liveCount = liveStats.stats?.totalLive ?? null;
+  const liveDotColor =
+    liveCount == null ? "#9CA3AF" : liveCount > 0 ? "#22C55E" : "#EF4444";
   
   const [search,     setSearch]     = useState("");
   const [activeTab,  setActiveTab]  = useState("made_in");
@@ -329,9 +341,9 @@ export default function StateDetailScreen() {
             <Ionicons name="chevron-down" size={14} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.liveBadge} onPress={() => router.push({ pathname: "/store-live", params: { stateKey, stateName, storesLive: storesLiveNum.toString() } })}>
-            <View style={styles.liveDot} />
+            <View style={[styles.liveDot, { backgroundColor: liveDotColor }]} />
             <Text style={[styles.liveTxt, { fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
-              Stores Live – {formatCount(storesLiveNum)}
+              Stores Live – {liveCount == null ? "…" : formatCount(liveCount)}
             </Text>
           </TouchableOpacity>
         </View>
@@ -454,7 +466,7 @@ const styles = StyleSheet.create({
   locationBtn: { flexDirection:"row", alignItems:"center", flex:1, gap:5, marginRight:4 },
   locationTxt: { color:"#fff", flex:1, flexShrink:1 },
   liveBadge:   { flexDirection:"row", alignItems:"center", gap:5, flexShrink:0 },
-  liveDot:     { width:8, height:8, borderRadius:4, backgroundColor:"#22C55E" },
+  liveDot:     { width:8, height:8, borderRadius:4 },
   liveTxt:     { color:"#fff" },
 
   // Tab strip

@@ -27,6 +27,7 @@ import {
   DiscoveryMode,
 } from "../../data/homeData";
 import { useLocation } from "../../context/LocationContext";
+import { useStoreLiveStats } from "../../hooks/useStoreLiveStats";
 
 // ── Hero components ──────────────────────────────────────────
 import HomeHeader          from "../../components/tabs/home/HomeHeader";
@@ -90,6 +91,16 @@ export default function HomeScreen() {
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  // Live store count for the header badge — scoped to the customer's city
+  // (same scope the Store Live screen opens with). null until loaded; the
+  // badge shows grey/"…" rather than claiming a number (§19.8). Mock mode
+  // keeps the bundled count so FE-only dev looks unchanged.
+  const liveStats = useStoreLiveStats({
+    city: selectedAddress.city,
+    mockStateTotal: STORES_LIVE_COUNT,
+  });
+  const storesLiveCount = liveStats.stats?.totalLive ?? null;
+
   // Stores mode state
   const [storeTab, setStoreTab] = useState<StoreTab>("nearby");
   const [filters,  setFilters]  = useState<StoreFilters>({
@@ -145,7 +156,7 @@ export default function HomeScreen() {
 
           <HomeHeader
             location={{ area: selectedAddress.city, state: selectedAddress.state, pincode: selectedAddress.pincode }}
-            storesLive={STORES_LIVE_COUNT}
+            storesLive={storesLiveCount}
             onLocationPress={() => router.push("/address-book")}
             onStoreLivePress={() => router.push("/store-live")}
           />

@@ -31,6 +31,8 @@ import StoreTypeGrid   from "../../components/tabs/category/StoreTypeGrid";
 import ApcBrowseBanner from "../../components/apc/ApcBrowseBanner";
 import MenuDrawer      from "../../components/tabs/home/MenuDrawer";
 import { handleMenuSelect } from "../../lib/menuNav";
+import { useLocation } from "../../context/LocationContext";
+import { useStoreLiveStats } from "../../hooks/useStoreLiveStats";
 
 export default function CategoryScreen() {
   const { colors } = useTheme();
@@ -39,6 +41,14 @@ export default function CategoryScreen() {
   const [search,     setSearch]     = useState("");
   const [mode,       setMode]       = useState<DiscoveryMode>("products");
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Live store count for the header badge — same city scope as home.
+  const { selectedAddress } = useLocation();
+  const liveStats = useStoreLiveStats({
+    city: selectedAddress.city,
+    mockStateTotal: STORES_LIVE_COUNT,
+  });
+  const storesLiveCount = liveStats.stats?.totalLive ?? null;
 
   // One section per group. Rendered through a FlatList so only the on-screen
   // groups mount — the grid holds 308 tiles / 279 images, and mounting them
@@ -75,7 +85,7 @@ export default function CategoryScreen() {
 
         <HomeHeader
           location={MOCK_LOCATION}
-          storesLive={STORES_LIVE_COUNT}
+          storesLive={storesLiveCount}
           onLocationPress={() => Alert.alert("Change Location", "Area selector coming soon.")}
         />
 
