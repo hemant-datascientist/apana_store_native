@@ -3,7 +3,7 @@
 //
 // Rich multi-section home feed:
 //   1. BannerCarousel            — promo banners
-//   2. Summer Picks              — 4-col seasonal category grid
+//   2. Seasonal Picks            — 4-col grid, arrow-browsed seasons
 //   3. Discover                  — Offer Zone / Brands / New Launches tiles
 //   4. Daily Essentials          — horizontal scroll + add button
 //   5. Flash Deals               — horizontal scroll + % off + add button
@@ -28,7 +28,7 @@ import { BANNERS }          from "../../../../data/homeData";
 import { useLocation }      from "../../../../context/LocationContext";
 import {
   getTrendingForCity,
-  SUMMER_CATEGORIES,
+  SEASONS,
   DAILY_ESSENTIALS,
   FLASH_DEALS,
   NEW_ARRIVALS,
@@ -51,12 +51,8 @@ export default function AllFeed() {
         onPress={() => {}}
       />
 
-      {/* ── 2. Summer Picks — seasonal category grid ── */}
-      <SeasonalCategorySection
-        season="Summer"
-        categories={SUMMER_CATEGORIES}
-        accent="#E05A00"
-      />
+      {/* ── 2. Seasonal Picks — Summer/Monsoon/Winter/Festive, arrow-browsed ── */}
+      <SeasonalCategorySection seasons={SEASONS} />
 
       {/* ── 4. Discover — Offer Zone · Brands · New Launches ── */}
       <View style={{ paddingVertical: 14 }}>

@@ -205,6 +205,68 @@ export const SUMMER_CATEGORIES: SeasonalCat[] = [
   { key:"footwear",    label:"Summer Footwear",     icon:"walk-outline",          bg:"#FFEDD5" },
 ];
 
+// ── Seasons carousel ──────────────────────────────────────────
+// One entry per Indian season; the seasonal section steps through
+// these with prev/next arrows. Order matches the Indian calendar:
+// Summer → Monsoon → Winter → Festive.
+//
+// Backend contract (replace mock when ready):
+//   GET /customer/home/seasons → Season[]  (server decides which is
+//   active for the user's region + date; arrows still browse all).
+export interface Season {
+  key:        string;
+  name:       string;       // shown as "{name} Picks"
+  icon:       string;       // Ionicons glyph for the header
+  accent:     string;       // section accent colour
+  categories: SeasonalCat[];
+}
+
+const MONSOON_CATEGORIES: SeasonalCat[] = [
+  { key:"umbrellas",   label:"Umbrellas",           icon:"umbrella-outline",      bg:"#DBEAFE" },
+  { key:"raincoats",   label:"Raincoats",           icon:"rainy-outline",         bg:"#E0F2FE" },
+  { key:"gumboots",    label:"Gumboots",            icon:"footsteps-outline",     bg:"#FEF3C7" },
+  { key:"hotdrinks",   label:"Hot Beverages",       icon:"cafe-outline",          bg:"#FFEDD5" },
+  { key:"snacks",      label:"Pakora & Snacks",     icon:"fast-food-outline",     bg:"#FEE2E2" },
+  { key:"immunity",    label:"Immunity Boost",      icon:"shield-outline",        bg:"#DCFCE7" },
+  { key:"mosquito",    label:"Mosquito Care",       icon:"bug-outline",           bg:"#ECFDF5" },
+  { key:"quickdry",    label:"Quick-Dry Wear",      icon:"shirt-outline",         bg:"#EDE9FE" },
+  { key:"indoorgames", label:"Indoor Games",        icon:"game-controller-outline", bg:"#FCE7F3" },
+  { key:"dehumid",     label:"Moisture Control",    icon:"water-outline",         bg:"#DBEAFE" },
+];
+
+const WINTER_CATEGORIES: SeasonalCat[] = [
+  { key:"moisturizer", label:"Moisturizers",        icon:"sparkles-outline",      bg:"#FCE7F3" },
+  { key:"lipcare",     label:"Lip Care",            icon:"heart-outline",         bg:"#FEE2E2" },
+  { key:"woolens",     label:"Woolens",             icon:"shirt-outline",         bg:"#EDE9FE" },
+  { key:"heaters",     label:"Room Heaters",        icon:"flame-outline",         bg:"#FFEDD5" },
+  { key:"hotdrinks",   label:"Hot Drinks",          icon:"cafe-outline",          bg:"#FEF3C7" },
+  { key:"dryfruits",   label:"Dry Fruits",          icon:"nutrition-outline",     bg:"#FDE8D8" },
+  { key:"blankets",    label:"Blankets & Quilts",   icon:"bed-outline",           bg:"#DBEAFE" },
+  { key:"wintershoes", label:"Winter Footwear",     icon:"walk-outline",          bg:"#E0F2FE" },
+  { key:"coldcough",   label:"Cold & Cough",        icon:"medkit-outline",        bg:"#DCFCE7" },
+  { key:"geysers",     label:"Geysers",             icon:"thermometer-outline",   bg:"#ECFDF5" },
+];
+
+const FESTIVE_CATEGORIES: SeasonalCat[] = [
+  { key:"mithai",      label:"Sweets & Mithai",     icon:"gift-outline",          bg:"#FEF3C7" },
+  { key:"dryfruits",   label:"Dry Fruit Boxes",     icon:"nutrition-outline",     bg:"#FDE8D8" },
+  { key:"diyas",       label:"Diyas & Candles",     icon:"flame-outline",         bg:"#FFEDD5" },
+  { key:"hampers",     label:"Gift Hampers",        icon:"cube-outline",          bg:"#FCE7F3" },
+  { key:"decor",       label:"Decor & Rangoli",     icon:"color-palette-outline", bg:"#EDE9FE" },
+  { key:"pooja",       label:"Pooja Needs",         icon:"flower-outline",        bg:"#DCFCE7" },
+  { key:"ethnic",      label:"Ethnic Wear",         icon:"shirt-outline",         bg:"#FEE2E2" },
+  { key:"lights",      label:"Festive Lights",      icon:"bulb-outline",          bg:"#DBEAFE" },
+  { key:"cleaning",    label:"Home Cleaning",       icon:"sparkles-outline",      bg:"#E0F2FE" },
+  { key:"idols",       label:"Idols & Murti",       icon:"happy-outline",         bg:"#ECFDF5" },
+];
+
+export const SEASONS: Season[] = [
+  { key:"summer",  name:"Summer",  icon:"sunny-outline", accent:"#E05A00", categories:SUMMER_CATEGORIES },
+  { key:"monsoon", name:"Monsoon", icon:"rainy-outline", accent:"#2563EB", categories:MONSOON_CATEGORIES },
+  { key:"winter",  name:"Winter",  icon:"snow-outline",  accent:"#0891B2", categories:WINTER_CATEGORIES },
+  { key:"festive", name:"Festive", icon:"gift-outline",  accent:"#DB2777", categories:FESTIVE_CATEGORIES },
+];
+
 // ── Daily Essentials (horizontal scroll) ─────────────────────
 export const DAILY_ESSENTIALS: HomeProduct[] = [
   { id:"de1",  name:"Amul Milk",          unit:"500 ml",   price:28,   icon:"cafe-outline",       bg:"#DBEAFE" },

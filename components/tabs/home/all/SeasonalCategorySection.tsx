@@ -2,24 +2,24 @@
 // SEASONAL CATEGORY SECTION — Apana Store
 //
 // Section header + 4-col wrapped grid of seasonal sub-categories.
-// Summer: Sunscreens, Skincare, Refreshing Cools, Air Coolers …
-// Changes season by season — update SUMMER_CATEGORIES in data.
+// Steps through every season (Summer / Monsoon / Winter / Festive)
+// via prev/next arrows in the header — no "See All". The active
+// season drives the title, accent colour, icon and the grid.
+// Data: SEASONS in allFeedData; swap for GET /customer/home/seasons.
 // ============================================================
 
-import React from "react";
+import React, { useState, useCallback } from "react";
 import {
   View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert,
 } from "react-native";
 import { Ionicons }        from "@expo/vector-icons";
 import { typography }      from "../../../../theme/typography";
 import SectionHeader       from "./SectionHeader";
-import { SeasonalCat }     from "../../../../data/allFeedData";
+import { Season }          from "../../../../data/allFeedData";
 import useTheme            from "../../../../theme/useTheme";
 
 interface SeasonalCategorySectionProps {
-  season:     string;       // e.g. "Summer 2026"
-  categories: SeasonalCat[];
-  accent:     string;
+  seasons: Season[];
 }
 
 const { width: SW } = Dimensions.get("window");
@@ -29,21 +29,54 @@ const COLS          = 4;
 const CELL_W        = Math.floor((SW - H_PAD * 2 - COL_GAP * (COLS - 1)) / COLS);
 const IMG_H         = Math.floor(CELL_W * 0.90);
 
-export default function SeasonalCategorySection({
-  season, categories, accent,
-}: SeasonalCategorySectionProps) {
-  // Theme so label inverts in dark mode
+export default function SeasonalCategorySection({ seasons }: SeasonalCategorySectionProps) {
   const { colors } = useTheme();
+  const [idx, setIdx] = useState(0);
+
+  const n = seasons.length;
+  // Wrap around both ends so the carousel never dead-ends.
+  const prev = useCallback(() => setIdx(i => (i - 1 + n) % n), [n]);
+  const next = useCallback(() => setIdx(i => (i + 1) % n), [n]);
+
+  if (n === 0) return null;
+  const active = seasons[idx];
+
+  const arrows = (
+    <View style={styles.arrows}>
+      <TouchableOpacity
+        onPress={prev}
+        activeOpacity={0.7}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        accessibilityRole="button"
+        accessibilityLabel="Previous season"
+        style={[styles.arrowBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+      >
+        <Ionicons name="chevron-back" size={18} color={active.accent} />
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={next}
+        activeOpacity={0.7}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        accessibilityRole="button"
+        accessibilityLabel="Next season"
+        style={[styles.arrowBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+      >
+        <Ionicons name="chevron-forward" size={18} color={active.accent} />
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <View style={styles.root}>
       <SectionHeader
-        icon="sunny-outline"
-        title={`${season} Picks`}
-        accentColor={accent}
+        icon={active.icon}
+        title={`${active.name} Picks`}
+        accentColor={active.accent}
+        rightSlot={arrows}
       />
 
       <View style={styles.grid}>
-        {categories.map(cat => (
+        {active.categories.map(cat => (
           <TouchableOpacity
             key={cat.key}
             style={[styles.cell, { width: CELL_W }]}
@@ -71,6 +104,20 @@ const styles = StyleSheet.create({
   root: {
     paddingHorizontal: H_PAD,
     marginTop:         20,
+  },
+
+  arrows: {
+    flexDirection: "row",
+    gap:           8,
+  },
+
+  arrowBtn: {
+    width:          30,
+    height:         30,
+    borderRadius:   15,
+    borderWidth:    1,
+    alignItems:     "center",
+    justifyContent: "center",
   },
 
   grid: {

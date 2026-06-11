@@ -16,10 +16,13 @@ interface SectionHeaderProps {
   title:       string;
   accentColor: string;
   onSeeAll?:   () => void;
+  // When supplied, replaces the default "See All" affordance entirely
+  // (e.g. the seasonal section swaps it for prev/next arrows).
+  rightSlot?:  React.ReactNode;
 }
 
 export default function SectionHeader({
-  icon, title, accentColor, onSeeAll,
+  icon, title, accentColor, onSeeAll, rightSlot,
 }: SectionHeaderProps) {
   // Pull theme so title flips with light/dark mode instead of staying near-black
   const { colors } = useTheme();
@@ -31,14 +34,16 @@ export default function SectionHeader({
           {title}
         </Text>
       </View>
-      <TouchableOpacity
-        activeOpacity={0.7}
-        onPress={onSeeAll ?? (() => Alert.alert(title, "Full list coming soon."))}
-      >
-        <Text style={[styles.seeAll, { color: accentColor, fontFamily: typography.fontFamily.semiBold }]}>
-          See All
-        </Text>
-      </TouchableOpacity>
+      {rightSlot ?? (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={onSeeAll ?? (() => Alert.alert(title, "Full list coming soon."))}
+        >
+          <Text style={[styles.seeAll, { color: accentColor, fontFamily: typography.fontFamily.semiBold }]}>
+            See All
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
