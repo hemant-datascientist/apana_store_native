@@ -8,8 +8,11 @@
 // Data: GET /customer/categories — replace mocks from categoryData.ts
 // ============================================================
 
-import React, { useState } from "react";
-import { View, ScrollView, StyleSheet, StatusBar, Alert } from "react-native";
+import React, { useState, useCallback } from "react";
+import {
+  View, ScrollView, FlatList, StyleSheet, StatusBar, Alert,
+  ListRenderItemInfo,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter }    from "expo-router";
 import useTheme from "../../theme/useTheme";
@@ -19,7 +22,7 @@ import {
   HEADER_BG,
   DiscoveryMode,
 } from "../../data/homeData";
-import { CATEGORY_GROUPS, STORE_TYPES } from "../../data/categoryData";
+import { CATEGORY_GROUPS, STORE_TYPES, CategoryGroup } from "../../data/categoryData";
 import HomeHeader      from "../../components/tabs/home/HomeHeader";
 import HomeSearchBar   from "../../components/tabs/home/HomeSearchBar";
 import DiscoveryToggle from "../../components/tabs/home/DiscoveryToggle";
@@ -33,6 +36,25 @@ export default function CategoryScreen() {
 
   const [search, setSearch] = useState("");
   const [mode,   setMode]   = useState<DiscoveryMode>("products");
+
+  // One section per group. Rendered through a FlatList so only the on-screen
+  // groups mount — the grid holds 308 tiles / 279 images, and mounting them
+  // all at once (old ScrollView) thrashed decode + memory and stalled scroll.
+  // Windowing keeps ~3-4 groups (≈ 30-48 images) live at any time.
+  const renderGroup = useCallback(
+    ({ item: group }: ListRenderItemInfo<CategoryGroup>) => (
+      <CategorySection
+        group={group}
+        onPress={(_groupKey, subKey) =>
+          Alert.alert(
+            group.title,
+            `"${group.subs.find(s => s.key === subKey)?.label}" coming soon.`
+          )
+        }
+      />
+    ),
+    [],
+  );
 
   return (
     <View style={styles.root}>
@@ -64,36 +86,34 @@ export default function CategoryScreen() {
       </SafeAreaView>
 
       {/* ── Category browser ── */}
-      <ScrollView
-        style={[styles.scroll, { backgroundColor: colors.background }]}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        {mode === "stores" ? (
-          /* Stores mode — 2-col large store-type cards */
+      {mode === "stores" ? (
+        /* Stores mode — small list, non-virtualized ScrollView is fine */
+        <ScrollView
+          style={[styles.scroll, { backgroundColor: colors.background }]}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
           <StoreTypeGrid
             stores={STORE_TYPES}
             onPress={item => Alert.alert(item.label, `${item.sub} — coming soon.`)}
           />
-        ) : (
-          /* Products mode — APC browser entry, then grouped 3-col subcategory tiles */
-          <>
-          <ApcBrowseBanner />
-          {CATEGORY_GROUPS.map(group => (
-            <CategorySection
-              key={group.key}
-              group={group}
-              onPress={(_groupKey, subKey) =>
-                Alert.alert(
-                  group.title,
-                  `"${group.subs.find(s => s.key === subKey)?.label}" coming soon.`
-                )
-              }
-            />
-          ))}
-          </>
-        )}
-      </ScrollView>
+        </ScrollView>
+      ) : (
+        /* Products mode — APC banner header, then virtualized group sections */
+        <FlatList
+          style={[styles.scroll, { backgroundColor: colors.background }]}
+          contentContainerStyle={styles.content}
+          data={CATEGORY_GROUPS}
+          keyExtractor={group => group.key}
+          renderItem={renderGroup}
+          ListHeaderComponent={ApcBrowseBanner}
+          showsVerticalScrollIndicator={false}
+          removeClippedSubviews
+          initialNumToRender={3}
+          maxToRenderPerBatch={3}
+          windowSize={5}
+        />
+      )}
 
     </View>
   );

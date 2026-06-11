@@ -27,7 +27,7 @@ interface CategorySectionProps {
   onPress: (groupKey: string, subKey: string) => void;
 }
 
-export default function CategorySection({ group, onPress }: CategorySectionProps) {
+function CategorySection({ group, onPress }: CategorySectionProps) {
   const { colors } = useTheme();
 
   return (
@@ -82,3 +82,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: H_PADDING,
   },
 });
+
+// Memoised: as a FlatList row this re-renders only when its group changes,
+// so off-screen sections don't rebuild their tile grids on every scroll tick.
+export default React.memo(CategorySection);

@@ -21,7 +21,7 @@ interface SubCategoryCardProps {
   onPress: (item: SubCategory) => void;
 }
 
-export default function SubCategoryCard({ item, width, onPress }: SubCategoryCardProps) {
+function SubCategoryCard({ item, width, onPress }: SubCategoryCardProps) {
   const { colors } = useTheme();
   const tileSize = width - 16;
 
@@ -52,6 +52,8 @@ export default function SubCategoryCard({ item, width, onPress }: SubCategoryCar
             style={StyleSheet.absoluteFill}
             contentFit="cover"
             transition={300}
+            recyclingKey={item.key}
+            cachePolicy="memory-disk"
           />
         )}
 
@@ -96,3 +98,7 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
 });
+
+// Memoised: in the virtualized category grid the same tile re-renders as the
+// list recycles rows — props are stable, so skip re-render unless they change.
+export default React.memo(SubCategoryCard);
