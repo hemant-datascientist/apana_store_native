@@ -1,11 +1,10 @@
 // ============================================================
 // FAVOURITE DATA — Apana Store (Customer App)
 //
-// Sample data for all 4 Favourite tabs.
-// Stores data lives in profileData.ts (FavouriteStore[]).
+// Sample data for the Favourite tabs (riders/delivery/products).
+// Stores tab = §30 follow relationship (lib/followStore), not favourites.
 //
 // Backend API contract (when ready):
-//   GET  /api/customer/favourites/stores    → FavouriteStore[]
 //   GET  /api/customer/favourites/riders    → FavouriteRider[]
 //   GET  /api/customer/favourites/delivery  → FavouriteDelivery[]
 //   GET  /api/customer/favourites/products  → FavouriteProduct[]

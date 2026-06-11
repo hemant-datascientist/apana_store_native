@@ -15,19 +15,15 @@ import { useRouter } from "expo-router";
 
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
-import { useFollowedIds } from "../../hooks/useFollow";
+import { useFollowedStores } from "../../hooks/useFollow";
 import { toggleFollow } from "../../lib/followStore";
-import { MOCK_STORES, StoreDetail } from "../../data/storeDetailData";
 
 export default function FollowingScreen() {
   const { colors, isDark } = useTheme();
   const router = useRouter();
 
-  const ids = useFollowedIds();
-  // Resolve to known stores only — unknown ids (scanned external) have no data.
-  const stores = ids
-    .map((id) => MOCK_STORES[id])
-    .filter((s): s is StoreDetail => Boolean(s));
+  // Known stores only — unknown ids (scanned external) are skipped by the hook.
+  const stores = useFollowedStores();
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>

@@ -3,7 +3,8 @@
 //
 // 4-tab screen showing saved favourites:
 //   Products  — saved products (empty until backend)
-//   Stores    — saved local stores (uses FAVOURITE_STORES)
+//   Stores    — stores you follow (§30 followStore — the single store
+//               relationship; old separate favourite-stores list merged)
 //   Riders    — saved auto/cab riders (uses FAVOURITE_RIDERS)
 //   Delivery  — saved delivery partners (uses FAVOURITE_DELIVERIES)
 //
@@ -13,7 +14,7 @@
 //   router.push("/favourite?tab=delivery") → opens Delivery tab
 //
 // Backend API:
-//   GET  /api/customer/favourites/stores    → FavouriteStore[]
+//   GET  /customer/following                → StoreSummary[]   (stores tab)
 //   GET  /api/customer/favourites/riders    → FavouriteRider[]
 //   GET  /api/customer/favourites/delivery  → FavouriteDelivery[]
 //   POST /api/customer/favourites/{type}    { id } → 201
@@ -30,11 +31,13 @@ import { Ionicons }          from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import useTheme             from "../../theme/useTheme";
 import { typography }        from "../../theme/typography";
-import { FAVOURITE_STORES }  from "../../data/profileData";
 import {
   FAVOURITE_RIDERS,   FavouriteRider,
   FAVOURITE_DELIVERIES, FavouriteDelivery,
 } from "../../data/favouriteData";
+import { useFollowedStores } from "../../hooks/useFollow";
+import { toggleFollow }      from "../../lib/followStore";
+import { StoreDetail }       from "../../data/storeDetailData";
 
 // Deliberate dark-navy chrome — header is a brand surface
 const BRAND_BLUE  = "#0F4C81";
@@ -73,14 +76,23 @@ function Initials({ name, bg }: { name: string; bg: string }) {
   );
 }
 
-// ── Store card ────────────────────────────────────────────────
-function StoreCard({ store }: { store: typeof FAVOURITE_STORES[0] }) {
+// ── Store card (followed store) ───────────────────────────────
+function StoreCard({ store, onOpen }: { store: StoreDetail; onOpen: () => void }) {
   const { colors } = useTheme();
+
+  // Heart = unfollow (real action on the §30 follow store, not a stub).
+  function confirmUnfollow() {
+    Alert.alert("Unfollow", `Stop following ${store.name}?`, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Unfollow", style: "destructive", onPress: () => toggleFollow(store.id) },
+    ]);
+  }
+
   return (
     <TouchableOpacity
       style={[styles.listCard, { backgroundColor: colors.card, borderColor: colors.border }]}
       activeOpacity={0.8}
-      onPress={() => Alert.alert(store.name, `${store.category} · ${store.area}`)}
+      onPress={onOpen}
     >
       <View style={[styles.storeIconWrap, { backgroundColor: BRAND_BLUE + "15" }]}>
         <Ionicons name={store.icon as any} size={24} color={BRAND_BLUE} />
@@ -91,20 +103,20 @@ function StoreCard({ store }: { store: typeof FAVOURITE_STORES[0] }) {
           {store.name}
         </Text>
         <Text style={[styles.cardSub, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
-          {store.category} · {store.area}
+          {store.category} · {store.city}
         </Text>
         <View style={styles.metaRow}>
           <Ionicons name="star" size={11} color={colors.warning} />
           <Text style={[styles.metaText, { fontFamily: typography.fontFamily.medium, color: colors.subText }]}>
-            {store.rating}
+            {store.rating.toFixed(1)}
           </Text>
           {/* Status pill uses success/border tokens so both light & dark modes read cleanly */}
-          <View style={[styles.openBadge, { backgroundColor: store.open ? colors.successLight : colors.border }]}>
+          <View style={[styles.openBadge, { backgroundColor: store.isOpen ? colors.successLight : colors.border }]}>
             <Text style={[styles.openText, {
               fontFamily: typography.fontFamily.semiBold,
-              color: store.open ? colors.success : colors.subText,
+              color: store.isOpen ? colors.success : colors.subText,
             }]}>
-              {store.open ? "Open" : "Closed"}
+              {store.isOpen ? "Open" : "Closed"}
             </Text>
           </View>
         </View>
@@ -112,7 +124,7 @@ function StoreCard({ store }: { store: typeof FAVOURITE_STORES[0] }) {
 
       <TouchableOpacity
         style={styles.removeFavBtn}
-        onPress={() => Alert.alert("Remove", `Remove ${store.name} from favourites?`)}
+        onPress={confirmUnfollow}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
         <Ionicons name="heart" size={20} color={colors.danger} />
@@ -287,17 +299,35 @@ export default function FavouriteScreen() {
   const params           = useLocalSearchParams<{ tab?: string }>();
   const initialTab       = (params.tab as FavTab) ?? "products";
   const [activeTab, setActiveTab] = useState<FavTab>(initialTab);
+  const followedStores   = useFollowedStores();
 
   function renderContent() {
     switch (activeTab) {
 
       case "stores":
+        if (followedStores.length === 0) {
+          return (
+            <EmptyState
+              icon="heart-outline"
+              title="Not following any stores yet"
+              sub="Tap the heart on any storefront to follow it and see it here."
+              cta="Explore Stores"
+              onCta={() => router.back()}
+            />
+          );
+        }
         return (
           <View style={styles.list}>
             <Text style={[styles.countLabel, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
-              {FAVOURITE_STORES.length} saved stores
+              {followedStores.length} {followedStores.length === 1 ? "store" : "stores"} you follow
             </Text>
-            {FAVOURITE_STORES.map(s => <StoreCard key={s.id} store={s} />)}
+            {followedStores.map(s => (
+              <StoreCard
+                key={s.id}
+                store={s}
+                onOpen={() => router.push(`/store-detail?id=${s.id}`)}
+              />
+            ))}
           </View>
         );
 

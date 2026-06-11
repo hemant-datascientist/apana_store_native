@@ -34,64 +34,8 @@ export const PROFILE_STATS: ProfileStat[] = [
   { key: "rides",   label: "Rides",       value: "12",  icon: "car-outline"          },
 ];
 
-// ── Favourite Stores ──────────────────────────────────────────
-export interface FavouriteStore {
-  id:       string;
-  name:     string;
-  category: string;
-  area:     string;
-  icon:     string; // Ionicons glyph
-  open:     boolean;
-  rating:   string;
-}
-
-export const FAVOURITE_STORES: FavouriteStore[] = [
-  {
-    id:       "s1",
-    name:     "Sharma General Store",
-    category: "Grocery",
-    area:     "Shivajinagar",
-    icon:     "basket-outline",
-    open:     true,
-    rating:   "4.8",
-  },
-  {
-    id:       "s2",
-    name:     "TechZone Electronics",
-    category: "Electronics",
-    area:     "FC Road",
-    icon:     "headset-outline",
-    open:     true,
-    rating:   "4.5",
-  },
-  {
-    id:       "s3",
-    name:     "Gupta Medical",
-    category: "Pharmacy",
-    area:     "Kothrud",
-    icon:     "medkit-outline",
-    open:     false,
-    rating:   "4.9",
-  },
-  {
-    id:       "s4",
-    name:     "Style Hub",
-    category: "Fashion",
-    area:     "MG Road",
-    icon:     "shirt-outline",
-    open:     true,
-    rating:   "4.3",
-  },
-  {
-    id:       "s5",
-    name:     "Fresh Bakes",
-    category: "Food & Drink",
-    area:     "Baner",
-    icon:     "restaurant-outline",
-    open:     true,
-    rating:   "4.7",
-  },
-];
+// NOTE: the old FavouriteStore/FAVOURITE_STORES mock was removed — stores
+// merged into the §30 follow relationship (lib/followStore + useFollowedStores).
 
 // ── Partner (Delivery Boy / Rider) ────────────────────────────
 export type PartnerType = "delivery" | "rider";
