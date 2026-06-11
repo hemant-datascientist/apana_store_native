@@ -14,7 +14,7 @@
 // SVG:  react-native-svg via StateSvg
 // ============================================================
 
-import React from "react";
+import React, { useState } from "react";
 import {
   View, Text, ScrollView, StyleSheet, Alert, StatusBar, Dimensions, TouchableOpacity,
 } from "react-native";
@@ -26,6 +26,8 @@ import { typography } from "../../theme/typography";
 import { REGION_GROUPS, StateInfo } from "../../data/bharatData";
 import RegionSection from "../../components/tabs/bharat/RegionSection";
 import IndiaMapSvg   from "../../components/tabs/bharat/IndiaMapSvg";
+import MenuDrawer    from "../../components/tabs/home/MenuDrawer";
+import { handleMenuSelect } from "../../lib/menuNav";
 
 // Total state + UT count for the badge
 const TOTAL_STATES = REGION_GROUPS.reduce((acc, g) => acc + g.states.length, 0);
@@ -37,6 +39,7 @@ const MAP_WIDTH = Math.round(SW * 0.60);
 export default function BharatScreen() {
   const { colors, isDark } = useTheme();
   const router = useRouter();
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   function handleStatePress(state: StateInfo) {
     router.push({
@@ -56,14 +59,27 @@ export default function BharatScreen() {
         backgroundColor={colors.card}
       />
 
+      {/* ── Menu drawer (Modal — doesn't affect layout) ── */}
+      <MenuDrawer
+        visible={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        onSelect={key => handleMenuSelect(router, key)}
+      />
+
       {/* ── Header ── */}
       <SafeAreaView style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]} edges={["top"]}>
         <View style={styles.headerContent}>
 
-          {/* Left: map pin icon */}
-          <View style={[styles.headerIcon, { backgroundColor: colors.primary + "18" }]}>
-            <Ionicons name="map-outline" size={20} color={colors.primary} />
-          </View>
+          {/* Left: hamburger menu — opens the shared MenuDrawer */}
+          <TouchableOpacity
+            style={[styles.headerIcon, { backgroundColor: colors.primary + "18" }]}
+            onPress={() => setDrawerOpen(true)}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Open menu"
+          >
+            <Ionicons name="menu-outline" size={22} color={colors.primary} />
+          </TouchableOpacity>
 
           {/* Center: title + subtitle */}
           <View style={styles.headerText}>
