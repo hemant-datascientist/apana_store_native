@@ -23,6 +23,8 @@ import useTheme         from "../../theme/useTheme";
 import { typography }   from "../../theme/typography";
 import HomeSearchBar    from "../../components/tabs/home/HomeSearchBar";
 import BannerCarousel  from "../../components/tabs/home/BannerCarousel";
+import MenuDrawer      from "../../components/tabs/home/MenuDrawer";
+import { handleMenuSelect } from "../../lib/menuNav";
 import { HEADER_BG }    from "../../data/homeData";
 import { fetchStateData, StateDetailData, StateProduct, StateStore } from "../../data/stateDetailData";
 import { Animated } from "react-native";
@@ -245,8 +247,9 @@ export default function StateDetailScreen() {
   const stateName  = (name as string) ?? "State";
   const storesLiveNum = parseInt(storesLive || "0", 10);
   
-  const [search,    setSearch]    = useState("");
-  const [activeTab, setActiveTab] = useState("made_in");
+  const [search,     setSearch]     = useState("");
+  const [activeTab,  setActiveTab]  = useState("made_in");
+  const [drawerOpen, setDrawerOpen] = useState(false);
   
   // Async Data State
   const [loading,     setLoading]     = useState(true);
@@ -303,6 +306,13 @@ export default function StateDetailScreen() {
     >
       <StatusBar barStyle="light-content" backgroundColor={HEADER_BG} />
 
+      {/* ── Menu drawer (Modal — doesn't affect layout) ── */}
+      <MenuDrawer
+        visible={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        onSelect={key => handleMenuSelect(router, key)}
+      />
+
       {/* ── HERO ── */}
       <SafeAreaView style={{ backgroundColor: HEADER_BG }} edges={["top"]}>
 
@@ -332,7 +342,7 @@ export default function StateDetailScreen() {
           onChangeText={setSearch}
           onSubmit={(q) => q.trim() && router.push(`/search-results?q=${encodeURIComponent(q.trim())}&state=${stateKey}` as any)}
           mode="products"
-          onMenuPress={() => Alert.alert("Menu", "State menu coming soon.")}
+          onMenuPress={() => setDrawerOpen(true)}
           onMicPress={() => Alert.alert("Voice", "Voice search coming soon.")}
           onBellPress={() => router.push("/notifications")}
           onScanPress={() => router.push("/scanner")}
