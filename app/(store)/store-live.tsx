@@ -180,24 +180,40 @@ export default function StoreLiveScreen() {
             {asOfLabel(stats.asOf)}
           </Text>
 
-          {/* Donut chart */}
-          <DonutChart data={stats.breakdown} totalLive={stats.totalLive} />
+          {stats.totalLive === 0 && stats.breakdown.length === 0 ? (
+            /* Zero stores in this scope — say so plainly instead of three
+               empty charts. Empty is empty (§19.8). */
+            <View style={styles.zeroWrap}>
+              <Ionicons name="storefront-outline" size={44} color={colors.subText} />
+              <Text style={[styles.zeroTitle, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.md }]}>
+                No stores live {isScoped ? `in ${scopeName}` : ""} yet
+              </Text>
+              <Text style={[styles.zeroSub, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.sm }]}>
+                Stores appear here as sellers in this area come online.
+              </Text>
+            </View>
+          ) : (
+            <>
+              {/* Donut chart */}
+              <DonutChart data={stats.breakdown} totalLive={stats.totalLive} />
 
-          {/* Section label */}
-          <Text style={[styles.sectionLabel, { color: colors.subText, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
-            DISTRIBUTION BY STORE TYPE
-          </Text>
+              {/* Section label */}
+              <Text style={[styles.sectionLabel, { color: colors.subText, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
+                DISTRIBUTION BY STORE TYPE
+              </Text>
 
-          {/* Horizontal bars */}
-          <HorizontalBars data={stats.breakdown} totalLive={stats.totalLive} />
+              {/* Horizontal bars */}
+              <HorizontalBars data={stats.breakdown} totalLive={stats.totalLive} />
 
-          {/* Section label */}
-          <Text style={[styles.sectionLabel, { color: colors.subText, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs, marginTop: 20 }]}>
-            LIVE vs CLOSED
-          </Text>
+              {/* Section label */}
+              <Text style={[styles.sectionLabel, { color: colors.subText, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs, marginTop: 20 }]}>
+                LIVE vs CLOSED
+              </Text>
 
-          {/* Data table */}
-          <StoreTable data={stats.breakdown} totalLive={stats.totalLive} />
+              {/* Data table */}
+              <StoreTable data={stats.breakdown} totalLive={stats.totalLive} />
+            </>
+          )}
 
         </ScrollView>
       )}
@@ -282,6 +298,16 @@ const styles = StyleSheet.create({
     alignSelf:    "center",
     marginBottom: 4,
   },
+
+  // Zero-stores state
+  zeroWrap: {
+    alignItems:        "center",
+    gap:               10,
+    paddingTop:        48,
+    paddingHorizontal: 32,
+  },
+  zeroTitle: { textAlign: "center" },
+  zeroSub:   { textAlign: "center" },
 
   // Section labels
   sectionLabel: {

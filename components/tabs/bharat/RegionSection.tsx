@@ -16,11 +16,23 @@ import StateCard from "./StateCard";
 interface RegionSectionProps {
   group:    RegionGroup;
   primary:  string;
+  // Live per-state counts (normalised state name → live). undefined = mock
+  // mode (cards use bundled numbers); null = live mode still loading.
+  liveCounts?: Record<string, number> | null;
   onPress?: (state: StateInfo) => void;
 }
 
-export default function RegionSection({ group, primary, onPress }: RegionSectionProps) {
+// Same normalisation as the service — bharat names → response keys.
+const norm = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+export default function RegionSection({ group, primary, liveCounts, onPress }: RegionSectionProps) {
   const { colors } = useTheme();
+
+  // undefined → mock passthrough · null → loading · map → count (absent = 0)
+  const liveFor = (state: StateInfo): number | null | undefined =>
+    liveCounts === undefined ? undefined
+    : liveCounts === null    ? null
+    : liveCounts[norm(state.name)] ?? 0;
 
   return (
     <View style={styles.section}>
@@ -53,6 +65,7 @@ export default function RegionSection({ group, primary, onPress }: RegionSection
             key={state.key}
             state={state}
             primary={primary}
+            liveCount={liveFor(state)}
             onPress={onPress}
           />
         ))}

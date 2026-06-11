@@ -28,6 +28,7 @@ import RegionSection from "../../components/tabs/bharat/RegionSection";
 import IndiaMapSvg   from "../../components/tabs/bharat/IndiaMapSvg";
 import MenuDrawer    from "../../components/tabs/home/MenuDrawer";
 import { handleMenuSelect } from "../../lib/menuNav";
+import { useStateLiveCounts } from "../../hooks/useStateLiveCounts";
 
 // Total state + UT count for the badge
 const TOTAL_STATES = REGION_GROUPS.reduce((acc, g) => acc + g.states.length, 0);
@@ -40,6 +41,12 @@ export default function BharatScreen() {
   const { colors, isDark } = useTheme();
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Per-state live counts for the card badges. Mock mode → undefined
+  // (cards keep bundled numbers); live mode → real map (loading = null,
+  // cards show "…" + grey dot).
+  const stateLive = useStateLiveCounts();
+  const stateCounts = stateLive.isLive ? stateLive.counts : undefined;
 
   function handleStatePress(state: StateInfo) {
     router.push({
@@ -164,6 +171,7 @@ export default function BharatScreen() {
             key={group.key}
             group={group}
             primary={colors.primary}
+            liveCounts={stateCounts}
             onPress={handleStatePress}
           />
         ))}

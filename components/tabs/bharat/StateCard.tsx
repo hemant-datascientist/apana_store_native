@@ -18,16 +18,27 @@ import { formatCount } from "../../../utils/formatUtils";
 interface StateCardProps {
   state:    StateInfo;
   primary:  string;
+  // Live count override: undefined = mock mode (bundled state.storesLive),
+  // null = live mode still loading ("…" + grey dot), number = real count
+  // (green dot when > 0, red when 0). §19.8 — never claims unknowns.
+  liveCount?: number | null;
   onPress?: (state: StateInfo) => void;
 }
 
 const BOX_SIZE = 76;   // outer rounded square
 const SVG_SIZE = 56;   // SVG render size inside the box
 
-export default function StateCard({ state, primary, onPress }: StateCardProps) {
+const DOT_LIVE    = "#22C55E";
+const DOT_NONE    = "#EF4444";
+const DOT_LOADING = "#9CA3AF";
+
+export default function StateCard({ state, primary, liveCount, onPress }: StateCardProps) {
   const { colors } = useTheme();
   const bgTint     = primary + "12";   // ~7% opacity
   const borderTint = primary + "28";
+
+  const shown    = liveCount === undefined ? state.storesLive : liveCount;
+  const dotColor = shown == null ? DOT_LOADING : shown > 0 ? DOT_LIVE : DOT_NONE;
 
   return (
     <TouchableOpacity style={styles.wrap} onPress={() => onPress?.(state)} activeOpacity={0.72}>
@@ -51,9 +62,9 @@ export default function StateCard({ state, primary, onPress }: StateCardProps) {
 
       {/* Stores Live Count */}
       <View style={styles.liveRow}>
-        <View style={styles.liveDot} />
+        <View style={[styles.liveDot, { backgroundColor: dotColor }]} />
         <Text style={[styles.liveCount, { color: colors.primary, fontFamily: typography.fontFamily.semiBold }]}>
-          {formatCount(state.storesLive)} Live
+          {shown == null ? "…" : formatCount(shown)} Live
         </Text>
       </View>
 
@@ -94,7 +105,6 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 3,
-    backgroundColor: "#22C55E", // Green
   },
   liveCount: {
     fontSize: 8.5,

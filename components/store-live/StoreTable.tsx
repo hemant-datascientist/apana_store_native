@@ -7,20 +7,21 @@
 
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { StoreTypeData, TOTAL_LIVE } from "../../data/storeLiveData";
+import { StoreTypeData } from "../../data/storeLiveData";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { formatCount } from "../../utils/formatUtils";
 
 interface StoreTableProps {
   data: StoreTypeData[];
-  totalLive?: number;
+  // Required — 0 renders as 0, never the mock national fallback (§19.8).
+  totalLive: number;
 }
 
 export default function StoreTable({ data, totalLive }: StoreTableProps) {
   const { colors } = useTheme();
 
-  const currentTotal = totalLive || TOTAL_LIVE;
+  const currentTotal = totalLive;
 
   const totalClosed = data.reduce((s, d) => s + d.closedCount, 0);
 

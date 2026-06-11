@@ -175,3 +175,31 @@ export async function fetchStoreLiveStats(
   if (IS_LIVE) return fetchLive(params);
   return fetchMock(params);
 }
+
+// ── Per-state live counts (bharat screen badges) ──────────────
+// GET /stores/live-stats/by-state → { as_of, states: [{ state_name, live }] }
+// Returns a normalised-name → count map; states absent from the response
+// have zero live stores. Returns null in mock mode — the bharat screen
+// keeps its bundled per-state numbers there.
+//
+// Keys are normalised (lowercase, alphanumerics only) so "Tamil Nadu",
+// "tamil_nadu" and bharatData keys all collide onto the same entry.
+export const normalizeStateKey = (s: string): string =>
+  s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+export async function fetchStateLiveCounts(): Promise<Record<string, number> | null> {
+  if (!IS_LIVE) return null;
+
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${BASE_URL}/stores/live-stats/by-state`, { signal: ctl.signal });
+    if (!res.ok) throw new Error(`live-stats/by-state ${res.status}`);
+    const body = (await res.json()) as { states: Array<{ state_name: string; live: number }> };
+    const map: Record<string, number> = {};
+    for (const row of body.states) map[normalizeStateKey(row.state_name)] = row.live;
+    return map;
+  } finally {
+    clearTimeout(timer);
+  }
+}

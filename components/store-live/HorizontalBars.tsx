@@ -8,25 +8,28 @@
 
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { StoreTypeData, TOTAL_LIVE } from "../../data/storeLiveData";
+import { StoreTypeData } from "../../data/storeLiveData";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 
 interface HorizontalBarsProps {
   data: StoreTypeData[];
-  totalLive?: number;
+  // Required — 0 renders as 0, never the mock national fallback (§19.8).
+  totalLive: number;
 }
 
 export default function HorizontalBars({ data, totalLive }: HorizontalBarsProps) {
   const { colors } = useTheme();
-  const maxCount   = Math.max(...data.map(d => d.liveCount));
-  const currentTotal = totalLive || TOTAL_LIVE;
+  // Guards: empty data → Math.max() is -Infinity; zero totals must render
+  // as 0%, never fall back to the mock national total (§19.8).
+  const maxCount     = data.length > 0 ? Math.max(...data.map(d => d.liveCount)) : 0;
+  const currentTotal = totalLive;
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
       {data.map((item, i) => {
-        const pct      = (item.liveCount / currentTotal) * 100;
-        const barWidth = (item.liveCount / maxCount) * 100; // relative to widest bar
+        const pct      = currentTotal > 0 ? (item.liveCount / currentTotal) * 100 : 0;
+        const barWidth = maxCount > 0 ? (item.liveCount / maxCount) * 100 : 0; // relative to widest bar
         const isLast   = i === data.length - 1;
 
         return (

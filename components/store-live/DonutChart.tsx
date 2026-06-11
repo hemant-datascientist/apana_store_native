@@ -10,7 +10,7 @@
 import React from "react";
 import { View, StyleSheet, Dimensions } from "react-native";
 import Svg, { Path, Circle, Line, Text as SvgText, G } from "react-native-svg";
-import { StoreTypeData, TOTAL_LIVE } from "../../data/storeLiveData";
+import { StoreTypeData } from "../../data/storeLiveData";
 import { typography } from "../../theme/typography";
 
 const SCREEN_W  = Dimensions.get("window").width;
@@ -52,18 +52,20 @@ function arcPath(
 // ── Component ─────────────────────────────────────────────────
 interface DonutChartProps {
   data: StoreTypeData[];
-  totalLive?: number;
+  // Required — no bundled fallback: 0 must render as 0, never as the mock
+  // national total (§19.8). `0 || TOTAL_LIVE` was exactly that bug.
+  totalLive: number;
 }
 
 export default function DonutChart({ data, totalLive }: DonutChartProps) {
-  const currentTotal = totalLive || TOTAL_LIVE;
+  const currentTotal = totalLive;
   // Build segments with start/end angles
   type Seg = StoreTypeData & { startDeg: number; endDeg: number; pct: number };
   const segments: Seg[] = [];
   let cursor = 0;
 
   data.forEach(item => {
-    const pct      = item.liveCount / currentTotal;
+    const pct      = currentTotal > 0 ? item.liveCount / currentTotal : 0;
     const spanDeg  = pct * 360;
     const startDeg = cursor + GAP_DEG / 2;
     const endDeg   = cursor + spanDeg - GAP_DEG / 2;
