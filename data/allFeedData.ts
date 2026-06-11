@@ -232,10 +232,8 @@ const MONSOON_CATEGORIES: SeasonalCat[] = [
   { key:"quickdry",    label:"Quick-Dry Wear",      icon:"shirt-outline",         bg:"#EDE9FE" },
   { key:"indoorgames", label:"Indoor Games",        icon:"game-controller-outline", bg:"#FCE7F3" },
   { key:"dehumid",     label:"Moisture Control",    icon:"water-outline",         bg:"#DBEAFE" },
-  { key:"mask",        label:"Masks",               icon:"medical-outline",       bg:"#E0F2FE" },
   { key:"instnoodles", label:"Instant Noodles",     icon:"restaurant-outline",    bg:"#FEF3C7" },
   { key:"sanitizer",   label:"Hand Sanitizers",     icon:"hand-left-outline",     bg:"#ECFDF5" },
-  { key:"soups",       label:"Soups & Broths",      icon:"wine-outline",          bg:"#FFEDD5" },
 ];
 
 const WINTER_CATEGORIES: SeasonalCat[] = [
@@ -250,8 +248,6 @@ const WINTER_CATEGORIES: SeasonalCat[] = [
   { key:"coldcough",   label:"Cold & Cough",        icon:"medkit-outline",        bg:"#DCFCE7" },
   { key:"geysers",     label:"Geysers",             icon:"thermometer-outline",   bg:"#ECFDF5" },
   { key:"mask",        label:"Masks",               icon:"medical-outline",       bg:"#E0F2FE" },
-  { key:"instnoodles", label:"Instant Noodles",     icon:"restaurant-outline",    bg:"#FEF3C7" },
-  { key:"sanitizer",   label:"Hand Sanitizers",     icon:"hand-left-outline",     bg:"#DCFCE7" },
   { key:"soups",       label:"Soups & Broths",      icon:"wine-outline",          bg:"#FFEDD5" },
 ];
 
