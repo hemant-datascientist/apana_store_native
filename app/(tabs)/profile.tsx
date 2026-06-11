@@ -93,11 +93,11 @@ export default function ProfileScreen() {
         <ProfileStats stats={PROFILE_STATS} />
 
         {/* ── Stores You Follow — §30, the single store relationship.
-             (Old separate "favourite stores" list merged into follow.)
-             View All → Following screen ── */}
+             View All → Favourite hub (Stores tab), same as the partner
+             rows below — one consistent destination for saved things ── */}
         <FavouriteStores
           stores={followedStores}
-          onViewAll={() => router.push("/following")}
+          onViewAll={() => router.push("/favourite?tab=stores")}
           onPress={store => router.push(`/store-detail?id=${store.id}`)}
         />
 
