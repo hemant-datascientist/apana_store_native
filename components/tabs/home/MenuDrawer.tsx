@@ -7,7 +7,7 @@
 //
 // Menu items:
 //   Offer Zone · Shop by Brands · New Launches · Product Finder · Store QR
-//   Favourite · Bookmark · Sell on ONDC · Address Book · Auto Riders · About
+//   Favourite · Sell on ONDC · Address Book · Auto Riders · About
 // ============================================================
 
 import React, { useEffect, useRef } from "react";
@@ -40,7 +40,6 @@ const MENU_ITEMS: MenuItem[] = [
   { key: "product_finder",label: "Product Finder",  icon: "search-outline"             },
   { key: "store_qr",      label: "Store QR",        icon: "qr-code-outline"            },
   { key: "favourite",     label: "Favourite",       icon: "heart-outline"              },
-  { key: "bookmark",      label: "Bookmark",        icon: "bookmark-outline"           },
   { key: "sell_ondc",     label: "Sell on ONDC",    icon: "bag-handle-outline"         },
   { key: "address_book",  label: "Address Book",    icon: "location-outline"           },
   { key: "auto_riders",   label: "Auto Riders",     icon: "car-outline"                },
