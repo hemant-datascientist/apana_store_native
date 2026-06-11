@@ -3,13 +3,14 @@
 //
 // Rich multi-section home feed:
 //   1. BannerCarousel            — promo banners
-//   2. Trending in {city}        — 4-col grid of famous local items
-//   3. Summer Picks              — 4-col seasonal category grid
-//   4. Discover                  — Offer Zone / Brands / New Launches tiles
-//   5. Daily Essentials          — horizontal scroll + add button
-//   6. Flash Deals               — horizontal scroll + % off + add button
-//   7. New Arrivals              — horizontal scroll + add button
-//   8. Popular Near You          — horizontal scroll of top-rated stores
+//   2. Summer Picks              — 4-col seasonal category grid
+//   3. Discover                  — Offer Zone / Brands / New Launches tiles
+//   4. Daily Essentials          — horizontal scroll + add button
+//   5. Flash Deals               — horizontal scroll + % off + add button
+//   6. New Arrivals              — horizontal scroll + add button
+//   7. Popular Near You          — horizontal scroll of top-rated stores
+//   8. Trending in {city}        — PARKED at the bottom (Pune-only data;
+//                                  needs real per-city data, see §below)
 // ============================================================
 
 import React from "react";
@@ -50,15 +51,7 @@ export default function AllFeed() {
         onPress={() => {}}
       />
 
-      {/* ── 2. Trending in {city} — 4-col famous local items grid ──
-           Data is city-specific. Replace getTrendingForCity() with
-           GET /api/customer/home/trending?city={city} when backend ready. */}
-      <TrendingCitySection
-        city={city}
-        items={getTrendingForCity(city)}
-      />
-
-      {/* ── 3. Summer Picks — seasonal category grid ── */}
+      {/* ── 2. Summer Picks — seasonal category grid ── */}
       <SeasonalCategorySection
         season="Summer"
         categories={SUMMER_CATEGORIES}
@@ -70,7 +63,7 @@ export default function AllFeed() {
         <HomeDiscoverRow />
       </View>
 
-      {/* ── 5. Daily Essentials — horizontal scroll ── */}
+      {/* ── 4. Daily Essentials — horizontal scroll ── */}
       <ProductHScrollSection
         icon="cart-outline"
         title="Daily Essentials"
@@ -91,6 +84,17 @@ export default function AllFeed() {
 
       {/* ── 7. Popular Stores Near You ── */}
       <PopularStoresSection stores={POPULAR_STORES} />
+
+      {/* ── 8. Trending in {city} — MOVED TO LAST (parked) ──
+           Current data is Pune-only (famous local places/shops/items). India
+           cities differ wildly — no shared metro wholesale, food, or places —
+           so this needs real per-city data before it's promoted up the feed.
+           Replace getTrendingForCity() with
+           GET /api/customer/home/trending?city={city} when backend ready. */}
+      <TrendingCitySection
+        city={city}
+        items={getTrendingForCity(city)}
+      />
 
       <View style={{ height: 24 }} />
     </View>
