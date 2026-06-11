@@ -25,6 +25,8 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
+import { useLocation } from "../../context/LocationContext";
+import { STORES_LIVE_COUNT } from "../../data/homeData";
 import { useStoreLiveStats } from "../../hooks/useStoreLiveStats";
 import DonutChart    from "../../components/store-live/DonutChart";
 import HorizontalBars from "../../components/store-live/HorizontalBars";
@@ -48,18 +50,37 @@ export default function StoreLiveScreen() {
     stateKey?: string; stateName?: string; storesLive?: string;
   }>();
 
+  // Scope: a state from the Bharat screen wins; otherwise the customer's
+  // current city (home entry) — so "Stores Live" always means stores the
+  // customer could actually reach, not a vanity national number.
+  const { selectedAddress } = useLocation();
+  const customerCity = stateKey || stateName ? undefined : selectedAddress.city;
+
+  // Mock-mode scoped total: state flow passes storesLive; the city flow
+  // (home entry) reuses the home header's count so the two screens agree.
+  // Live mode ignores this entirely — real numbers come from the BE.
+  const mockTotal = storesLive
+    ? parseInt(storesLive, 10)
+    : customerCity ? STORES_LIVE_COUNT : undefined;
+
   const { stats, isLoading, isError, refetch } = useStoreLiveStats({
     stateKey,
     stateName,
-    mockStateTotal: storesLive ? parseInt(storesLive, 10) : undefined,
+    city: customerCity,
+    mockStateTotal: mockTotal,
   });
 
-  // Scope labels follow the RESPONSE, not the nav params — if the BE can't
-  // filter by state yet it declares scope "india", and showing a state title
-  // over national numbers would be phantom data (§19.8). Nav params only
+  // Scope labels follow the RESPONSE, not the nav params — if the BE serves
+  // a different scope than asked (e.g. can't resolve the state) the title
+  // must match the numbers shown (§19.8). Nav params / current city only
   // seed the title while loading.
-  const isStateSpecific = stats ? stats.scope === "state" : !!stateName;
-  const scopeName       = stats?.scope === "state" ? stats.stateName : stateName;
+  const fallbackName = stateName ?? customerCity;
+  const scopeName = stats
+    ? stats.scope === "state" ? stats.stateName
+    : stats.scope === "city"  ? stats.cityName
+    : undefined
+    : fallbackName;
+  const isScoped = stats ? stats.scope !== "india" : !!fallbackName;
 
   const [refreshing, setRefreshing] = React.useState(false);
   const onRefresh = React.useCallback(() => {
@@ -69,7 +90,7 @@ export default function StoreLiveScreen() {
     setTimeout(() => setRefreshing(false), 600);
   }, [refetch]);
 
-  const scopeLabel = isStateSpecific ? `${scopeName} Stores Live` : "All India Stores Live";
+  const scopeLabel = isScoped ? `${scopeName} Stores Live` : "All India Stores Live";
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -85,7 +106,7 @@ export default function StoreLiveScreen() {
         </TouchableOpacity>
 
         <Text style={[styles.headerTitle, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg }]}>
-          {isStateSpecific ? `${scopeName} Store Live` : "All India Store Live"}
+          {isScoped ? `${scopeName} Store Live` : "All India Store Live"}
         </Text>
 
         <TouchableOpacity onPress={refetch} style={styles.headerBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>

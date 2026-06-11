@@ -3,13 +3,16 @@
 //
 // Live store statistics for the Store Live screen (all-India or per-state).
 //
-// Contract (BE §13 stats surface, swap target):
-//   GET {API_BASE_URL}/stores/live-stats[?state={stateKey}]
+// Contract (BE modules/seller — live):
+//   GET {API_BASE_URL}/stores/live-stats[?state={state}|?city={city}]
 //   → {
-//       scope: "india" | "state", state_key?, state_name?,
+//       scope: "india" | "state" | "city", state_name?, city_name?,
 //       total_live, total_closed, as_of,           // ISO timestamp
 //       breakdown: [{ type_key, label, full_label, live, closed }]
 //     }
+// Scope rules: state (bharat flow) wins over city (customer location);
+// neither → all-India. The BE declares the scope it actually served and
+// the screen labels off the response.
 //
 // Mode gate (same as services/api/client.ts):
 //   EXPO_PUBLIC_API_MODE=local|prod → real fetch; errors PROPAGATE so the
@@ -39,9 +42,9 @@ const FETCH_TIMEOUT_MS = 10_000;
 
 // ── Result shape consumed by the screen/charts ────────────────
 export interface StoreLiveStats {
-  scope:       "india" | "state";
-  stateKey?:   string;
+  scope:       "india" | "state" | "city";
   stateName?:  string;
+  cityName?:   string;
   totalLive:   number;
   totalClosed: number;
   asOf:        string;            // ISO timestamp of the snapshot
@@ -49,9 +52,10 @@ export interface StoreLiveStats {
 }
 
 export interface FetchStoreLiveParams {
-  stateKey?:  string;
+  stateKey?:  string;   // bharat flow — state scope (wins over city)
   stateName?: string;
-  // Mock-mode only: state total from nav params, used to scale the bundled
+  city?:      string;   // customer-location flow — city scope
+  // Mock-mode only: scoped total from nav params, used to scale the bundled
   // national distribution. Ignored entirely in live mode.
   mockStateTotal?: number;
 }
@@ -66,9 +70,9 @@ interface WireBreakdownRow {
 }
 
 interface WireStats {
-  scope:        "india" | "state";
-  state_key?:   string;
+  scope:        "india" | "state" | "city";
   state_name?:  string;
+  city_name?:   string;
   total_live:   number;
   total_closed: number;
   as_of:        string;
@@ -102,8 +106,8 @@ function colorFor(typeKey: string, index: number): string {
 function fromWire(w: WireStats): StoreLiveStats {
   return {
     scope:       w.scope,
-    stateKey:    w.state_key,
     stateName:   w.state_name,
+    cityName:    w.city_name,
     totalLive:   w.total_live,
     totalClosed: w.total_closed,
     asOf:        w.as_of,
@@ -120,7 +124,12 @@ function fromWire(w: WireStats): StoreLiveStats {
 
 // ── Live fetch ────────────────────────────────────────────────
 async function fetchLive(params: FetchStoreLiveParams): Promise<StoreLiveStats> {
-  const qs  = params.stateKey ? `?state=${encodeURIComponent(params.stateKey)}` : "";
+  // State (bharat) wins over city (customer location) — mirrors the BE rule.
+  const qs = params.stateKey
+    ? `?state=${encodeURIComponent(params.stateKey)}`
+    : params.city
+      ? `?city=${encodeURIComponent(params.city)}`
+      : "";
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), FETCH_TIMEOUT_MS);
   try {
@@ -132,13 +141,15 @@ async function fetchLive(params: FetchStoreLiveParams): Promise<StoreLiveStats> 
   }
 }
 
-// ── Mock (bundled data; state scope scales the national mix) ──
+// ── Mock (bundled data; scoped views scale the national mix) ──
 function fetchMock(params: FetchStoreLiveParams): StoreLiveStats {
-  const isState = Boolean(params.stateKey || params.stateName);
-  const total   = isState ? (params.mockStateTotal ?? 0) : TOTAL_LIVE;
-  const ratio   = TOTAL_LIVE > 0 ? total / TOTAL_LIVE : 0;
+  const isState  = Boolean(params.stateKey || params.stateName);
+  const isCity   = !isState && Boolean(params.city);
+  const isScoped = isState || isCity;
+  const total    = isScoped ? (params.mockStateTotal ?? 0) : TOTAL_LIVE;
+  const ratio    = TOTAL_LIVE > 0 ? total / TOTAL_LIVE : 0;
 
-  const breakdown = isState
+  const breakdown = isScoped
     ? STORE_LIVE_DATA.map(d => ({
         ...d,
         liveCount:   Math.round(d.liveCount * ratio),
@@ -147,9 +158,9 @@ function fetchMock(params: FetchStoreLiveParams): StoreLiveStats {
     : STORE_LIVE_DATA;
 
   return {
-    scope:       isState ? "state" : "india",
-    stateKey:    params.stateKey,
+    scope:       isState ? "state" : isCity ? "city" : "india",
     stateName:   params.stateName,
+    cityName:    isCity ? params.city : undefined,
     totalLive:   total,
     totalClosed: breakdown.reduce((acc, d) => acc + d.closedCount, 0),
     asOf:        new Date().toISOString(),

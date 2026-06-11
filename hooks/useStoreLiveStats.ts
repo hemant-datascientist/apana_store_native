@@ -30,13 +30,13 @@ export function useStoreLiveStats(params: FetchStoreLiveParams): UseStoreLiveSta
 
   // Depend on the scalar keys (not the params object) so the poll interval
   // doesn't restart every render from a fresh object literal.
-  const { stateKey, stateName, mockStateTotal } = params;
+  const { stateKey, stateName, city, mockStateTotal } = params;
 
   const aliveRef = useRef(true);
 
   const load = useCallback(async () => {
     try {
-      const next = await fetchStoreLiveStats({ stateKey, stateName, mockStateTotal });
+      const next = await fetchStoreLiveStats({ stateKey, stateName, city, mockStateTotal });
       if (!aliveRef.current) return;
       setStats(next);
       setIsError(false);
@@ -48,7 +48,7 @@ export function useStoreLiveStats(params: FetchStoreLiveParams): UseStoreLiveSta
     } finally {
       if (aliveRef.current) setIsLoading(false);
     }
-  }, [stateKey, stateName, mockStateTotal]);
+  }, [stateKey, stateName, city, mockStateTotal]);
 
   useEffect(() => {
     aliveRef.current = true;
