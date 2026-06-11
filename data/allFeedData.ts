@@ -232,6 +232,10 @@ const MONSOON_CATEGORIES: SeasonalCat[] = [
   { key:"quickdry",    label:"Quick-Dry Wear",      icon:"shirt-outline",         bg:"#EDE9FE" },
   { key:"indoorgames", label:"Indoor Games",        icon:"game-controller-outline", bg:"#FCE7F3" },
   { key:"dehumid",     label:"Moisture Control",    icon:"water-outline",         bg:"#DBEAFE" },
+  { key:"mask",        label:"Masks",               icon:"medical-outline",       bg:"#E0F2FE" },
+  { key:"instnoodles", label:"Instant Noodles",     icon:"restaurant-outline",    bg:"#FEF3C7" },
+  { key:"sanitizer",   label:"Hand Sanitizers",     icon:"hand-left-outline",     bg:"#ECFDF5" },
+  { key:"soups",       label:"Soups & Broths",      icon:"wine-outline",          bg:"#FFEDD5" },
 ];
 
 const WINTER_CATEGORIES: SeasonalCat[] = [
@@ -245,6 +249,10 @@ const WINTER_CATEGORIES: SeasonalCat[] = [
   { key:"wintershoes", label:"Winter Footwear",     icon:"walk-outline",          bg:"#E0F2FE" },
   { key:"coldcough",   label:"Cold & Cough",        icon:"medkit-outline",        bg:"#DCFCE7" },
   { key:"geysers",     label:"Geysers",             icon:"thermometer-outline",   bg:"#ECFDF5" },
+  { key:"mask",        label:"Masks",               icon:"medical-outline",       bg:"#E0F2FE" },
+  { key:"instnoodles", label:"Instant Noodles",     icon:"restaurant-outline",    bg:"#FEF3C7" },
+  { key:"sanitizer",   label:"Hand Sanitizers",     icon:"hand-left-outline",     bg:"#DCFCE7" },
+  { key:"soups",       label:"Soups & Broths",      icon:"wine-outline",          bg:"#FFEDD5" },
 ];
 
 const FESTIVE_CATEGORIES: SeasonalCat[] = [
@@ -258,6 +266,8 @@ const FESTIVE_CATEGORIES: SeasonalCat[] = [
   { key:"lights",      label:"Festive Lights",      icon:"bulb-outline",          bg:"#DBEAFE" },
   { key:"cleaning",    label:"Home Cleaning",       icon:"sparkles-outline",      bg:"#E0F2FE" },
   { key:"idols",       label:"Idols & Murti",       icon:"happy-outline",         bg:"#ECFDF5" },
+  { key:"firecrackers",label:"Firecrackers",        icon:"rocket-outline",        bg:"#FEE2E2" },
+  { key:"namkeen",     label:"Namkeen Mixture",     icon:"fast-food-outline",     bg:"#FFEDD5" },
 ];
 
 export const SEASONS: Season[] = [
