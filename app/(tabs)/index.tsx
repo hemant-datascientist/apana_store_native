@@ -36,6 +36,7 @@ import CategoryScroll      from "../../components/tabs/home/CategoryScroll";
 import StoreDiscoveryTabs, { StoreTab }    from "../../components/tabs/home/StoreDiscoveryTabs";
 import StoreFilterBar,     { StoreFilters } from "../../components/tabs/home/StoreFilterBar";
 import MenuDrawer                          from "../../components/tabs/home/MenuDrawer";
+import { handleMenuSelect }                from "../../lib/menuNav";
 
 // ── Product category feeds ───────────────────────────────────
 import AllFeed        from "../../components/tabs/home/all/AllFeed";
@@ -128,22 +129,7 @@ export default function HomeScreen() {
       <MenuDrawer
         visible={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        onSelect={key => {
-          switch (key) {
-            case "offer_zone":     router.push("/offer-zone");     break;
-            case "shop_brands":    router.push("/brands");         break;
-            case "new_launches":   router.push("/new-launchers");  break;
-            case "about_us":       router.push("/about-us");       break;
-            case "sell_ondc":      router.push("/sell-ondc");      break;
-            case "product_finder": router.push("/product-finder"); break;
-            case "store_qr":       router.push("/store-qr");       break;
-            case "address_book":   router.push("/address-book");   break;
-            case "favourite":      router.push("/favourite");      break;
-            case "scanner":        router.push("/scanner");        break;
-            default:
-              Alert.alert("Coming Soon", `"${key}" is coming soon.`);
-          }
-        }}
+        onSelect={key => handleMenuSelect(router, key)}
       />
 
       {/* ── Single scrollable page ── */}

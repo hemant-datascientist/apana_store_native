@@ -29,13 +29,16 @@ import DiscoveryToggle from "../../components/tabs/home/DiscoveryToggle";
 import CategorySection from "../../components/tabs/category/CategorySection";
 import StoreTypeGrid   from "../../components/tabs/category/StoreTypeGrid";
 import ApcBrowseBanner from "../../components/apc/ApcBrowseBanner";
+import MenuDrawer      from "../../components/tabs/home/MenuDrawer";
+import { handleMenuSelect } from "../../lib/menuNav";
 
 export default function CategoryScreen() {
   const { colors } = useTheme();
   const router     = useRouter();
 
-  const [search, setSearch] = useState("");
-  const [mode,   setMode]   = useState<DiscoveryMode>("products");
+  const [search,     setSearch]     = useState("");
+  const [mode,       setMode]       = useState<DiscoveryMode>("products");
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // One section per group. Rendered through a FlatList so only the on-screen
   // groups mount — the grid holds 308 tiles / 279 images, and mounting them
@@ -60,6 +63,13 @@ export default function CategoryScreen() {
     <View style={styles.root}>
       <StatusBar barStyle="light-content" backgroundColor={HEADER_BG} />
 
+      {/* ── Menu drawer (Modal — doesn't affect layout) ── */}
+      <MenuDrawer
+        visible={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        onSelect={key => handleMenuSelect(router, key)}
+      />
+
       {/* ── Dark navy hero ── */}
       <SafeAreaView style={[styles.hero, { backgroundColor: HEADER_BG }]} edges={["top"]}>
 
@@ -74,7 +84,7 @@ export default function CategoryScreen() {
           onChangeText={setSearch}
           onSubmit={q => q.trim() && router.push(`/search-results?q=${encodeURIComponent(q.trim())}` as any)}
           mode={mode}
-          onMenuPress={()   => Alert.alert("Menu",          "Drawer coming soon.")}
+          onMenuPress={()   => setDrawerOpen(true)}
           onMicPress={()    => Alert.alert("Voice",         "Voice search coming soon.")}
           onBellPress={() => router.push("/notifications")}
           onScanPress={() => router.push("/scanner")}
