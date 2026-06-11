@@ -1,13 +1,13 @@
 // ============================================================
 // MENU DRAWER — Apana Store (Customer App)
 //
-// Slides in from the left when the hamburger button is pressed.
-// Dark navy background matching the hero header.
+// Centered card modal (not a side drawer): a branded primary header band
+// over a 2-column grid of menu tiles. Scales + fades in. Fully themed via
+// tokens so it reads well in light and dark.
 //
 // Menu items:
-//   Offer Zone · Shop by Brands · New Launches · Product Finder
-//   Favourite · Bookmark · Sell on ONDC · Address Book
-//   Auto Riders - ONDC · About Us
+//   Offer Zone · Shop by Brands · New Launches · Product Finder · Store QR
+//   Favourite · Bookmark · Sell on ONDC · Address Book · Auto Riders · About
 // ============================================================
 
 import React, { useEffect, useRef } from "react";
@@ -17,67 +17,79 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import useTheme from "../../../theme/useTheme";
 import { typography } from "../../../theme/typography";
-import { HEADER_BG } from "../../../data/homeData";
 
-const { width: SCREEN_W } = Dimensions.get("window");
-const DRAWER_W = SCREEN_W * 0.78;
+const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
+const CARD_W    = Math.min(SCREEN_W * 0.9, 440);
+const CARD_PAD  = 16;
+const GRID_GAP  = 12;
+const TILE_W    = (CARD_W - CARD_PAD * 2 - GRID_GAP) / 2;
 
 // ── Menu items ────────────────────────────────────────────────
 interface MenuItem {
-  key:      string;
-  label:    string;
-  icon:     keyof typeof Ionicons.glyphMap | "brand_b";
-  dividerAfter?: boolean;
+  key:   string;
+  label: string;
+  icon:  keyof typeof Ionicons.glyphMap | "brand_b";
 }
 
 const MENU_ITEMS: MenuItem[] = [
-  { key: "offer_zone",    label: "Offer Zone",        icon: "pricetag-outline"              },
-  { key: "shop_brands",   label: "Shop by Brands",    icon: "brand_b"                       },
-  { key: "new_launches",  label: "New Launches",      icon: "sparkles-outline"              },
-  { key: "product_finder",label: "Product Finder",    icon: "search-outline"                },
-  { key: "store_qr",      label: "Store QR",          icon: "qr-code-outline", dividerAfter: true },
-  { key: "favourite",     label: "Favourite",         icon: "heart-outline"                 },
-  { key: "bookmark",      label: "Bookmark",          icon: "bookmark-outline", dividerAfter: true },
-  { key: "sell_ondc",     label: "Sell on ONDC",      icon: "bag-handle-outline"            },
-  { key: "address_book",  label: "Address Book",      icon: "location-outline"              },
-  { key: "auto_riders",   label: "Auto Riders – ONDC",icon: "car-outline",   dividerAfter: true },
-  { key: "about_us",      label: "About Us",          icon: "information-circle-outline"    },
+  { key: "offer_zone",    label: "Offer Zone",      icon: "pricetag-outline"           },
+  { key: "shop_brands",   label: "Shop by Brands",  icon: "brand_b"                    },
+  { key: "new_launches",  label: "New Launches",    icon: "sparkles-outline"           },
+  { key: "product_finder",label: "Product Finder",  icon: "search-outline"             },
+  { key: "store_qr",      label: "Store QR",        icon: "qr-code-outline"            },
+  { key: "favourite",     label: "Favourite",       icon: "heart-outline"              },
+  { key: "bookmark",      label: "Bookmark",        icon: "bookmark-outline"           },
+  { key: "sell_ondc",     label: "Sell on ONDC",    icon: "bag-handle-outline"         },
+  { key: "address_book",  label: "Address Book",    icon: "location-outline"           },
+  { key: "auto_riders",   label: "Auto Riders",     icon: "car-outline"                },
+  { key: "about_us",      label: "About Us",        icon: "information-circle-outline" },
 ];
 
 // ── Brand "B" icon (custom) ────────────────────────────────────
-function BrandIcon() {
+function BrandIcon({ color }: { color: string }) {
   return (
-    <View style={styles.brandIcon}>
-      <Text style={styles.brandLetter}>B</Text>
+    <View style={[styles.brandIcon, { borderColor: color }]}>
+      <Text style={[styles.brandLetter, { color }]}>B</Text>
     </View>
   );
 }
 
-// ── Single menu row ────────────────────────────────────────────
-function MenuRow({
-  item,
-  onPress,
+// ── Single menu tile ───────────────────────────────────────────
+function MenuTile({
+  item, onPress, tint, chipBg, surface, border, textColor,
 }: {
-  item: MenuItem;
-  onPress: () => void;
+  item:      MenuItem;
+  onPress:   () => void;
+  tint:      string;
+  chipBg:    string;
+  surface:   string;
+  border:    string;
+  textColor: string;
 }) {
   return (
-    <>
-      <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.65}>
-        <View style={styles.iconWrap}>
-          {item.icon === "brand_b" ? (
-            <BrandIcon />
-          ) : (
-            <Ionicons name={item.icon as keyof typeof Ionicons.glyphMap} size={20} color="#fff" />
-          )}
-        </View>
-        <Text style={[styles.rowLabel, { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.md }]}>
-          {item.label}
-        </Text>
-      </TouchableOpacity>
-      {item.dividerAfter && <View style={styles.divider} />}
-    </>
+    <TouchableOpacity
+      style={[styles.tile, { width: TILE_W, backgroundColor: surface, borderColor: border }]}
+      onPress={onPress}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={item.label}
+    >
+      <View style={[styles.chip, { backgroundColor: chipBg }]}>
+        {item.icon === "brand_b" ? (
+          <BrandIcon color={tint} />
+        ) : (
+          <Ionicons name={item.icon as keyof typeof Ionicons.glyphMap} size={22} color={tint} />
+        )}
+      </View>
+      <Text
+        numberOfLines={1}
+        style={[styles.tileLabel, { color: textColor, fontFamily: typography.fontFamily.semiBold }]}
+      >
+        {item.label}
+      </Text>
+    </TouchableOpacity>
   );
 }
 
@@ -89,23 +101,29 @@ interface MenuDrawerProps {
 }
 
 export default function MenuDrawer({ visible, onClose, onSelect }: MenuDrawerProps) {
-  const insets    = useSafeAreaInsets();
-  const slideAnim = useRef(new Animated.Value(-DRAWER_W)).current;
-  const fadeAnim  = useRef(new Animated.Value(0)).current;
+  const { colors } = useTheme();
+  const insets     = useSafeAreaInsets();
+  const scaleAnim  = useRef(new Animated.Value(0.92)).current;
+  const fadeAnim   = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (visible) {
       Animated.parallel([
-        Animated.timing(slideAnim, { toValue: 0,          duration: 280, useNativeDriver: true }),
-        Animated.timing(fadeAnim,  { toValue: 1,          duration: 280, useNativeDriver: true }),
+        Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, friction: 8, tension: 80 }),
+        Animated.timing(fadeAnim,  { toValue: 1, duration: 200, useNativeDriver: true }),
       ]).start();
     } else {
       Animated.parallel([
-        Animated.timing(slideAnim, { toValue: -DRAWER_W,  duration: 220, useNativeDriver: true }),
-        Animated.timing(fadeAnim,  { toValue: 0,          duration: 220, useNativeDriver: true }),
+        Animated.timing(scaleAnim, { toValue: 0.92, duration: 160, useNativeDriver: true }),
+        Animated.timing(fadeAnim,  { toValue: 0,    duration: 160, useNativeDriver: true }),
       ]).start();
     }
-  }, [visible]);
+  }, [visible, scaleAnim, fadeAnim]);
+
+  // Soft primary tint for the icon chips; theme-derived so it tracks the app's
+  // accent without hardcoding a palette.
+  const chipBg  = colors.primary + "1A"; // ~10% primary
+  const surface = colors.background;
 
   return (
     <Modal
@@ -115,34 +133,32 @@ export default function MenuDrawer({ visible, onClose, onSelect }: MenuDrawerPro
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      <StatusBar barStyle="light-content" backgroundColor="rgba(0,0,0,0.5)" />
+      <StatusBar barStyle="light-content" backgroundColor="rgba(0,0,0,0.55)" />
 
-      <View style={styles.overlay}>
-        {/* Scrim — tap to close */}
-        <Animated.View style={[styles.scrim, { opacity: fadeAnim }]}>
-          <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
-        </Animated.View>
+      {/* Scrim — tap anywhere outside the card to close */}
+      <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
+        <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
+      </Animated.View>
 
-        {/* Drawer panel */}
+      <View style={styles.center} pointerEvents="box-none">
         <Animated.View
           style={[
-            styles.drawer,
+            styles.card,
             {
-              width:           DRAWER_W,
-              paddingTop:      insets.top + 8,
-              paddingBottom:   insets.bottom + 16,
-              backgroundColor: HEADER_BG,
-              transform:       [{ translateX: slideAnim }],
+              width:           CARD_W,
+              backgroundColor: colors.card,
+              opacity:         fadeAnim,
+              transform:       [{ scale: scaleAnim }],
             },
           ]}
         >
-          {/* Header: logo + close */}
-          <View style={styles.drawerHeader}>
+          {/* ── Header band ── */}
+          <View style={[styles.header, { backgroundColor: colors.primary }]}>
             <View style={styles.logoRow}>
               <View style={styles.logoCircle}>
-                <Ionicons name="storefront" size={18} color={HEADER_BG} />
+                <Ionicons name="storefront" size={18} color={colors.primary} />
               </View>
-              <View>
+              <View style={styles.logoText}>
                 <Text style={[styles.logoName, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg }]}>
                   Apana Store
                 </Text>
@@ -151,19 +167,32 @@ export default function MenuDrawer({ visible, onClose, onSelect }: MenuDrawerPro
                 </Text>
               </View>
             </View>
-            <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-              <Ionicons name="close" size={22} color="rgba(255,255,255,0.75)" />
+            <TouchableOpacity
+              onPress={onClose}
+              style={styles.closeBtn}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityRole="button"
+              accessibilityLabel="Close menu"
+            >
+              <Ionicons name="close" size={20} color="#fff" />
             </TouchableOpacity>
           </View>
 
-          <View style={styles.headerDivider} />
-
-          {/* Menu list */}
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
+          {/* ── Tile grid ── */}
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            style={{ maxHeight: SCREEN_H * 0.56 }}
+            contentContainerStyle={styles.grid}
+          >
             {MENU_ITEMS.map(item => (
-              <MenuRow
+              <MenuTile
                 key={item.key}
                 item={item}
+                tint={colors.primary}
+                chipBg={chipBg}
+                surface={surface}
+                border={colors.border}
+                textColor={colors.text}
                 onPress={() => {
                   onSelect(item.key);
                   onClose();
@@ -171,6 +200,8 @@ export default function MenuDrawer({ visible, onClose, onSelect }: MenuDrawerPro
               />
             ))}
           </ScrollView>
+
+          <View style={{ height: insets.bottom ? insets.bottom / 2 : 6 }} />
         </Animated.View>
       </View>
     </Modal>
@@ -180,32 +211,39 @@ export default function MenuDrawer({ visible, onClose, onSelect }: MenuDrawerPro
 // ── Styles ─────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   overlay: {
-    flex:      1,
-    flexDirection: "row",
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.55)",
   },
-  scrim: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: "rgba(0,0,0,0.52)",
+  center: {
+    flex:           1,
+    alignItems:     "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
   },
-  drawer: {
-    position: "absolute",
-    left:      0,
-    top:       0,
-    bottom:    0,
+  card: {
+    borderRadius:  24,
+    overflow:      "hidden",
+    // Depth — floats over the scrim
+    shadowColor:   "#000",
+    shadowOffset:  { width: 0, height: 12 },
+    shadowOpacity: 0.3,
+    shadowRadius:  28,
+    elevation:     16,
   },
 
-  // Header
-  drawerHeader: {
+  // Header band
+  header: {
     flexDirection:     "row",
     alignItems:        "center",
     justifyContent:    "space-between",
-    paddingHorizontal: 20,
-    paddingBottom:     14,
+    paddingHorizontal: 18,
+    paddingVertical:   16,
   },
   logoRow: {
     flexDirection: "row",
     alignItems:    "center",
-    gap:           10,
+    gap:           11,
+    flex:          1,
   },
   logoCircle: {
     width:          40,
@@ -215,56 +253,57 @@ const styles = StyleSheet.create({
     alignItems:     "center",
     justifyContent: "center",
   },
-  logoName:    { color: "#fff",                  lineHeight: 22 },
-  logoTagline: { color: "rgba(255,255,255,0.60)", lineHeight: 17 },
-  headerDivider: {
-    height:          1,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    marginHorizontal:20,
-    marginBottom:    8,
+  logoText:    { flexShrink: 1 },
+  logoName:    { color: "#fff",                   lineHeight: 22 },
+  logoTagline: { color: "rgba(255,255,255,0.72)", lineHeight: 16 },
+  closeBtn: {
+    width:           34,
+    height:          34,
+    borderRadius:    17,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    alignItems:      "center",
+    justifyContent:  "center",
+    marginLeft:      8,
   },
 
-  // Menu list
-  list: {
-    paddingHorizontal: 12,
-    paddingTop:         8,
+  // Tile grid
+  grid: {
+    flexDirection:     "row",
+    flexWrap:          "wrap",
+    gap:               GRID_GAP,
+    padding:           CARD_PAD,
+    justifyContent:    "flex-start",
   },
-  row: {
-    flexDirection:  "row",
-    alignItems:     "center",
-    gap:            14,
-    paddingVertical: 13,
+  tile: {
+    borderRadius:    16,
+    borderWidth:     1,
+    paddingVertical: 16,
     paddingHorizontal: 10,
-    borderRadius:   10,
+    alignItems:      "center",
+    gap:             10,
   },
-  iconWrap: {
-    width:          28,
+  chip: {
+    width:          46,
+    height:         46,
+    borderRadius:   23,
     alignItems:     "center",
     justifyContent: "center",
   },
-  rowLabel: {
-    color: "#fff",
-    flex:  1,
-  },
-  divider: {
-    height:          1,
-    backgroundColor: "rgba(255,255,255,0.10)",
-    marginVertical:  4,
-    marginHorizontal:10,
+  tileLabel: {
+    fontSize:  typography.size.xs,
+    textAlign: "center",
   },
 
   // Brand "B" custom icon
   brandIcon: {
-    width:        22,
-    height:       22,
+    width:         22,
+    height:        22,
     borderWidth:   1.5,
-    borderColor:  "#fff",
     borderRadius:  4,
-    alignItems:   "center",
+    alignItems:    "center",
     justifyContent:"center",
   },
   brandLetter: {
-    color:      "#fff",
     fontSize:   13,
     fontFamily: "Poppins_700Bold",
     lineHeight: 16,
