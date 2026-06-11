@@ -10,7 +10,7 @@
 
 import React, { useState, useCallback } from "react";
 import {
-  View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert,
+  View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert, Image,
 } from "react-native";
 import { Ionicons }        from "@expo/vector-icons";
 import { typography }      from "../../../../theme/typography";
@@ -84,7 +84,15 @@ export default function SeasonalCategorySection({ seasons }: SeasonalCategorySec
             onPress={() => Alert.alert(cat.label, `${cat.label} collection coming soon.`)}
           >
             <View style={[styles.imgWrap, { backgroundColor: cat.bg, height: IMG_H }]}>
-              <Ionicons name={cat.icon as any} size={28} color="rgba(0,0,0,0.25)" />
+              {cat.imageUrl ? (
+                <Image
+                  source={cat.imageUrl}
+                  style={styles.img}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Ionicons name={cat.icon as any} size={28} color="rgba(0,0,0,0.25)" />
+              )}
             </View>
 
             <Text
@@ -139,6 +147,11 @@ const styles = StyleSheet.create({
     overflow:       "hidden",
     borderWidth:    1,
     borderColor:    "#F3F4F6",
+  },
+
+  img: {
+    width:          "100%",
+    height:         "100%",
   },
 
   label: {

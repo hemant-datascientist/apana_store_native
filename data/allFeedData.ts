@@ -188,21 +188,22 @@ export interface SeasonalCat {
   label: string;
   icon:  string;
   bg:    string;
+  imageUrl?: any;
 }
 
 export const SUMMER_CATEGORIES: SeasonalCat[] = [
-  { key:"sunscreens",  label:"Sunscreens",         icon:"sunny-outline",         bg:"#FEF3C7" },
-  { key:"skincare",    label:"Skincare",            icon:"sparkles-outline",      bg:"#FCE7F3" },
-  { key:"beverages",   label:"Refreshing Cools",    icon:"wine-outline",          bg:"#DBEAFE" },
-  { key:"milkshakes",  label:"Milkshakes",          icon:"cafe-outline",          bg:"#FEF3C7" },
-  { key:"aircooler",   label:"Air Coolers",         icon:"snow-outline",          bg:"#E0F2FE" },
-  { key:"energy",      label:"Energy Drinks",       icon:"flash-outline",         bg:"#FEE2E2" },
-  { key:"fruits",      label:"Summer Fruits",       icon:"nutrition-outline",     bg:"#DCFCE7" },
-  { key:"icecream",    label:"Frozen Desserts",     icon:"ice-cream-outline",     bg:"#FCE7F3" },
-  { key:"hydration",   label:"Body Hydration",      icon:"fitness-outline",       bg:"#ECFDF5" },
-  { key:"pool",        label:"Pool & Beach",        icon:"water-outline",         bg:"#DBEAFE" },
-  { key:"lightcloth",  label:"Light Clothing",      icon:"shirt-outline",         bg:"#EDE9FE" },
-  { key:"footwear",    label:"Summer Footwear",     icon:"walk-outline",          bg:"#FFEDD5" },
+  { key:"sunscreens",  label:"Sunscreens",         icon:"sunny-outline",         bg:"#FEF3C7", imageUrl: require("../assets/images/home/seasons/sunscreens.png") },
+  { key:"skincare",    label:"Skincare",            icon:"sparkles-outline",      bg:"#FCE7F3", imageUrl: require("../assets/images/home/seasons/skincare.png") },
+  { key:"beverages",   label:"Refreshing Cools",    icon:"wine-outline",          bg:"#DBEAFE", imageUrl: require("../assets/images/home/seasons/beverages.png") },
+  { key:"milkshakes",  label:"Milkshakes",          icon:"cafe-outline",          bg:"#FEF3C7", imageUrl: require("../assets/images/home/seasons/milkshakes.png") },
+  { key:"aircooler",   label:"Air Coolers",         icon:"snow-outline",          bg:"#E0F2FE", imageUrl: require("../assets/images/home/seasons/aircooler.png") },
+  { key:"energy",      label:"Energy Drinks",       icon:"flash-outline",         bg:"#FEE2E2", imageUrl: require("../assets/images/home/seasons/energy.png") },
+  { key:"fruits",      label:"Summer Fruits",       icon:"nutrition-outline",     bg:"#DCFCE7", imageUrl: require("../assets/images/home/seasons/fruits.png") },
+  { key:"icecream",    label:"Frozen Desserts",     icon:"ice-cream-outline",     bg:"#FCE7F3", imageUrl: require("../assets/images/home/seasons/icecream.png") },
+  { key:"hydration",   label:"Body Hydration",      icon:"fitness-outline",       bg:"#ECFDF5", imageUrl: require("../assets/images/home/seasons/hydration.png") },
+  { key:"pool",        label:"Pool & Beach",        icon:"water-outline",         bg:"#DBEAFE", imageUrl: require("../assets/images/home/seasons/pool.png") },
+  { key:"lightcloth",  label:"Light Clothing",      icon:"shirt-outline",         bg:"#EDE9FE", imageUrl: require("../assets/images/home/seasons/lightcloth.png") },
+  { key:"footwear",    label:"Summer Footwear",     icon:"walk-outline",          bg:"#FFEDD5", imageUrl: require("../assets/images/home/seasons/footwear.png") },
 ];
 
 // ── Seasons carousel ──────────────────────────────────────────
@@ -222,15 +223,15 @@ export interface Season {
 }
 
 const MONSOON_CATEGORIES: SeasonalCat[] = [
-  { key:"umbrellas",   label:"Umbrellas",           icon:"umbrella-outline",      bg:"#DBEAFE" },
-  { key:"raincoats",   label:"Raincoats",           icon:"rainy-outline",         bg:"#E0F2FE" },
-  { key:"gumboots",    label:"Gumboots",            icon:"footsteps-outline",     bg:"#FEF3C7" },
-  { key:"hotdrinks",   label:"Hot Beverages",       icon:"cafe-outline",          bg:"#FFEDD5" },
-  { key:"snacks",      label:"Pakora & Snacks",     icon:"fast-food-outline",     bg:"#FEE2E2" },
-  { key:"immunity",    label:"Immunity Boost",      icon:"shield-outline",        bg:"#DCFCE7" },
-  { key:"mosquito",    label:"Mosquito Care",       icon:"bug-outline",           bg:"#ECFDF5" },
-  { key:"quickdry",    label:"Quick-Dry Wear",      icon:"shirt-outline",         bg:"#EDE9FE" },
-  { key:"indoorgames", label:"Indoor Games",        icon:"game-controller-outline", bg:"#FCE7F3" },
+  { key:"umbrellas",   label:"Umbrellas",           icon:"umbrella-outline",      bg:"#DBEAFE", imageUrl: require("../assets/images/home/seasons/umbrellas.png") },
+  { key:"raincoats",   label:"Raincoats",           icon:"rainy-outline",         bg:"#E0F2FE", imageUrl: require("../assets/images/home/seasons/raincoats.png") },
+  { key:"gumboots",    label:"Gumboots",            icon:"footsteps-outline",     bg:"#FEF3C7", imageUrl: require("../assets/images/home/seasons/gumboots.png") },
+  { key:"hotdrinks",   label:"Hot Beverages",       icon:"cafe-outline",          bg:"#FFEDD5", imageUrl: require("../assets/images/home/seasons/hotdrinks.png") },
+  { key:"snacks",      label:"Pakora & Snacks",     icon:"fast-food-outline",     bg:"#FEE2E2", imageUrl: require("../assets/images/home/seasons/snacks.png") },
+  { key:"immunity",    label:"Immunity Boost",      icon:"shield-outline",        bg:"#DCFCE7", imageUrl: require("../assets/images/home/seasons/immunity.png") },
+  { key:"mosquito",    label:"Mosquito Care",       icon:"bug-outline",           bg:"#ECFDF5", imageUrl: require("../assets/images/home/seasons/mosquito.png") },
+  { key:"quickdry",    label:"Quick-Dry Wear",      icon:"shirt-outline",         bg:"#EDE9FE", imageUrl: require("../assets/images/home/seasons/quickdry.png") },
+  { key:"indoorgames", label:"Indoor Games",        icon:"game-controller-outline", bg:"#FCE7F3", imageUrl: require("../assets/images/home/seasons/indoorgames.png") },
   { key:"dehumid",     label:"Moisture Control",    icon:"water-outline",         bg:"#DBEAFE" },
   { key:"instnoodles", label:"Instant Noodles",     icon:"restaurant-outline",    bg:"#FEF3C7" },
   { key:"sanitizer",   label:"Hand Sanitizers",     icon:"hand-left-outline",     bg:"#ECFDF5" },
