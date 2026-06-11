@@ -77,6 +77,13 @@ interface WireStats {
 
 // ── Client-side color map (type_key → chart color) ────────────
 const TYPE_COLORS: Record<string, string> = {
+  // BE seller types (§18 sellers.type)
+  retail:      "#22C55E",
+  wholesale:   "#F97316",
+  food_packed: "#EAB308",
+  food_live:   "#EF4444",
+  service:     "#8B5CF6",
+  // legacy mock keys (bundled STORE_LIVE_DATA)
   kirana:      "#22C55E",
   fashion:     "#06B6D4",
   pharmacy:    "#84CC16",

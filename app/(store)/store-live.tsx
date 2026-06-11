@@ -48,12 +48,18 @@ export default function StoreLiveScreen() {
     stateKey?: string; stateName?: string; storesLive?: string;
   }>();
 
-  const isStateSpecific = !!stateName;
   const { stats, isLoading, isError, refetch } = useStoreLiveStats({
     stateKey,
     stateName,
     mockStateTotal: storesLive ? parseInt(storesLive, 10) : undefined,
   });
+
+  // Scope labels follow the RESPONSE, not the nav params — if the BE can't
+  // filter by state yet it declares scope "india", and showing a state title
+  // over national numbers would be phantom data (§19.8). Nav params only
+  // seed the title while loading.
+  const isStateSpecific = stats ? stats.scope === "state" : !!stateName;
+  const scopeName       = stats?.scope === "state" ? stats.stateName : stateName;
 
   const [refreshing, setRefreshing] = React.useState(false);
   const onRefresh = React.useCallback(() => {
@@ -63,7 +69,7 @@ export default function StoreLiveScreen() {
     setTimeout(() => setRefreshing(false), 600);
   }, [refetch]);
 
-  const scopeLabel = isStateSpecific ? `${stateName} Stores Live` : "All India Stores Live";
+  const scopeLabel = isStateSpecific ? `${scopeName} Stores Live` : "All India Stores Live";
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -79,7 +85,7 @@ export default function StoreLiveScreen() {
         </TouchableOpacity>
 
         <Text style={[styles.headerTitle, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg }]}>
-          {isStateSpecific ? `${stateName} Store Live` : "All India Store Live"}
+          {isStateSpecific ? `${scopeName} Store Live` : "All India Store Live"}
         </Text>
 
         <TouchableOpacity onPress={refetch} style={styles.headerBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
