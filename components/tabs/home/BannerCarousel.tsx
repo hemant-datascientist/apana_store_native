@@ -18,7 +18,7 @@ import { typography } from "../../../theme/typography";
 import useTheme from "../../../theme/useTheme";
 
 const { width: SCREEN_W } = Dimensions.get("window");
-const CARD_H = 160;
+const CARD_H = 180;
 const H_PAD  = 16;
 const CARD_W = SCREEN_W - H_PAD * 2;
 
@@ -68,12 +68,26 @@ export default function BannerCarousel({ banners, onPress }: BannerCarouselProps
             onPress={() => onPress?.(banner)}
             activeOpacity={0.9}
           >
+            {/* Background Image if available */}
+            {banner.imageUrl && (
+              <Image 
+                source={banner.imageUrl} 
+                style={StyleSheet.absoluteFill} 
+                resizeMode="cover" 
+              />
+            )}
+            
+            {/* Dark overlay to make text readable over the image */}
+            {banner.imageUrl && (
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.55)' }]} />
+            )}
+
             {/* Decorative circles (background pattern) - only if no image */}
             {!banner.imageUrl && <View style={[styles.circle1, { backgroundColor: "rgba(255,255,255,0.08)" }]} />}
             {!banner.imageUrl && <View style={[styles.circle2, { backgroundColor: "rgba(255,255,255,0.06)" }]} />}
 
             {/* Content */}
-            <View style={[styles.content, banner.imageUrl ? { maxWidth: CARD_W * 0.55, zIndex: 10 } : {}]}>
+            <View style={[styles.content, banner.imageUrl ? { maxWidth: CARD_W * 0.75, zIndex: 10 } : {}]}>
               {/* Tag pill */}
               <View style={[styles.tag, { backgroundColor: banner.accent + "30" }]}>
                 <Text style={[styles.tagText, { color: banner.accent, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
@@ -87,21 +101,13 @@ export default function BannerCarousel({ banners, onPress }: BannerCarouselProps
               </Text>
 
               {/* Subtitle */}
-              <Text numberOfLines={3} style={[styles.subtitle, { color: "rgba(255,255,255,0.90)", fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
+              <Text numberOfLines={2} style={[styles.subtitle, { color: "rgba(255,255,255,0.90)", fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
                 {banner.subtitle}
               </Text>
             </View>
 
-            {/* Right Side Image or Icon */}
-            {banner.imageUrl ? (
-              <View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'flex-end', paddingRight: 0, overflow: 'hidden' }]}>
-                <Image 
-                  source={banner.imageUrl} 
-                  style={{ width: CARD_H, height: CARD_H, right: -10, borderRadius: CARD_H / 2, opacity: 0.95 }} 
-                  resizeMode="cover" 
-                />
-              </View>
-            ) : (
+            {/* Decorative icon - only if no image */}
+            {!banner.imageUrl && (
               <View style={styles.iconWrap}>
                 <Ionicons name={banner.icon as any} size={72} color="rgba(255,255,255,0.15)" />
               </View>
