@@ -16,8 +16,9 @@ export interface HeroStore {
   city:       string;     // bottom-left label
   nearLabel:  string;     // bottom-right label
   bgColor:    string;     // placeholder bg (real app uses photo)
-  accentColor:string;     // overlay tint for the gradient
+  accentColor:string;
   icon:       string;     // Ionicons for placeholder centre
+  imageUrl?:  any;
 }
 
 export const HERO_STORES: HeroStore[] = [
@@ -31,6 +32,7 @@ export const HERO_STORES: HeroStore[] = [
     bgColor:     "#166534",
     accentColor: "#0d4022",
     icon:        "basket-outline",
+    imageUrl:    require("../assets/images/home/stores/hero_sharma.png"),
   },
   {
     id:          "s5",
@@ -42,6 +44,7 @@ export const HERO_STORES: HeroStore[] = [
     bgColor:     "#92400E",
     accentColor: "#6b2d08",
     icon:        "restaurant-outline",
+    imageUrl:    require("../assets/images/home/stores/hero_fresh_bakes.png"),
   },
   {
     id:          "s2",
@@ -53,6 +56,7 @@ export const HERO_STORES: HeroStore[] = [
     bgColor:     "#1E3A5F",
     accentColor: "#122540",
     icon:        "headset-outline",
+    imageUrl:    require("../assets/images/home/stores/hero_techzone.png"),
   },
   {
     id:          "s4",
@@ -64,6 +68,7 @@ export const HERO_STORES: HeroStore[] = [
     bgColor:     "#6D28D9",
     accentColor: "#4c1d99",
     icon:        "shirt-outline",
+    imageUrl:    require("../assets/images/home/stores/hero_style_hub.png"),
   },
 ];
 

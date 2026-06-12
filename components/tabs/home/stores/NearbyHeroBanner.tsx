@@ -14,7 +14,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Dimensions,
+  StyleSheet, Dimensions, Image
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
@@ -71,13 +71,20 @@ export default function NearbyHeroBanner({ stores, onPress }: NearbyHeroBannerPr
             onPress={() => onPress(store)}
             activeOpacity={0.9}
           >
+            {/* Background Image */}
+            {store.imageUrl && (
+              <Image source={store.imageUrl} style={styles.imageFull} resizeMode="cover" />
+            )}
+
             {/* Colour overlay */}
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: store.accentColor + "CC" }]} />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: store.imageUrl ? "rgba(0,0,0,0.5)" : (store.accentColor + "CC") }]} />
 
             {/* Faint centre icon watermark */}
-            <View style={[StyleSheet.absoluteFill, styles.iconCenter]}>
-              <Ionicons name={store.icon as any} size={56} color="rgba(255,255,255,0.07)" />
-            </View>
+            {!store.imageUrl && (
+              <View style={[StyleSheet.absoluteFill, styles.iconCenter]}>
+                <Ionicons name={store.icon as any} size={56} color="rgba(255,255,255,0.07)" />
+              </View>
+            )}
 
             {/* ── Body content ── */}
             <View style={styles.body}>
@@ -162,6 +169,12 @@ const styles = StyleSheet.create({
     overflow:     "hidden",
     // flex column so body grows and bottomBar sits at bottom
     flexDirection: "column",
+  },
+  imageFull: {
+    position: "absolute",
+    top: 0, left: 0, right: 0, bottom: 0,
+    width: "100%",
+    height: "100%",
   },
 
   iconCenter: {
