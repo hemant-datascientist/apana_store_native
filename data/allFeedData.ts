@@ -255,16 +255,16 @@ const WINTER_CATEGORIES: SeasonalCat[] = [
 const FESTIVE_CATEGORIES: SeasonalCat[] = [
   { key:"mithai",      label:"Sweets & Mithai",     icon:"gift-outline",          bg:"#FEF3C7", imageUrl: require("../assets/images/home/seasons/mithai.png") },
   { key:"dryfruits",   label:"Dry Fruit Boxes",     icon:"nutrition-outline",     bg:"#FDE8D8", imageUrl: require("../assets/images/home/seasons/dryfruits_festive.png") },
-  { key:"diyas",       label:"Diyas & Candles",     icon:"flame-outline",         bg:"#FFEDD5" },
-  { key:"hampers",     label:"Gift Hampers",        icon:"cube-outline",          bg:"#FCE7F3" },
-  { key:"decor",       label:"Decor & Rangoli",     icon:"color-palette-outline", bg:"#EDE9FE" },
-  { key:"pooja",       label:"Pooja Needs",         icon:"flower-outline",        bg:"#DCFCE7" },
-  { key:"ethnic",      label:"Ethnic Wear",         icon:"shirt-outline",         bg:"#FEE2E2" },
-  { key:"lights",      label:"Festive Lights",      icon:"bulb-outline",          bg:"#DBEAFE" },
-  { key:"cleaning",    label:"Home Cleaning",       icon:"sparkles-outline",      bg:"#E0F2FE" },
-  { key:"idols",       label:"Idols & Murti",       icon:"happy-outline",         bg:"#ECFDF5" },
-  { key:"firecrackers",label:"Firecrackers",        icon:"rocket-outline",        bg:"#FEE2E2" },
-  { key:"namkeen",     label:"Namkeen Mixture",     icon:"fast-food-outline",     bg:"#FFEDD5" },
+  { key:"diyas",       label:"Diyas & Candles",     icon:"flame-outline",         bg:"#FFEDD5", imageUrl: require("../assets/images/home/seasons/diyas.png") },
+  { key:"hampers",     label:"Gift Hampers",        icon:"cube-outline",          bg:"#FCE7F3", imageUrl: require("../assets/images/home/seasons/hampers.png") },
+  { key:"decor",       label:"Decor & Rangoli",     icon:"color-palette-outline", bg:"#EDE9FE", imageUrl: require("../assets/images/home/seasons/decor.png") },
+  { key:"pooja",       label:"Pooja Needs",         icon:"flower-outline",        bg:"#DCFCE7", imageUrl: require("../assets/images/home/seasons/pooja.png") },
+  { key:"ethnic",      label:"Ethnic Wear",         icon:"shirt-outline",         bg:"#FEE2E2", imageUrl: require("../assets/images/home/seasons/ethnic.png") },
+  { key:"lights",      label:"Festive Lights",      icon:"bulb-outline",          bg:"#DBEAFE", imageUrl: require("../assets/images/home/seasons/lights.png") },
+  { key:"cleaning",    label:"Home Cleaning",       icon:"sparkles-outline",      bg:"#E0F2FE", imageUrl: require("../assets/images/home/seasons/cleaning.png") },
+  { key:"idols",       label:"Idols & Murti",       icon:"happy-outline",         bg:"#ECFDF5", imageUrl: require("../assets/images/home/seasons/idols.png") },
+  { key:"firecrackers",label:"Firecrackers",        icon:"rocket-outline",        bg:"#FEE2E2", imageUrl: require("../assets/images/home/seasons/firecrackers.png") },
+  { key:"namkeen",     label:"Namkeen Mixture",     icon:"fast-food-outline",     bg:"#FFEDD5", imageUrl: require("../assets/images/home/seasons/namkeen.png") },
 ];
 
 export const SEASONS: Season[] = [
