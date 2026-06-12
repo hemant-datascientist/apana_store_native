@@ -71,6 +71,7 @@ export interface Banner {
   bg:       string;   // card background color
   accent:   string;   // title / tag accent color
   icon:     string;   // Ionicons glyph for decorative element
+  imageUrl?: any;
 }
 
 export const BANNERS: Banner[] = [
@@ -82,6 +83,7 @@ export const BANNERS: Banner[] = [
     bg:       "#0F4C81",
     accent:   "#FFD700",
     icon:     "storefront-outline",
+    imageUrl: require("../assets/images/home/banners/apana.png"),
   },
   {
     id:       "b2",
@@ -91,6 +93,7 @@ export const BANNERS: Banner[] = [
     bg:       "#15803D",
     accent:   "#BBF7D0",
     icon:     "basket-outline",
+    imageUrl: require("../assets/images/home/banners/grocery.png"),
   },
   {
     id:       "b3",
@@ -100,6 +103,7 @@ export const BANNERS: Banner[] = [
     bg:       "#9333EA",
     accent:   "#F3E8FF",
     icon:     "shirt-outline",
+    imageUrl: require("../assets/images/home/banners/fashion.png"),
   },
   {
     id:       "b4",
@@ -109,6 +113,7 @@ export const BANNERS: Banner[] = [
     bg:       "#C2410C",
     accent:   "#FED7AA",
     icon:     "heart-outline",
+    imageUrl: require("../assets/images/home/banners/pune.png"),
   },
 ];
 

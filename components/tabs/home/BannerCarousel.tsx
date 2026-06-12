@@ -10,7 +10,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import {
   View, Text, ScrollView, StyleSheet, Dimensions,
-  TouchableOpacity, NativeSyntheticEvent, NativeScrollEvent,
+  TouchableOpacity, NativeSyntheticEvent, NativeScrollEvent, Image
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Banner } from "../../../data/homeData";
@@ -68,9 +68,23 @@ export default function BannerCarousel({ banners, onPress }: BannerCarouselProps
             onPress={() => onPress?.(banner)}
             activeOpacity={0.9}
           >
-            {/* Decorative circles (background pattern) */}
-            <View style={[styles.circle1, { backgroundColor: "rgba(255,255,255,0.08)" }]} />
-            <View style={[styles.circle2, { backgroundColor: "rgba(255,255,255,0.06)" }]} />
+            {/* Background Image if available */}
+            {banner.imageUrl && (
+              <Image 
+                source={banner.imageUrl} 
+                style={StyleSheet.absoluteFill} 
+                resizeMode="cover" 
+              />
+            )}
+            
+            {/* Dark overlay to make text readable over the image */}
+            {banner.imageUrl && (
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.55)' }]} />
+            )}
+
+            {/* Decorative circles (background pattern) - only if no image */}
+            {!banner.imageUrl && <View style={[styles.circle1, { backgroundColor: "rgba(255,255,255,0.08)" }]} />}
+            {!banner.imageUrl && <View style={[styles.circle2, { backgroundColor: "rgba(255,255,255,0.06)" }]} />}
 
             {/* Content */}
             <View style={styles.content}>
@@ -87,15 +101,17 @@ export default function BannerCarousel({ banners, onPress }: BannerCarouselProps
               </Text>
 
               {/* Subtitle */}
-              <Text numberOfLines={2} style={[styles.subtitle, { color: "rgba(255,255,255,0.80)", fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+              <Text numberOfLines={2} style={[styles.subtitle, { color: "rgba(255,255,255,0.90)", fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
                 {banner.subtitle}
               </Text>
             </View>
 
-            {/* Decorative icon */}
-            <View style={styles.iconWrap}>
-              <Ionicons name={banner.icon as any} size={72} color="rgba(255,255,255,0.15)" />
-            </View>
+            {/* Decorative icon - only if no image */}
+            {!banner.imageUrl && (
+              <View style={styles.iconWrap}>
+                <Ionicons name={banner.icon as any} size={72} color="rgba(255,255,255,0.15)" />
+              </View>
+            )}
           </TouchableOpacity>
         ))}
       </ScrollView>
