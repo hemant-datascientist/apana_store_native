@@ -72,7 +72,7 @@ export default function BannerCarousel({ banners, onPress }: BannerCarouselProps
             {banner.imageUrl && (
               <Image 
                 source={banner.imageUrl} 
-                style={StyleSheet.absoluteFill} 
+                style={{ width: '100%', height: '100%', position: 'absolute' }} 
                 resizeMode="cover" 
               />
             )}
