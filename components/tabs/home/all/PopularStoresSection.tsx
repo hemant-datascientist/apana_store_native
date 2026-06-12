@@ -7,7 +7,7 @@
 
 import React from "react";
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, Image
 } from "react-native";
 import { Ionicons }       from "@expo/vector-icons";
 import { useRouter }      from "expo-router";
@@ -51,9 +51,14 @@ export default function PopularStoresSection({ stores }: PopularStoresSectionPro
             activeOpacity={0.8}
             onPress={() => router.push(`/store-detail?id=${s.id}`)}
           >
-            {/* Image placeholder */}
+            {/* Image or Icon */}
             <View style={[styles.imgArea, { backgroundColor: s.bg }]}>
-              <Ionicons name={s.icon as any} size={38} color="rgba(0,0,0,0.20)" />
+              {s.imageUrl ? (
+                <Image source={s.imageUrl} style={styles.imageFull} resizeMode="cover" />
+              ) : (
+                <Ionicons name={s.icon as any} size={38} color="rgba(0,0,0,0.20)" />
+              )}
+              {s.imageUrl && <View style={styles.overlay} />}
 
               {/* Badge */}
               <View style={[styles.badge, { backgroundColor: s.badgeBg }]}>
@@ -127,6 +132,15 @@ const styles = StyleSheet.create({
     alignItems:     "center",
     justifyContent: "center",
     position:       "relative",
+  },
+  imageFull: {
+    width: "100%",
+    height: "100%",
+    position: "absolute",
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.15)",
   },
 
   badge: {

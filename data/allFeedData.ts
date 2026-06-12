@@ -330,13 +330,14 @@ export interface PopularStore {
   badge:     string;
   badgeBg:   string;
   badgeColor:string;
+  imageUrl?: any;
 }
 
 export const POPULAR_STORES: PopularStore[] = [
-  { id:"ps1",  name:"Chitale Bandhu",         category:"Sweets & Snacks",  area:"Deccan",      rating:4.8, icon:"storefront-outline",  bg:"#FEF3C7", badge:"Top Rated", badgeBg:"#FEF3C7", badgeColor:"#B45309" },
-  { id:"ps2",  name:"D-Mart Baner",           category:"Supermarket",      area:"Baner",       rating:4.5, icon:"cart-outline",         bg:"#DBEAFE", badge:"Popular",   badgeBg:"#FFEDD5", badgeColor:"#C2410C" },
-  { id:"ps3",  name:"Apollo Pharmacy",        category:"Pharmacy",         area:"Wakad",       rating:4.7, icon:"medkit-outline",       bg:"#FEE2E2", badge:"Open 24/7", badgeBg:"#DCFCE7", badgeColor:"#15803D" },
-  { id:"ps4",  name:"Cafe Goodluck",          category:"Cafe",             area:"Deccan",      rating:4.9, icon:"cafe-outline",         bg:"#FFEDD5", badge:"Iconic",    badgeBg:"#FEF3C7", badgeColor:"#B45309" },
+  { id:"ps1",  name:"Chitale Bandhu",         category:"Sweets & Snacks",  area:"Deccan",      rating:4.8, icon:"storefront-outline",  bg:"#FEF3C7", badge:"Top Rated", badgeBg:"#FEF3C7", badgeColor:"#B45309", imageUrl: require("../assets/images/home/stores/chitale_bandhu.png") },
+  { id:"ps2",  name:"D-Mart Baner",           category:"Supermarket",      area:"Baner",       rating:4.5, icon:"cart-outline",         bg:"#DBEAFE", badge:"Popular",   badgeBg:"#FFEDD5", badgeColor:"#C2410C", imageUrl: require("../assets/images/home/stores/dmart.png") },
+  { id:"ps3",  name:"Apollo Pharmacy",        category:"Pharmacy",         area:"Wakad",       rating:4.7, icon:"medkit-outline",       bg:"#FEE2E2", badge:"Open 24/7", badgeBg:"#DCFCE7", badgeColor:"#15803D", imageUrl: require("../assets/images/home/stores/apollo_pharmacy.png") },
+  { id:"ps4",  name:"Cafe Goodluck",          category:"Cafe",             area:"Deccan",      rating:4.9, icon:"cafe-outline",         bg:"#FFEDD5", badge:"Iconic",    badgeBg:"#FEF3C7", badgeColor:"#B45309", imageUrl: require("../assets/images/home/stores/cafe_goodluck.png") },
   { id:"ps5",  name:"Vaishali Restaurant",    category:"Restaurant",       area:"FC Road",     rating:4.8, icon:"restaurant-outline",   bg:"#DCFCE7", badge:"Legendary", badgeBg:"#FFEDD5", badgeColor:"#C2410C" },
   { id:"ps6",  name:"Naturals Ice Cream",     category:"Ice Cream",        area:"Kothrud",     rating:4.6, icon:"ice-cream-outline",    bg:"#FCE7F3", badge:"Popular",   badgeBg:"#FFEDD5", badgeColor:"#C2410C" },
   { id:"ps7",  name:"More Supermarket",       category:"Grocery",          area:"Aundh",       rating:4.4, icon:"basket-outline",       bg:"#ECFDF5", badge:"Open",      badgeBg:"#DCFCE7", badgeColor:"#15803D" },
