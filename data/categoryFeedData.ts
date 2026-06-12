@@ -30,6 +30,7 @@ export const CATEGORY_FEEDS: Record<string, CategoryFeed> = {
         bg:       "#026451",
         accent:   "#6EE7B7",
         icon:     "basket-outline",
+        imageUrl: require("../assets/images/category/banners/grocery_fresh.png"),
       },
       {
         id:       "g2",
@@ -39,6 +40,7 @@ export const CATEGORY_FEEDS: Record<string, CategoryFeed> = {
         bg:       "#065F46",
         accent:   "#A7F3D0",
         icon:     "storefront-outline",
+        imageUrl: require("../assets/images/category/banners/grocery_essentials.png"),
       },
     ],
     sectionTitle: "Fresh Near You",
