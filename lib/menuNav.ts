@@ -23,6 +23,7 @@ export function handleMenuSelect(router: AppRouter, key: string): void {
     case "store_qr":       router.push("/store-qr");       break;
     case "address_book":   router.push("/address-book");   break;
     case "favourite":      router.push("/favourite");      break;
+    case "auto_riders":    router.push("/auto-riders");    break;
     case "scanner":        router.push("/scanner");        break;
     default:
       Alert.alert("Coming Soon", `"${key}" is coming soon.`);

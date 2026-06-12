@@ -76,6 +76,8 @@ export default function RootLayout() {
             <Stack.Screen name="s"          />
             {/* Info + settings — about-us, help-support, sell-ondc, rate-us, language, notifications */}
             <Stack.Screen name="(info)"     />
+            {/* Rides — auto-riders (Apana Partner fleet: personal + order rides) */}
+            <Stack.Screen name="(rides)"    />
           </Stack>
           </CartProvider>
         </LocationProvider>
