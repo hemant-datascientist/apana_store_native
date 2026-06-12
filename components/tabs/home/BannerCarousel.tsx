@@ -77,6 +77,11 @@ export default function BannerCarousel({ banners, onPress }: BannerCarouselProps
               />
             )}
 
+            {/* Dark overlay to make text readable over the image */}
+            {banner.imageUrl && (
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.45)' }]} />
+            )}
+
             {/* Decorative circles (background pattern) - only if no image */}
             {!banner.imageUrl && <View style={[styles.circle1, { backgroundColor: "rgba(255,255,255,0.08)" }]} />}
             {!banner.imageUrl && <View style={[styles.circle2, { backgroundColor: "rgba(255,255,255,0.06)" }]} />}
