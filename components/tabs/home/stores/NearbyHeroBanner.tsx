@@ -18,7 +18,14 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
-import { HeroStore } from "../../../../data/nearbyStoresData";
+import { HeroStore, BannerType } from "../../../../data/nearbyStoresData";
+
+// Semantic colour for the bottom-right banner-type pill.
+const BANNER_TYPE_COLOR: Record<BannerType, string> = {
+  "Near you":  "#16A34A", // green — proximity
+  Popular:     "#2563EB", // blue — well-reviewed
+  Sponsored:   "#D97706", // amber — paid placement
+};
 
 interface NearbyHeroBannerProps {
   stores:  HeroStore[];
@@ -120,16 +127,16 @@ export default function NearbyHeroBanner({ stores, onPress }: NearbyHeroBannerPr
 
             </View>
 
-            {/* ── Two-tone bottom bar ── */}
+            {/* ── Two-tone bottom bar: city + why-shown pill ── */}
             <View style={styles.bottomBar}>
               <View style={styles.bottomCity}>
                 <Text style={[styles.bottomTxt, { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
                   {store.city}
                 </Text>
               </View>
-              <View style={styles.bottomNear}>
+              <View style={[styles.bottomNear, { backgroundColor: BANNER_TYPE_COLOR[store.bannerType] }]}>
                 <Text style={[styles.bottomTxt, { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
-                  {store.nearLabel}
+                  {store.bannerType}
                 </Text>
               </View>
             </View>

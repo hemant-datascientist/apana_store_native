@@ -10,18 +10,36 @@
 //   StoreListCard × N — vertical list
 // ============================================================
 
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, Alert, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { typography } from "../../../../theme/typography";
 import useTheme from "../../../../theme/useTheme";
-import { HERO_STORES, NEARBY_STORES, NearbyStore, HeroStore } from "../../../../data/nearbyStoresData";
+import {
+  selectNearbyStores,
+  selectHeroStores,
+  NearbyStore,
+  HeroStore,
+} from "../../../../data/nearbyStoresData";
+import { useLocation } from "../../../../context/LocationContext";
 import NearbyHeroBanner from "./NearbyHeroBanner";
 import StoreListCard from "./StoreListCard";
 
 export default function NearbyStoresFeed() {
   const { colors } = useTheme();
   const router = useRouter();
+  const { selectedAddress } = useLocation();
+
+  // Sort by real distance from the customer's active address when it has
+  // GPS coords; the nearest 4 become the hero banner automatically.
+  const lat = selectedAddress.lat ?? null;
+  const lng = selectedAddress.lng ?? null;
+
+  const nearbyStores = useMemo(
+    () => selectNearbyStores(lat != null && lng != null ? { lat, lng } : null),
+    [lat, lng],
+  );
+  const heroStores = useMemo(() => selectHeroStores(nearbyStores), [nearbyStores]);
 
   function handleHeroPress(store: HeroStore) {
     router.push(`/store-detail?id=${store.id}`);
@@ -42,8 +60,8 @@ export default function NearbyStoresFeed() {
   return (
     <View style={styles.root}>
 
-      {/* Hero banner carousel */}
-      <NearbyHeroBanner stores={HERO_STORES} onPress={handleHeroPress} />
+      {/* Hero banner carousel — the nearest 4 stores */}
+      <NearbyHeroBanner stores={heroStores} onPress={handleHeroPress} />
 
       {/* Section label */}
       <View style={styles.sectionRow}>
@@ -51,12 +69,12 @@ export default function NearbyStoresFeed() {
           Stores Near You
         </Text>
         <Text style={[styles.sectionCount, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-          {NEARBY_STORES.length} found
+          {nearbyStores.length} found
         </Text>
       </View>
 
-      {/* Store list */}
-      {NEARBY_STORES.map(store => (
+      {/* Store list — nearest first */}
+      {nearbyStores.map(store => (
         <StoreListCard
           key={store.id}
           store={store}

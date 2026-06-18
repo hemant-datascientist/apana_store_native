@@ -1,76 +1,44 @@
 // ============================================================
 // NEARBY STORES DATA — Apana Store (Customer App)
 //
-// Mock data for the Stores → Nearby tab feed.
-// Replace with GET /stores/nearby?lat=&lng=&radius= when ready.
+// Mock data + selectors for the Stores → Nearby tab feed.
+//
+// Discovery rule (§19): the customer always sees the *nearest* stores
+// first, sorted by real distance from their active location, and the
+// top-4 nearest become the hero banner automatically. Both the list
+// and the banner are derived from ONE sorted source — never a
+// hand-curated banner list — so they can never drift.
+//
+// Backend swap: GET /api/customer/stores/nearby?lat=&lng=&limit=
+//   returns stores already distance-sorted; the FE selectors below
+//   become a thin pass-through (server does the sort + distance).
 // ============================================================
 
-// ── Hero Banner Stores ────────────────────────────────────────
-// Shown at the top of Nearby as a full-width carousel.
+import { STORE_HERO_IMAGES } from "./storeHeroImages";
+import { distanceMeters } from "../lib/geo";
+
+export interface LatLng {
+  lat: number;
+  lng: number;
+}
+
+// ── Hero Banner Stores (derived from the nearest stores) ──────
+
+// Why a store is in the banner — drives the bottom-right pill label/colour.
+export type BannerType = "Near you" | "Sponsored" | "Popular";
 
 export interface HeroStore {
   id:         string;
   name:       string;
   rating:     number;
   categories: string[];   // listed on the banner
-  city:       string;     // bottom-left label
-  nearLabel:  string;     // bottom-right label
+  city:       string;     // bottom-left label — store city (e.g. "Pune")
+  bannerType: BannerType; // bottom-right label — why it's shown
   bgColor:    string;     // placeholder bg (real app uses photo)
   accentColor:string;
   icon:       string;     // Ionicons for placeholder centre
-  imageUrl?:  any;
+  imageUrl?:  number;     // require()'d asset (undefined → colour fallback)
 }
-
-export const HERO_STORES: HeroStore[] = [
-  {
-    id:          "s1",
-    name:        "Sharma General Store",
-    rating:      4.8,
-    categories:  ["Grocery", "Staples & Grains", "Personal Care"],
-    city:        "Pune",
-    nearLabel:   "Near your Home",
-    bgColor:     "#166534",
-    accentColor: "#0d4022",
-    icon:        "basket-outline",
-    imageUrl:    require("../assets/images/home/stores/hero_sharma.png"),
-  },
-  {
-    id:          "s5",
-    name:        "Fresh Bakes",
-    rating:      4.7,
-    categories:  ["Breads & Buns", "Cakes & Pastries", "Meals & Thali"],
-    city:        "Pune",
-    nearLabel:   "Near your Home",
-    bgColor:     "#92400E",
-    accentColor: "#6b2d08",
-    icon:        "restaurant-outline",
-    imageUrl:    require("../assets/images/home/stores/hero_fresh_bakes.png"),
-  },
-  {
-    id:          "s2",
-    name:        "TechZone Electronics",
-    rating:      4.5,
-    categories:  ["Mobiles & Tablets", "Audio & Earphones", "Accessories"],
-    city:        "Pune",
-    nearLabel:   "Near your Home",
-    bgColor:     "#1E3A5F",
-    accentColor: "#122540",
-    icon:        "headset-outline",
-    imageUrl:    require("../assets/images/home/stores/hero_techzone.png"),
-  },
-  {
-    id:          "s4",
-    name:        "Style Hub Fashion",
-    rating:      4.3,
-    categories:  ["Men's Clothing", "Women's Clothing", "Footwear"],
-    city:        "Pune",
-    nearLabel:   "Near your Home",
-    bgColor:     "#6D28D9",
-    accentColor: "#4c1d99",
-    icon:        "shirt-outline",
-    imageUrl:    require("../assets/images/home/stores/hero_style_hub.png"),
-  },
-];
 
 // ── Store List Cards ──────────────────────────────────────────
 
@@ -82,11 +50,17 @@ export interface NearbyStore {
   typeBg:     string;
   rating:     number;
   reviews:    number;
-  distanceKm: number;
+  distanceKm: number;     // baseline; recomputed from the customer's location
   categories: string[];   // small tag pills
   isLive:     boolean;
   bgColor:    string;     // placeholder thumbnail bg
   icon:       string;     // Ionicons for thumbnail
+  isSponsored?: boolean;  // paid placement → "Sponsored" banner pill (monetization)
+  // Optional so other feeds (e.g. wholesale) can reuse StoreListCard
+  // without coords; the nearby list always provides them for sorting.
+  city?:      string;     // store city (banner bottom-left)
+  lat?:       number;
+  lng?:       number;
 }
 
 export const NEARBY_STORES: NearbyStore[] = [
@@ -103,6 +77,9 @@ export const NEARBY_STORES: NearbyStore[] = [
     isLive:     true,
     bgColor:    "#166534",
     icon:       "basket-outline",
+    city:       "Pune",
+    lat:        18.5308,
+    lng:        73.8475,
   },
   {
     id:         "s5",
@@ -117,6 +94,9 @@ export const NEARBY_STORES: NearbyStore[] = [
     isLive:     true,
     bgColor:    "#92400E",
     icon:       "restaurant-outline",
+    city:       "Pune",
+    lat:        18.5590,
+    lng:        73.7868,
   },
   {
     id:         "s2",
@@ -131,6 +111,10 @@ export const NEARBY_STORES: NearbyStore[] = [
     isLive:     true,
     bgColor:    "#1E3A5F",
     icon:       "headset-outline",
+    isSponsored: true,
+    city:       "Pune",
+    lat:        18.5232,
+    lng:        73.8411,
   },
   {
     id:         "s4",
@@ -145,6 +129,9 @@ export const NEARBY_STORES: NearbyStore[] = [
     isLive:     false,
     bgColor:    "#6D28D9",
     icon:       "shirt-outline",
+    city:       "Pune",
+    lat:        18.5204,
+    lng:        73.8567,
   },
   {
     id:         "s3",
@@ -159,5 +146,63 @@ export const NEARBY_STORES: NearbyStore[] = [
     isLive:     false,
     bgColor:    "#0F5132",
     icon:       "medkit-outline",
+    city:       "Pune",
+    lat:        18.5074,
+    lng:        73.8077,
   },
 ];
+
+// ── Discovery selectors (single source for list + banner) ─────
+// Pure + immutable: callers pass the customer's active location and
+// get a fresh distance-sorted list. The hero banner is just the top
+// of that same list, so list order and banner order always agree.
+
+const HERO_COUNT = 4; // nearest N stores promoted to the banner
+
+function roundKm(meters: number): number {
+  return Math.round((meters / 1000) * 10) / 10;
+}
+
+// Sort the nearby stores by distance from `origin` (nearest first).
+// With a real location we recompute each store's distance; without one
+// (customer hasn't shared GPS yet) we fall back to the baseline order.
+export function selectNearbyStores(origin: LatLng | null): NearbyStore[] {
+  const measured = NEARBY_STORES.map((s) =>
+    origin && s.lat != null && s.lng != null
+      ? { ...s, distanceKm: roundKm(distanceMeters(origin.lat, origin.lng, s.lat, s.lng)) }
+      : { ...s },
+  );
+  return measured.sort((a, b) => a.distanceKm - b.distanceKm);
+}
+
+const POPULAR_RATING = 4.8; // ≥ this → "Popular" pill (when not sponsored)
+
+// Why this store earns a banner slot. Paid placement wins; then a
+// strong rating reads as "Popular"; otherwise it's simply "Near you".
+function bannerTypeFor(s: NearbyStore): BannerType {
+  if (s.isSponsored) return "Sponsored";
+  if (s.rating >= POPULAR_RATING) return "Popular";
+  return "Near you";
+}
+
+// Promote a nearby store to a banner descriptor (photo from the shared
+// hero-image source; colour fallback when the store has no photo yet).
+export function toHeroStore(s: NearbyStore): HeroStore {
+  return {
+    id:          s.id,
+    name:        s.name,
+    rating:      s.rating,
+    categories:  s.categories,
+    city:        s.city ?? "",
+    bannerType:  bannerTypeFor(s),
+    bgColor:     s.bgColor,
+    accentColor: s.bgColor,
+    icon:        s.icon,
+    imageUrl:    STORE_HERO_IMAGES[s.id],
+  };
+}
+
+// The top-N nearest stores, ready for the hero carousel.
+export function selectHeroStores(sortedNearby: NearbyStore[]): HeroStore[] {
+  return sortedNearby.slice(0, HERO_COUNT).map(toHeroStore);
+}

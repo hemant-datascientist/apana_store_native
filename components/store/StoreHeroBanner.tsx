@@ -11,6 +11,7 @@ import { View, Text, StyleSheet, Dimensions, Image, Modal, TouchableOpacity, Pre
 import { Ionicons }   from "@expo/vector-icons";
 import { typography } from "../../theme/typography";
 import { StoreDetail } from "../../data/storeDetailData";
+import { getStoreHeroImage } from "../../data/storeHeroImages";
 import useTheme from "../../theme/useTheme";
 
 const { width: SW, height: SH } = Dimensions.get("window");
@@ -24,9 +25,24 @@ export default function StoreHeroBanner({ store }: StoreHeroBannerProps) {
   const { colors } = useTheme();
   const [showOwnerModal, setShowOwnerModal] = useState(false);
 
+  // Same photo the customer tapped on the Nearby banner — visual continuity.
+  // Stores without a photo keep the solid heroBg colour below.
+  const heroImage = getStoreHeroImage(store.id);
+
   return (
     <View style={styles.container}>
       <View style={[styles.hero, { backgroundColor: store.heroBg }]}>
+
+        {/* ── Cover photo (falls back to heroBg colour when absent) ── */}
+        {heroImage && (
+          <>
+            {/* Explicit 100%/100% — an absolute <Image> with no size renders at
+                intrinsic dimensions on Android and bleeds past the hero. */}
+            <Image source={heroImage} style={styles.coverImage} resizeMode="cover" />
+            {/* Scrim keeps the badges, rating chip and icon legible over the photo */}
+            <View style={[StyleSheet.absoluteFill, styles.imageOverlay]} />
+          </>
+        )}
 
         {/* ── LIVE badge ── */}
         {store.isLive && (
@@ -146,7 +162,16 @@ const styles = StyleSheet.create({
     height:         HERO_H,
     justifyContent: "center",
     alignItems:     "center",
-    overflow:       "visible", 
+    overflow:       "visible",
+  },
+  coverImage: {
+    position: "absolute",
+    top: 0, left: 0, right: 0, bottom: 0,
+    width:  "100%",
+    height: "100%",
+  },
+  imageOverlay: {
+    backgroundColor: "rgba(0,0,0,0.40)",
   },
 
   liveBadge: {
