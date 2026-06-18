@@ -17,7 +17,7 @@ import { typography } from "../../../../theme/typography";
 import useTheme from "../../../../theme/useTheme";
 import {
   selectNearbyStores,
-  selectHeroStores,
+  buildHeroStores,
   NearbyStore,
   HeroStore,
 } from "../../../../data/nearbyStoresData";
@@ -39,7 +39,7 @@ export default function NearbyStoresFeed() {
     () => selectNearbyStores(lat != null && lng != null ? { lat, lng } : null),
     [lat, lng],
   );
-  const heroStores = useMemo(() => selectHeroStores(nearbyStores), [nearbyStores]);
+  const heroStores = useMemo(() => buildHeroStores(nearbyStores), [nearbyStores]);
 
   function handleHeroPress(store: HeroStore) {
     router.push(`/store-detail?id=${store.id}`);

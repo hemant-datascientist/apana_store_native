@@ -9,19 +9,40 @@
 //   B2CStoreCard × N — manufacturer/brand list
 // ============================================================
 
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, Alert, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
 import useTheme from "../../../../theme/useTheme";
 import { B2C_PROMOS, B2C_STORES, B2CPromo, B2CStore } from "../../../../data/b2cStoresData";
+import { buildHeroStores, sortByDistance, BannerableStore, HeroStore } from "../../../../lib/storeBanner";
+import { getStoreById } from "../../../../data/storeDetailData";
 import B2CHeroBanner from "./B2CHeroBanner";
+import NearbyHeroBanner from "./NearbyHeroBanner";
 import B2CStoreCard  from "./B2CStoreCard";
 
 export default function B2CStoresFeed() {
   const { colors } = useTheme();
   const router = useRouter();
+
+  // Same store banner as Nearby: top-4 brands, city + why-shown pill.
+  // B2C carries its categories as `tags` and brand colour as `logoColor`.
+  const heroStores = useMemo(
+    () => buildHeroStores(sortByDistance(
+      B2C_STORES.map((s): BannerableStore => ({
+        id: s.id, name: s.name, rating: s.rating, distanceKm: s.distanceKm,
+        categories: s.tags, icon: s.icon, bgColor: s.logoColor,
+        city: getStoreById(s.id).city,
+      })),
+      null,
+    )),
+    [],
+  );
+
+  function handleHeroPress(store: HeroStore) {
+    router.push(`/store-detail?id=${store.id}`);
+  }
 
   function handlePromoPress(promo: B2CPromo) {
     Alert.alert(promo.headline, "Brand category page coming soon.");
@@ -48,6 +69,9 @@ export default function B2CStoresFeed() {
 
       {/* Promo banner */}
       <B2CHeroBanner promos={B2C_PROMOS} onPress={handlePromoPress} />
+
+      {/* Store banner — nearest top picks (shared with Nearby) */}
+      <NearbyHeroBanner stores={heroStores} onPress={handleHeroPress} />
 
       {/* Section label */}
       <View style={styles.sectionRow}>

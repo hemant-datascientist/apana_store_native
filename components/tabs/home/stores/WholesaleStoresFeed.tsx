@@ -9,7 +9,7 @@
 //   StoreListCard × N   — list (no LIVE badge for wholesale)
 // ============================================================
 
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, Alert, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { typography } from "../../../../theme/typography";
@@ -18,12 +18,30 @@ import {
   WHOLESALE_PROMOS, WHOLESALE_STORES,
   WholesalePromo, WholesaleStore,
 } from "../../../../data/wholesaleStoresData";
+import { buildHeroStores, sortByDistance, BannerableStore, HeroStore } from "../../../../lib/storeBanner";
+import { getStoreById } from "../../../../data/storeDetailData";
 import WholesaleHeroBanner from "./WholesaleHeroBanner";
+import NearbyHeroBanner    from "./NearbyHeroBanner";
 import StoreListCard       from "./StoreListCard";
 
 export default function WholesaleStoresFeed() {
   const { colors } = useTheme();
   const router = useRouter();
+
+  // Same store banner as Nearby: top-4 of this tab's list (nearest-first
+  // by listed distance), city + why-shown pill. Colour/icon cards until
+  // wholesale stores carry photos.
+  const heroStores = useMemo(
+    () => buildHeroStores(sortByDistance(
+      WHOLESALE_STORES.map((s): BannerableStore => ({ ...s, city: getStoreById(s.id).city })),
+      null,
+    )),
+    [],
+  );
+
+  function handleHeroPress(store: HeroStore) {
+    router.push(`/store-detail?id=${store.id}`);
+  }
 
   function handlePromoPress(promo: WholesalePromo) {
     Alert.alert(promo.brandName, "Wholesale offer page coming soon.");
@@ -46,6 +64,9 @@ export default function WholesaleStoresFeed() {
 
       {/* Promo banner */}
       <WholesaleHeroBanner promos={WHOLESALE_PROMOS} onPress={handlePromoPress} />
+
+      {/* Store banner — nearest top picks (shared with Nearby) */}
+      <NearbyHeroBanner stores={heroStores} onPress={handleHeroPress} />
 
       {/* Section label */}
       <View style={styles.sectionRow}>

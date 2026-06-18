@@ -14,31 +14,12 @@
 //   become a thin pass-through (server does the sort + distance).
 // ============================================================
 
-import { STORE_HERO_IMAGES } from "./storeHeroImages";
-import { distanceMeters } from "../lib/geo";
+import { sortByDistance, type LatLng } from "../lib/storeBanner";
 
-export interface LatLng {
-  lat: number;
-  lng: number;
-}
-
-// ── Hero Banner Stores (derived from the nearest stores) ──────
-
-// Why a store is in the banner — drives the bottom-right pill label/colour.
-export type BannerType = "Near you" | "Sponsored" | "Popular";
-
-export interface HeroStore {
-  id:         string;
-  name:       string;
-  rating:     number;
-  categories: string[];   // listed on the banner
-  city:       string;     // bottom-left label — store city (e.g. "Pune")
-  bannerType: BannerType; // bottom-right label — why it's shown
-  bgColor:    string;     // placeholder bg (real app uses photo)
-  accentColor:string;
-  icon:       string;     // Ionicons for placeholder centre
-  imageUrl?:  number;     // require()'d asset (undefined → colour fallback)
-}
+// Banner model lives in lib/storeBanner (shared across all Stores tabs);
+// re-exported here so existing importers keep working.
+export type { LatLng, BannerType, HeroStore } from "../lib/storeBanner";
+export { buildHeroStores } from "../lib/storeBanner";
 
 // ── Store List Cards ──────────────────────────────────────────
 
@@ -152,57 +133,11 @@ export const NEARBY_STORES: NearbyStore[] = [
   },
 ];
 
-// ── Discovery selectors (single source for list + banner) ─────
-// Pure + immutable: callers pass the customer's active location and
-// get a fresh distance-sorted list. The hero banner is just the top
-// of that same list, so list order and banner order always agree.
-
-const HERO_COUNT = 4; // nearest N stores promoted to the banner
-
-function roundKm(meters: number): number {
-  return Math.round((meters / 1000) * 10) / 10;
-}
-
-// Sort the nearby stores by distance from `origin` (nearest first).
-// With a real location we recompute each store's distance; without one
-// (customer hasn't shared GPS yet) we fall back to the baseline order.
+// ── Discovery selector ────────────────────────────────────────
+// Rank the nearby stores nearest-first from the customer's location
+// (falls back to baseline order when no GPS pin). The banner is just
+// buildHeroStores() over the top of this same list, so list order and
+// banner order always agree.
 export function selectNearbyStores(origin: LatLng | null): NearbyStore[] {
-  const measured = NEARBY_STORES.map((s) =>
-    origin && s.lat != null && s.lng != null
-      ? { ...s, distanceKm: roundKm(distanceMeters(origin.lat, origin.lng, s.lat, s.lng)) }
-      : { ...s },
-  );
-  return measured.sort((a, b) => a.distanceKm - b.distanceKm);
-}
-
-const POPULAR_RATING = 4.8; // ≥ this → "Popular" pill (when not sponsored)
-
-// Why this store earns a banner slot. Paid placement wins; then a
-// strong rating reads as "Popular"; otherwise it's simply "Near you".
-function bannerTypeFor(s: NearbyStore): BannerType {
-  if (s.isSponsored) return "Sponsored";
-  if (s.rating >= POPULAR_RATING) return "Popular";
-  return "Near you";
-}
-
-// Promote a nearby store to a banner descriptor (photo from the shared
-// hero-image source; colour fallback when the store has no photo yet).
-export function toHeroStore(s: NearbyStore): HeroStore {
-  return {
-    id:          s.id,
-    name:        s.name,
-    rating:      s.rating,
-    categories:  s.categories,
-    city:        s.city ?? "",
-    bannerType:  bannerTypeFor(s),
-    bgColor:     s.bgColor,
-    accentColor: s.bgColor,
-    icon:        s.icon,
-    imageUrl:    STORE_HERO_IMAGES[s.id],
-  };
-}
-
-// The top-N nearest stores, ready for the hero carousel.
-export function selectHeroStores(sortedNearby: NearbyStore[]): HeroStore[] {
-  return sortedNearby.slice(0, HERO_COUNT).map(toHeroStore);
+  return sortByDistance(NEARBY_STORES, origin);
 }

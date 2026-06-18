@@ -9,13 +9,16 @@
 //   ServiceStoreCard × N — service provider list
 // ============================================================
 
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, Alert, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
 import useTheme from "../../../../theme/useTheme";
 import { SERVICE_PROMOS, SERVICE_STORES, ServicePromo, ServiceStore } from "../../../../data/serviceStoresData";
+import { buildHeroStores, sortByDistance, BannerableStore, HeroStore } from "../../../../lib/storeBanner";
+import { getStoreById } from "../../../../data/storeDetailData";
 import ServiceHeroBanner from "./ServiceHeroBanner";
+import NearbyHeroBanner  from "./NearbyHeroBanner";
 import ServiceStoreCard  from "./ServiceStoreCard";
 
 import { useRouter } from "expo-router";
@@ -23,6 +26,24 @@ import { useRouter } from "expo-router";
 export default function ServiceStoresFeed() {
   const { colors } = useTheme();
   const router = useRouter();
+
+  // Same store banner as Nearby: top-4 providers, city + why-shown pill.
+  // Service stores have no category list, so the cards show name + rating.
+  const heroStores = useMemo(
+    () => buildHeroStores(sortByDistance(
+      SERVICE_STORES.map((s): BannerableStore => ({
+        id: s.id, name: s.name, rating: s.rating, distanceKm: s.distanceKm,
+        categories: [], icon: s.icon, bgColor: s.bgColor,
+        city: getStoreById(s.id).city,
+      })),
+      null,
+    )),
+    [],
+  );
+
+  function handleHeroPress(store: HeroStore) {
+    router.push(`/service-detail?id=${store.id}`);
+  }
 
   function handlePromoPress(promo: ServicePromo) {
     Alert.alert(promo.headline, "Service category page coming soon.");
@@ -45,6 +66,9 @@ export default function ServiceStoresFeed() {
 
       {/* Promo banner */}
       <ServiceHeroBanner promos={SERVICE_PROMOS} onPress={handlePromoPress} />
+
+      {/* Store banner — nearest top picks (shared with Nearby) */}
+      <NearbyHeroBanner stores={heroStores} onPress={handleHeroPress} />
 
       {/* Section label */}
       <View style={styles.sectionRow}>
