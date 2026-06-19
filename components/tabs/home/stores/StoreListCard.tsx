@@ -16,7 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
 import useTheme from "../../../../theme/useTheme";
 import { NearbyStore } from "../../../../data/nearbyStoresData";
-import { getStoreHeroImage } from "../../../../data/storeHeroImages";
+import { getStoreProfileImage } from "../../../../data/storeProfileImages";
 
 interface StoreListCardProps {
   store:         NearbyStore;
@@ -28,9 +28,10 @@ interface StoreListCardProps {
 export default function StoreListCard({ store, onPress, onDirection, onViewItems }: StoreListCardProps) {
   const { colors } = useTheme();
 
-  // Store's 1:1 profile photo so customers recognise a familiar shop.
-  // Falls back to the coloured type icon until the store has a photo.
-  const storePhoto = getStoreHeroImage(store.id);
+  // Store's 1:1 PROFILE photo (outside storefront + name board) so
+  // customers recognise a familiar shop. NOT the cover/banner (inside
+  // shot). Falls back to the coloured type icon until a photo exists.
+  const storePhoto = getStoreProfileImage(store.id);
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
