@@ -10,12 +10,13 @@
 
 import React from "react";
 import {
-  View, Text, TouchableOpacity, StyleSheet,
+  View, Text, TouchableOpacity, StyleSheet, Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
 import useTheme from "../../../../theme/useTheme";
 import { NearbyStore } from "../../../../data/nearbyStoresData";
+import { getStoreHeroImage } from "../../../../data/storeHeroImages";
 
 interface StoreListCardProps {
   store:         NearbyStore;
@@ -26,6 +27,10 @@ interface StoreListCardProps {
 
 export default function StoreListCard({ store, onPress, onDirection, onViewItems }: StoreListCardProps) {
   const { colors } = useTheme();
+
+  // Store's 1:1 profile photo so customers recognise a familiar shop.
+  // Falls back to the coloured type icon until the store has a photo.
+  const storePhoto = getStoreHeroImage(store.id);
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -47,9 +52,13 @@ export default function StoreListCard({ store, onPress, onDirection, onViewItems
 
       <View style={styles.row}>
 
-        {/* ── Thumbnail ── */}
+        {/* ── Thumbnail — store's 1:1 photo, else coloured icon ── */}
         <View style={[styles.thumb, { backgroundColor: store.bgColor }]}>
-          <Ionicons name={store.icon as any} size={30} color={store.typeColor} />
+          {storePhoto ? (
+            <Image source={storePhoto} style={styles.thumbImg} resizeMode="cover" />
+          ) : (
+            <Ionicons name={store.icon as any} size={30} color={store.typeColor} />
+          )}
         </View>
 
         {/* ── Right content ── */}
@@ -181,6 +190,11 @@ const styles = StyleSheet.create({
     alignItems:     "center",
     justifyContent: "center",
     flexShrink:     0,
+    overflow:       "hidden",
+  },
+  thumbImg: {
+    width:  "100%",
+    height: "100%",
   },
 
   // Info

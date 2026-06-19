@@ -11,7 +11,8 @@ import { View, Text, StyleSheet, Dimensions, Image, Modal, TouchableOpacity, Pre
 import { Ionicons }   from "@expo/vector-icons";
 import { typography } from "../../theme/typography";
 import { StoreDetail } from "../../data/storeDetailData";
-import { getStoreHeroImage } from "../../data/storeHeroImages";
+import { getStoreGallery } from "../../data/storeGallery";
+import StoreCoverCarousel from "./StoreCoverCarousel";
 import useTheme from "../../theme/useTheme";
 
 const { width: SW, height: SH } = Dimensions.get("window");
@@ -25,23 +26,27 @@ export default function StoreHeroBanner({ store }: StoreHeroBannerProps) {
   const { colors } = useTheme();
   const [showOwnerModal, setShowOwnerModal] = useState(false);
 
-  // Same photo the customer tapped on the Nearby banner — visual continuity.
-  // Stores without a photo keep the solid heroBg colour below.
-  const heroImage = getStoreHeroImage(store.id);
+  // All of the store's photos — cover + front/exterior/interior/surrounding
+  // (the Nearby banner shows the cover; here the customer can swipe them all).
+  const photos = getStoreGallery(store.id);
+  const hasPhotos = photos.length > 0;
 
   return (
     <View style={styles.container}>
       <View style={[styles.hero, { backgroundColor: store.heroBg }]}>
 
-        {/* ── Cover photo (falls back to heroBg colour when absent) ── */}
-        {heroImage && (
-          <>
-            {/* Explicit 100%/100% — an absolute <Image> with no size renders at
-                intrinsic dimensions on Android and bleeds past the hero. */}
-            <Image source={heroImage} style={styles.coverImage} resizeMode="cover" />
-            {/* Scrim keeps the badges, rating chip and icon legible over the photo */}
-            <View style={[StyleSheet.absoluteFill, styles.imageOverlay]} />
-          </>
+        {/* ── Swipeable cover (falls back to heroBg colour + icon) ── */}
+        <StoreCoverCarousel
+          photos={photos}
+          heroBg={store.heroBg}
+          icon={store.icon}
+          category={store.category}
+          height={HERO_H}
+        />
+        {/* Scrim keeps the badges + rating legible over photos. pointerEvents
+            none so horizontal swipes reach the carousel underneath. */}
+        {hasPhotos && (
+          <View style={[StyleSheet.absoluteFill, styles.imageOverlay]} pointerEvents="none" />
         )}
 
         {/* ── LIVE badge ── */}
@@ -62,16 +67,6 @@ export default function StoreHeroBanner({ store }: StoreHeroBannerProps) {
           </Text>
           <Text style={[styles.reviewLabel, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
             ({store.reviewCount})
-          </Text>
-        </View>
-
-        {/* ── Center icon ── */}
-        <View style={styles.center}>
-          <View style={styles.iconCircle}>
-            <Ionicons name={store.icon as any} size={52} color={store.heroBg} />
-          </View>
-          <Text style={[styles.category, { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
-            {store.category.toUpperCase()}
           </Text>
         </View>
 
@@ -164,12 +159,6 @@ const styles = StyleSheet.create({
     alignItems:     "center",
     overflow:       "visible",
   },
-  coverImage: {
-    position: "absolute",
-    top: 0, left: 0, right: 0, bottom: 0,
-    width:  "100%",
-    height: "100%",
-  },
   imageOverlay: {
     backgroundColor: "rgba(0,0,0,0.40)",
   },
@@ -210,28 +199,6 @@ const styles = StyleSheet.create({
   },
   ratingLabel: { color: "#fff" },
   reviewLabel: { color: "rgba(255,255,255,0.75)" },
-
-  center: {
-    alignItems: "center",
-    gap:        10,
-  },
-  iconCircle: {
-    width:           90,
-    height:          90,
-    borderRadius:    45,
-    backgroundColor: "rgba(255,255,255,0.92)",
-    alignItems:      "center",
-    justifyContent:  "center",
-    shadowColor:     "#000",
-    shadowOffset:    { width: 0, height: 4 },
-    shadowOpacity:   0.18,
-    shadowRadius:    8,
-    elevation:       6,
-  },
-  category: {
-    color:         "rgba(255,255,255,0.85)",
-    letterSpacing: 1.5,
-  },
 
   // Owner Profile Overlap
   ownerWrapper: {
