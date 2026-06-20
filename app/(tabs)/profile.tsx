@@ -30,21 +30,35 @@ import {
   SETTING_GROUPS,
 } from "../../data/profileData";
 import { useFollowedStores } from "../../hooks/useFollow";
+import { useCoverage } from "../../context/CoverageContext";
 import ProfileHeader         from "../../components/tabs/profile/ProfileHeader";
 import ProfileStats          from "../../components/tabs/profile/ProfileStats";
 import FavouriteStores       from "../../components/tabs/profile/FavouriteStores";
 import PartnerCard           from "../../components/tabs/profile/PartnerCard";
 import ProfileSettingSection from "../../components/tabs/profile/ProfileSettingSection";
 import AppearanceModal       from "../../components/tabs/profile/AppearanceModal";
+import CoverageModal         from "../../components/tabs/profile/CoverageModal";
 
 export default function ProfileScreen() {
   const { colors }  = useTheme();
   const router      = useRouter();
   const { logout }  = useAuth();
+  const { meta: coverageMeta } = useCoverage();
   const [appearanceVisible, setAppearanceVisible] = useState(false);
+  const [coverageVisible,   setCoverageVisible]   = useState(false);
   const followedStores = useFollowedStores();
 
+  // Surface the live coverage choice as the row's badge so the current
+  // scope is readable without opening the modal.
+  const settingGroups = SETTING_GROUPS.map(group => ({
+    ...group,
+    items: group.items.map(item =>
+      item.key === "coverage" ? { ...item, badge: coverageMeta.label } : item,
+    ),
+  }));
+
   function handleSetting(key: string) {
+    if (key === "coverage")     { setCoverageVisible(true);           return; }
     if (key === "appearance")   { setAppearanceVisible(true);          return; }
     if (key === "addresses")    { router.push("/address-book");        return; }
     if (key === "about")        { router.push("/about-us");            return; }
@@ -114,7 +128,7 @@ export default function ProfileScreen() {
         />
 
         {/* ── Settings sections ── */}
-        {SETTING_GROUPS.map(group => (
+        {settingGroups.map(group => (
           <ProfileSettingSection
             key={group.title}
             group={group}
@@ -126,6 +140,12 @@ export default function ProfileScreen() {
         <AppearanceModal
           visible={appearanceVisible}
           onClose={() => setAppearanceVisible(false)}
+        />
+
+        {/* ── Store coverage modal — Nearest vs Long (§19) ── */}
+        <CoverageModal
+          visible={coverageVisible}
+          onClose={() => setCoverageVisible(false)}
         />
 
         {/* ── Logout ── */}

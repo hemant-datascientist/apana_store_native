@@ -82,6 +82,17 @@ export interface MapMarker {
   isOpen?:   boolean;         // closed stores get a greyed pin
 }
 
+// Filled area overlay (e.g. an H3 coverage hexagon). One ring of
+// lat/lng vertices per polygon; the SDK closes the loop.
+export interface MapPolygon {
+  id:            string;
+  paths:         Array<{ lat: number; lng: number }>;
+  fillColor?:    string;      // hex (default Apana Blue)
+  fillOpacity?:  number;      // 0–1 (default 0.22)
+  strokeColor?:  string;      // hex (default = fillColor)
+  strokeWeight?: number;      // px (default 1.5)
+}
+
 export interface MapplsWebViewHandle {
   // Imperatively update markers without re-mounting the WebView
   setMarkers: (markers: MapMarker[]) => void;
@@ -93,6 +104,7 @@ export interface MapplsWebViewHandle {
 
 interface MapplsWebViewProps {
   markers?:       MapMarker[];
+  polygons?:      MapPolygon[];
   center?:        { lat: number; lng: number };
   zoom?:          number;
   height:         number;
@@ -103,6 +115,7 @@ interface MapplsWebViewProps {
   onMapPress?:    () => void;
   onMapReady?:    () => void;
   onMapError?:    (reason: string) => void;
+  onMapDiag?:     (caps: Record<string, boolean>) => void;
   isDark?:        boolean;
   style?:         StyleProp<ViewStyle>;
 }
@@ -118,14 +131,16 @@ function buildMapHTML(opts: {
   centerLng:    number;
   zoom:         number;
   markers:      MapMarker[];
+  polygons:     MapPolygon[];
   showUserDot:  boolean;
   userLat?:     number;
   userLng?:     number;
   routeLine?:   Array<{ lat: number; lng: number }>;
   isDark:       boolean;
 }): string {
-  const markersJson = JSON.stringify(opts.markers || []);
-  const routeJson   = opts.routeLine ? JSON.stringify(opts.routeLine) : "null";
+  const markersJson  = JSON.stringify(opts.markers || []);
+  const polygonsJson = JSON.stringify(opts.polygons || []);
+  const routeJson    = opts.routeLine ? JSON.stringify(opts.routeLine) : "null";
   const mapBg       = opts.isDark ? "#0D1F35" : "#E8F4FD";
   const markerColors: Record<string, string> = {
     store:    "#0F4C81",
@@ -181,6 +196,7 @@ function buildMapHTML(opts: {
     var userMarker      = null;
     var routeLayer      = null;
     var markerMap       = {};            // id → mappls.Marker
+    var polygonMap      = {};            // id → mappls.Polygon
     var mapInitialized  = false;         // set once 'load' fires or fallback runs
     var pendingActions  = [];            // RN → WebView messages queued before init
     var COLORS          = ${JSON.stringify(markerColors)};
@@ -280,7 +296,122 @@ function buildMapHTML(opts: {
       } catch(e) {}
     }
 
-    // ── User location dot ────────────────────────────────────
+    // ── Polygon overlays (e.g. an area coverage shape) ───────
+    // Three renderers, most-reliable-first, so the FILLED area shows on
+    // any SDK build:
+    //   1. a MapLibre GL fill layer (the vector SDK is MapLibre under the
+    //      hood — addSource/addLayer gives a true filled polygon)
+    //   2. mappls.Polygon (best-effort; some builds omit it)
+    //   3. a closed Polyline tracing the ring (always renders the border)
+    function glRemove(entry) {
+      try { if (entry.glLyr && map.getLayer && map.getLayer(entry.glLyr)) map.removeLayer(entry.glLyr); } catch(e) {}
+      try { if (entry.glSrc && map.getSource && map.getSource(entry.glSrc)) map.removeSource(entry.glSrc); } catch(e) {}
+    }
+
+    function renderPolygons(polygons) {
+      if (!map) return;
+      polygons = polygons || [];
+
+      // Remove stale entries
+      var keep = {};
+      polygons.forEach(function(p){ if (p && p.id) keep[p.id] = true; });
+      Object.keys(polygonMap).forEach(function(id) {
+        if (!keep[id]) {
+          var stale = polygonMap[id] || {};
+          try { stale.fill && stale.fill.remove && stale.fill.remove(); } catch(e) {}
+          try { stale.line && stale.line.remove && stale.line.remove(); } catch(e) {}
+          glRemove(stale);
+          delete polygonMap[id];
+        }
+      });
+
+      // Add new entries (immutable-by-id: existing ids are left as-is)
+      polygons.forEach(function(p) {
+        if (!p || !p.id || !p.paths || !p.paths.length) return;
+        if (polygonMap[p.id]) return;
+        var color = p.strokeColor || p.fillColor || '#0F4C81';
+        var fill  = p.fillColor || '#0F4C81';
+        var op    = (p.fillOpacity != null) ? p.fillOpacity : 0.3;
+        var weight = (p.strokeWeight != null) ? p.strokeWeight : 2;
+        var entry = {};
+
+        // [lng,lat] ring, closed — for the GL GeoJSON fill.
+        var ring = p.paths.map(function(pt){ return [pt.lng, pt.lat]; });
+        if (ring.length) {
+          var f0 = ring[0], fN = ring[ring.length - 1];
+          if (f0[0] !== fN[0] || f0[1] !== fN[1]) ring.push(f0);
+        }
+
+        // 1) GL fill layer — the reliable filled polygon. Deferred until
+        //    the vector style is loaded, else addSource/addLayer throw.
+        try {
+          if (map.addSource && map.addLayer) {
+            var srcId = 'cov-src-' + p.id;
+            var lyrId = 'cov-fill-' + p.id;
+            entry.glSrc = srcId;
+            entry.glLyr = lyrId;
+            (function(srcId, lyrId, ring, fill, op){
+              function doAdd(){
+                try {
+                  if (map.getSource && map.getSource(srcId)) return;
+                  map.addSource(srcId, {
+                    type: 'geojson',
+                    data: { type: 'Feature', properties: {},
+                      geometry: { type: 'Polygon', coordinates: [ring] } },
+                  });
+                  map.addLayer({
+                    id: lyrId, type: 'fill', source: srcId,
+                    paint: { 'fill-color': fill, 'fill-opacity': op },
+                  });
+                } catch(e) {}
+              }
+              if (map.isStyleLoaded && !map.isStyleLoaded()) {
+                if (map.once) map.once('load', doAdd);
+                if (map.on)   map.on('styledata', doAdd);
+              } else {
+                doAdd();
+              }
+            })(srcId, lyrId, ring, fill, op);
+          }
+        } catch(e) {}
+
+        // 2) mappls.Polygon fill — best-effort.
+        try {
+          if (typeof mappls.Polygon === 'function') {
+            entry.fill = new mappls.Polygon({
+              map:           map,
+              paths:         p.paths,
+              fillColor:     fill,
+              fillOpacity:   op,
+              strokeColor:   color,
+              strokeOpacity: 0.9,
+              strokeWeight:  weight,
+            });
+          }
+        } catch(e) {}
+
+        // 3) Boundary outline — closed polyline, always renders.
+        try {
+          var loop = p.paths.slice();
+          var a = loop[0], b = loop[loop.length - 1];
+          if (a && b && (a.lat !== b.lat || a.lng !== b.lng)) loop.push(a);
+          entry.line = new mappls.Polyline({
+            map:           map,
+            paths:         loop,
+            strokeColor:   color,
+            strokeOpacity: 0.95,
+            strokeWeight:  weight,
+          });
+        } catch(e) {}
+
+        polygonMap[p.id] = entry;
+      });
+    }
+
+    // ── User location marker ─────────────────────────────────
+    // The vector SDK is unreliable with custom data-URI icons, so the
+    // "you" marker uses the SDK's DEFAULT pin (always renders) and opens
+    // its "You are here" popup so the customer can't miss themselves.
     function addUserDot(lat, lng) {
       if (!map || !lat || !lng) return;
       if (userMarker) {
@@ -288,23 +419,12 @@ function buildMapHTML(opts: {
       }
       try {
         userMarker = new mappls.Marker({
-          map:       map,
-          position:  { lat: lat, lng: lng },
-          fitbounds: false,
-          icon: {
-            url: (function(){
-              var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">'
-                + '<circle cx="12" cy="12" r="10" fill="#0F4C81" opacity="0.2"/>'
-                + '<circle cx="12" cy="12" r="6"  fill="#0F4C81"/>'
-                + '<circle cx="12" cy="12" r="3"  fill="white"/>'
-                + '</svg>';
-              return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
-            })(),
-            width:  24,
-            height: 24,
-          },
+          map:          map,
+          position:     { lat: lat, lng: lng },
+          fitbounds:    false,
+          draggable:    false,
           popupHtml:    '<div class="mp-popup"><div class="mp-popup-title">You are here</div></div>',
-          popupOptions: { openPopup: false },
+          popupOptions: { openPopup: true },
         });
       } catch(e) {}
     }
@@ -313,6 +433,7 @@ function buildMapHTML(opts: {
     function executeAction(msg) {
       if (!msg || !map) return;
       if (msg.type === 'setMarkers')      renderMarkers(msg.markers);
+      else if (msg.type === 'setPolygons') renderPolygons(msg.polygons);
       else if (msg.type === 'panTo') {
         try {
           map.setCenter({ lat: msg.lat, lng: msg.lng });
@@ -347,6 +468,9 @@ function buildMapHTML(opts: {
       // Initial markers baked into the HTML on mount
       renderMarkers(${markersJson});
 
+      // Initial polygon overlays baked in on mount
+      renderPolygons(${polygonsJson});
+
       // User dot (if provided at mount)
       ${opts.showUserDot && opts.userLat && opts.userLng
         ? `addUserDot(${opts.userLat}, ${opts.userLng});`
@@ -362,6 +486,18 @@ function buildMapHTML(opts: {
       var queued = pendingActions.slice();
       pendingActions = [];
       queued.forEach(executeAction);
+
+      // Report which overlay-fill APIs this SDK build exposes — lets the
+      // app know whether the GL fill / mappls.Polygon path is available.
+      try {
+        postToRN({ type: 'mapDiag', caps: {
+          polygon:   (typeof mappls !== 'undefined' && typeof mappls.Polygon === 'function'),
+          geojson:   (typeof mappls !== 'undefined' && (typeof mappls.GeoJSON === 'function' || typeof mappls.GeoJson === 'function')),
+          addLayer:  !!(map && map.addLayer),
+          addSource: !!(map && map.addSource),
+          styleFn:   !!(map && map.isStyleLoaded),
+        }});
+      } catch(e) {}
 
       postToRN({ type: 'mapReady' });
     }
@@ -444,6 +580,7 @@ const MapplsWebView = forwardRef<MapplsWebViewHandle, MapplsWebViewProps>(
   function MapplsWebView(
     {
       markers      = [],
+      polygons     = [],
       center,
       zoom         = DEFAULT_ZOOM,
       height,
@@ -454,6 +591,7 @@ const MapplsWebView = forwardRef<MapplsWebViewHandle, MapplsWebViewProps>(
       onMapPress,
       onMapReady,
       onMapError,
+      onMapDiag,
       isDark       = false,
       style,
     },
@@ -494,12 +632,13 @@ const MapplsWebView = forwardRef<MapplsWebViewHandle, MapplsWebViewProps>(
         if (msg.type === "markerPress") onMarkerPress?.(msg.id);
         else if (msg.type === "mapPress")  onMapPress?.();
         else if (msg.type === "mapReady")  { setReady(true); onMapReady?.(); }
+        else if (msg.type === "mapDiag")   { onMapDiag?.(msg.caps || {}); }
         else if (msg.type === "mapError")  {
           setErr(true);
           onMapError?.(msg.reason || "Map could not be loaded.");
         }
       } catch {}
-    }, [onMarkerPress, onMapPress, onMapReady, onMapError]);
+    }, [onMarkerPress, onMapPress, onMapReady, onMapError, onMapDiag]);
 
     // ── Auto-sync markers prop → map ──────────────────────────
     // Stringify as a key so React re-runs only on meaningful changes.
@@ -510,6 +649,15 @@ const MapplsWebView = forwardRef<MapplsWebViewHandle, MapplsWebViewProps>(
         `window.handleRNMessage({ data: JSON.stringify({ type: 'setMarkers', markers: ${markersKey} }) }); true;`,
       );
     }, [markersKey, mapReady]);
+
+    // ── Auto-sync polygons prop → map ─────────────────────────
+    const polygonsKey = useMemo(() => JSON.stringify(polygons), [polygons]);
+    useEffect(() => {
+      if (!mapReady) return;
+      webViewRef.current?.injectJavaScript(
+        `window.handleRNMessage({ data: JSON.stringify({ type: 'setPolygons', polygons: ${polygonsKey} }) }); true;`,
+      );
+    }, [polygonsKey, mapReady]);
 
     // ── Auto-sync routeLine prop → map ────────────────────────
     const routeKey = useMemo(() => JSON.stringify(routeLine ?? null), [routeLine]);
@@ -551,6 +699,7 @@ const MapplsWebView = forwardRef<MapplsWebViewHandle, MapplsWebViewProps>(
         centerLng,
         zoom,
         markers,
+        polygons,
         showUserDot,
         userLat:     userLocation?.lat,
         userLng:     userLocation?.lng,

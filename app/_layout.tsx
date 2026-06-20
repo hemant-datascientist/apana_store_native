@@ -33,6 +33,7 @@ import {
 import { View } from "react-native";
 import { ThemeProvider }    from "../theme/ThemeContext";
 import { LocationProvider } from "../context/LocationContext";
+import { CoverageProvider } from "../context/CoverageContext";
 import { AuthProvider }     from "../context/AuthContext";
 import { CartProvider }     from "../context/CartContext";
 
@@ -52,6 +53,7 @@ export default function RootLayout() {
     <ThemeProvider>
       <AuthProvider>
         <LocationProvider>
+          <CoverageProvider>
           <CartProvider>
           <Stack screenOptions={{ headerShown: false }}>
             {/* Auth flow — get-started, login, otp, create-account, edit-profile */}
@@ -80,6 +82,7 @@ export default function RootLayout() {
             <Stack.Screen name="(rides)"    />
           </Stack>
           </CartProvider>
+          </CoverageProvider>
         </LocationProvider>
       </AuthProvider>
     </ThemeProvider>

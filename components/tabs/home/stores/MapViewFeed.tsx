@@ -31,6 +31,8 @@ import { MAP_CATEGORY_FILTERS, StoreMapPin } from "../../../../data/nearbyMapDat
 import { DEFAULT_LAT, DEFAULT_LNG, DEFAULT_ZOOM } from "../../../../config/mapplsConfig";
 import { useNearbyStores } from "../../../../hooks/useNearbyStores";
 import { clearCellCache } from "../../../../services/cellCache";
+import { useCoverage, COVERAGE_K } from "../../../../context/CoverageContext";
+import CoverageToggle from "../../../store/CoverageToggle";
 import MapplsWebView, { MapMarker, MapplsWebViewHandle } from "../../../map/MapplsWebView";
 
 const { height: SH } = Dimensions.get("window");
@@ -56,12 +58,17 @@ export default function MapViewFeed() {
   const mapRef             = useRef<MapplsWebViewHandle>(null);
 
   // ── Nearby stores via the H3 cell cache (§19.3 / §19.6) ───
-  // Map centre → K=2 ring of cells (~600 m, the q-commerce radius) →
-  // cellCache (memory-first). Panning within a cell never refetches;
-  // revisits are instant.
+  // Map centre → k-ring of cells → cellCache (memory-first). The ring
+  // radius follows the customer's coverage setting: Nearest tightens to
+  // their sub-district, Long widens to the district — so switching it
+  // visibly grows / shrinks what the map shows (Testing/README §Coverage).
+  // Panning within a cell never refetches; revisits are instant.
   // TODO: swap DEFAULT for live GPS from LocationContext.
+  const { coverage } = useCoverage();
   const center = useMemo(() => ({ lat: DEFAULT_LAT, lng: DEFAULT_LNG }), []);
-  const { stores: pins, loading, error: storeErr } = useNearbyStores(center);
+  const { stores: pins, loading, error: storeErr } = useNearbyStores(center, {
+    k: COVERAGE_K[coverage],
+  });
 
   // The Mappls SDK can fail to load independently of the store fetch.
   const [mapErr, setMapErr] = useState<string | null>(null);
@@ -164,6 +171,9 @@ export default function MapViewFeed() {
         }}
         isDark={isDark}
       />
+
+      {/* ── Coverage scope — Nearest vs Long, mirrors Profile ── */}
+      <CoverageToggle />
 
       {/* ── Category filter chips ─────────────────────────── */}
       <ScrollView

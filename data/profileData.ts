@@ -96,6 +96,7 @@ export const SETTING_GROUPS: SettingGroup[] = [
   {
     title: "Preferences",
     items: [
+      { key: "coverage",      label: "Store Coverage",    icon: "navigate-circle-outline" },
       { key: "notifications", label: "Notifications",     icon: "notifications-outline"   },
       { key: "language",      label: "Language",          icon: "language-outline"        },
       { key: "appearance",    label: "Appearance",        icon: "color-palette-outline"   },
