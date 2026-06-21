@@ -12,10 +12,14 @@ export interface CartItem {
   id:    string;
   name:  string;
   unit:  string;     // display unit e.g. "1 kg", "500 ml"
-  price: number;     // per unit in ₹
+  price: number;     // everyday per-unit price in ₹ (≤ MRP)
   qty:   number;
   icon:  string;     // Ionicons glyph
   bg:    string;     // placeholder image bg
+  // Stop-loss floor (the deal price unlocked at the store's threshold).
+  // Seller-declared; absent = this item never discounts. Apana never
+  // stores the seller's cost — only this floor (§ discount engine).
+  floorPrice?: number;
 }
 
 export interface CartStore {
@@ -26,6 +30,9 @@ export interface CartStore {
   typeBg:      string;
   fulfillment: FulfillmentMode;
   items:       CartItem[];
+  // Basket subtotal (at everyday prices) that unlocks floor pricing for
+  // this store. Seller-set; absent = no basket deal.
+  unlockThreshold?: number;
 }
 
 // IDs aligned to canonical s1–s5 per CLAUDE.md so per-store invoices,
@@ -38,11 +45,16 @@ export const INITIAL_CART: CartStore[] = [
     type:        "Grocery",
     typeColor:   "#166534",
     typeBg:      "#D1FAE5",
-    fulfillment: "pickup",
+    fulfillment: "delivery",
+    // Seller A's stop-loss demo (matches the spec worked example):
+    // basket ≥ ₹500 → items drop to their floor. ₹580 here → unlocked,
+    // pays ₹460, saves ₹120. (Soap has no floor — seller's choice.)
+    unlockThreshold: 500,
     items: [
-      { id:"i1", name:"Fresh Potatoes",    unit:"1 kg",    price: 35,  qty:2, icon:"earth-outline",       bg:"#FEF3C7" },
-      { id:"i2", name:"Tomatoes",          unit:"500 g",   price: 22,  qty:1, icon:"radio-button-on",     bg:"#FEE2E2" },
-      { id:"i3", name:"Onions",            unit:"1 kg",    price: 28,  qty:1, icon:"ellipse-outline",     bg:"#FCE7F3" },
+      { id:"i1", name:"Maggi Noodles",   unit:"70 g pack", price:10, floorPrice:8,  qty:20, icon:"fast-food-outline",  bg:"#FEF3C7" },
+      { id:"i2", name:"Parle-G Biscuit", unit:"100 g",     price:18, floorPrice:16, qty:10, icon:"nutrition-outline",  bg:"#FDE68A" },
+      { id:"i3", name:"Lays Chips",      unit:"52 g",      price: 5, floorPrice:3,  qty:30, icon:"fast-food-outline",  bg:"#FEE2E2" },
+      { id:"i8", name:"Lux Soap",        unit:"100 g",     price:10,                qty: 5, icon:"sparkles-outline",   bg:"#DBEAFE" },
     ],
   },
   {

@@ -13,6 +13,7 @@ import { typography } from "../../theme/typography";
 
 interface CartPriceBreakdownProps {
   subtotal:      number;
+  bulkSavings?:  number; // stop-loss floor savings unlocked across stores
   deliveryTotal: number;
   discountAmt:   number;
   appliedPromo:  string | null;
@@ -20,9 +21,10 @@ interface CartPriceBreakdownProps {
 }
 
 export default function CartPriceBreakdown({
-  subtotal, deliveryTotal, discountAmt, appliedPromo, total,
+  subtotal, bulkSavings = 0, deliveryTotal, discountAmt, appliedPromo, total,
 }: CartPriceBreakdownProps) {
   const { colors } = useTheme();
+  const totalSaved = bulkSavings + discountAmt;
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -34,6 +36,14 @@ export default function CartPriceBreakdown({
 
       {/* Line items */}
       <PriceRow label="Item Subtotal"    value={`₹${subtotal}`}          labelColor={colors.text} valueColor={colors.subText} />
+      {bulkSavings > 0 && (
+        <PriceRow
+          label="Bulk price savings"
+          value={`−₹${bulkSavings}`}
+          labelColor={colors.text}
+          valueColor="#16A34A"
+        />
+      )}
       <PriceRow
         label="Delivery Charges"
         value={deliveryTotal === 0 ? "FREE" : `₹${deliveryTotal}`}
@@ -61,12 +71,12 @@ export default function CartPriceBreakdown({
         </Text>
       </View>
 
-      {/* Savings badge */}
-      {discountAmt > 0 && (
+      {/* Savings badge — bulk floors + promo combined */}
+      {totalSaved > 0 && (
         <View style={[styles.savingsBadge, { backgroundColor: "#DCFCE7" }]}>
           <Ionicons name="happy-outline" size={14} color="#15803D" />
           <Text style={[styles.savingsText, { color: "#15803D", fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
-            You're saving ₹{discountAmt} on this order!
+            You're saving ₹{totalSaved} on this order!
           </Text>
         </View>
       )}

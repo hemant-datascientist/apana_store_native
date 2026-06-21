@@ -13,7 +13,9 @@ import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { CartStore, FulfillmentMode, storeSubtotal } from "../../data/cartData";
+import { resolveStoreDiscount } from "../../lib/discount";
 import CartFulfillmentSelector from "./CartFulfillmentSelector";
+import CartDiscountBar         from "./CartDiscountBar";
 import CartItemRow             from "./CartItemRow";
 
 interface CartStoreCardProps {
@@ -28,6 +30,7 @@ export default function CartStoreCard({
 }: CartStoreCardProps) {
   const { colors } = useTheme();
   const subtotal   = storeSubtotal(store);
+  const disc       = resolveStoreDiscount(store);
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -50,9 +53,21 @@ export default function CartStoreCard({
           </View>
         </View>
 
-        <Text style={[styles.subtotal, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-          ₹{subtotal}
-        </Text>
+        {/* When unlocked, show the charged total with the everyday price struck through */}
+        {disc.unlocked && disc.savings > 0 ? (
+          <View style={styles.priceCol}>
+            <Text style={[styles.strike, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+              ₹{subtotal}
+            </Text>
+            <Text style={[styles.subtotal, { color: "#15803D", fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
+              ₹{disc.charged}
+            </Text>
+          </View>
+        ) : (
+          <Text style={[styles.subtotal, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
+            ₹{subtotal}
+          </Text>
+        )}
       </View>
 
       {/* ── Fulfillment mode selector ── */}
@@ -62,6 +77,9 @@ export default function CartStoreCard({
         onSelect={onSetFulfillment}
       />
 
+      {/* ── Stop-loss discount nudge / unlocked savings ── */}
+      <CartDiscountBar disc={disc} />
+
       {/* ── Item rows ── */}
       {store.items.map((item, idx) => (
         <CartItemRow
@@ -69,6 +87,7 @@ export default function CartStoreCard({
           item={item}
           storeId={store.id}
           isLast={idx === store.items.length - 1}
+          unlocked={disc.unlocked}
           onUpdateQty={onUpdateQty}
           onRemove={onRemoveItem}
         />
@@ -107,4 +126,6 @@ const styles = StyleSheet.create({
   },
   typeText:  {},
   subtotal:  {},
+  priceCol:  { alignItems: "flex-end" },
+  strike:    { textDecorationLine: "line-through" },
 });

@@ -16,12 +16,19 @@ interface CartItemRowProps {
   item:       CartItem;
   storeId:    string;
   isLast:     boolean;
+  unlocked?:  boolean; // store basket has crossed its discount threshold
   onUpdateQty: (storeId: string, itemId: string, delta: number) => void;
   onRemove:    (storeId: string, itemId: string) => void;
 }
 
-export default function CartItemRow({ item, storeId, isLast, onUpdateQty, onRemove }: CartItemRowProps) {
+export default function CartItemRow({ item, storeId, isLast, unlocked, onUpdateQty, onRemove }: CartItemRowProps) {
   const { colors } = useTheme();
+
+  // Stop-loss: when the basket is unlocked and this item has a floor, the
+  // line is charged at the floor — show the everyday price struck through.
+  const onDeal      = !!unlocked && item.floorPrice != null;
+  const everydayTot = item.price * item.qty;
+  const chargedTot  = onDeal ? (item.floorPrice as number) * item.qty : everydayTot;
 
   return (
     <View style={[
@@ -43,9 +50,20 @@ export default function CartItemRow({ item, storeId, isLast, onUpdateQty, onRemo
         <Text style={[styles.unit, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
           {item.unit}
         </Text>
-        <Text style={[styles.price, { color: colors.primary, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-          ₹{item.price * item.qty}
-        </Text>
+        {onDeal ? (
+          <View style={styles.priceRow}>
+            <Text style={[styles.strike, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+              ₹{everydayTot}
+            </Text>
+            <Text style={[styles.price, { color: "#15803D", fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
+              ₹{chargedTot}
+            </Text>
+          </View>
+        ) : (
+          <Text style={[styles.price, { color: colors.primary, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
+            ₹{everydayTot}
+          </Text>
+        )}
       </View>
 
       {/* Quantity stepper + trash */}
@@ -107,6 +125,8 @@ const styles = StyleSheet.create({
   name:  { lineHeight: 18 },
   unit:  {},
   price: {},
+  priceRow: { flexDirection: "row", alignItems: "baseline", gap: 6 },
+  strike:   { textDecorationLine: "line-through" },
 
   controls: {
     alignItems: "flex-end",

@@ -24,6 +24,7 @@ import { useCart } from "../../context/CartContext";
 import {
   PROMO_CODES, DELIVERY_FEE, FulfillmentMode, storeSubtotal,
 } from "../../data/cartData";
+import { storeCharged } from "../../lib/discount";
 import LoginPromptModal   from "../../components/auth/LoginPromptModal";
 import CartHeader         from "../../components/cart/CartHeader";
 import CartEmptyState     from "../../components/cart/CartEmptyState";
@@ -48,18 +49,23 @@ export default function CartScreen() {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   // ── Derived totals ────────────────────────────────────────
-  const subtotal      = cart.reduce((s, st) => s + storeSubtotal(st), 0);
-  const deliveryTotal = cart.reduce((s, st) => s + DELIVERY_FEE[st.fulfillment], 0);
-  const promoData     = appliedPromo ? PROMO_CODES[appliedPromo] : null;
-  const discountAmt   = promoData ? Math.round(subtotal * promoData.discount) : 0;
-  const total         = subtotal + deliveryTotal - discountAmt;
-  const totalItems    = cart.reduce((s, st) => s + st.items.reduce((si, i) => si + i.qty, 0), 0);
+  // subtotal      = everyday prices; chargedSubtotal = after stop-loss
+  // floors unlock; bulkSavings = the gap. Promo applies on the charged
+  // amount (don't discount money already saved).
+  const subtotal        = cart.reduce((s, st) => s + storeSubtotal(st), 0);
+  const chargedSubtotal = cart.reduce((s, st) => s + storeCharged(st), 0);
+  const bulkSavings     = subtotal - chargedSubtotal;
+  const deliveryTotal   = cart.reduce((s, st) => s + DELIVERY_FEE[st.fulfillment], 0);
+  const promoData       = appliedPromo ? PROMO_CODES[appliedPromo] : null;
+  const discountAmt     = promoData ? Math.round(chargedSubtotal * promoData.discount) : 0;
+  const total           = chargedSubtotal + deliveryTotal - discountAmt;
+  const totalItems      = cart.reduce((s, st) => s + st.items.reduce((si, i) => si + i.qty, 0), 0);
 
   // ── Fulfillment groups for the per-mode checkout bar ──────
   const fulfillmentGroups = useMemo<FulfillmentGroup[]>(() => {
     const map = new Map<FulfillmentMode, FulfillmentGroup>();
     cart.forEach(store => {
-      const sub      = storeSubtotal(store) + DELIVERY_FEE[store.fulfillment];
+      const sub      = storeCharged(store) + DELIVERY_FEE[store.fulfillment];
       const items    = store.items.reduce((s, i) => s + i.qty, 0);
       const existing = map.get(store.fulfillment);
       if (existing) {
@@ -173,6 +179,7 @@ export default function CartScreen() {
 
         <CartPriceBreakdown
           subtotal={subtotal}
+          bulkSavings={bulkSavings}
           deliveryTotal={deliveryTotal}
           discountAmt={discountAmt}
           appliedPromo={appliedPromo}
