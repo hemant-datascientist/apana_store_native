@@ -38,7 +38,7 @@ export interface StoreDetail {
   closesAt:     string;   // e.g. "9:00 PM"
   opensAt:      string;   // e.g. "9:00 AM" (shown when closed)
   isLive:       boolean;
-  foundingSeller?: boolean;  // Apana Founding Seller — 0% commission, price locked
+  foundingSeller?: boolean;  // Apana Founding Seller — 0% commission
   lat:          number;
   lng:          number;
   hours:        StoreHours[];

@@ -190,7 +190,7 @@ export default function StoreDetailScreen() {
           <View style={[styles.foundingBadge, { backgroundColor: colors.primary + "12", borderColor: colors.primary + "30" }]}>
             <Ionicons name="shield-checkmark" size={15} color={colors.primary} />
             <Text style={[styles.foundingText, { color: colors.primary, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
-              Apana Founding Seller · 0% commission · price locked for life
+              Apana Founding Seller · 0% commission
             </Text>
           </View>
         )}
