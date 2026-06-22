@@ -13,7 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { CartStore, FulfillmentMode, storeSubtotal } from "../../data/cartData";
-import { resolveStoreDiscount } from "../../lib/discount";
+import { resolveStoreDiscount, isItemUnlocked } from "../../lib/discount";
 import CartFulfillmentSelector from "./CartFulfillmentSelector";
 import CartDiscountBar         from "./CartDiscountBar";
 import CartItemRow             from "./CartItemRow";
@@ -80,14 +80,14 @@ export default function CartStoreCard({
       {/* ── Stop-loss discount nudge / unlocked savings ── */}
       <CartDiscountBar disc={disc} />
 
-      {/* ── Item rows ── */}
+      {/* ── Item rows ── each item unlocks on its OWN trailing threshold ── */}
       {store.items.map((item, idx) => (
         <CartItemRow
           key={item.id}
           item={item}
           storeId={store.id}
           isLast={idx === store.items.length - 1}
-          unlocked={disc.unlocked}
+          unlocked={isItemUnlocked(item, disc.subtotal, disc.threshold)}
           onUpdateQty={onUpdateQty}
           onRemove={onRemoveItem}
         />
