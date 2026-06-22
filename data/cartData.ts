@@ -20,6 +20,10 @@ export interface CartItem {
   // Seller-declared; absent = this item never discounts. Apana never
   // stores the seller's cost — only this floor (§ discount engine).
   floorPrice?: number;
+  // Brand-FUNDED promo on this line (lib/brandPromo.ts). When set + active,
+  // the funding brand covers the markdown — the seller still receives the
+  // everyday price. Takes precedence over the stop-loss floor (don't stack).
+  brandPromoId?: string;
 }
 
 export interface CartStore {
@@ -65,8 +69,11 @@ export const INITIAL_CART: CartStore[] = [
     typeBg:      "#DCFCE7",
     fulfillment: "delivery",
     items: [
-      { id:"i4", name:"Dettol Handwash",   unit:"250 ml",  price: 89,  qty:1, icon:"water-outline",       bg:"#DBEAFE" },
-      { id:"i5", name:"Vitamin C Tablets", unit:"60 tabs", price:145,  qty:1, icon:"fitness-outline",     bg:"#DCFCE7" },
+      // Dettol carries a brand-funded promo (Reckitt) — the brand covers the
+      // markdown, Gupta Medical still receives the full ₹89. Shows the
+      // Engine-B layer in the cart alongside Sharma's seller-funded stop-loss.
+      { id:"i4", name:"Dettol Handwash",   unit:"250 ml",  price: 89,  qty:1, icon:"water-outline",   bg:"#DBEAFE", brandPromoId:"p-dettol" },
+      { id:"i5", name:"Vitamin C Tablets", unit:"60 tabs", price:145,  qty:1, icon:"fitness-outline", bg:"#DCFCE7" },
     ],
   },
   {

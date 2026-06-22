@@ -53,8 +53,8 @@ export default function CartStoreCard({
           </View>
         </View>
 
-        {/* When unlocked, show the charged total with the everyday price struck through */}
-        {disc.unlocked && disc.savings > 0 ? (
+        {/* Any saving (stop-loss floor OR brand-funded) → show charged with everyday struck through */}
+        {disc.charged < subtotal ? (
           <View style={styles.priceCol}>
             <Text style={[styles.strike, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
               ₹{subtotal}

@@ -12,7 +12,7 @@
 // No seller cost/margin appears here — Apana never collects it (§ price-war).
 // ============================================================
 
-import { BrandPromo, isBrandPromoActive } from "../lib/brandPromo";
+import { type BrandPromo, isBrandPromoActive } from "../lib/brandPromo";
 
 export interface BrandDeal {
   productId: string;   // == promo.productId
@@ -83,7 +83,27 @@ export const BRAND_DEALS: BrandDeal[] = [
       tagline: "Brand-funded saver", ...WINDOW,
     },
   },
+  {
+    // Also linked from the cart (Gupta Medical's Dettol, id p-dettol) to show
+    // the brand-funded line in checkout next to Sharma's stop-loss basket.
+    productId: "bd-dettol", name: "Dettol Handwash", unit: "250 ml",
+    everyday: 89, icon: "water-outline", bg: "#DBEAFE", storeName: "Gupta Medical Store",
+    promo: {
+      id: "p-dettol", brand: "Reckitt", brandColor: "#00833E", productId: "bd-dettol",
+      kind: "pct", value: 0.15, apanaCoopRate: 0.08, capPerOrder: 2,
+      tagline: "Hygiene drive", ...WINDOW,
+    },
+  },
 ];
+
+// Lookup an ACTIVE brand promo by id (cart lines reference it via brandPromoId).
+// Returns null if unknown or its window isn't live — so an expired promo
+// silently reverts the line to everyday pricing.
+export function getActiveBrandPromo(id?: string, now: Date = new Date()): BrandPromo | null {
+  if (!id) return null;
+  const deal = BRAND_DEALS.find((d) => d.promo.id === id);
+  return deal && isBrandPromoActive(deal.promo, now) ? deal.promo : null;
+}
 
 // Only deals whose promo window is live now — empty if none (§19.8 no phantom).
 export function getActiveBrandDeals(now: Date = new Date()): BrandDeal[] {

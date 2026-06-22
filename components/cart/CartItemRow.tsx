@@ -10,7 +10,8 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
-import { CartItem } from "../../data/cartData";
+import type { CartItem } from "../../data/cartData";
+import { resolveLine } from "../../lib/discount";
 
 interface CartItemRowProps {
   item:       CartItem;
@@ -21,14 +22,21 @@ interface CartItemRowProps {
   onRemove:    (storeId: string, itemId: string) => void;
 }
 
+// Green for seller-funded floor; Apana Blue for brand-funded (brand pays).
+const FLOOR_GREEN = "#15803D";
+const BRAND_BLUE  = "#0F4C81";
+
 export default function CartItemRow({ item, storeId, isLast, unlocked, onUpdateQty, onRemove }: CartItemRowProps) {
   const { colors } = useTheme();
 
-  // Stop-loss: when the basket is unlocked and this item has a floor, the
-  // line is charged at the floor — show the everyday price struck through.
-  const onDeal      = !!unlocked && item.floorPrice != null;
+  // One resolver drives both systems (brand-funded > stop-loss floor) so the
+  // row always matches the cart total. Brand line stays whole for the seller.
+  const info        = resolveLine(item, !!unlocked);
+  const onDeal      = info.source !== "everyday";
+  const isBrand     = info.source === "brand";
+  const dealColor   = isBrand ? BRAND_BLUE : FLOOR_GREEN;
   const everydayTot = item.price * item.qty;
-  const chargedTot  = onDeal ? (item.floorPrice as number) * item.qty : everydayTot;
+  const chargedTot  = info.unit * item.qty;
 
   return (
     <View style={[
@@ -51,14 +59,24 @@ export default function CartItemRow({ item, storeId, isLast, unlocked, onUpdateQ
           {item.unit}
         </Text>
         {onDeal ? (
-          <View style={styles.priceRow}>
-            <Text style={[styles.strike, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-              ₹{everydayTot}
-            </Text>
-            <Text style={[styles.price, { color: "#15803D", fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-              ₹{chargedTot}
-            </Text>
-          </View>
+          <>
+            <View style={styles.priceRow}>
+              <Text style={[styles.strike, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+                ₹{everydayTot}
+              </Text>
+              <Text style={[styles.price, { color: dealColor, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
+                ₹{chargedTot}
+              </Text>
+            </View>
+            {isBrand && (
+              <View style={[styles.brandTag, { backgroundColor: `${BRAND_BLUE}14` }]}>
+                <Ionicons name="ribbon-outline" size={9} color={BRAND_BLUE} />
+                <Text style={[styles.brandTagText, { color: BRAND_BLUE, fontFamily: typography.fontFamily.semiBold }]}>
+                  Funded by {info.brand} · seller paid in full
+                </Text>
+              </View>
+            )}
+          </>
         ) : (
           <Text style={[styles.price, { color: colors.primary, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
             ₹{everydayTot}
@@ -127,6 +145,18 @@ const styles = StyleSheet.create({
   price: {},
   priceRow: { flexDirection: "row", alignItems: "baseline", gap: 6 },
   strike:   { textDecorationLine: "line-through" },
+
+  brandTag: {
+    flexDirection:     "row",
+    alignItems:        "center",
+    gap:               3,
+    alignSelf:         "flex-start",
+    paddingHorizontal: 5,
+    paddingVertical:   2,
+    borderRadius:      4,
+    marginTop:         3,
+  },
+  brandTagText: { fontSize: 9 },
 
   controls: {
     alignItems: "flex-end",

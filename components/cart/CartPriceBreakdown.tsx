@@ -14,6 +14,7 @@ import { typography } from "../../theme/typography";
 interface CartPriceBreakdownProps {
   subtotal:      number;
   bulkSavings?:  number; // stop-loss floor savings unlocked across stores
+  brandSavings?: number; // brand-funded markdowns (brand pays, seller kept whole)
   deliveryTotal: number;
   discountAmt:   number;
   appliedPromo:  string | null;
@@ -21,10 +22,10 @@ interface CartPriceBreakdownProps {
 }
 
 export default function CartPriceBreakdown({
-  subtotal, bulkSavings = 0, deliveryTotal, discountAmt, appliedPromo, total,
+  subtotal, bulkSavings = 0, brandSavings = 0, deliveryTotal, discountAmt, appliedPromo, total,
 }: CartPriceBreakdownProps) {
   const { colors } = useTheme();
-  const totalSaved = bulkSavings + discountAmt;
+  const totalSaved = bulkSavings + brandSavings + discountAmt;
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -42,6 +43,14 @@ export default function CartPriceBreakdown({
           value={`−₹${bulkSavings}`}
           labelColor={colors.text}
           valueColor="#16A34A"
+        />
+      )}
+      {brandSavings > 0 && (
+        <PriceRow
+          label="Brand-funded savings"
+          value={`−₹${brandSavings}`}
+          labelColor={colors.text}
+          valueColor="#0F4C81"
         />
       )}
       <PriceRow

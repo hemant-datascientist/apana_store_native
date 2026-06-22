@@ -24,7 +24,7 @@ import { useCart } from "../../context/CartContext";
 import {
   PROMO_CODES, DELIVERY_FEE, FulfillmentMode, storeSubtotal,
 } from "../../data/cartData";
-import { storeCharged } from "../../lib/discount";
+import { resolveStoreDiscount, storeCharged } from "../../lib/discount";
 import LoginPromptModal   from "../../components/auth/LoginPromptModal";
 import CartHeader         from "../../components/cart/CartHeader";
 import CartEmptyState     from "../../components/cart/CartEmptyState";
@@ -49,12 +49,16 @@ export default function CartScreen() {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   // ── Derived totals ────────────────────────────────────────
-  // subtotal      = everyday prices; chargedSubtotal = after stop-loss
-  // floors unlock; bulkSavings = the gap. Promo applies on the charged
-  // amount (don't discount money already saved).
+  // subtotal = everyday prices. Two saving buckets, labelled separately:
+  //   bulkSavings  = stop-loss floors (seller-funded, basket-unlocked)
+  //   brandSavings = brand-funded markdowns (brand pays, seller kept whole)
+  // chargedSubtotal = subtotal − both. Promo applies on the charged amount
+  // (don't discount money already saved).
   const subtotal        = cart.reduce((s, st) => s + storeSubtotal(st), 0);
-  const chargedSubtotal = cart.reduce((s, st) => s + storeCharged(st), 0);
-  const bulkSavings     = subtotal - chargedSubtotal;
+  const discs           = useMemo(() => cart.map(resolveStoreDiscount), [cart]);
+  const bulkSavings     = discs.reduce((s, d) => s + d.savings, 0);
+  const brandSavings    = discs.reduce((s, d) => s + d.brandSavings, 0);
+  const chargedSubtotal = subtotal - bulkSavings - brandSavings;
   const deliveryTotal   = cart.reduce((s, st) => s + DELIVERY_FEE[st.fulfillment], 0);
   const promoData       = appliedPromo ? PROMO_CODES[appliedPromo] : null;
   const discountAmt     = promoData ? Math.round(chargedSubtotal * promoData.discount) : 0;
@@ -180,6 +184,7 @@ export default function CartScreen() {
         <CartPriceBreakdown
           subtotal={subtotal}
           bulkSavings={bulkSavings}
+          brandSavings={brandSavings}
           deliveryTotal={deliveryTotal}
           discountAmt={discountAmt}
           appliedPromo={appliedPromo}
