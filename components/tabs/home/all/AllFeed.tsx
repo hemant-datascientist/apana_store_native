@@ -21,6 +21,7 @@ import TrendingCitySection     from "./TrendingCitySection";
 import SeasonalCategorySection from "./SeasonalCategorySection";
 import ProductHScrollSection   from "./ProductHScrollSection";
 import FlashDealsSection       from "./FlashDealsSection";
+import BrandDealsSection       from "./BrandDealsSection";
 import PopularStoresSection    from "./PopularStoresSection";
 import HomeDiscoverRow        from "../HomeDiscoverRow";
 
@@ -34,6 +35,7 @@ import {
   NEW_ARRIVALS,
   POPULAR_STORES,
 } from "../../../../data/allFeedData";
+import { getActiveBrandDeals } from "../../../../data/brandPromoData";
 
 const BRAND_BLUE = "#0F4C81";
 const PURPLE     = "#7C3AED";
@@ -41,6 +43,9 @@ const PURPLE     = "#7C3AED";
 export default function AllFeed() {
   const { selectedAddress } = useLocation();
   const city = selectedAddress.city;
+
+  // Brand-funded promos live now (empty → the section renders nothing).
+  const brandDeals = getActiveBrandDeals();
 
   return (
     <View>
@@ -69,6 +74,9 @@ export default function AllFeed() {
 
       {/* ── 5. Flash Deals — horizontal scroll with % off ── */}
       <FlashDealsSection deals={FLASH_DEALS} />
+
+      {/* ── 5b. Brand Deals — brand-FUNDED co-op (Engine-B); seller kept whole ── */}
+      <BrandDealsSection deals={brandDeals} />
 
       {/* ── 6. New Arrivals — horizontal scroll ── */}
       <ProductHScrollSection
