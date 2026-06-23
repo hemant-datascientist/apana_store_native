@@ -13,7 +13,7 @@
 // Data: GET /customer/home — replace mocks from homeData.ts
 // ============================================================
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View, ScrollView, StyleSheet, StatusBar, Alert,
 } from "react-native";
@@ -109,6 +109,15 @@ export default function HomeScreen() {
     topRated: false,
   });
 
+  // Search-bar map button → flip to the nearby-stores map view + scroll it
+  // into view (the map feed renders just below the hero).
+  const scrollRef = useRef<ScrollView>(null);
+  function openMapView() {
+    setMode("stores");
+    setStoreTab("map_view");
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+  }
+
   // ── Category feed renderer ───────────────────────────────
   function renderCategoryFeed() {
     switch (category) {
@@ -145,6 +154,7 @@ export default function HomeScreen() {
 
       {/* ── Single scrollable page ── */}
       <ScrollView
+        ref={scrollRef}
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -170,7 +180,7 @@ export default function HomeScreen() {
             onMicPress={()    => Alert.alert("Voice",         "Voice search coming soon.")}
             onBellPress={() => router.push("/notifications")}
             onScanPress={()   => router.push("/scanner")}
-            onLocatePress={() => Alert.alert("Locate",        "GPS locate coming soon.")}
+            onLocatePress={openMapView}
           />
 
           <DiscoveryToggle mode={mode} onChange={setMode} />

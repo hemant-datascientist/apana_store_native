@@ -8,7 +8,7 @@
 // Search pill— full-width input with mic for voice search
 // Bell       — notifications
 // Scan       — barcode / QR scanner
-// Locate     — GPS current location pin
+// Map        — opens the nearby-stores map view (stores → map)
 //
 // The placeholder text changes with the discovery mode.
 // ============================================================
@@ -87,7 +87,7 @@ export default function HomeSearchBar({
           <Ionicons name="scan-outline" size={ICON_SIZE} color={ICON_COLOR} />
         </TouchableOpacity>
         <TouchableOpacity onPress={onLocatePress} style={styles.iconBtn} activeOpacity={0.7}>
-          <Ionicons name="locate-outline" size={ICON_SIZE} color={ICON_COLOR} />
+          <Ionicons name="map-outline" size={ICON_SIZE} color={ICON_COLOR} />
         </TouchableOpacity>
       </View>
 
