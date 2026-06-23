@@ -413,12 +413,44 @@ function buildMapHTML(opts: {
       });
     }
 
-    // ── User location marker ─────────────────────────────────
-    // The vector SDK is unreliable with custom data-URI icons, so the
-    // "you" marker uses the SDK's DEFAULT pin (always renders) and opens
-    // its "You are here" popup so the customer can't miss themselves.
+    // ── User location dot ────────────────────────────────────
+    // Renders the familiar "blue dot": a solid core with a white ring and a
+    // soft halo, so the customer instantly recognises where they are.
+    // Preferred path is a MapLibre GL circle (the vector SDK is MapLibre
+    // underneath — reliable, and it re-positions by just updating the source).
+    // Falls back to the SDK's default pin only if the GL layer APIs are absent.
     function addUserDot(lat, lng) {
       if (!map || !lat || !lng) return;
+      var data = { type: 'Feature', properties: {},
+        geometry: { type: 'Point', coordinates: [lng, lat] } };
+
+      if (map.addSource && map.addLayer) {
+        function doAddUser() {
+          try {
+            if (map.getSource && map.getSource('user-loc-src')) {
+              map.getSource('user-loc-src').setData(data);   // move existing dot
+              return;
+            }
+            map.addSource('user-loc-src', { type: 'geojson', data: data });
+            map.addLayer({ id: 'user-loc-halo', type: 'circle', source: 'user-loc-src',
+              paint: { 'circle-radius': 18, 'circle-color': '#3B82F6', 'circle-opacity': 0.16 } });
+            map.addLayer({ id: 'user-loc-core', type: 'circle', source: 'user-loc-src',
+              paint: { 'circle-radius': 7, 'circle-color': '#2563EB',
+                'circle-stroke-width': 3, 'circle-stroke-color': '#ffffff' } });
+          } catch(e) {}
+        }
+        try {
+          if (map.isStyleLoaded && !map.isStyleLoaded()) {
+            if (map.once) map.once('load', doAddUser);
+            if (map.on)   map.on('styledata', doAddUser);
+          } else {
+            doAddUser();
+          }
+          return;   // GL path taken — don't also drop a pin
+        } catch(e) {}
+      }
+
+      // Fallback: SDK default pin with a "You are here" popup.
       if (userMarker) {
         try { userMarker.remove && userMarker.remove(); } catch(e) {}
       }

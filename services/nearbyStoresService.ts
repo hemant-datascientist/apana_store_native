@@ -87,6 +87,40 @@ function fromWire(s: WireNearbyStore): StoreMapPin {
   };
 }
 
+// ── Mock fetch ────────────────────────────────────────────────
+// Spread the bundled mock pins in a tight cluster around the requested
+// centre, so the demo shows stores right next to the user dot wherever they
+// are (and the bottom store card always has an on-screen shop to show).
+// Mock-only — live data is never fabricated or repositioned (§19.8).
+function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const R = 6371;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(bLat - aLat);
+  const dLng = toRad(bLng - aLng);
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) ** 2;
+  return Math.round(2 * R * Math.asin(Math.sqrt(s)) * 10) / 10;
+}
+
+// Per-store lat/lng deltas (deg) → a cluster ~0.3–1 km out from centre.
+const MOCK_OFFSETS: Array<[number, number]> = [
+  [ 0.0040,  0.0030],
+  [-0.0060,  0.0050],
+  [ 0.0020, -0.0070],
+  [-0.0050, -0.0040],
+  [ 0.0080,  0.0010],
+];
+
+function mockPinsAround(lat: number, lng: number): StoreMapPin[] {
+  return MOCK_MAP_PINS.map((p, i) => {
+    const [dLat, dLng] = MOCK_OFFSETS[i % MOCK_OFFSETS.length];
+    const plat = lat + dLat;
+    const plng = lng + dLng;
+    return { ...p, lat: plat, lng: plng, distanceKm: haversineKm(lat, lng, plat, plng) };
+  });
+}
+
 // ── Live fetch ────────────────────────────────────────────────
 async function fetchLive(lat: number, lng: number, limit: number): Promise<StoreMapPin[]> {
   const ctl = new AbortController();
@@ -110,5 +144,5 @@ export async function fetchNearbyStores(
   limit: number = DEFAULT_LIMIT,
 ): Promise<StoreMapPin[]> {
   if (IS_LIVE) return fetchLive(lat, lng, limit);
-  return MOCK_MAP_PINS;
+  return mockPinsAround(lat, lng);
 }

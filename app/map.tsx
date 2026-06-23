@@ -162,6 +162,7 @@ export default function MapScreen() {
             markers={markers}
             zoomControl={false}
             showUserDot
+            userLocation={center}
             onMarkerPress={handleMarker}
             onMapPress={() => setSelected(null)}
             isDark={isDark}
