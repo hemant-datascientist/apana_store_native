@@ -200,8 +200,9 @@ function buildMapHTML(opts: {
     var map             = null;
     var userMarker      = null;
     var routeLayer      = null;
-    var markerMap       = {};            // id → mappls.Marker
+    var markerMap       = {};            // id → mappls.Marker (fallback path)
     var polygonMap      = {};            // id → mappls.Polygon
+    var storesClickBound= false;         // GL store-layer click bound once
     var mapInitialized  = false;         // set once 'load' fires or fallback runs
     var pendingActions  = [];            // RN → WebView messages queued before init
     var COLORS          = ${JSON.stringify(markerColors)};
@@ -213,24 +214,72 @@ function buildMapHTML(opts: {
       }
     }
 
-    function iconFor(m) {
-      var c   = COLORS[m.icon || 'pin'] || m.color || '#0F4C81';
-      var dim = (m.isOpen === false) ? '0.45' : '1';
-      var svg = [
-        '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">',
-          '<circle cx="16" cy="14" r="13" fill="' + c + '" opacity="' + dim + '"/>',
-          '<polygon points="16,40 6,22 26,22" fill="' + c + '" opacity="' + dim + '"/>',
-          '<circle cx="16" cy="14" r="7" fill="white" opacity="0.35"/>',
-        '</svg>'
-      ].join('');
-      return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+    // ── Marker rendering ─────────────────────────────────────
+    // Store pins render as a single MapLibre GL circle layer (the vector SDK
+    // is MapLibre underneath — this is reliable and colour-data-driven,
+    // unlike custom data-URI marker icons which the SDK drops silently).
+    // Falls back to default SDK pins only if the GL layer APIs are absent.
+    function storesFC(markers) {
+      var feats = [];
+      (markers || []).forEach(function(m) {
+        if (!m || !m.lat || !m.lng) return;
+        var c = COLORS[m.icon || 'pin'] || m.color || '#0F4C81';
+        feats.push({
+          type: 'Feature',
+          properties: { id: m.id, color: c, open: (m.isOpen !== false) },
+          geometry: { type: 'Point', coordinates: [m.lng, m.lat] },
+        });
+      });
+      return { type: 'FeatureCollection', features: feats };
     }
 
-    // ── Marker rendering ─────────────────────────────────────
     function renderMarkers(markers) {
       if (!map || !markers) return;
 
-      // Remove stale markers
+      // Preferred: GL circle layer (one source, all pins).
+      if (map.addSource && map.addLayer) {
+        var fc = storesFC(markers);
+        function doStores() {
+          try {
+            if (map.getSource && map.getSource('stores-src')) {
+              map.getSource('stores-src').setData(fc);
+            } else {
+              map.addSource('stores-src', { type: 'geojson', data: fc });
+              map.addLayer({ id: 'stores-halo', type: 'circle', source: 'stores-src',
+                paint: { 'circle-radius': 15, 'circle-color': ['get', 'color'],
+                  'circle-opacity': ['case', ['get', 'open'], 0.20, 0.10] } });
+              map.addLayer({ id: 'stores-core', type: 'circle', source: 'stores-src',
+                paint: { 'circle-radius': 8, 'circle-color': ['get', 'color'],
+                  'circle-opacity': ['case', ['get', 'open'], 1, 0.5],
+                  'circle-stroke-width': 3, 'circle-stroke-color': '#ffffff' } });
+            }
+            if (!storesClickBound && map.on) {
+              map.on('click', 'stores-core', function(e) {
+                try {
+                  var f = e.features && e.features[0];
+                  if (f && f.properties) postToRN({ type: 'markerPress', id: f.properties.id });
+                } catch(err) {}
+              });
+              try {
+                map.on('mouseenter', 'stores-core', function(){ map.getCanvas().style.cursor = 'pointer'; });
+                map.on('mouseleave', 'stores-core', function(){ map.getCanvas().style.cursor = ''; });
+              } catch(e) {}
+              storesClickBound = true;
+            }
+          } catch(e) {}
+        }
+        try {
+          if (map.isStyleLoaded && !map.isStyleLoaded()) {
+            if (map.once) map.once('load', doStores);
+            if (map.on)   map.on('styledata', doStores);
+          } else {
+            doStores();
+          }
+          return; // GL path taken
+        } catch(e) {}
+      }
+
+      // Fallback: default SDK pins (no custom data-URI icon).
       var keep = {};
       markers.forEach(function(m){ if (m && m.id) keep[m.id] = true; });
       Object.keys(markerMap).forEach(function(id) {
@@ -240,7 +289,6 @@ function buildMapHTML(opts: {
         }
       });
 
-      // Add / update
       markers.forEach(function(m) {
         if (!m || !m.lat || !m.lng) return;
         var pos = { lat: m.lat, lng: m.lng };
@@ -255,7 +303,6 @@ function buildMapHTML(opts: {
             map:       map,
             position:  pos,
             fitbounds: false,
-            icon: { url: iconFor(m), width: 32, height: 40 },
             popupHtml: [
               '<div class="mp-popup">',
                 '<div class="mp-popup-title">' + (m.title || '') + '</div>',
