@@ -56,13 +56,13 @@ interface WireNearby {
 interface TypeStyle { category: string; label: string; icon: string; accentColor: string; iconBg: string; }
 
 const TYPE_STYLE: Record<string, TypeStyle> = {
-  retail:      { category: "grocery",     label: "Kirana Stores",  icon: "basket-outline",        accentColor: "#166534", iconBg: "#D1FAE5" },
-  wholesale:   { category: "grocery",     label: "Wholesale",      icon: "cube-outline",          accentColor: "#92400E", iconBg: "#FEF3C7" },
-  food_packed: { category: "food",        label: "Food Store",     icon: "fast-food-outline",     accentColor: "#92400E", iconBg: "#FEF3C7" },
-  food_live:   { category: "food",        label: "Restaurant",     icon: "restaurant-outline",    accentColor: "#92400E", iconBg: "#FEF3C7" },
-  service:     { category: "service",     label: "Services",       icon: "construct-outline",     accentColor: "#6D28D9", iconBg: "#EDE9FE" },
+  retail:      { category: "grocery",     label: "Kirana",     icon: "basket-outline",        accentColor: "#166534", iconBg: "#D1FAE5" },
+  wholesale:   { category: "grocery",     label: "Wholesale",  icon: "cube-outline",          accentColor: "#92400E", iconBg: "#FEF3C7" },
+  food_packed: { category: "food",        label: "Food",       icon: "fast-food-outline",     accentColor: "#92400E", iconBg: "#FEF3C7" },
+  food_live:   { category: "food",        label: "Restaurant", icon: "restaurant-outline",    accentColor: "#92400E", iconBg: "#FEF3C7" },
+  service:     { category: "service",     label: "Services",   icon: "construct-outline",     accentColor: "#6D28D9", iconBg: "#EDE9FE" },
 };
-const FALLBACK_STYLE: TypeStyle = { category: "grocery", label: "Apana Store", icon: "storefront-outline", accentColor: "#0F4C81", iconBg: "#DBEAFE" };
+const FALLBACK_STYLE: TypeStyle = { category: "grocery", label: "Apana", icon: "storefront-outline", accentColor: "#0F4C81", iconBg: "#DBEAFE" };
 
 function styleFor(type: string): TypeStyle {
   return TYPE_STYLE[type] ?? FALLBACK_STYLE;
