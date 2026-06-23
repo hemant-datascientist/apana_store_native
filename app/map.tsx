@@ -37,7 +37,7 @@ import MapModeToggle, { MapMode } from "../components/map-screen/MapModeToggle";
 import MapSearchRow from "../components/map-screen/MapSearchRow";
 import MapProductPicker from "../components/map-screen/MapProductPicker";
 import MapControlRail from "../components/map-screen/MapControlRail";
-import MapStoreCard from "../components/map-screen/MapStoreCard";
+import MapStoreCard, { MAP_CARD_HEIGHT } from "../components/map-screen/MapStoreCard";
 
 const NAVY = "#0F4C81";
 
@@ -45,8 +45,8 @@ const NAVY = "#0F4C81";
 const SCREEN_W = Dimensions.get("window").width;
 const SIDE_PAD = 16;
 const CARD_GAP = 12;
-const CARD_W   = SCREEN_W - SIDE_PAD * 2 - 22; // leave a peek of the next card
-const CARD_H   = 132;                           // fixed so the card never stretches
+const CARD_W   = SCREEN_W - SIDE_PAD * 2 - 22;  // leave a peek of the next card
+const PAGER_H  = MAP_CARD_HEIGHT + 18;          // card height + shadow room
 const SNAP     = CARD_W + CARD_GAP;
 
 function pinToMarker(pin: StoreMapPin): MapMarker {
@@ -200,7 +200,7 @@ export default function MapScreen() {
         {visiblePins.length > 0 && (
           <FlatList
             ref={pagerRef}
-            style={[styles.pager, { height: CARD_H, bottom: insets.bottom + 12 }]}
+            style={[styles.pager, { height: PAGER_H, bottom: insets.bottom + 12 }]}
             data={visiblePins}
             keyExtractor={(p) => p.id}
             horizontal
@@ -212,7 +212,7 @@ export default function MapScreen() {
             contentContainerStyle={styles.pagerContent}
             onMomentumScrollEnd={onPagerSettle}
             renderItem={({ item }) => (
-              <View style={{ width: CARD_W, height: CARD_H, marginRight: CARD_GAP }}>
+              <View style={{ width: CARD_W, marginRight: CARD_GAP }}>
                 <MapStoreCard
                   pin={item}
                   onGetDirections={() => openStore(item.id)}
@@ -234,5 +234,5 @@ const styles = StyleSheet.create({
   mapArea: { flex: 1, position: "relative" },
   pickerWrap: { position: "absolute", top: 0, left: 0, right: 0 },
   pager: { position: "absolute", left: 0, right: 0, flexGrow: 0 },
-  pagerContent: { paddingHorizontal: SIDE_PAD },
+  pagerContent: { paddingHorizontal: SIDE_PAD, alignItems: "center" },
 });
