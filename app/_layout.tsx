@@ -76,6 +76,8 @@ export default function RootLayout() {
             <Stack.Screen name="apc"        />
             {/* Store short-link entry — /s/<id> from a shared store link or QR (§30) */}
             <Stack.Screen name="s"          />
+            {/* Full-screen store-discovery map — /map (home search-bar map button) */}
+            <Stack.Screen name="map"        />
             {/* Info + settings — about-us, help-support, sell-ondc, rate-us, language, notifications */}
             <Stack.Screen name="(info)"     />
             {/* Rides — auto-riders (Apana Partner fleet: personal + order rides) */}

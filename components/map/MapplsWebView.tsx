@@ -100,6 +100,9 @@ export interface MapplsWebViewHandle {
   panTo:      (lat: number, lng: number, zoom?: number) => void;
   // Draw / redraw a route line between two coords
   drawRoute:  (route: Array<{ lat: number; lng: number }>) => void;
+  // Step the zoom level by ±1 (custom control rail)
+  zoomIn:     () => void;
+  zoomOut:    () => void;
 }
 
 interface MapplsWebViewProps {
@@ -108,6 +111,7 @@ interface MapplsWebViewProps {
   center?:        { lat: number; lng: number };
   zoom?:          number;
   height:         number;
+  zoomControl?:   boolean;   // native +/- buttons (default true; hide when a custom rail is used)
   showUserDot?:   boolean;
   userLocation?:  { lat: number; lng: number };
   routeLine?:     Array<{ lat: number; lng: number }>;
@@ -137,6 +141,7 @@ function buildMapHTML(opts: {
   userLng?:     number;
   routeLine?:   Array<{ lat: number; lng: number }>;
   isDark:       boolean;
+  zoomControl:  boolean;
 }): string {
   const markersJson  = JSON.stringify(opts.markers || []);
   const polygonsJson = JSON.stringify(opts.polygons || []);
@@ -440,6 +445,12 @@ function buildMapHTML(opts: {
           if (msg.zoom) map.setZoom(msg.zoom);
         } catch(e) {}
       }
+      else if (msg.type === 'zoomBy') {
+        try {
+          var z = (typeof map.getZoom === 'function') ? map.getZoom() : 12;
+          map.setZoom(Math.max(3, Math.min(18, (z || 12) + msg.delta)));
+        } catch(e) {}
+      }
       else if (msg.type === 'setUserLocation') addUserDot(msg.lat, msg.lng);
       else if (msg.type === 'drawRoute')       drawRoute(msg.route);
     }
@@ -523,7 +534,7 @@ function buildMapHTML(opts: {
         map = new mappls.Map('map', {
           center:      { lat: ${opts.centerLat}, lng: ${opts.centerLng} },
           zoom:        ${opts.zoom},
-          zoomControl: true,
+          zoomControl: ${opts.zoomControl},
           location:    false,
         });
 
@@ -584,6 +595,7 @@ const MapplsWebView = forwardRef<MapplsWebViewHandle, MapplsWebViewProps>(
       center,
       zoom         = DEFAULT_ZOOM,
       height,
+      zoomControl  = true,
       showUserDot  = false,
       userLocation,
       routeLine,
@@ -621,6 +633,16 @@ const MapplsWebView = forwardRef<MapplsWebViewHandle, MapplsWebViewProps>(
       drawRoute(route: Array<{ lat: number; lng: number }>) {
         webViewRef.current?.injectJavaScript(
           `window.handleRNMessage({ data: JSON.stringify({ type: 'drawRoute', route: ${JSON.stringify(route)} }) }); true;`,
+        );
+      },
+      zoomIn() {
+        webViewRef.current?.injectJavaScript(
+          `window.handleRNMessage({ data: JSON.stringify({ type: 'zoomBy', delta: 1 }) }); true;`,
+        );
+      },
+      zoomOut() {
+        webViewRef.current?.injectJavaScript(
+          `window.handleRNMessage({ data: JSON.stringify({ type: 'zoomBy', delta: -1 }) }); true;`,
         );
       },
     }), [zoom]);
@@ -705,6 +727,7 @@ const MapplsWebView = forwardRef<MapplsWebViewHandle, MapplsWebViewProps>(
         userLng:     userLocation?.lng,
         routeLine,
         isDark,
+        zoomControl,
       }),
       // NOTE: HTML is intentionally built once per mount. Changes
       // to markers / routeLine / userLocation flow through the

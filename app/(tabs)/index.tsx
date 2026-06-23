@@ -109,13 +109,10 @@ export default function HomeScreen() {
     topRated: false,
   });
 
-  // Search-bar map button → flip to the nearby-stores map view + scroll it
-  // into view (the map feed renders just below the hero).
+  // Search-bar map button → full-screen Map screen (/map).
   const scrollRef = useRef<ScrollView>(null);
   function openMapView() {
-    setMode("stores");
-    setStoreTab("map_view");
-    scrollRef.current?.scrollTo({ y: 0, animated: true });
+    router.push("/map");
   }
 
   // ── Category feed renderer ───────────────────────────────

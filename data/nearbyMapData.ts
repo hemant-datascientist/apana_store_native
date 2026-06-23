@@ -34,6 +34,7 @@ export interface StoreMapPin {
   name:        string;
   category:    string;   // matches a MapCategoryFilter key
   rating:      number;
+  reviews?:    number;   // rating count (map store card)
   isOpen:      boolean;
   isLive:      boolean;
   distanceKm:  number;
@@ -61,6 +62,7 @@ export const MOCK_MAP_PINS: StoreMapPin[] = [
     name:        "Sharma General Store",
     category:    "grocery",
     rating:      4.8,
+    reviews:     989,
     isOpen:      true,
     isLive:      true,
     distanceKm:  0.8,
@@ -76,6 +78,7 @@ export const MOCK_MAP_PINS: StoreMapPin[] = [
     name:        "TechZone Electronics",
     category:    "electronics",
     rating:      4.5,
+    reviews:     412,
     isOpen:      true,
     isLive:      false,
     distanceKm:  1.4,
@@ -91,6 +94,7 @@ export const MOCK_MAP_PINS: StoreMapPin[] = [
     name:        "Gupta Medical Store",
     category:    "pharmacy",
     rating:      4.7,
+    reviews:     756,
     isOpen:      true,
     isLive:      true,
     distanceKm:  0.5,
@@ -106,6 +110,7 @@ export const MOCK_MAP_PINS: StoreMapPin[] = [
     name:        "Style Hub Fashion",
     category:    "fashion",
     rating:      4.4,
+    reviews:     233,
     isOpen:      false,
     isLive:      false,
     distanceKm:  2.1,
@@ -121,6 +126,7 @@ export const MOCK_MAP_PINS: StoreMapPin[] = [
     name:        "Fresh Bakes",
     category:    "food",
     rating:      4.9,
+    reviews:     1240,
     isOpen:      true,
     isLive:      true,
     distanceKm:  1.1,
