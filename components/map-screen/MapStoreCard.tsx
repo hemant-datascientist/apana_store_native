@@ -22,7 +22,7 @@ import { StoreMapPin, StoreOpenState } from "../../data/nearbyMapData";
 
 // Single source for the card height — the pager imports this so the row of
 // cards is sized to match, with no chance of a flex stretch blowing it up.
-export const MAP_CARD_HEIGHT = 124;
+export const MAP_CARD_HEIGHT = 148;
 
 interface BadgeCfg { label: string; bg: string; fg: string; dot: string; }
 
@@ -69,31 +69,32 @@ export default function MapStoreCard({ pin, onGetDirections, onViewStock, onBook
 
         {/* Content */}
         <View style={styles.content}>
-          {/* Name + stacked status badges */}
-          <View style={styles.headRow}>
-            <Text numberOfLines={1} style={[styles.name, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.md }]}>
-              {pin.name}
-            </Text>
-            <View style={styles.badges}>
-              <Badge cfg={inventory} />
-              <Badge cfg={openCfg} />
-            </View>
-          </View>
-
-          {/* Rating · reviews · distance */}
-          <View style={styles.meta}>
-            <Ionicons name="star" size={13} color="#F59E0B" />
-            <Text style={[styles.rating, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-              {pin.rating}
-            </Text>
-            {pin.reviews != null && (
-              <Text style={[styles.dim, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-                {"  ·  "}{pin.reviews.toLocaleString("en-IN")} reviews
+          {/* Top group: name + stacked badges, then rating · reviews · distance */}
+          <View style={styles.topGroup}>
+            <View style={styles.headRow}>
+              <Text numberOfLines={1} style={[styles.name, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.md }]}>
+                {pin.name}
               </Text>
-            )}
-            <Text style={[styles.dim, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-              {"  ·  "}{pin.distanceKm} km
-            </Text>
+              <View style={styles.badges}>
+                <Badge cfg={inventory} />
+                <Badge cfg={openCfg} />
+              </View>
+            </View>
+
+            <View style={styles.meta}>
+              <Ionicons name="star" size={13} color="#F59E0B" />
+              <Text style={[styles.rating, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
+                {pin.rating}
+              </Text>
+              {pin.reviews != null && (
+                <Text style={[styles.dim, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+                  {"  ·  "}{pin.reviews.toLocaleString("en-IN")} reviews
+                </Text>
+              )}
+              <Text style={[styles.dim, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+                {"  ·  "}{pin.distanceKm} km
+              </Text>
+            </View>
           </View>
 
           {/* Actions */}
@@ -145,8 +146,9 @@ const styles = StyleSheet.create({
   },
   catText: { color: "#fff", fontSize: 9 },
 
-  // Content column
+  // Content column — top group hugs the top, actions pinned to the bottom
   content: { flex: 1, justifyContent: "space-between" },
+  topGroup: { gap: 7 },
   headRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
   name: { flex: 1, marginTop: 1 },
   badges: { gap: 5, alignItems: "flex-end", flexShrink: 0 },
