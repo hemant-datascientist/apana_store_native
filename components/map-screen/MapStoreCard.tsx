@@ -37,13 +37,12 @@ const OPEN_STATE: Record<StoreOpenState, BadgeCfg> = {
 
 interface MapStoreCardProps {
   pin:             StoreMapPin;
-  width:           number;   // fixed width so the pager can snap
   onGetDirections: () => void;
   onViewStock:     () => void;
   onBookRide:      () => void;
 }
 
-export default function MapStoreCard({ pin, width, onGetDirections, onViewStock, onBookRide }: MapStoreCardProps) {
+export default function MapStoreCard({ pin, onGetDirections, onViewStock, onBookRide }: MapStoreCardProps) {
   const { colors } = useTheme();
 
   const img       = getStoreHeroImage(pin.id);
@@ -52,7 +51,7 @@ export default function MapStoreCard({ pin, width, onGetDirections, onViewStock,
   const tagLabel  = pin.categoryLabel ?? "Apana Store";
 
   return (
-    <View style={[styles.card, { width, backgroundColor: colors.card, borderColor: colors.primary }]}>
+    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.primary }]}>
       <View style={styles.row}>
 
         {/* Thumbnail + category tag */}
@@ -135,14 +134,15 @@ function Action({ icon, label, onPress, primary }: {
 
 const styles = StyleSheet.create({
   card: {
+    flex: 1,
     borderRadius: 18, borderWidth: 2, padding: 10,
     shadowColor: "#000", shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.16, shadowRadius: 16, elevation: 8,
   },
-  row: { flexDirection: "row", gap: 12, alignItems: "stretch" },
+  row: { flex: 1, flexDirection: "row", gap: 12, alignItems: "stretch" },
 
-  // Thumbnail column (stretches to the content height)
+  // Thumbnail column (stretches to the card height)
   thumbCol: { width: 92, borderRadius: 12, overflow: "hidden", position: "relative" },
-  thumbImg: { flex: 1, width: "100%", minHeight: 92 },
+  thumbImg: { flex: 1, width: "100%" },
   thumbFallback: { alignItems: "center", justifyContent: "center" },
   catTag: {
     position: "absolute", left: 6, right: 6, bottom: 6,

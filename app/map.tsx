@@ -46,6 +46,7 @@ const SCREEN_W = Dimensions.get("window").width;
 const SIDE_PAD = 16;
 const CARD_GAP = 12;
 const CARD_W   = SCREEN_W - SIDE_PAD * 2 - 22; // leave a peek of the next card
+const CARD_H   = 132;                           // fixed so the card never stretches
 const SNAP     = CARD_W + CARD_GAP;
 
 function pinToMarker(pin: StoreMapPin): MapMarker {
@@ -199,7 +200,7 @@ export default function MapScreen() {
         {visiblePins.length > 0 && (
           <FlatList
             ref={pagerRef}
-            style={[styles.pager, { bottom: insets.bottom + 12 }]}
+            style={[styles.pager, { height: CARD_H, bottom: insets.bottom + 12 }]}
             data={visiblePins}
             keyExtractor={(p) => p.id}
             horizontal
@@ -211,10 +212,9 @@ export default function MapScreen() {
             contentContainerStyle={styles.pagerContent}
             onMomentumScrollEnd={onPagerSettle}
             renderItem={({ item }) => (
-              <View style={{ width: CARD_W, marginRight: CARD_GAP }}>
+              <View style={{ width: CARD_W, height: CARD_H, marginRight: CARD_GAP }}>
                 <MapStoreCard
                   pin={item}
-                  width={CARD_W}
                   onGetDirections={() => openStore(item.id)}
                   onViewStock={() => openStore(item.id)}
                   onBookRide={() => openStore(item.id)}
