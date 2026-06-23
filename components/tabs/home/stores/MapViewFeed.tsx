@@ -18,7 +18,7 @@
 //     GET /stores/nearby when you swap the stub.
 // ============================================================
 
-import React, { useState, useCallback, useRef, useMemo } from "react";
+import React, { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Dimensions, ActivityIndicator,
@@ -28,12 +28,15 @@ import { useRouter } from "expo-router";
 import useTheme from "../../../../theme/useTheme";
 import { typography } from "../../../../theme/typography";
 import { MAP_CATEGORY_FILTERS, StoreMapPin } from "../../../../data/nearbyMapData";
-import { DEFAULT_LAT, DEFAULT_LNG, DEFAULT_ZOOM } from "../../../../config/mapplsConfig";
+import { DEFAULT_ZOOM } from "../../../../config/mapplsConfig";
 import { useNearbyStores } from "../../../../hooks/useNearbyStores";
+import { useDeviceLocation } from "../../../../hooks/useDeviceLocation";
 import { clearCellCache } from "../../../../services/cellCache";
 import { useCoverage, COVERAGE_K } from "../../../../context/CoverageContext";
 import CoverageToggle from "../../../store/CoverageToggle";
 import MapplsWebView, { MapMarker, MapplsWebViewHandle } from "../../../map/MapplsWebView";
+import MapSearchBar from "./MapSearchBar";
+import MapFullscreenModal from "./MapFullscreenModal";
 
 const { height: SH } = Dimensions.get("window");
 const MAP_H = SH * 0.52;
@@ -65,7 +68,8 @@ export default function MapViewFeed() {
   // Panning within a cell never refetches; revisits are instant.
   // TODO: swap DEFAULT for live GPS from LocationContext.
   const { coverage } = useCoverage();
-  const center = useMemo(() => ({ lat: DEFAULT_LAT, lng: DEFAULT_LNG }), []);
+  // Real device GPS for the map centre (falls back to DEFAULT until a fix).
+  const { center, located } = useDeviceLocation();
   const { stores: pins, loading, error: storeErr } = useNearbyStores(center, {
     k: COVERAGE_K[coverage],
   });
@@ -78,15 +82,29 @@ export default function MapViewFeed() {
   // on the next cell read.
   const loadPins = useCallback(() => { clearCellCache(); setMapErr(null); }, []);
 
-  // ── Filter + selection state ──────────────────────────────
+  // ── Filter + search + selection state ─────────────────────
   const [activeCat,   setActiveCat]   = useState("all");
+  const [query,       setQuery]       = useState("");
+  const [fullscreen,  setFullscreen]  = useState(false);
   const [selectedPin, setSelectedPin] = useState<StoreMapPin | null>(null);
 
-  // ── Filtered pins (memoised so markers array ref is stable) ──
-  const visiblePins = useMemo(
-    () => (activeCat === "all" ? pins : pins.filter(p => p.category === activeCat)),
-    [pins, activeCat],
-  );
+  // Once a real GPS fix lands, glide the already-mounted map to it (no reload).
+  useEffect(() => {
+    if (located) mapRef.current?.panTo(center.lat, center.lng);
+  }, [located, center.lat, center.lng]);
+
+  // ── Filtered pins: category chip + free-text search (name / what they
+  //    sell via tags / category). Memoised so the markers ref stays stable. ──
+  const visiblePins = useMemo(() => {
+    const byCat = activeCat === "all" ? pins : pins.filter(p => p.category === activeCat);
+    const q = query.trim().toLowerCase();
+    if (!q) return byCat;
+    return byCat.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      p.category.toLowerCase().includes(q) ||
+      p.tags.some(t => t.toLowerCase().includes(q)),
+    );
+  }, [pins, activeCat, query]);
 
   // ── Markers for the map (memoised — MapplsWebView auto-syncs) ──
   const markers = useMemo(
@@ -149,28 +167,42 @@ export default function MapViewFeed() {
   return (
     <View style={styles.root}>
 
-      {/* ── Real Mappls map ── */}
-      <MapplsWebView
-        ref={mapRef}
-        height={MAP_H}
-        center={{ lat: DEFAULT_LAT, lng: DEFAULT_LNG }}
-        zoom={DEFAULT_ZOOM}
-        markers={markers}
-        showUserDot
-        onMarkerPress={handleMarkerPress}
-        onMapPress={handleMapPress}
-        onMapError={(reason) => {
-          // Translate raw SDK error codes into user-friendly copy
-          const msg =
-            reason.startsWith("mappls_undefined")      ? "Map SDK could not load. Please check your internet connection." :
-            reason.startsWith("cdn_load_failed")       ? "Map servers unreachable. Please check your internet connection." :
-            reason.startsWith("init_timeout")          ? "Map took too long to start. Please retry." :
-            reason.startsWith("map_construct_failed")  ? "Map failed to initialise. Please retry." :
-            "Map is unavailable right now. Please retry.";
-          setMapErr(msg);
-        }}
-        isDark={isDark}
-      />
+      {/* ── Real Mappls map (+ fullscreen toggle) ── */}
+      <View style={styles.mapWrap}>
+        <MapplsWebView
+          ref={mapRef}
+          height={MAP_H}
+          center={center}
+          zoom={DEFAULT_ZOOM}
+          markers={markers}
+          showUserDot
+          onMarkerPress={handleMarkerPress}
+          onMapPress={handleMapPress}
+          onMapError={(reason) => {
+            // Translate raw SDK error codes into user-friendly copy
+            const msg =
+              reason.startsWith("mappls_undefined")      ? "Map SDK could not load. Please check your internet connection." :
+              reason.startsWith("cdn_load_failed")       ? "Map servers unreachable. Please check your internet connection." :
+              reason.startsWith("init_timeout")          ? "Map took too long to start. Please retry." :
+              reason.startsWith("map_construct_failed")  ? "Map failed to initialise. Please retry." :
+              "Map is unavailable right now. Please retry.";
+            setMapErr(msg);
+          }}
+          isDark={isDark}
+        />
+        <TouchableOpacity
+          style={[styles.expandBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={() => setFullscreen(true)}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="expand-outline" size={18} color={colors.text} />
+        </TouchableOpacity>
+      </View>
+
+      {/* ── In-map search (store or product) ── */}
+      <View style={styles.searchRow}>
+        <MapSearchBar value={query} onChangeText={setQuery} />
+      </View>
 
       {/* ── Coverage scope — Nearest vs Long, mirrors Profile ── */}
       <CoverageToggle />
@@ -304,12 +336,38 @@ export default function MapViewFeed() {
           </ScrollView>
         </>
       )}
+
+      {/* ── Fullscreen map ── */}
+      <MapFullscreenModal
+        visible={fullscreen}
+        onClose={() => setFullscreen(false)}
+        center={center}
+        zoom={DEFAULT_ZOOM}
+        markers={markers}
+        pins={visiblePins}
+        filters={MAP_CATEGORY_FILTERS}
+        activeCat={activeCat}
+        onCatChange={setActiveCat}
+        query={query}
+        onQueryChange={setQuery}
+        onVisit={(id) => { setFullscreen(false); router.push(`/store-detail?id=${id}` as any); }}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+
+  // Map + fullscreen toggle
+  mapWrap: { position: "relative" },
+  expandBtn: {
+    position: "absolute", top: 12, right: 12,
+    width: 38, height: 38, borderRadius: 10, borderWidth: 1,
+    alignItems: "center", justifyContent: "center",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 6, elevation: 4,
+  },
+  searchRow: { paddingHorizontal: 16, paddingTop: 12 },
 
   // Loading / error
   centred: {
