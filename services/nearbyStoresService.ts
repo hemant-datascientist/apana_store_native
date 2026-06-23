@@ -53,16 +53,16 @@ interface WireNearby {
 }
 
 // ── Seller type → map category + pin styling (presentation only) ──
-interface TypeStyle { category: string; icon: string; accentColor: string; iconBg: string; }
+interface TypeStyle { category: string; label: string; icon: string; accentColor: string; iconBg: string; }
 
 const TYPE_STYLE: Record<string, TypeStyle> = {
-  retail:      { category: "grocery",     icon: "basket-outline",        accentColor: "#166534", iconBg: "#D1FAE5" },
-  wholesale:   { category: "grocery",     icon: "cube-outline",          accentColor: "#92400E", iconBg: "#FEF3C7" },
-  food_packed: { category: "food",        icon: "fast-food-outline",     accentColor: "#92400E", iconBg: "#FEF3C7" },
-  food_live:   { category: "food",        icon: "restaurant-outline",    accentColor: "#92400E", iconBg: "#FEF3C7" },
-  service:     { category: "service",     icon: "construct-outline",     accentColor: "#6D28D9", iconBg: "#EDE9FE" },
+  retail:      { category: "grocery",     label: "Kirana Stores",  icon: "basket-outline",        accentColor: "#166534", iconBg: "#D1FAE5" },
+  wholesale:   { category: "grocery",     label: "Wholesale",      icon: "cube-outline",          accentColor: "#92400E", iconBg: "#FEF3C7" },
+  food_packed: { category: "food",        label: "Food Store",     icon: "fast-food-outline",     accentColor: "#92400E", iconBg: "#FEF3C7" },
+  food_live:   { category: "food",        label: "Restaurant",     icon: "restaurant-outline",    accentColor: "#92400E", iconBg: "#FEF3C7" },
+  service:     { category: "service",     label: "Services",       icon: "construct-outline",     accentColor: "#6D28D9", iconBg: "#EDE9FE" },
 };
-const FALLBACK_STYLE: TypeStyle = { category: "grocery", icon: "storefront-outline", accentColor: "#0F4C81", iconBg: "#DBEAFE" };
+const FALLBACK_STYLE: TypeStyle = { category: "grocery", label: "Apana Store", icon: "storefront-outline", accentColor: "#0F4C81", iconBg: "#DBEAFE" };
 
 function styleFor(type: string): TypeStyle {
   return TYPE_STYLE[type] ?? FALLBACK_STYLE;
@@ -71,10 +71,11 @@ function styleFor(type: string): TypeStyle {
 function fromWire(s: WireNearbyStore): StoreMapPin {
   const st = styleFor(s.type);
   return {
-    id:          s.id,
-    name:        s.name,
-    category:    st.category,
-    rating:      0,                 // BE has no ratings yet — honest 0, not faked
+    id:            s.id,
+    name:          s.name,
+    category:      st.category,
+    categoryLabel: st.label,
+    rating:        0,               // BE has no ratings yet — honest 0, not faked
     isOpen:      s.is_live,
     isLive:      s.is_live,
     distanceKm:  Math.round((s.distance_m / 1000) * 10) / 10,

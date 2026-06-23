@@ -13,8 +13,11 @@
 // via mapProductData. BE swap points are documented in those modules.
 // ============================================================
 
-import React, { useState, useRef, useMemo, useCallback, useEffect } from "react";
-import { View, StyleSheet, StatusBar, Alert } from "react-native";
+import React, { useState, useRef, useMemo, useEffect } from "react";
+import {
+  View, StyleSheet, StatusBar, Alert, FlatList, Dimensions,
+  NativeScrollEvent, NativeSyntheticEvent,
+} from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import useTheme from "../theme/useTheme";
@@ -38,6 +41,13 @@ import MapStoreCard from "../components/map-screen/MapStoreCard";
 
 const NAVY = "#0F4C81";
 
+// Bottom store-card pager: one card per nearby store, swipe to switch.
+const SCREEN_W = Dimensions.get("window").width;
+const SIDE_PAD = 16;
+const CARD_GAP = 12;
+const CARD_W   = SCREEN_W - SIDE_PAD * 2 - 22; // leave a peek of the next card
+const SNAP     = CARD_W + CARD_GAP;
+
 function pinToMarker(pin: StoreMapPin): MapMarker {
   return {
     id: pin.id, lat: pin.lat, lng: pin.lng,
@@ -53,6 +63,7 @@ export default function MapScreen() {
   const { coverage }       = useCoverage();
   const insets             = useSafeAreaInsets();
   const mapRef             = useRef<MapplsWebViewHandle>(null);
+  const pagerRef           = useRef<FlatList<StoreMapPin>>(null);
 
   const { center, located } = useDeviceLocation();
   const { stores: pins }    = useNearbyStores(center, { k: COVERAGE_K[coverage] });
@@ -61,7 +72,6 @@ export default function MapScreen() {
   const [mode,            setMode]    = useState<MapMode>("stores");
   const [query,           setQuery]   = useState("");
   const [product,         setProduct] = useState<MapProduct | null>(null);
-  const [selectedPin,     setSelected]= useState<StoreMapPin | null>(null);
   const [mapH,            setMapH]    = useState(0);
 
   // Recenter the live map once a real GPS fix lands.
@@ -83,13 +93,6 @@ export default function MapScreen() {
 
   const markers = useMemo(() => visiblePins.map(pinToMarker), [visiblePins]);
 
-  // The card is ALWAYS shown for a store (matches the design): the tapped pin
-  // if it's still in view, else the nearest visible store.
-  const activePin = useMemo(() => {
-    if (selectedPin && visiblePins.some(p => p.id === selectedPin.id)) return selectedPin;
-    return visiblePins[0] ?? null;
-  }, [selectedPin, visiblePins]);
-
   // Product suggestions only while typing in Products mode (before a pick).
   const productResults = useMemo(
     () => (mode === "products" && !product ? searchProducts(query) : []),
@@ -99,23 +102,31 @@ export default function MapScreen() {
   const locationLabel = `${selectedAddress.city}, ${selectedAddress.state} – ${selectedAddress.pincode}`;
 
   // ── Handlers ──────────────────────────────────────────────
-  const handleMarker = useCallback((id: string) => {
+  // Tapping a map pin pans the map and scrolls the card pager to that store.
+  function handleMarker(id: string) {
     const pin = pins.find(p => p.id === id) ?? null;
-    setSelected(pin);
-    if (pin) mapRef.current?.panTo(pin.lat, pin.lng);
-  }, [pins]);
+    if (!pin) return;
+    mapRef.current?.panTo(pin.lat, pin.lng);
+    const idx = visiblePins.findIndex(p => p.id === id);
+    if (idx >= 0) pagerRef.current?.scrollToOffset({ offset: idx * SNAP, animated: true });
+  }
+
+  // Swiping the pager pans the map to the card now centred.
+  function onPagerSettle(e: NativeSyntheticEvent<NativeScrollEvent>) {
+    const idx = Math.round(e.nativeEvent.contentOffset.x / SNAP);
+    const p = visiblePins[idx];
+    if (p) mapRef.current?.panTo(p.lat, p.lng);
+  }
 
   function changeMode(m: MapMode) {
     setMode(m);
     setQuery("");
     setProduct(null);
-    setSelected(null);
   }
 
   function pickProduct(p: MapProduct) {
     setProduct(p);
     setQuery(p.name);
-    setSelected(null);
     const first = pins.find(s => p.availableStoreIds.includes(s.id));
     if (first) mapRef.current?.panTo(first.lat, first.lng);
   }
@@ -164,7 +175,6 @@ export default function MapScreen() {
             showUserDot
             userLocation={center}
             onMarkerPress={handleMarker}
-            onMapPress={() => setSelected(null)}
             isDark={isDark}
           />
         )}
@@ -185,16 +195,33 @@ export default function MapScreen() {
           onNavigate={recenter}
         />
 
-        {/* Floating store card — always shown for the nearest / tapped store */}
-        {activePin && (
-          <View style={[styles.cardWrap, { bottom: insets.bottom + 12 }]}>
-            <MapStoreCard
-              pin={activePin}
-              onGetDirections={() => openStore(activePin.id)}
-              onViewStock={() => openStore(activePin.id)}
-              onBookRide={() => openStore(activePin.id)}
-            />
-          </View>
+        {/* Floating store-card pager — one card per nearby store, swipe to switch */}
+        {visiblePins.length > 0 && (
+          <FlatList
+            ref={pagerRef}
+            style={[styles.pager, { bottom: insets.bottom + 12 }]}
+            data={visiblePins}
+            keyExtractor={(p) => p.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            decelerationRate="fast"
+            snapToInterval={SNAP}
+            snapToAlignment="start"
+            disableIntervalMomentum
+            contentContainerStyle={styles.pagerContent}
+            onMomentumScrollEnd={onPagerSettle}
+            renderItem={({ item }) => (
+              <View style={{ width: CARD_W, marginRight: CARD_GAP }}>
+                <MapStoreCard
+                  pin={item}
+                  width={CARD_W}
+                  onGetDirections={() => openStore(item.id)}
+                  onViewStock={() => openStore(item.id)}
+                  onBookRide={() => openStore(item.id)}
+                />
+              </View>
+            )}
+          />
         )}
       </View>
     </View>
@@ -206,5 +233,6 @@ const styles = StyleSheet.create({
   header: { paddingBottom: 4 },
   mapArea: { flex: 1, position: "relative" },
   pickerWrap: { position: "absolute", top: 0, left: 0, right: 0 },
-  cardWrap: { position: "absolute", left: 12, right: 12, bottom: 16 },
+  pager: { position: "absolute", left: 0, right: 0, flexGrow: 0 },
+  pagerContent: { paddingHorizontal: SIDE_PAD },
 });

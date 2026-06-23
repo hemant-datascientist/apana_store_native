@@ -28,20 +28,26 @@ export const MAP_CATEGORY_FILTERS: MapCategoryFilter[] = [
   { key: "food",        label: "Food & Drink",  icon: "cafe-outline"           },
 ];
 
+// Trading state shown on the map store card. Richer than isOpen so the card
+// can say CLOSING SOON / OPENING SOON, not just open/closed.
+export type StoreOpenState = "open" | "closing_soon" | "closed" | "opening_soon";
+
 // ── Store pin displayed on the real Mappls map ────────────────
 export interface StoreMapPin {
-  id:          string;
-  name:        string;
-  category:    string;   // matches a MapCategoryFilter key
-  rating:      number;
-  reviews?:    number;   // rating count (map store card)
-  isOpen:      boolean;
-  isLive:      boolean;
-  distanceKm:  number;
-  icon:        string;   // Ionicons glyph (for info card + bottom strip)
-  accentColor: string;
-  iconBg:      string;
-  tags:        string[];
+  id:           string;
+  name:         string;
+  category:     string;   // matches a MapCategoryFilter key
+  categoryLabel?: string; // friendly tag on the card ("Kirana Stores")
+  rating:       number;
+  reviews?:     number;   // rating count (map store card)
+  isOpen:       boolean;
+  isLive:       boolean;  // live inventory feed vs offline
+  openState?:   StoreOpenState; // card badge; falls back to isOpen
+  distanceKm:   number;
+  icon:         string;   // Ionicons glyph (for info card + bottom strip)
+  accentColor:  string;
+  iconBg:       string;
+  tags:         string[];
 
   // Real geographic coordinates — passed to MapplsWebView markers.
   // Mock values are real Pune landmarks; backend returns actual store coords.
@@ -61,6 +67,8 @@ export const MOCK_MAP_PINS: StoreMapPin[] = [
     id:          "s1",
     name:        "Sharma General Store",
     category:    "grocery",
+    categoryLabel: "Kirana Stores",
+    openState:   "open",
     rating:      4.8,
     reviews:     989,
     isOpen:      true,
@@ -77,6 +85,8 @@ export const MOCK_MAP_PINS: StoreMapPin[] = [
     id:          "s2",
     name:        "TechZone Electronics",
     category:    "electronics",
+    categoryLabel: "Electronics Store",
+    openState:   "closing_soon",
     rating:      4.5,
     reviews:     412,
     isOpen:      true,
@@ -93,6 +103,8 @@ export const MOCK_MAP_PINS: StoreMapPin[] = [
     id:          "s3",
     name:        "Gupta Medical Store",
     category:    "pharmacy",
+    categoryLabel: "Pharmacy Stores",
+    openState:   "opening_soon",
     rating:      4.7,
     reviews:     756,
     isOpen:      true,
@@ -109,6 +121,8 @@ export const MOCK_MAP_PINS: StoreMapPin[] = [
     id:          "s4",
     name:        "Style Hub Fashion",
     category:    "fashion",
+    categoryLabel: "Fashion Stores",
+    openState:   "closed",
     rating:      4.4,
     reviews:     233,
     isOpen:      false,
@@ -125,6 +139,8 @@ export const MOCK_MAP_PINS: StoreMapPin[] = [
     id:          "s5",
     name:        "Fresh Bakes",
     category:    "food",
+    categoryLabel: "Bakery & Cafe",
+    openState:   "open",
     rating:      4.9,
     reviews:     1240,
     isOpen:      true,
