@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   errTitle:    {},
   errSub:      { textAlign: "center", lineHeight: 20 },
 
-  // Retry button — matches the pattern used by MapViewFeed
+  // Retry button — shared error-state pattern across discovery screens
   retryBtn: {
     flexDirection:     "row",
     alignItems:        "center",

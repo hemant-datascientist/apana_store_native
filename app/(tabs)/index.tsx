@@ -62,7 +62,6 @@ import NearbyStoresFeed    from "../../components/tabs/home/stores/NearbyStoresF
 import WholesaleStoresFeed from "../../components/tabs/home/stores/WholesaleStoresFeed";
 import B2CStoresFeed       from "../../components/tabs/home/stores/B2CStoresFeed";
 import ServiceStoresFeed   from "../../components/tabs/home/stores/ServiceStoresFeed";
-import MapViewFeed         from "../../components/tabs/home/stores/MapViewFeed";
 
 export default function HomeScreen() {
   const { colors, setCategoryPrimary } = useTheme();
@@ -113,6 +112,13 @@ export default function HomeScreen() {
   const scrollRef = useRef<ScrollView>(null);
   function openMapView() {
     router.push("/map");
+  }
+
+  // The "Map View" tab is just another door to the same /map screen — it never
+  // becomes an inline storeTab, so there's a single map UI (no old duplicate).
+  function handleStoreTabChange(key: StoreTab) {
+    if (key === "map_view") { openMapView(); return; }
+    setStoreTab(key);
   }
 
   // ── Category feed renderer ───────────────────────────────
@@ -191,14 +197,14 @@ export default function HomeScreen() {
           ) : (
             <StoreDiscoveryTabs
               activeTab={storeTab}
-              onChange={setStoreTab}
+              onChange={handleStoreTabChange}
             />
           )}
 
         </SafeAreaView>
 
         {/* ── Store filter bar (stores mode only) ── */}
-        {mode === "stores" && storeTab !== "map_view" && (
+        {mode === "stores" && (
           <StoreFilterBar
             filters={filters}
             onFilterChange={setFilters}
@@ -215,7 +221,6 @@ export default function HomeScreen() {
         {mode === "stores" && storeTab === "wholesale"     && <WholesaleStoresFeed />}
         {mode === "stores" && storeTab === "b2c"           && <B2CStoresFeed />}
         {mode === "stores" && storeTab === "service_based" && <ServiceStoresFeed />}
-        {mode === "stores" && storeTab === "map_view"      && <MapViewFeed />}
 
       </ScrollView>
 
