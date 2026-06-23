@@ -15,7 +15,7 @@
 
 import React, { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { View, StyleSheet, StatusBar, Alert } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import useTheme from "../theme/useTheme";
 import { useLocation } from "../context/LocationContext";
@@ -51,6 +51,7 @@ export default function MapScreen() {
   const router             = useRouter();
   const { selectedAddress } = useLocation();
   const { coverage }       = useCoverage();
+  const insets             = useSafeAreaInsets();
   const mapRef             = useRef<MapplsWebViewHandle>(null);
 
   const { center, located } = useDeviceLocation();
@@ -67,17 +68,27 @@ export default function MapScreen() {
   useEffect(() => { if (located) mapRef.current?.panTo(center.lat, center.lng); }, [located, center.lat, center.lng]);
 
   // Visible pins per mode: Products → stores stocking the chosen product;
-  // Stores → name search; otherwise all nearby pins.
+  // Stores → name search; otherwise all nearby pins. Sorted nearest-first so
+  // the default store card is the closest shop.
   const visiblePins = useMemo(() => {
+    let list: StoreMapPin[];
     if (mode === "products") {
-      if (!product) return pins;
-      return pins.filter(p => product.availableStoreIds.includes(p.id));
+      list = product ? pins.filter(p => product.availableStoreIds.includes(p.id)) : pins;
+    } else {
+      const q = query.trim().toLowerCase();
+      list = q ? pins.filter(p => p.name.toLowerCase().includes(q)) : pins;
     }
-    const q = query.trim().toLowerCase();
-    return q ? pins.filter(p => p.name.toLowerCase().includes(q)) : pins;
+    return [...list].sort((a, b) => a.distanceKm - b.distanceKm);
   }, [mode, product, query, pins]);
 
   const markers = useMemo(() => visiblePins.map(pinToMarker), [visiblePins]);
+
+  // The card is ALWAYS shown for a store (matches the design): the tapped pin
+  // if it's still in view, else the nearest visible store.
+  const activePin = useMemo(() => {
+    if (selectedPin && visiblePins.some(p => p.id === selectedPin.id)) return selectedPin;
+    return visiblePins[0] ?? null;
+  }, [selectedPin, visiblePins]);
 
   // Product suggestions only while typing in Products mode (before a pick).
   const productResults = useMemo(
@@ -173,14 +184,14 @@ export default function MapScreen() {
           onNavigate={recenter}
         />
 
-        {/* Floating store card */}
-        {selectedPin && (
-          <View style={styles.cardWrap}>
+        {/* Floating store card — always shown for the nearest / tapped store */}
+        {activePin && (
+          <View style={[styles.cardWrap, { bottom: insets.bottom + 12 }]}>
             <MapStoreCard
-              pin={selectedPin}
-              onGetDirections={() => openStore(selectedPin.id)}
-              onViewStock={() => openStore(selectedPin.id)}
-              onBookRide={() => openStore(selectedPin.id)}
+              pin={activePin}
+              onGetDirections={() => openStore(activePin.id)}
+              onViewStock={() => openStore(activePin.id)}
+              onBookRide={() => openStore(activePin.id)}
             />
           </View>
         )}
