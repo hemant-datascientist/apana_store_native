@@ -1,21 +1,19 @@
 // ============================================================
-// useNearbyStores — k-ring store discovery  ·  §19.3 / §19.6
+// useNearbyStores — store discovery for the map  ·  §19.3 / §19.6
 //
-// Given the user's location (or the map centre), this:
-//   1. resolves it to an H3 cell,
-//   2. takes a k-ring of cells around it (K=2 default — the
-//      q-commerce radius, ~600 m across),
-//   3. asks cellCache for the stores in those cells.
+// Resolves the centre to an H3 cell and fetches nearby stores from
+// services/nearbyStoresService (live BE /customer/stores/nearby, or the
+// bundled mock). The centre CELL is the refetch trigger, so GPS drift within
+// one cell never refetches — the BE call only fires when the user actually
+// crosses into a new hex (or on an explicit refetch).
 //
-// Cell-debounced: the centre cell is the effect dependency, so GPS
-// drift within the same cell never refetches. When the centre does
-// move, most of the new ring overlaps the old one, so cellCache
-// serves it almost entirely from memory — pan/zoom stays cheap.
+// The BE computes the k-ring itself; `k` is accepted for call-site
+// compatibility (coverage scope) but the live radius is server-defined.
 // ============================================================
 
-import { useEffect, useState } from "react";
-import { latLngToCell, gridDisk, H3_RES } from "../services/h3";
-import { getStoresInCells } from "../services/cellCache";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { latLngToCell, H3_RES } from "../services/h3";
+import { fetchNearbyStores } from "../services/nearbyStoresService";
 import { StoreMapPin } from "../data/nearbyMapData";
 
 interface LatLng {
@@ -24,60 +22,64 @@ interface LatLng {
 }
 
 interface UseNearbyStoresOptions {
-  k?: number; // ring size — default 2 (§19.3 q-commerce default)
-  res?: number; // H3 resolution — default DISCOVERY (r8)
+  k?:     number; // ring size (coverage scope) — server radius is fixed in live mode
+  res?:   number; // H3 resolution — default DISCOVERY (r8)
+  limit?: number; // max pins
 }
 
 interface NearbyStoresResult {
-  stores: StoreMapPin[];
+  stores:  StoreMapPin[];
   loading: boolean;
-  error: string | null;
+  error:   string | null;
+  refetch: () => void;
 }
 
 export function useNearbyStores(
   location: LatLng | null,
   options: UseNearbyStoresOptions = {},
 ): NearbyStoresResult {
-  const k = options.k ?? 2;
-  const res = options.res ?? H3_RES.DISCOVERY;
+  const res   = options.res ?? H3_RES.DISCOVERY;
+  const limit = options.limit;
 
-  const [stores, setStores] = useState<StoreMapPin[]>([]);
+  const [stores, setStores]   = useState<StoreMapPin[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError]     = useState<string | null>(null);
 
-  // The centre cell is the real dependency — a stable string while
-  // the user moves within one cell, so the effect stays idle until
-  // they actually cross into a new hex.
+  // Stable while the user moves within one cell — the refetch trigger.
   const centerCell = location ? latLngToCell(location.lat, location.lng, res) : null;
 
-  useEffect(() => {
-    if (!centerCell) {
+  // Latest location read inside load via a ref, so the fetch isn't a render
+  // dependency (the cell debounces it instead).
+  const locRef = useRef(location);
+  locRef.current = location;
+  const aliveRef = useRef(true);
+
+  const load = useCallback(async () => {
+    const loc = locRef.current;
+    if (!loc || !centerCell) {
       setStores([]);
       setLoading(false);
       setError(null);
       return;
     }
-
-    let cancelled = false;
     setLoading(true);
     setError(null);
+    try {
+      const result = await fetchNearbyStores(loc.lat, loc.lng, limit);
+      if (aliveRef.current) setStores(result);
+    } catch {
+      // Live mode propagates errors here → surface a retry, never fabricate.
+      if (aliveRef.current) setError("could not load nearby stores");
+    } finally {
+      if (aliveRef.current) setLoading(false);
+    }
+  }, [centerCell, limit]);
 
-    getStoresInCells(gridDisk(centerCell, k))
-      .then((result) => {
-        if (cancelled) return;
-        setStores(result);
-        setLoading(false);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setError("could not load nearby stores");
-        setLoading(false);
-      });
+  useEffect(() => {
+    aliveRef.current = true;
+    void load();
+    return () => { aliveRef.current = false; };
+  }, [load]);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [centerCell, k, res]);
-
-  return { stores, loading, error };
+  return { stores, loading, error, refetch: load };
 }

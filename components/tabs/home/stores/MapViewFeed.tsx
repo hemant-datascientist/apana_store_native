@@ -31,7 +31,6 @@ import { MAP_CATEGORY_FILTERS, StoreMapPin } from "../../../../data/nearbyMapDat
 import { DEFAULT_ZOOM } from "../../../../config/mapplsConfig";
 import { useNearbyStores } from "../../../../hooks/useNearbyStores";
 import { useDeviceLocation } from "../../../../hooks/useDeviceLocation";
-import { clearCellCache } from "../../../../services/cellCache";
 import { useCoverage, COVERAGE_K } from "../../../../context/CoverageContext";
 import CoverageToggle from "../../../store/CoverageToggle";
 import MapplsWebView, { MapMarker, MapplsWebViewHandle } from "../../../map/MapplsWebView";
@@ -70,7 +69,7 @@ export default function MapViewFeed() {
   const { coverage } = useCoverage();
   // Real device GPS for the map centre (falls back to DEFAULT until a fix).
   const { center, located } = useDeviceLocation();
-  const { stores: pins, loading, error: storeErr } = useNearbyStores(center, {
+  const { stores: pins, loading, error: storeErr, refetch } = useNearbyStores(center, {
     k: COVERAGE_K[coverage],
   });
 
@@ -80,7 +79,7 @@ export default function MapViewFeed() {
 
   // Retry drops the cache + clears the map error; the hook refetches
   // on the next cell read.
-  const loadPins = useCallback(() => { clearCellCache(); setMapErr(null); }, []);
+  const loadPins = useCallback(() => { setMapErr(null); refetch(); }, [refetch]);
 
   // ── Filter + search + selection state ─────────────────────
   const [activeCat,   setActiveCat]   = useState("all");
