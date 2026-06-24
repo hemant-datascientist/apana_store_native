@@ -42,6 +42,7 @@ interface WireNearbyStore {
   name:         string;
   type:         string;   // seller type: retail | wholesale | food_packed | food_live | service
   asc_code?:    string | null; // §16 store type (ASC-INV-* | ASC-SVC-* | ASC-MNU-*) when onboarding emits it
+  category_label?: string;     // BE-resolved badge text (ASC tag); colour stays FE
   city:         string | null;
   lat:          number;
   lng:          number;
@@ -81,7 +82,7 @@ function fromWire(s: WireNearbyStore): StoreMapPin {
     id:            s.id,
     name:          s.name,
     category:      st.category,
-    categoryLabel: st.label,
+    categoryLabel: s.category_label ?? st.label, // label is BE-owned; colour stays FE (st)
     rating:        s.rating ?? 0,        // real AVG from store_reviews; 0 = no reviews yet (honest §19.8)
     reviews:       s.review_count ?? 0,
     isOpen:      s.is_live,
