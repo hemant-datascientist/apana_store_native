@@ -14,8 +14,9 @@
 //
 // UI-only fields (icon / colour / category) are assigned client-side from the
 // seller type, exactly like storeLiveService assigns chart colours — the BE
-// never ships presentation. Rating/reviews aren't in the BE yet, so live pins
-// carry rating 0 / no reviews (honest, not faked) until that lands.
+// never ships presentation. Rating + review_count ARE real now (AVG over
+// customer_db.store_reviews, modules/seller getNearbyStores): a store with no
+// reviews reports 0 / 0 — honest, never faked (§19.8).
 // ============================================================
 
 import { StoreMapPin, MOCK_MAP_PINS } from "../data/nearbyMapData";
@@ -37,15 +38,17 @@ export const NEARBY_IS_LIVE = IS_LIVE;
 
 // ── BE wire shape ─────────────────────────────────────────────
 interface WireNearbyStore {
-  id:         string;
-  name:       string;
-  type:       string;     // seller type: retail | wholesale | food_packed | food_live | service
-  asc_code?:  string | null; // §16 store type (ASC-INV-* | ASC-SVC-* | ASC-MNU-*) when onboarding emits it
-  city:       string | null;
-  lat:        number;
-  lng:        number;
-  distance_m: number;
-  is_live:    boolean;
+  id:           string;
+  name:         string;
+  type:         string;   // seller type: retail | wholesale | food_packed | food_live | service
+  asc_code?:    string | null; // §16 store type (ASC-INV-* | ASC-SVC-* | ASC-MNU-*) when onboarding emits it
+  city:         string | null;
+  lat:          number;
+  lng:          number;
+  distance_m:   number;
+  is_live:      boolean;
+  rating?:      number;   // AVG of store_reviews (1dp); 0/absent when none
+  review_count?: number;  // number of reviews; 0/absent when none
 }
 
 interface WireNearby {
@@ -79,7 +82,8 @@ function fromWire(s: WireNearbyStore): StoreMapPin {
     name:          s.name,
     category:      st.category,
     categoryLabel: st.label,
-    rating:        0,               // BE has no ratings yet — honest 0, not faked
+    rating:        s.rating ?? 0,        // real AVG from store_reviews; 0 = no reviews yet (honest §19.8)
+    reviews:       s.review_count ?? 0,
     isOpen:      s.is_live,
     isLive:      s.is_live,
     distanceKm:  Math.round((s.distance_m / 1000) * 10) / 10,
