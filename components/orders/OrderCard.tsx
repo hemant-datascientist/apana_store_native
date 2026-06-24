@@ -26,11 +26,13 @@ interface OrderCardProps {
   order:     Order;
   onTrack:   (order: Order) => void;
   onReorder: (order: Order) => void;
+  onRate?:   (order: Order) => void;
 }
 
-export default function OrderCard({ order, onTrack, onReorder }: OrderCardProps) {
+export default function OrderCard({ order, onTrack, onReorder, onRate }: OrderCardProps) {
   const { colors } = useTheme();
-  const isActive   = ACTIVE_STATUSES.includes(order.status);
+  const isActive    = ACTIVE_STATUSES.includes(order.status);
+  const isDelivered = order.status === "delivered";
 
   // Build item summary: "Tata Salt 1 kg +2 more"
   const firstItem     = order.items[0];
@@ -126,6 +128,24 @@ export default function OrderCard({ order, onTrack, onReorder }: OrderCardProps)
             {order.deliveryAddress}
           </Text>
         </View>
+
+        {/* Rate store — delivered orders only (real buyers can review) */}
+        {isDelivered && onRate && (
+          <TouchableOpacity
+            style={[styles.cta, { backgroundColor: "transparent", borderWidth: 1, borderColor: "#F59E0B" }]}
+            activeOpacity={0.8}
+            onPress={() => onRate(order)}
+          >
+            <Ionicons name="star-outline" size={14} color="#F59E0B" />
+            <Text style={[styles.ctaLabel, {
+              color:      "#B45309",
+              fontFamily: typography.fontFamily.semiBold,
+              fontSize:   typography.size.xs,
+            }]}>
+              Rate
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {/* CTA button */}
         {isActive

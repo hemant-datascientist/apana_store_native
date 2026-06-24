@@ -39,6 +39,8 @@ import {
 import OrderFilterTabs  from "../../components/orders/OrderFilterTabs";
 import OrderCard        from "../../components/orders/OrderCard";
 import OrderEmptyState  from "../../components/orders/OrderEmptyState";
+import RateStoreSheet   from "../../components/orders/RateStoreSheet";
+import { submitStoreReview } from "../../services/reviewService";
 
 export default function OrderHistoryScreen() {
   const { colors } = useTheme();
@@ -46,6 +48,8 @@ export default function OrderHistoryScreen() {
 
   const [activeFilter, setActiveFilter] = useState<OrderFilter>("all");
   const [orders]                        = useState<Order[]>(MOCK_ORDERS);
+  const [rateOrder, setRateOrder]       = useState<Order | null>(null);
+  const [rating,    setRating]          = useState(false);
 
   // ── Filter orders by tab ──────────────────────────────────────
   const filtered = useMemo(() => {
@@ -84,6 +88,23 @@ export default function OrderHistoryScreen() {
             Alert.alert("Added", "Items added to cart. (Backend integration pending)") },
       ],
     );
+  }
+
+  // Rate store — opens the sheet; submit posts to the review service. The BE
+  // gate (a delivered order from this store) keeps ratings honest; here the
+  // order is already delivered so the buyer qualifies.
+  async function handleSubmitRating(stars: number, comment: string) {
+    if (!rateOrder) return;
+    setRating(true);
+    try {
+      await submitStoreReview(rateOrder.storeId, stars, comment || undefined, rateOrder.id);
+      setRateOrder(null);
+      Alert.alert("Thanks!", "Your rating helps other shoppers.");
+    } catch {
+      Alert.alert("Couldn't submit", "Please try again in a moment.");
+    } finally {
+      setRating(false);
+    }
   }
 
   return (
@@ -142,12 +163,22 @@ export default function OrderHistoryScreen() {
                 order={order}
                 onTrack={handleTrack}
                 onReorder={handleReorder}
+                onRate={setRateOrder}
               />
             ))
           : <OrderEmptyState filter={activeFilter} />
         }
 
       </ScrollView>
+
+      {/* Rate-store bottom sheet */}
+      <RateStoreSheet
+        visible={rateOrder !== null}
+        storeName={rateOrder?.storeName ?? ""}
+        submitting={rating}
+        onClose={() => setRateOrder(null)}
+        onSubmit={handleSubmitRating}
+      />
     </SafeAreaView>
   );
 }
