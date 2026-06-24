@@ -56,13 +56,20 @@ export default function ServiceStoreCard({ store, onCall, onDirection, onViewInf
         {/* ── Right content ── */}
         <View style={styles.info}>
 
-          {/* Store name */}
-          <Text
-            style={[styles.name, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}
-            numberOfLines={2}
-          >
-            {store.name}
-          </Text>
+          {/* Store name + ASC service-type badge */}
+          <View style={styles.nameRow}>
+            <Text
+              style={[styles.name, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}
+              numberOfLines={2}
+            >
+              {store.name}
+            </Text>
+            <View style={[styles.typeBadge, { backgroundColor: store.typeBg }]}>
+              <Text style={[styles.typeText, { color: store.typeColor, fontFamily: typography.fontFamily.semiBold, fontSize: 9 }]}>
+                {store.type}
+              </Text>
+            </View>
+          </View>
 
           {/* Rating · Reviews · Distance */}
           <View style={styles.metaRow}>
@@ -191,10 +198,24 @@ const styles = StyleSheet.create({
   // Info
   info: { flex: 1, gap: 6 },
 
-  name: {
-    paddingRight: 44,   // avoid LIVE badge overlap
-    lineHeight:   19,
+  nameRow: {
+    flexDirection: "row",
+    alignItems:    "flex-start",
+    gap:            8,
+    flexWrap:      "wrap",
+    paddingRight:  44,   // avoid LIVE badge overlap
   },
+  name: {
+    flexShrink:  1,
+    lineHeight:  19,
+  },
+  typeBadge: {
+    paddingHorizontal: 7,
+    paddingVertical:   2,
+    borderRadius:      20,
+    alignSelf:         "flex-start",
+  },
+  typeText: {},
 
   // Meta
   metaRow: {

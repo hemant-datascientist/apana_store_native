@@ -67,6 +67,11 @@ export const SERVICE_PROMOS: ServicePromo[] = [
 export interface ServiceStore {
   id:           string;
   name:         string;
+  // ASC §16 service-type badge — same tag system as the map / Nearby cards
+  // (data/ascBadges service tags + families). Colour stays FE presentation.
+  type:         string;     // ASC SVC tag, e.g. "Salon", "Repair", "Laundry"
+  typeColor:    string;
+  typeBg:       string;
   rating:       number;
   reviews:      number;
   distanceKm:   number;
@@ -83,6 +88,9 @@ export const SERVICE_STORES: ServiceStore[] = [
   {
     id:         "sv1",
     name:       "SAI Electrical Repair Shop",
+    type:       "Repair",
+    typeColor:  "#1D4ED8",
+    typeBg:     "#DBEAFE",
     rating:     4.5,
     reviews:    989,
     distanceKm: 0.1,
@@ -97,6 +105,9 @@ export const SERVICE_STORES: ServiceStore[] = [
   {
     id:         "sv2",
     name:       "Dyjo Hair Salon – Women",
+    type:       "Salon",
+    typeColor:  "#6D28D9",
+    typeBg:     "#EDE9FE",
     rating:     3.9,
     reviews:    650,
     distanceKm: 0.5,
@@ -111,6 +122,9 @@ export const SERVICE_STORES: ServiceStore[] = [
   {
     id:         "sv3",
     name:       "Wrinsely Laundry Room",
+    type:       "Laundry",
+    typeColor:  "#1D4ED8",
+    typeBg:     "#DBEAFE",
     rating:     4.8,
     reviews:    477,
     distanceKm: 1.1,
@@ -125,6 +139,9 @@ export const SERVICE_STORES: ServiceStore[] = [
   {
     id:         "sv4",
     name:       "Cheap & Best Salon – Men",
+    type:       "Salon",
+    typeColor:  "#6D28D9",
+    typeBg:     "#EDE9FE",
     rating:     4.6,
     reviews:    789,
     distanceKm: 1.5,
@@ -139,6 +156,9 @@ export const SERVICE_STORES: ServiceStore[] = [
   {
     id:         "sv5",
     name:       "Laundry King",
+    type:       "Laundry",
+    typeColor:  "#1D4ED8",
+    typeBg:     "#DBEAFE",
     rating:     4.4,
     reviews:    327,
     distanceKm: 2.1,
@@ -153,6 +173,9 @@ export const SERVICE_STORES: ServiceStore[] = [
   {
     id:         "sv6",
     name:       "Dr Sravanthi Poly Clinic",
+    type:       "Clinic",
+    typeColor:  "#0F5132",
+    typeBg:     "#DCFCE7",
     rating:     4.3,
     reviews:    107,
     distanceKm: 2.5,
@@ -167,6 +190,9 @@ export const SERVICE_STORES: ServiceStore[] = [
   {
     id:         "sv7",
     name:       "Pearl Makeup Parlour – Women",
+    type:       "Salon",
+    typeColor:  "#6D28D9",
+    typeBg:     "#EDE9FE",
     rating:     4.1,
     reviews:    697,
     distanceKm: 2.7,
@@ -181,6 +207,9 @@ export const SERVICE_STORES: ServiceStore[] = [
   {
     id:         "sv8",
     name:       "AF – Anytime Fitness Gym",
+    type:       "Classes",
+    typeColor:  "#6D28D9",
+    typeBg:     "#EDE9FE",
     rating:     4.2,
     reviews:    287,
     distanceKm: 2.8,
@@ -195,6 +224,9 @@ export const SERVICE_STORES: ServiceStore[] = [
   {
     id:         "sv9",
     name:       "BUG OFF Pest Control",
+    type:       "Repair",
+    typeColor:  "#1D4ED8",
+    typeBg:     "#DBEAFE",
     rating:     4.9,
     reviews:    452,
     distanceKm: 2.9,
