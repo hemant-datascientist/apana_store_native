@@ -26,9 +26,12 @@ export { buildHeroStores } from "../lib/storeBanner";
 export interface NearbyStore {
   id:         string;
   name:       string;
-  type:       string;     // main badge label (e.g. "Grocery Stores")
-  typeColor:  string;
-  typeBg:     string;
+  // Store-type badge — MUST mirror the map store card's ASC tag for this store
+  // (data/nearbyMapData categoryLabel + accentColor + iconBg) so the home Nearby
+  // list and the Map View show the same badge. See data/ascBadges for the tags.
+  type:       string;     // ASC short tag, e.g. "Kirana", "Bakery"
+  typeColor:  string;     // = map pin accentColor
+  typeBg:     string;     // = map pin iconBg
   rating:     number;
   reviews:    number;
   distanceKm: number;     // baseline; recomputed from the customer's location
@@ -48,9 +51,9 @@ export const NEARBY_STORES: NearbyStore[] = [
   {
     id:         "s1",
     name:       "Sharma General Store",
-    type:       "Grocery",
-    typeColor:  "#15803D",
-    typeBg:     "#DCFCE7",
+    type:       "Kirana",
+    typeColor:  "#166534",
+    typeBg:     "#D1FAE5",
     rating:     4.8,
     reviews:    312,
     distanceKm: 0.1,
@@ -65,7 +68,7 @@ export const NEARBY_STORES: NearbyStore[] = [
   {
     id:         "s5",
     name:       "Fresh Bakes",
-    type:       "Food & Drink",
+    type:       "Bakery",
     typeColor:  "#92400E",
     typeBg:     "#FEF3C7",
     rating:     4.7,
@@ -83,7 +86,7 @@ export const NEARBY_STORES: NearbyStore[] = [
     id:         "s2",
     name:       "TechZone Electronics",
     type:       "Electronics",
-    typeColor:  "#1D4ED8",
+    typeColor:  "#1E3A5F",
     typeBg:     "#DBEAFE",
     rating:     4.5,
     reviews:    189,
@@ -101,8 +104,8 @@ export const NEARBY_STORES: NearbyStore[] = [
     id:         "s4",
     name:       "Style Hub Fashion",
     type:       "Fashion",
-    typeColor:  "#9333EA",
-    typeBg:     "#F3E8FF",
+    typeColor:  "#6D28D9",
+    typeBg:     "#EDE9FE",
     rating:     4.3,
     reviews:    156,
     distanceKm: 0.8,
@@ -118,8 +121,8 @@ export const NEARBY_STORES: NearbyStore[] = [
     id:         "s3",
     name:       "Gupta Medical Store",
     type:       "Pharmacy",
-    typeColor:  "#DC2626",
-    typeBg:     "#FEE2E2",
+    typeColor:  "#0F5132",
+    typeBg:     "#DCFCE7",
     rating:     4.9,
     reviews:    427,
     distanceKm: 0.6,
