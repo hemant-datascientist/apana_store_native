@@ -19,6 +19,7 @@
 // ============================================================
 
 import { StoreMapPin, MOCK_MAP_PINS } from "../data/nearbyMapData";
+import { ascStyle } from "../data/ascBadges";
 
 const API_MODE = process.env.EXPO_PUBLIC_API_MODE ?? "mock";
 const TOWER_IP = process.env.EXPO_PUBLIC_TOWER_IP ?? "10.153.78.94";
@@ -39,6 +40,7 @@ interface WireNearbyStore {
   id:         string;
   name:       string;
   type:       string;     // seller type: retail | wholesale | food_packed | food_live | service
+  asc_code?:  string | null; // §16 store type (ASC-INV-* | ASC-SVC-* | ASC-MNU-*) when onboarding emits it
   city:       string | null;
   lat:        number;
   lng:        number;
@@ -64,12 +66,14 @@ const TYPE_STYLE: Record<string, TypeStyle> = {
 };
 const FALLBACK_STYLE: TypeStyle = { category: "grocery", label: "Apana", icon: "storefront-outline", accentColor: "#0F4C81", iconBg: "#DBEAFE" };
 
-function styleFor(type: string): TypeStyle {
-  return TYPE_STYLE[type] ?? FALLBACK_STYLE;
+// Full §16 ASC code wins (all 69 types light up); else the coarse seller type;
+// else the generic Apana fallback. AscPinStyle and TypeStyle share fields.
+function styleFor(s: WireNearbyStore): TypeStyle {
+  return ascStyle(s.asc_code) ?? TYPE_STYLE[s.type] ?? FALLBACK_STYLE;
 }
 
 function fromWire(s: WireNearbyStore): StoreMapPin {
-  const st = styleFor(s.type);
+  const st = styleFor(s);
   return {
     id:            s.id,
     name:          s.name,
