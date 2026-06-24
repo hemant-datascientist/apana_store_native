@@ -67,30 +67,30 @@ export default function MapStoreCard({ pin, onGetDirections, onViewStock, onBook
         </View>
 
         <View style={styles.info}>
-          {/* Name + rating stacked tight on the left */}
-          <View style={styles.infoLeft}>
+          {/* Row 1: name ↔ inventory badge */}
+          <View style={styles.infoRow}>
             <Text numberOfLines={1} style={[styles.name, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.md }]}>
               {pin.name}
             </Text>
+            <Badge cfg={inventory} />
+          </View>
+
+          {/* Row 2: rating · reviews · distance ↔ open badge */}
+          <View style={styles.infoRow}>
             <View style={styles.meta}>
               <Ionicons name="star" size={13} color="#F59E0B" />
               <Text style={[styles.rating, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
                 {pin.rating}
               </Text>
               {pin.reviews != null && (
-                <Text style={[styles.dim, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+                <Text numberOfLines={1} style={[styles.dim, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
                   {"  ·  "}{pin.reviews.toLocaleString("en-IN")} reviews
                 </Text>
               )}
-              <Text style={[styles.dim, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+              <Text numberOfLines={1} style={[styles.dim, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
                 {"  ·  "}{pin.distanceKm} km
               </Text>
             </View>
-          </View>
-
-          {/* Stacked status badges on the right */}
-          <View style={styles.badges}>
-            <Badge cfg={inventory} />
             <Badge cfg={openCfg} />
           </View>
         </View>
@@ -153,14 +153,13 @@ const styles = StyleSheet.create({
   },
   catText: { color: "#fff", fontSize: 8.5 },
 
-  info: { flex: 1, flexDirection: "row", alignItems: "flex-start", gap: 8 },
-  infoLeft: { flex: 1, gap: 5 },
-  name: {},
-  meta: { flexDirection: "row", alignItems: "center" },
+  info: { flex: 1, justifyContent: "center", gap: 8 },
+  infoRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  name: { flex: 1 },
+  meta: { flex: 1, flexDirection: "row", alignItems: "center" },
   rating: {},
   dim: {},
-  badges: { gap: 5, alignItems: "flex-end", flexShrink: 0 },
-  badge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
+  badge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, flexShrink: 0 },
   badgeDot: { width: 5, height: 5, borderRadius: 3 },
   badgeText: { fontSize: 9, letterSpacing: 0.2 },
 
