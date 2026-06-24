@@ -7,10 +7,11 @@
 //
 // availableStoreIds reference the StoreMapPin ids in nearbyMapData (s1–s5).
 //
-// Backend: replace searchProducts() with
-//   GET /api/customer/products/search?q=         → MapProduct[]
-// and availability with
-//   GET /api/customer/products/:id/stores?lat&lng → storeIds (live stock)
+// Live wiring lives in services/mapProductService.ts (env-gated), hitting the
+// real BE (modules/seller):
+//   GET /api/customer/products/search?q=&lat=&lng=        → product hits
+//   GET /api/customer/products/stores?productId=|q=&lat=&lng= → stores stocking it
+// This file is the MOCK index used when EXPO_PUBLIC_API_MODE is not local/prod.
 // ============================================================
 
 export interface MapProduct {
@@ -20,7 +21,9 @@ export interface MapProduct {
   brand?:            string;
   icon:              string;   // Ionicons glyph
   iconBg:            string;
-  availableStoreIds: string[]; // StoreMapPin ids stocking this product
+  availableStoreIds: string[]; // StoreMapPin ids stocking it (mock); empty in live
+  masterProductId?:  string | null; // live: stable product key for the stores lookup
+  storeCount?:       number;   // live: how many nearby stores stock it
 }
 
 export const MAP_PRODUCTS: MapProduct[] = [

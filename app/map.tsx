@@ -29,7 +29,8 @@ import { useStoreLiveStats } from "../hooks/useStoreLiveStats";
 import { DEFAULT_ZOOM } from "../config/mapplsConfig";
 import { STORES_LIVE_COUNT } from "../data/homeData";
 import { StoreMapPin } from "../data/nearbyMapData";
-import { MapProduct, searchProducts } from "../data/mapProductData";
+import { MapProduct } from "../data/mapProductData";
+import { searchMapProducts, storeIdsForProduct } from "../services/mapProductService";
 import MapplsWebView, { MapMarker, MapplsWebViewHandle } from "../components/map/MapplsWebView";
 import MapScreenHeader from "../components/map-screen/MapScreenHeader";
 import MapLocationBar from "../components/map-screen/MapLocationBar";
@@ -73,6 +74,8 @@ export default function MapScreen() {
   const [mode,            setMode]    = useState<MapMode>("stores");
   const [query,           setQuery]   = useState("");
   const [product,         setProduct] = useState<MapProduct | null>(null);
+  const [productResults,  setResults] = useState<MapProduct[]>([]);
+  const [productStoreIds, setStoreIds]= useState<string[]>([]);
   const [mapH,            setMapH]    = useState(0);
 
   // Recenter the live map once a real GPS fix lands.
@@ -84,21 +87,36 @@ export default function MapScreen() {
   const visiblePins = useMemo(() => {
     let list: StoreMapPin[];
     if (mode === "products") {
-      list = product ? pins.filter(p => product.availableStoreIds.includes(p.id)) : pins;
+      // Picked product → only the nearby stores that stock it (id set from the
+      // service: mock = availableStoreIds, live = BE /products/stores).
+      list = product ? pins.filter(p => productStoreIds.includes(p.id)) : pins;
     } else {
       const q = query.trim().toLowerCase();
       list = q ? pins.filter(p => p.name.toLowerCase().includes(q)) : pins;
     }
     return [...list].sort((a, b) => a.distanceKm - b.distanceKm);
-  }, [mode, product, query, pins]);
+  }, [mode, product, query, pins, productStoreIds]);
 
   const markers = useMemo(() => visiblePins.map(pinToMarker), [visiblePins]);
 
-  // Product suggestions only while typing in Products mode (before a pick).
-  const productResults = useMemo(
-    () => (mode === "products" && !product ? searchProducts(query) : []),
-    [mode, product, query],
-  );
+  // Product typeahead (Products mode, before a pick) — debounced, service-backed
+  // (mock index or live BE). Stale responses are dropped via the alive flag.
+  useEffect(() => {
+    if (mode !== "products" || product || !query.trim()) {
+      setResults([]);
+      return;
+    }
+    let alive = true;
+    const t = setTimeout(async () => {
+      try {
+        const hits = await searchMapProducts(query, center.lat, center.lng);
+        if (alive) setResults(hits);
+      } catch {
+        if (alive) setResults([]); // never fabricate suggestions (§19.8)
+      }
+    }, 250);
+    return () => { alive = false; clearTimeout(t); };
+  }, [mode, product, query, center.lat, center.lng]);
 
   const locationLabel = `${selectedAddress.city}, ${selectedAddress.state} – ${selectedAddress.pincode}`;
 
@@ -123,18 +141,27 @@ export default function MapScreen() {
     setMode(m);
     setQuery("");
     setProduct(null);
+    setResults([]);
+    setStoreIds([]);
   }
 
-  function pickProduct(p: MapProduct) {
+  async function pickProduct(p: MapProduct) {
     setProduct(p);
     setQuery(p.name);
-    const first = pins.find(s => p.availableStoreIds.includes(s.id));
-    if (first) mapRef.current?.panTo(first.lat, first.lng);
+    setResults([]);
+    try {
+      const ids = await storeIdsForProduct(p, center.lat, center.lng);
+      setStoreIds(ids);
+      const first = pins.find(s => ids.includes(s.id));
+      if (first) mapRef.current?.panTo(first.lat, first.lng);
+    } catch {
+      setStoreIds([]); // honest-empty on failure (§19.8)
+    }
   }
 
   function onQueryChange(t: string) {
     setQuery(t);
-    if (product) setProduct(null); // editing the text clears the locked product
+    if (product) { setProduct(null); setStoreIds([]); } // editing clears the locked product
   }
 
   const recenter = () => mapRef.current?.panTo(center.lat, center.lng, 15);
