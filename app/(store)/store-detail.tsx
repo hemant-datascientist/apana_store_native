@@ -185,16 +185,6 @@ export default function StoreDetailScreen() {
         {/* ── Hero banner ── */}
         <StoreHeroBanner store={store} />
 
-        {/* ── Founding-Seller trust badge (§30) ── */}
-        {store.foundingSeller && (
-          <View style={[styles.foundingBadge, { backgroundColor: colors.primary + "12", borderColor: colors.primary + "30" }]}>
-            <Ionicons name="shield-checkmark" size={15} color={colors.primary} />
-            <Text style={[styles.foundingText, { color: colors.primary, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
-              Apana Founding Seller · 0% commission
-            </Text>
-          </View>
-        )}
-
         {/* ── Store name, address, status ── */}
         <StoreInfoHeader store={store} />
 
@@ -268,17 +258,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap:           8,
   },
-  foundingBadge: {
-    flexDirection:     "row",
-    alignItems:        "center",
-    gap:               7,
-    marginHorizontal:  16,
-    paddingHorizontal: 12,
-    paddingVertical:   9,
-    borderRadius:      12,
-    borderWidth:       1,
-  },
-  foundingText: { flex: 1 },
 
   // ── Scroll content ──
   content: {
