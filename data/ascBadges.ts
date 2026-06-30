@@ -1,8 +1,9 @@
 // ============================================================
 // ASC BADGES — Apana Store (Customer App · Map View store card)
 //
-// Single source for the store-type tag pill on the Map View card: all 69 ASC
-// §16 types → { tag label, Ionicon, colour family }. Mirrors the spec in
+// Single source for the store-type tag pill on the Map View card: all 82 ASC
+// §16 types (44 inv + 27 svc + 11 menu) → { tag label, Ionicon, colour family }.
+// Mirrors the spec in
 //   apana_doc/architecture/map_store_card_badges.md
 // and the codes in apana_registry_web/lib/asc.ts (ASC-INV-<3> | ASC-SVC-NN |
 // ASC-MNU-NN). Self-contained — the registry-web lib is a different package, so
@@ -79,6 +80,12 @@ export const ASC_BADGES: Record<string, AscBadge> = {
   "ASC-INV-OPL": { label: "Optical",     icon: "eye-outline",                 family: "slate" },
   "ASC-INV-TYR": { label: "Tyre",        icon: "ellipse-outline",             family: "slate" },
   "ASC-INV-CNG": { label: "Fuel",        icon: "flame-outline",               family: "maroon" },
+  // Inventory gap-fill (40–44, §16.10)
+  "ASC-INV-MTF": { label: "Meat & Fish", icon: "fish-outline",                family: "maroon" },
+  "ASC-INV-UTN": { label: "Crockery",    icon: "restaurant-outline",          family: "slate" },
+  "ASC-INV-SAN": { label: "Sanitary",    icon: "construct-outline",           family: "slate" },
+  "ASC-INV-FRW": { label: "Fireworks",   icon: "sparkles-outline",            family: "orange" },
+  "ASC-INV-FAB": { label: "Fabric",      icon: "layers-outline",              family: "violet" },
 
   // Service (19) — ASC-SVC-*
   "ASC-SVC-01": { label: "Salon",        icon: "cut-outline",                 family: "violet" },
@@ -100,6 +107,15 @@ export const ASC_BADGES: Record<string, AscBadge> = {
   "ASC-SVC-17": { label: "Real Estate",  icon: "home-outline",                family: "teal" },
   "ASC-SVC-18": { label: "Insurance",    icon: "shield-checkmark-outline",    family: "navy" },
   "ASC-SVC-19": { label: "CSC",          icon: "globe-outline",               family: "blue" },
+  // Service gap-fill (20–27, §16.10)
+  "ASC-SVC-20": { label: "Gas Agency",   icon: "flame-outline",               family: "maroon" },
+  "ASC-SVC-21": { label: "Events",       icon: "balloon-outline",             family: "orange" },
+  "ASC-SVC-22": { label: "Home Clean",   icon: "brush-outline",               family: "teal" },
+  "ASC-SVC-23": { label: "Astrology",    icon: "planet-outline",              family: "violet" },
+  "ASC-SVC-24": { label: "Veterinary",   icon: "paw-outline",                 family: "deepGreen" },
+  "ASC-SVC-25": { label: "Painting",     icon: "color-fill-outline",          family: "blue" },
+  "ASC-SVC-26": { label: "Courier",      icon: "cube-outline",                family: "slate" },
+  "ASC-SVC-27": { label: "Scrap",        icon: "trash-outline",               family: "brown" },
 
   // Menu (11) — ASC-MNU-*
   "ASC-MNU-01": { label: "Restaurant",   icon: "restaurant-outline",          family: "orange" },
@@ -128,8 +144,8 @@ const SHORT_TO_CODE: Record<string, string> = Object.keys(ASC_BADGES).reduce((ac
 const CATEGORY_OVERRIDE: Record<string, string> = {
   "ASC-INV-MOB": "electronics", "ASC-INV-CPU": "electronics", "ASC-INV-APL": "electronics",
   "ASC-INV-PHA": "pharmacy",
-  "ASC-INV-FAS": "fashion",     "ASC-INV-FOO": "fashion",
-  "ASC-INV-BAK": "food",
+  "ASC-INV-FAS": "fashion",     "ASC-INV-FOO": "fashion",     "ASC-INV-FAB": "fashion",
+  "ASC-INV-BAK": "food",        "ASC-INV-MTF": "food",
 };
 
 function categoryFor(code: string): string {
