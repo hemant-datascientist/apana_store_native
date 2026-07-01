@@ -47,6 +47,7 @@ export interface TrendingCityItem {
   tag:  string;   // short label: "Famous Snack", "Local Brand" …
   icon: string;   // Ionicons glyph
   bg:   string;   // image placeholder background
+  imageUrl?: any;
 }
 
 // City slug → trending items map
@@ -55,18 +56,18 @@ export const CITY_TRENDING: Record<string, TrendingCityItem[]> = {
 
   // ── Pune ───────────────────────────────────────────────────
   pune: [
-    { id:"pn1",  name:"Metro Wholesale",        tag:"Local Store",       icon:"storefront-outline",   bg:"#DBEAFE" },
-    { id:"pn2",  name:"Shrewsbury Biscuits",    tag:"Famous Snack",      icon:"nutrition-outline",    bg:"#FEF3C7" },
-    { id:"pn3",  name:"Chitale Bhakarwadi",     tag:"Famous Snack",      icon:"nutrition-outline",    bg:"#FFEDD5" },
-    { id:"pn4",  name:"Meridian Ice Cream",     tag:"Ice Cream Parlour", icon:"ice-cream-outline",    bg:"#FCE7F3" },
-    { id:"pn5",  name:"Puneri Pagadi",          tag:"Traditional Craft", icon:"flag-outline",         bg:"#EDE9FE" },
-    { id:"pn6",  name:"Maharashtrian Naths",    tag:"Traditional Jewel", icon:"diamond-outline",      bg:"#FCE7F3" },
-    { id:"pn7",  name:"Osha Chappals",          tag:"Local Footwear",    icon:"walk-outline",         bg:"#FEF3C7" },
-    { id:"pn8",  name:"Kolhapuri Chappals",     tag:"Famous Footwear",   icon:"walk-outline",         bg:"#FFEDD5" },
-    { id:"pn9",  name:"Bun Maska",              tag:"Famous Breakfast",  icon:"cafe-outline",         bg:"#FFEDD5" },
-    { id:"pn10", name:"Kala Khatta",            tag:"Famous Drink",      icon:"wine-outline",         bg:"#EDE9FE" },
-    { id:"pn11", name:"Pithla Bhakri",          tag:"Local Cuisine",     icon:"restaurant-outline",   bg:"#DCFCE7" },
-    { id:"pn12", name:"Puran Poli",             tag:"Famous Sweet",      icon:"nutrition-outline",    bg:"#FEE2E2" },
+    { id:"pn1",  name:"Metro Wholesale",        tag:"Local Store",       icon:"storefront-outline",   bg:"#DBEAFE", imageUrl: require("../assets/images/home/trending/pune_metro.png") },
+    { id:"pn2",  name:"Shrewsbury Biscuits",    tag:"Famous Snack",      icon:"nutrition-outline",    bg:"#FEF3C7", imageUrl: require("../assets/images/home/trending/pune_shrewsbury.png") },
+    { id:"pn3",  name:"Chitale Bhakarwadi",     tag:"Famous Snack",      icon:"nutrition-outline",    bg:"#FFEDD5", imageUrl: require("../assets/images/home/trending/pune_bhakarwadi.png") },
+    { id:"pn4",  name:"Meridian Ice Cream",     tag:"Ice Cream Parlour", icon:"ice-cream-outline",    bg:"#FCE7F3", imageUrl: require("../assets/images/home/trending/pune_meridian.png") },
+    { id:"pn5",  name:"Puneri Pagadi",          tag:"Traditional Craft", icon:"flag-outline",         bg:"#EDE9FE", imageUrl: require("../assets/images/home/trending/pune_pagadi.png") },
+    { id:"pn6",  name:"Maharashtrian Naths",    tag:"Traditional Jewel", icon:"diamond-outline",      bg:"#FCE7F3", imageUrl: require("../assets/images/home/trending/pune_nath.png") },
+    { id:"pn7",  name:"Osha Chappals",          tag:"Local Footwear",    icon:"walk-outline",         bg:"#FEF3C7", imageUrl: require("../assets/images/home/trending/pune_osha.png") },
+    { id:"pn8",  name:"Kolhapuri Chappals",     tag:"Famous Footwear",   icon:"walk-outline",         bg:"#FFEDD5", imageUrl: require("../assets/images/home/trending/pune_kolhapuri.png") },
+    { id:"pn9",  name:"Bun Maska",              tag:"Famous Breakfast",  icon:"cafe-outline",         bg:"#FFEDD5", imageUrl: require("../assets/images/home/trending/pune_bun_maska.png") },
+    { id:"pn10", name:"Kala Khatta",            tag:"Famous Drink",      icon:"wine-outline",         bg:"#EDE9FE", imageUrl: require("../assets/images/home/trending/pune_kala_khatta.png") },
+    { id:"pn11", name:"Pithla Bhakri",          tag:"Local Cuisine",     icon:"restaurant-outline",   bg:"#DCFCE7", imageUrl: require("../assets/images/home/trending/pune_pithla_bhakri.png") },
+    { id:"pn12", name:"Puran Poli",             tag:"Famous Sweet",      icon:"nutrition-outline",    bg:"#FEE2E2", imageUrl: require("../assets/images/home/trending/pune_puran_poli.png") },
   ],
 
   // ── Mumbai ─────────────────────────────────────────────────

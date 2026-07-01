@@ -17,7 +17,7 @@
 
 import React from "react";
 import {
-  View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert,
+  View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert, Image
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography }        from "../../../../theme/typography";
@@ -66,9 +66,13 @@ export default function TrendingCitySection({ city, items }: TrendingCitySection
                 activeOpacity={0.78}
                 onPress={() => Alert.alert(item.name, `${item.tag} · Coming soon.`)}
               >
-                {/* Image placeholder */}
+                {/* Image placeholder or real image */}
                 <View style={[styles.imgWrap, { backgroundColor: item.bg, height: IMG_H }]}>
-                  <Ionicons name={item.icon as any} size={30} color="rgba(0,0,0,0.22)" />
+                  {item.imageUrl ? (
+                    <Image source={item.imageUrl} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                  ) : (
+                    <Ionicons name={item.icon as any} size={30} color="rgba(0,0,0,0.22)" />
+                  )}
                 </View>
 
                 {/* Name */}
