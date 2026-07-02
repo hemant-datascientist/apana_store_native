@@ -1,9 +1,9 @@
 // ============================================================
 // ASC BADGES — Apana Store (Customer App · Map View store card)
 //
-// Single source for the store-type tag pill on the Map View card: all 82 ASC
-// §16 types (44 inv + 27 svc + 11 menu) → { tag label, Ionicon, colour family }.
-// Mirrors the spec in
+// Single source for the store-type tag pill on the Map View card: all 105 ASC
+// §16 types (44 inv + 27 svc + 11 menu + 10 factory-direct + 13 wholesale) →
+// { tag label, Ionicon, colour family }. Mirrors the spec in
 //   apana_doc/architecture/map_store_card_badges.md
 // and the codes in apana_registry_web/lib/asc.ts (ASC-INV-<3> | ASC-SVC-NN |
 // ASC-MNU-NN). Self-contained — the registry-web lib is a different package, so
@@ -129,6 +129,33 @@ export const ASC_BADGES: Record<string, AscBadge> = {
   "ASC-MNU-09": { label: "Cloud KTN",    icon: "cloud-outline",               family: "orange" },
   "ASC-MNU-10": { label: "Tiffin",       icon: "restaurant-outline",          family: "amber" },
   "ASC-MNU-11": { label: "Banquet",      icon: "business-outline",            family: "violet" },
+
+  // Factory-Direct (channel=factory, §16.9) — ASC-FAC-*
+  "ASC-FAC-FOOD":  { label: "Food Factory",      icon: "business-outline", family: "orange" },
+  "ASC-FAC-BEV":   { label: "Beverage Factory",  icon: "business-outline", family: "teal" },
+  "ASC-FAC-DAIRY": { label: "Dairy Factory",     icon: "business-outline", family: "green" },
+  "ASC-FAC-GAR":   { label: "Garment Factory",   icon: "business-outline", family: "violet" },
+  "ASC-FAC-HOME":  { label: "Home Factory",      icon: "business-outline", family: "brown" },
+  "ASC-FAC-PCARE": { label: "Care Factory",      icon: "business-outline", family: "rose" },
+  "ASC-FAC-FOOT":  { label: "Footwear Factory",  icon: "business-outline", family: "brown" },
+  "ASC-FAC-TOY":   { label: "Toy Factory",       icon: "business-outline", family: "teal" },
+  "ASC-FAC-FURN":  { label: "Furniture Factory", icon: "business-outline", family: "brown" },
+  "ASC-FAC-GEN":   { label: "Factory Direct",    icon: "business-outline", family: "slate" },
+
+  // Wholesale (channel=b2b bulk-MOQ to anyone, §16.9) — ASC-WHL-*
+  "ASC-WHL-FMCG": { label: "FMCG Whsl",        icon: "cube-outline", family: "green" },
+  "ASC-WHL-VEG":  { label: "Mandi",            icon: "cube-outline", family: "green" },
+  "ASC-WHL-GRN":  { label: "Grain Whsl",       icon: "cube-outline", family: "amber" },
+  "ASC-WHL-CNC":  { label: "Cash & Carry",     icon: "cube-outline", family: "navy" },
+  "ASC-WHL-FAB":  { label: "Textile Whsl",     icon: "cube-outline", family: "violet" },
+  "ASC-WHL-STA":  { label: "Stationery Whsl",  icon: "cube-outline", family: "indigo" },
+  "ASC-WHL-PHA":  { label: "Pharma Whsl",      icon: "cube-outline", family: "deepGreen" },
+  "ASC-WHL-ELE":  { label: "Electronics Whsl", icon: "cube-outline", family: "navy" },
+  "ASC-WHL-HRD":  { label: "Hardware Whsl",    icon: "cube-outline", family: "amber" },
+  "ASC-WHL-GAR":  { label: "Garment Whsl",     icon: "cube-outline", family: "violet" },
+  "ASC-WHL-UTN":  { label: "Crockery Whsl",    icon: "cube-outline", family: "slate" },
+  "ASC-WHL-MEA":  { label: "Meat Whsl",        icon: "cube-outline", family: "maroon" },
+  "ASC-WHL-DST":  { label: "Distributor",      icon: "cube-outline", family: "slate" },
 };
 
 // Inventory 3-letter short codes (§16.8) → full code, so a BE that ships "KIR"
