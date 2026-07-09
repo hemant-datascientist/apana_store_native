@@ -356,6 +356,7 @@ function buildMapHTML(opts: {
     //   2. mappls.Polygon (best-effort; some builds omit it)
     //   3. a closed Polyline tracing the ring (always renders the border)
     function glRemove(entry) {
+      try { if (entry.glTimer) clearInterval(entry.glTimer); } catch(e) {}
       try { if (entry.glLyr && map.getLayer && map.getLayer(entry.glLyr)) map.removeLayer(entry.glLyr); } catch(e) {}
       try { if (entry.glSrc && map.getSource && map.getSource(entry.glSrc)) map.removeSource(entry.glSrc); } catch(e) {}
     }
@@ -394,40 +395,45 @@ function buildMapHTML(opts: {
           if (f0[0] !== fN[0] || f0[1] !== fN[1]) ring.push(f0);
         }
 
-        // 1) GL fill layer — the reliable filled polygon. Deferred until
-        //    the vector style is loaded, else addSource/addLayer throw.
-        try {
-          if (map.addSource && map.addLayer) {
-            var srcId = 'cov-src-' + p.id;
-            var lyrId = 'cov-fill-' + p.id;
-            entry.glSrc = srcId;
-            entry.glLyr = lyrId;
-            (function(srcId, lyrId, ring, fill, op){
-              function doAdd(){
-                try {
-                  if (map.getSource && map.getSource(srcId)) return;
-                  map.addSource(srcId, {
-                    type: 'geojson',
-                    data: { type: 'Feature', properties: {},
-                      geometry: { type: 'Polygon', coordinates: [ring] } },
-                  });
-                  map.addLayer({
-                    id: lyrId, type: 'fill', source: srcId,
-                    paint: { 'fill-color': fill, 'fill-opacity': op },
-                  });
-                } catch(e) {}
-              }
-              if (map.isStyleLoaded && !map.isStyleLoaded()) {
-                if (map.once) map.once('load', doAdd);
-                if (map.on)   map.on('styledata', doAdd);
-              } else {
-                doAdd();
-              }
-            })(srcId, lyrId, ring, fill, op);
+        // 1) GL fill layer — the reliable filled polygon. The wrapper may
+        //    not expose addSource/addLayer until the style has loaded, and
+        //    an entry is immutable-by-id, so a single missed attempt used to
+        //    lose the fill forever (outline-only bug). Now: try immediately,
+        //    re-try on map events, AND poll until it lands (≤10s), so the
+        //    fill always appears once the style is ready.
+        (function(pid, ring, fill, op){
+          var srcId = 'cov-src-' + pid;
+          var lyrId = 'cov-fill-' + pid;
+          entry.glSrc = srcId;
+          entry.glLyr = lyrId;
+          function doAdd(){
+            try {
+              if (!map.addSource || !map.addLayer) return false;
+              if (map.isStyleLoaded && !map.isStyleLoaded()) return false;
+              if (map.getSource && map.getSource(srcId)) return true;
+              map.addSource(srcId, {
+                type: 'geojson',
+                data: { type: 'Feature', properties: {},
+                  geometry: { type: 'Polygon', coordinates: [ring] } },
+              });
+              map.addLayer({
+                id: lyrId, type: 'fill', source: srcId,
+                paint: { 'fill-color': fill, 'fill-opacity': op },
+              });
+              return true;
+            } catch(e) { return false; }
           }
-        } catch(e) {}
+          if (doAdd()) return;
+          try { if (map.on) { map.on('load', doAdd); map.on('styledata', doAdd); } } catch(e) {}
+          var tries = 0;
+          entry.glTimer = setInterval(function(){
+            if (doAdd() || ++tries >= 40) { clearInterval(entry.glTimer); entry.glTimer = null; }
+          }, 250);
+        })(p.id, ring, fill, op);
 
-        // 2) mappls.Polygon fill — best-effort.
+        // 2) mappls.Polygon fill — best-effort backup for SDK builds where
+        //    the GL layer APIs are absent. Stroke follows strokeWeight, so a
+        //    fill-only polygon (weight 0) draws no border here either.
         try {
           if (typeof mappls.Polygon === 'function') {
             entry.fill = new mappls.Polygon({
@@ -436,25 +442,28 @@ function buildMapHTML(opts: {
               fillColor:     fill,
               fillOpacity:   op,
               strokeColor:   color,
-              strokeOpacity: 0.9,
+              strokeOpacity: weight > 0 ? 0.9 : 0,
               strokeWeight:  weight,
             });
           }
         } catch(e) {}
 
-        // 3) Boundary outline — closed polyline, always renders.
-        try {
-          var loop = p.paths.slice();
-          var a = loop[0], b = loop[loop.length - 1];
-          if (a && b && (a.lat !== b.lat || a.lng !== b.lng)) loop.push(a);
-          entry.line = new mappls.Polyline({
-            map:           map,
-            paths:         loop,
-            strokeColor:   color,
-            strokeOpacity: 0.95,
-            strokeWeight:  weight,
-          });
-        } catch(e) {}
+        // 3) Boundary outline — only when the caller asks for a border
+        //    (strokeWeight > 0). Fill-only overlays skip it entirely.
+        if (weight > 0) {
+          try {
+            var loop = p.paths.slice();
+            var a = loop[0], b = loop[loop.length - 1];
+            if (a && b && (a.lat !== b.lat || a.lng !== b.lng)) loop.push(a);
+            entry.line = new mappls.Polyline({
+              map:           map,
+              paths:         loop,
+              strokeColor:   color,
+              strokeOpacity: 0.95,
+              strokeWeight:  weight,
+            });
+          } catch(e) {}
+        }
 
         polygonMap[p.id] = entry;
       });

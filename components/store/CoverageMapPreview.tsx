@@ -2,17 +2,18 @@
 // COVERAGE MAP PREVIEW — Apana Store (Customer App)
 //
 // A REAL Mappls map centred on the customer's LIVE location, marking
-// them as "You", with their coverage area drawn as a polygon outline.
+// them as "You", with their coverage area drawn as a FILLED polygon
+// (solid tinted region, no border outline — strokeWeight 0).
 // The area comes from the backend (geolocation /customer/stores/coverage
 // → the true sub-district / district from the §19.10 admin partition,
 // the same shape the Testing/ harness renders) — not a synthetic ring.
 //
-//   nearest → sub-district outline  (Nearest Coverage)
-//   long    → district outline       (Long Coverage)
+//   nearest → sub-district area  (Nearest Coverage)
+//   long    → district area      (Long Coverage)
 //
-// Live mode draws the real admin shape; mock / offline draws a local
-// outline around the pin (coverageService swaps the source). Bound to
-// CoverageContext, so toggling repaints + re-zooms the same map.
+// Live mode fills the real admin shape; mock / offline fills a local
+// approximation around the pin (coverageService swaps the source).
+// Bound to CoverageContext, so toggling repaints + re-zooms the same map.
 // ============================================================
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -88,7 +89,10 @@ export default function CoverageMapPreview({
     return () => { cancelled = true; };
   }, [coords]);
 
-  // 3) Active scope's outline → map polygons (one per disjoint ring).
+  // 3) Active scope's area → map polygons (one per disjoint ring).
+  // Fill-only by design: strokeWeight 0 means the WebView draws no border
+  // polyline — the customer sees the district/sub-district as a solid
+  // tinted region, not an outline.
   const polygons: MapPolygon[] = useMemo(() => {
     const scope = geo ? geo[coverage] : null;
     if (!scope) return [];
@@ -100,7 +104,7 @@ export default function CoverageMapPreview({
         fillColor:    colors.primary,
         fillOpacity:  0.32,
         strokeColor:  colors.primary,
-        strokeWeight: 2.5,
+        strokeWeight: 0,
       }));
   }, [geo, coverage, colors.primary]);
 
