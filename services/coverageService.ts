@@ -21,7 +21,6 @@
 // ============================================================
 
 import { latLngToCell, cellToParent, cellsToMultiPolygon, gridDisk, H3_RES } from "./h3";
-import { resolveLocalCoverage } from "./coverageGeo";
 
 const API_MODE = process.env.EXPO_PUBLIC_API_MODE ?? "mock";
 const TOWER_IP = process.env.EXPO_PUBLIC_TOWER_IP ?? "10.153.78.94";
@@ -158,26 +157,11 @@ function localScope(lat: number, lng: number, res: number, k: number): CoverageS
   return { name: null, res, rings, multi };
 }
 
-// Real bundled admin outline (Testing/ GADM for the customer's state),
-// resolved offline by point-in-polygon. The true sub-district / district
-// shape + names — perfect without the backend. Null outside the bundle.
-function fromBundledGeo(lat: number, lng: number): CoverageGeometry | null {
-  const local = resolveLocalCoverage(lat, lng);
-  if (!local) return null;
-  return {
-    center:  { lat, lng },
-    area:    { subdistrict: local.subdistrict, district: local.district, state: local.state },
-    nearest: { name: local.subdistrict, res: 0, rings: local.nearestRings, multi: ringsToMulti(local.nearestRings) },
-    long:    { name: local.district,    res: 0, rings: local.longRings,    multi: ringsToMulti(local.longRings) },
-    source:  "local", // offline source, but real admin geometry + names
-  };
-}
-
+// Offline/mock = an honest H3 approximation around the pin, anywhere in
+// India. The REAL admin shapes (all states) live backend-side only
+// (location_db.area_geometry) — no admin geometry is bundled in the app,
+// so the FE carries no backend work and no single-state special case.
 function fetchMock(lat: number, lng: number): CoverageGeometry {
-  // Prefer the real bundled admin outline; only fall to an H3 blob when
-  // the pin is outside the bundled state (§19.8 — approximate, flagged).
-  const real = fromBundledGeo(lat, lng);
-  if (real) return real;
   return {
     center:  { lat, lng },
     area:    { subdistrict: null, district: null, state: null },
