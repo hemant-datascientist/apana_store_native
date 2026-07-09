@@ -41,7 +41,11 @@ export type Ring   = LatLng[]; // a closed boundary loop
 export interface CoverageScopeGeo {
   name:  string | null;
   res:   number;
-  rings: Ring[]; // area outline(s) — draw each as a map polygon
+  rings: Ring[]; // area outline(s) — legacy per-ring shape
+  // GeoJSON MultiPolygon coordinates ([lng,lat], holes preserved where the
+  // source has them) — the same shape language the Testing/ harness renders
+  // through a single MapLibre fill layer. Preferred by the map.
+  multi: number[][][][];
 }
 
 export interface CoverageGeometry {
@@ -69,12 +73,22 @@ interface WireCoverage {
   long:    WireScope;
 }
 
+// Each LatLng ring becomes one single-ring polygon of the MultiPolygon
+// (the wire/bundle formats carry outer rings only, so no holes to keep).
+function ringsToMulti(rings: Ring[]): number[][][][] {
+  return rings
+    .filter((ring) => ring.length >= 3)
+    .map((ring) => [ring.map((pt) => [pt.lng, pt.lat])]);
+}
+
 function fromWire(w: WireCoverage): CoverageGeometry {
+  const nearestRings = w.nearest.rings ?? [];
+  const longRings    = w.long.rings ?? [];
   return {
     center:  w.center,
     area:    w.area,
-    nearest: { name: w.nearest.name, res: w.nearest.res, rings: w.nearest.rings ?? [] },
-    long:    { name: w.long.name,    res: w.long.res,    rings: w.long.rings ?? [] },
+    nearest: { name: w.nearest.name, res: w.nearest.res, rings: nearestRings, multi: ringsToMulti(nearestRings) },
+    long:    { name: w.long.name,    res: w.long.res,    rings: longRings,    multi: ringsToMulti(longRings) },
     source:  "backend",
   };
 }
@@ -105,20 +119,23 @@ const LONG_RES    = 6;
 
 function localScope(lat: number, lng: number, res: number, k: number): CoverageScopeGeo {
   const rings: Ring[] = [];
+  let multi: number[][][][] = [];
   try {
     const center = cellToParent(latLngToCell(lat, lng, H3_RES.HOT), res);
     const cells  = gridDisk(center, k);
-    const multi  = cellsToMultiPolygon(cells, false) as number[][][][];
+    // geojson mode: [lng,lat] closed loops, holes preserved — exactly what
+    // the Testing/ harness feeds its MapLibre fill layer.
+    multi = cellsToMultiPolygon(cells, true) as number[][][][];
     for (const poly of multi) {
       const outer = poly[0];
       if (outer && outer.length) {
-        rings.push(outer.map(([la, ln]) => ({ lat: la, lng: ln })));
+        rings.push(outer.map(([ln, la]) => ({ lat: la, lng: ln })));
       }
     }
   } catch {
-    // h3 hiccup — return an empty outline; the map + marker still render
+    // h3 hiccup — return an empty shape; the map + marker still render
   }
-  return { name: null, res, rings };
+  return { name: null, res, rings, multi };
 }
 
 // Real bundled admin outline (Testing/ GADM for the customer's state),
@@ -130,8 +147,8 @@ function fromBundledGeo(lat: number, lng: number): CoverageGeometry | null {
   return {
     center:  { lat, lng },
     area:    { subdistrict: local.subdistrict, district: local.district, state: local.state },
-    nearest: { name: local.subdistrict, res: 0, rings: local.nearestRings },
-    long:    { name: local.district,    res: 0, rings: local.longRings },
+    nearest: { name: local.subdistrict, res: 0, rings: local.nearestRings, multi: ringsToMulti(local.nearestRings) },
+    long:    { name: local.district,    res: 0, rings: local.longRings,    multi: ringsToMulti(local.longRings) },
     source:  "local", // offline source, but real admin geometry + names
   };
 }

@@ -89,23 +89,19 @@ export default function CoverageMapPreview({
     return () => { cancelled = true; };
   }, [coords]);
 
-  // 3) Active scope's area → map polygons (one per disjoint ring).
-  // Fill-only by design: strokeWeight 0 means the WebView draws no border
-  // polyline — the customer sees the district/sub-district as a solid
-  // tinted region, not an outline.
+  // 3) Active scope's area → ONE MultiPolygon overlay (Testing/ harness
+  // polygon system: a single GeoJSON source + MapLibre fill layer with a
+  // hairline fill-outline — solid tinted region, no border polyline).
   const polygons: MapPolygon[] = useMemo(() => {
     const scope = geo ? geo[coverage] : null;
-    if (!scope) return [];
-    return scope.rings
-      .filter((ring) => ring.length >= 3)
-      .map((ring, i) => ({
-        id:           `${coverage}-${i}`,
-        paths:        ring,
-        fillColor:    colors.primary,
-        fillOpacity:  0.32,
-        strokeColor:  colors.primary,
-        strokeWeight: 0,
-      }));
+    if (!scope || !scope.multi.length) return [];
+    return [{
+      id:           coverage,
+      coordinates:  scope.multi,
+      fillColor:    colors.primary,
+      fillOpacity:  0.45,
+      outlineColor: colors.primary,
+    }];
   }, [geo, coverage, colors.primary]);
 
   // Re-centre + re-zoom on the pin when scope changes (mount applies the

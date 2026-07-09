@@ -82,15 +82,20 @@ export interface MapMarker {
   isOpen?:   boolean;         // closed stores get a greyed pin
 }
 
-// Filled area overlay (e.g. an H3 coverage hexagon). One ring of
-// lat/lng vertices per polygon; the SDK closes the loop.
+// Filled area overlay. Preferred shape is GeoJSON MultiPolygon
+// coordinates ([lng,lat], holes preserved) rendered through one MapLibre
+// fill layer — the same polygon system the Testing/ harness proved out.
+// `paths` (one lat/lng ring) is the legacy form, still accepted.
 export interface MapPolygon {
   id:            string;
-  paths:         Array<{ lat: number; lng: number }>;
+  // GeoJSON MultiPolygon coordinates — [[[ [lng,lat], … ]], …]
+  coordinates?:  number[][][][];
+  paths?:        Array<{ lat: number; lng: number }>;
   fillColor?:    string;      // hex (default Apana Blue)
-  fillOpacity?:  number;      // 0–1 (default 0.22)
-  strokeColor?:  string;      // hex (default = fillColor)
-  strokeWeight?: number;      // px (default 1.5)
+  fillOpacity?:  number;      // 0–1 (default 0.45, the harness value)
+  outlineColor?: string;      // hairline fill-outline-color (default = fill)
+  strokeColor?:  string;      // legacy border colour
+  strokeWeight?: number;      // legacy border px; 0 = no border polyline
 }
 
 export interface MapplsWebViewHandle {
@@ -380,28 +385,35 @@ function buildMapHTML(opts: {
 
       // Add new entries (immutable-by-id: existing ids are left as-is)
       polygons.forEach(function(p) {
-        if (!p || !p.id || !p.paths || !p.paths.length) return;
+        if (!p || !p.id) return;
+        if (!((p.coordinates && p.coordinates.length) || (p.paths && p.paths.length))) return;
         if (polygonMap[p.id]) return;
-        var color = p.strokeColor || p.fillColor || '#0F4C81';
-        var fill  = p.fillColor || '#0F4C81';
-        var op    = (p.fillOpacity != null) ? p.fillOpacity : 0.3;
-        var weight = (p.strokeWeight != null) ? p.strokeWeight : 2;
+        var fill    = p.fillColor || '#0F4C81';
+        var op      = (p.fillOpacity != null) ? p.fillOpacity : 0.45;
+        var outline = p.outlineColor || fill;
+        var color   = p.strokeColor || fill;
+        var weight  = (p.strokeWeight != null) ? p.strokeWeight : 0;
         var entry = {};
 
-        // [lng,lat] ring, closed — for the GL GeoJSON fill.
-        var ring = p.paths.map(function(pt){ return [pt.lng, pt.lat]; });
-        if (ring.length) {
+        // GeoJSON geometry — MultiPolygon straight through (holes intact,
+        // Testing/ harness system); legacy paths become one closed ring.
+        var geometry;
+        if (p.coordinates && p.coordinates.length) {
+          geometry = { type: 'MultiPolygon', coordinates: p.coordinates };
+        } else {
+          var ring = p.paths.map(function(pt){ return [pt.lng, pt.lat]; });
           var f0 = ring[0], fN = ring[ring.length - 1];
           if (f0[0] !== fN[0] || f0[1] !== fN[1]) ring.push(f0);
+          geometry = { type: 'Polygon', coordinates: [ring] };
         }
 
-        // 1) GL fill layer — the reliable filled polygon. The wrapper may
-        //    not expose addSource/addLayer until the style has loaded, and
-        //    an entry is immutable-by-id, so a single missed attempt used to
-        //    lose the fill forever (outline-only bug). Now: try immediately,
-        //    re-try on map events, AND poll until it lands (≤10s), so the
-        //    fill always appears once the style is ready.
-        (function(pid, ring, fill, op){
+        // GL fill layer — the harness renderer: one geojson source + one
+        // fill layer with a hairline fill-outline-color. The wrapper may
+        // not expose addSource/addLayer until the style has loaded, and an
+        // entry is immutable-by-id, so a single missed attempt used to lose
+        // the fill forever (outline-only bug). Now: try immediately, re-try
+        // on map events, AND poll until it lands (≤10s).
+        (function(pid, geometry, fill, op, outline){
           var srcId = 'cov-src-' + pid;
           var lyrId = 'cov-fill-' + pid;
           entry.glSrc = srcId;
@@ -413,12 +425,15 @@ function buildMapHTML(opts: {
               if (map.getSource && map.getSource(srcId)) return true;
               map.addSource(srcId, {
                 type: 'geojson',
-                data: { type: 'Feature', properties: {},
-                  geometry: { type: 'Polygon', coordinates: [ring] } },
+                data: { type: 'Feature', properties: {}, geometry: geometry },
               });
               map.addLayer({
                 id: lyrId, type: 'fill', source: srcId,
-                paint: { 'fill-color': fill, 'fill-opacity': op },
+                paint: {
+                  'fill-color': fill,
+                  'fill-opacity': op,
+                  'fill-outline-color': outline,
+                },
               });
               return true;
             } catch(e) { return false; }
@@ -429,28 +444,11 @@ function buildMapHTML(opts: {
           entry.glTimer = setInterval(function(){
             if (doAdd() || ++tries >= 40) { clearInterval(entry.glTimer); entry.glTimer = null; }
           }, 250);
-        })(p.id, ring, fill, op);
+        })(p.id, geometry, fill, op, outline);
 
-        // 2) mappls.Polygon fill — best-effort backup for SDK builds where
-        //    the GL layer APIs are absent. Stroke follows strokeWeight, so a
-        //    fill-only polygon (weight 0) draws no border here either.
-        try {
-          if (typeof mappls.Polygon === 'function') {
-            entry.fill = new mappls.Polygon({
-              map:           map,
-              paths:         p.paths,
-              fillColor:     fill,
-              fillOpacity:   op,
-              strokeColor:   color,
-              strokeOpacity: weight > 0 ? 0.9 : 0,
-              strokeWeight:  weight,
-            });
-          }
-        } catch(e) {}
-
-        // 3) Boundary outline — only when the caller asks for a border
-        //    (strokeWeight > 0). Fill-only overlays skip it entirely.
-        if (weight > 0) {
+        // Legacy border polyline — only for single-ring paths callers that
+        // explicitly ask for a border (strokeWeight > 0).
+        if (weight > 0 && p.paths && p.paths.length) {
           try {
             var loop = p.paths.slice();
             var a = loop[0], b = loop[loop.length - 1];
