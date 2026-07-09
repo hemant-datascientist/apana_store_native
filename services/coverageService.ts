@@ -61,7 +61,15 @@ export interface CoverageGeometry {
 }
 
 // ── BE wire shape ─────────────────────────────────────────────
-interface WireScope { name: string | null; res: number; rings: Ring[] }
+// `multi` = GeoJSON MultiPolygon coordinates the backend now serves
+// (real GADM border from location_db.area_geometry). The FE only
+// consumes it — all geometry work stays backend-side.
+interface WireScope {
+  name:   string | null;
+  res:    number;
+  rings:  Ring[];
+  multi?: number[][][][];
+}
 interface WireCoverage {
   center: LatLng;
   area: {
@@ -87,8 +95,20 @@ function fromWire(w: WireCoverage): CoverageGeometry {
   return {
     center:  w.center,
     area:    w.area,
-    nearest: { name: w.nearest.name, res: w.nearest.res, rings: nearestRings, multi: ringsToMulti(nearestRings) },
-    long:    { name: w.long.name,    res: w.long.res,    rings: longRings,    multi: ringsToMulti(longRings) },
+    // Prefer the backend's real MultiPolygon (GADM border, holes intact);
+    // rings→multi conversion is only the shim for older BE responses.
+    nearest: {
+      name:  w.nearest.name,
+      res:   w.nearest.res,
+      rings: nearestRings,
+      multi: w.nearest.multi?.length ? w.nearest.multi : ringsToMulti(nearestRings),
+    },
+    long: {
+      name:  w.long.name,
+      res:   w.long.res,
+      rings: longRings,
+      multi: w.long.multi?.length ? w.long.multi : ringsToMulti(longRings),
+    },
     source:  "backend",
   };
 }
