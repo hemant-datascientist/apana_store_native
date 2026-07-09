@@ -125,6 +125,7 @@ interface MapplsWebViewProps {
   onMapReady?:    () => void;
   onMapError?:    (reason: string) => void;
   onMapDiag?:     (caps: Record<string, boolean>) => void;
+  onPolygonStatus?: (s: { id: string; ok: boolean; err: string }) => void;
   isDark?:        boolean;
   style?:         StyleProp<ViewStyle>;
 }
@@ -418,10 +419,11 @@ function buildMapHTML(opts: {
           var lyrId = 'cov-fill-' + pid;
           entry.glSrc = srcId;
           entry.glLyr = lyrId;
+          var lastErr = '';
           function doAdd(){
             try {
-              if (!map.addSource || !map.addLayer) return false;
-              if (map.isStyleLoaded && !map.isStyleLoaded()) return false;
+              if (!map.addSource || !map.addLayer) { lastErr = 'no addSource/addLayer'; return false; }
+              if (map.isStyleLoaded && !map.isStyleLoaded()) { lastErr = 'style not loaded'; return false; }
               if (map.getSource && map.getSource(srcId)) return true;
               map.addSource(srcId, {
                 type: 'geojson',
@@ -436,13 +438,15 @@ function buildMapHTML(opts: {
                 },
               });
               return true;
-            } catch(e) { return false; }
+            } catch(e) { lastErr = (e && e.message) ? e.message : 'addLayer threw'; return false; }
           }
-          if (doAdd()) return;
+          function report(ok){ postToRN({ type: 'polygonStatus', id: pid, ok: ok, err: ok ? '' : lastErr }); }
+          if (doAdd()) { report(true); return; }
           try { if (map.on) { map.on('load', doAdd); map.on('styledata', doAdd); } } catch(e) {}
           var tries = 0;
           entry.glTimer = setInterval(function(){
-            if (doAdd() || ++tries >= 40) { clearInterval(entry.glTimer); entry.glTimer = null; }
+            if (doAdd()) { clearInterval(entry.glTimer); entry.glTimer = null; report(true); }
+            else if (++tries >= 40) { clearInterval(entry.glTimer); entry.glTimer = null; report(false); }
           }, 250);
         })(p.id, geometry, fill, op, outline);
 
@@ -690,6 +694,7 @@ const MapplsWebView = forwardRef<MapplsWebViewHandle, MapplsWebViewProps>(
       onMapReady,
       onMapError,
       onMapDiag,
+      onPolygonStatus,
       isDark       = false,
       style,
     },
@@ -741,12 +746,13 @@ const MapplsWebView = forwardRef<MapplsWebViewHandle, MapplsWebViewProps>(
         else if (msg.type === "mapPress")  onMapPress?.();
         else if (msg.type === "mapReady")  { setReady(true); onMapReady?.(); }
         else if (msg.type === "mapDiag")   { onMapDiag?.(msg.caps || {}); }
+        else if (msg.type === "polygonStatus") { onPolygonStatus?.({ id: msg.id, ok: !!msg.ok, err: msg.err || "" }); }
         else if (msg.type === "mapError")  {
           setErr(true);
           onMapError?.(msg.reason || "Map could not be loaded.");
         }
       } catch {}
-    }, [onMarkerPress, onMapPress, onMapReady, onMapError, onMapDiag]);
+    }, [onMarkerPress, onMapPress, onMapReady, onMapError, onMapDiag, onPolygonStatus]);
 
     // ── Auto-sync markers prop → map ──────────────────────────
     // Stringify as a key so React re-runs only on meaningful changes.
