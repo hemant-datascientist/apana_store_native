@@ -51,8 +51,6 @@ export default function CoverageMapPreview({
   const [coords, setCoords] = useState<LatLng | null>(null);
   const [geo, setGeo]       = useState<CoverageGeometry | null>(null);
   const [mapErr, setErr]    = useState<string | null>(null);
-  // Temporary on-screen diagnostic for the coverage-polygon render path.
-  const [polyDbg, setPolyDbg] = useState<string>("");
 
   // 1) Resolve the customer's pin. Show the map IMMEDIATELY on the best
   //    pin we already have (saved address → city default) so it never
@@ -138,9 +136,6 @@ export default function CoverageMapPreview({
             showUserDot
             userLocation={coords}
             onMapError={(reason) => setErr(reason)}
-            onPolygonStatus={(s) =>
-              setPolyDbg(s.ok ? `poly ${s.id} drawn` : `poly ${s.id} FAILED: ${s.err}`)
-            }
             isDark={isDark}
           />
         ) : (
@@ -171,14 +166,6 @@ export default function CoverageMapPreview({
           {caption}
         </Text>
       </View>
-
-      {/* TEMP diagnostic — remove once coverage polygon confirmed on device.
-          Shows: data source, MultiPolygon point count, and GL-fill outcome. */}
-      <Text
-        style={[styles.caption, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: 10 }]}
-      >
-        {`dbg · src:${geo?.source ?? "—"} · pts:${scope?.multi?.[0]?.[0]?.length ?? 0} · ${polyDbg || "waiting"}`}
-      </Text>
     </View>
   );
 }

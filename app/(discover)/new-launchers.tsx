@@ -34,7 +34,11 @@ const ACCENT = "#7C3AED";
 export default function NewLaunchersScreen() {
   const { colors, isDark } = useTheme();
   const router             = useRouter();
-  const { city }           = useLocation();
+  // Real GPS city when available; the saved address is the fallback.
+  // (Previously destructured a `city` field that never existed on the
+  // context, so this header always rendered an empty city name.)
+  const { deviceCity, selectedAddress } = useLocation();
+  const city               = deviceCity ?? selectedAddress.city;
 
   const liveLaunches      = getLiveLaunches();
   const comingSoon        = getComingSoonLaunches();

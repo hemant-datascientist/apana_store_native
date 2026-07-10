@@ -53,8 +53,10 @@ export default function StoreLiveScreen() {
   // Scope: a state from the Bharat screen wins; otherwise the customer's
   // current city (home entry) — so "Stores Live" always means stores the
   // customer could actually reach, not a vanity national number.
-  const { selectedAddress } = useLocation();
-  const customerCity = stateKey || stateName ? undefined : selectedAddress.city;
+  // Prefer the real GPS-derived city; fall back to the saved address only
+  // when no fix/geocode is available. A Bharat state selection still wins.
+  const { selectedAddress, deviceCity } = useLocation();
+  const customerCity = stateKey || stateName ? undefined : (deviceCity ?? selectedAddress.city);
 
   // Mock-mode scoped total: state flow passes storesLive; the city flow
   // (home entry) reuses the home header's count so the two screens agree.

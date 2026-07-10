@@ -19,6 +19,7 @@ import React, {
   createContext, useContext, useState, useEffect, ReactNode,
 } from "react";
 import AsyncStorage               from "@react-native-async-storage/async-storage";
+import * as Location              from "expo-location";
 import { UserAddress, SAVED_ADDRESSES } from "../data/addressData";
 
 // ── Storage keys ──────────────────────────────────────────────
@@ -28,6 +29,11 @@ const KEY_READY    = "@apana_store:location_ready";
 // ── Context shape ─────────────────────────────────────────────
 interface LocationContextValue {
   selectedAddress:    UserAddress;
+  // The customer's REAL current city, reverse-geocoded from device GPS.
+  // null until (and unless) a fix + geocode succeeds. Prefer this over
+  // selectedAddress.city for "near me" queries — the saved address is a
+  // delivery target, not necessarily where the user is standing now.
+  deviceCity:         string | null;
   locationReady:      boolean;          // true once user sets any location
   setSelectedAddress: (addr: UserAddress) => void;
   confirmLocation:    (addr: UserAddress) => void;   // sets address + marks ready
@@ -38,8 +44,35 @@ const LocationContext = createContext<LocationContextValue | null>(null);
 
 export function LocationProvider({ children }: { children: ReactNode }) {
   const [selectedAddress, setSelectedAddressState] = useState<UserAddress>(SAVED_ADDRESSES[0]);
+  const [deviceCity,      setDeviceCity]           = useState<string | null>(null);
   const [locationReady,   setLocationReadyState]   = useState(false);
   const [hydrated,        setHydrated]             = useState(false);
+
+  // ── Resolve the real current city from device GPS (reverse-geocode) ──
+  // Runs once; permission denial / any failure silently leaves deviceCity
+  // null → callers fall back to the saved address (no crash, no phantom).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") return;
+        const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        const places = await Location.reverseGeocodeAsync({
+          latitude:  pos.coords.latitude,
+          longitude: pos.coords.longitude,
+        });
+        const p = places[0];
+        // city can be null on Indian addresses; subregion/district usually
+        // carries the town/district name (e.g. "Jalgaon").
+        const name = p?.city ?? p?.subregion ?? p?.district ?? p?.region ?? null;
+        if (!cancelled && name) setDeviceCity(name);
+      } catch {
+        // no permission / no fix / geocode failure → leave null
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // ── Restore persisted state on mount ─────────────────────────
   useEffect(() => {
@@ -91,6 +124,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   return (
     <LocationContext.Provider value={{
       selectedAddress,
+      deviceCity,
       locationReady,
       setSelectedAddress,
       confirmLocation,
