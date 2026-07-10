@@ -363,6 +363,8 @@ function buildMapHTML(opts: {
     //   3. a closed Polyline tracing the ring (always renders the border)
     function glRemove(entry) {
       try { if (entry.glTimer) clearInterval(entry.glTimer); } catch(e) {}
+      // Line layer must go before the fill layer, both before the source.
+      try { if (entry.glLine && map.getLayer && map.getLayer(entry.glLine)) map.removeLayer(entry.glLine); } catch(e) {}
       try { if (entry.glLyr && map.getLayer && map.getLayer(entry.glLyr)) map.removeLayer(entry.glLyr); } catch(e) {}
       try { if (entry.glSrc && map.getSource && map.getSource(entry.glSrc)) map.removeSource(entry.glSrc); } catch(e) {}
     }
@@ -408,17 +410,22 @@ function buildMapHTML(opts: {
           geometry = { type: 'Polygon', coordinates: [ring] };
         }
 
-        // GL fill layer — the harness renderer: one geojson source + one
-        // fill layer with a hairline fill-outline-color. The wrapper may
-        // not expose addSource/addLayer until the style has loaded, and an
-        // entry is immutable-by-id, so a single missed attempt used to lose
-        // the fill forever (outline-only bug). Now: try immediately, re-try
-        // on map events, AND poll until it lands (≤10s).
-        (function(pid, geometry, fill, op, outline){
-          var srcId = 'cov-src-' + pid;
-          var lyrId = 'cov-fill-' + pid;
+        // GL renderer (the Testing/ harness pattern): one geojson source, a
+        // fill layer, and — when weight > 0 — a line layer for the border.
+        // A fill layer can only draw a 1 px hairline via fill-outline-color,
+        // so a real, width-controllable border needs that second layer.
+        //
+        // The wrapper may not expose addSource/addLayer until the style has
+        // loaded, and an entry is immutable-by-id, so a single missed attempt
+        // used to lose the fill forever. Now: try immediately, re-try on map
+        // events, AND poll until it lands (<= 10s).
+        (function(pid, geometry, fill, op, outline, stroke, weight){
+          var srcId  = 'cov-src-'  + pid;
+          var lyrId  = 'cov-fill-' + pid;
+          var lineId = 'cov-line-' + pid;
           entry.glSrc = srcId;
           entry.glLyr = lyrId;
+          if (weight > 0) entry.glLine = lineId;
           var lastErr = '';
           function doAdd(){
             try {
@@ -437,6 +444,17 @@ function buildMapHTML(opts: {
                   'fill-outline-color': outline,
                 },
               });
+              if (weight > 0) {
+                map.addLayer({
+                  id: lineId, type: 'line', source: srcId,
+                  layout: { 'line-join': 'round', 'line-cap': 'round' },
+                  paint: {
+                    'line-color': stroke,
+                    'line-width': weight,
+                    'line-opacity': 0.95,
+                  },
+                });
+              }
               return true;
             } catch(e) { lastErr = (e && e.message) ? e.message : 'addLayer threw'; return false; }
           }
@@ -448,11 +466,13 @@ function buildMapHTML(opts: {
             if (doAdd()) { clearInterval(entry.glTimer); entry.glTimer = null; report(true); }
             else if (++tries >= 40) { clearInterval(entry.glTimer); entry.glTimer = null; report(false); }
           }, 250);
-        })(p.id, geometry, fill, op, outline);
+        })(p.id, geometry, fill, op, outline, color, weight);
 
-        // Legacy border polyline — only for single-ring paths callers that
-        // explicitly ask for a border (strokeWeight > 0).
-        if (weight > 0 && p.paths && p.paths.length) {
+        // Legacy border polyline — fallback only for SDK builds without the
+        // GL layer APIs (otherwise the line layer above already drew the
+        // border, and this would double-stroke it).
+        var hasGl = !!(map.addSource && map.addLayer);
+        if (!hasGl && weight > 0 && p.paths && p.paths.length) {
           try {
             var loop = p.paths.slice();
             var a = loop[0], b = loop[loop.length - 1];

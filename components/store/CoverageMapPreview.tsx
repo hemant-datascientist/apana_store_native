@@ -99,8 +99,12 @@ export default function CoverageMapPreview({
       id:           coverage,
       coordinates:  scope.multi,
       fillColor:    colors.primary,
-      fillOpacity:  0.45,
+      fillOpacity:  0.32,
       outlineColor: colors.primary,
+      // Border: a GL line layer over the same shape (fill-outline-color
+      // alone is a 1 px hairline and reads as no border at all).
+      strokeColor:  colors.primary,
+      strokeWeight: 2.5,
     }];
   }, [geo, coverage, colors.primary]);
 
