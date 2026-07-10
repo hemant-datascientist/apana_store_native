@@ -91,6 +91,10 @@ export interface MapPolygon {
   // GeoJSON MultiPolygon coordinates — [[[ [lng,lat], … ]], …]
   coordinates?:  number[][][][];
   paths?:        Array<{ lat: number; lng: number }>;
+  // H3 cell indexes for a honeycomb overlay — expanded to hexagons IN the
+  // WebView (h3-js) so a large set (a whole district, ~17k cells) transfers as
+  // compact strings instead of megabytes of pre-expanded coordinates.
+  cells?:        string[];
   fillColor?:    string;      // hex (default Apana Blue)
   fillOpacity?:  number;      // 0–1 (default 0.45, the harness value)
   outlineColor?: string;      // hairline fill-outline-color (default = fill)
@@ -203,6 +207,11 @@ function buildMapHTML(opts: {
   <!-- Mappls Map JS SDK (CDN). onerror fires if the CDN is down
        or the REST key is invalid. -->
   <script src="${opts.sdkJsUrl}" onerror="handleSdkError('cdn_load_failed')"></script>
+  <!-- h3-js (UMD) so the page can expand H3 cell indexes into hexagons
+       locally. The app ships a compact cell-index list instead of megabytes
+       of pre-expanded polygon coordinates, so a whole district's r8
+       honeycomb (~17k cells) actually transfers + renders. -->
+  <script src="https://cdn.jsdelivr.net/npm/h3-js@4/dist/h3-js.umd.js" onerror="window._h3Failed=true"></script>
 </head>
 <body>
   <div id="map"></div>
@@ -397,7 +406,7 @@ function buildMapHTML(opts: {
       // Add new entries (immutable-by-id: existing ids are left as-is)
       polygons.forEach(function(p) {
         if (!p || !p.id) return;
-        if (!((p.coordinates && p.coordinates.length) || (p.paths && p.paths.length))) return;
+        if (!((p.coordinates && p.coordinates.length) || (p.paths && p.paths.length) || (p.cells && p.cells.length))) return;
         if (polygonMap[p.id]) return;
         var fill    = p.fillColor || '#0F4C81';
         var op      = (p.fillOpacity != null) ? p.fillOpacity : 0.45;
@@ -409,16 +418,32 @@ function buildMapHTML(opts: {
         var casingO = (p.casingOpacity != null) ? p.casingOpacity : 0.9;
         var entry = {};
 
-        // GeoJSON geometry — MultiPolygon straight through (holes intact,
-        // Testing/ harness system); legacy paths become one closed ring.
-        var geometry;
-        if (p.coordinates && p.coordinates.length) {
-          geometry = { type: 'MultiPolygon', coordinates: p.coordinates };
-        } else {
+        // Geometry builder — deferred (a function, not a value) so the cells
+        // path can wait for h3-js to finish loading, retried by doAdd's loop.
+        //   p.cells       -> expand each H3 index to a hexagon here, in-page,
+        //                    via h3-js (compact transfer; the only way a whole
+        //                    district's ~17k-cell honeycomb renders at all).
+        //   p.coordinates -> MultiPolygon straight through (holes intact).
+        //   p.paths       -> one closed ring (legacy).
+        function buildGeometry() {
+          if (p.cells && p.cells.length) {
+            if (!window.h3 || typeof window.h3.cellToBoundary !== 'function') return null;
+            var polys = [];
+            for (var i = 0; i < p.cells.length; i++) {
+              try {
+                var hex = window.h3.cellToBoundary(p.cells[i], true); // [lng,lat], closed
+                if (hex && hex.length >= 4) polys.push([hex]);
+              } catch(e) {}
+            }
+            return polys.length ? { type: 'MultiPolygon', coordinates: polys } : null;
+          }
+          if (p.coordinates && p.coordinates.length) {
+            return { type: 'MultiPolygon', coordinates: p.coordinates };
+          }
           var ring = p.paths.map(function(pt){ return [pt.lng, pt.lat]; });
           var f0 = ring[0], fN = ring[ring.length - 1];
           if (f0[0] !== fN[0] || f0[1] !== fN[1]) ring.push(f0);
-          geometry = { type: 'Polygon', coordinates: [ring] };
+          return { type: 'Polygon', coordinates: [ring] };
         }
 
         // GL renderer (the Testing/ harness pattern): one geojson source, a
@@ -430,7 +455,7 @@ function buildMapHTML(opts: {
         // loaded, and an entry is immutable-by-id, so a single missed attempt
         // used to lose the fill forever. Now: try immediately, re-try on map
         // events, AND poll until it lands (<= 10s).
-        (function(pid, geometry, fill, op, outline, stroke, weight, casing, casingW, casingO){
+        (function(pid, buildGeometry, fill, op, outline, stroke, weight, casing, casingW, casingO){
           var srcId    = 'cov-src-'    + pid;
           var lyrId    = 'cov-fill-'   + pid;
           var casingId = 'cov-casing-' + pid;
@@ -445,6 +470,8 @@ function buildMapHTML(opts: {
               if (!map.addSource || !map.addLayer) { lastErr = 'no addSource/addLayer'; return false; }
               if (map.isStyleLoaded && !map.isStyleLoaded()) { lastErr = 'style not loaded'; return false; }
               if (map.getSource && map.getSource(srcId)) return true;
+              var geometry = buildGeometry();
+              if (!geometry) { lastErr = 'geometry not ready (h3 loading?)'; return false; }
               map.addSource(srcId, {
                 type: 'geojson',
                 data: { type: 'Feature', properties: {}, geometry: geometry },
@@ -498,7 +525,7 @@ function buildMapHTML(opts: {
             if (doAdd()) { clearInterval(entry.glTimer); entry.glTimer = null; report(true); }
             else if (++tries >= 40) { clearInterval(entry.glTimer); entry.glTimer = null; report(false); }
           }, 250);
-        })(p.id, geometry, fill, op, outline, color, weight, casing, casingW, casingO);
+        })(p.id, buildGeometry, fill, op, outline, color, weight, casing, casingW, casingO);
 
         // Legacy border polyline — fallback only for SDK builds without the
         // GL layer APIs (otherwise the line layer above already drew the

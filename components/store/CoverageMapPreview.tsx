@@ -29,7 +29,6 @@ import { DEFAULT_LAT, DEFAULT_LNG } from "../../config/mapplsConfig";
 import {
   fetchCoverageGeometry, CoverageGeometry, LatLng,
 } from "../../services/coverageService";
-import { cellToBoundary } from "../../services/h3";
 import MapplsWebView, { MapPolygon, MapplsWebViewHandle } from "../map/MapplsWebView";
 
 interface CoverageMapPreviewProps {
@@ -107,35 +106,28 @@ export default function CoverageMapPreview({
     // dissolved shape sits on top to define the area edge. The backend omits
     // `cells` for very large areas (districts) — we fall back to the fill.
     if (scope.cells && scope.cells.length) {
-      const hexes: number[][][][] = [];
-      for (const cell of scope.cells) {
-        try {
-          const ring = cellToBoundary(cell, true) as number[][]; // [lng,lat], closed
-          if (ring.length >= 4) hexes.push([ring]);
-        } catch {
-          // skip a malformed cell token — never break the overlay
-        }
-      }
-      if (hexes.length) {
-        return [
-          {
-            id:           `${coverage}-hex`,
-            coordinates:  hexes,
-            fillColor:    colors.primary,
-            fillOpacity:  0.14,
-            strokeColor:  colors.primary,
-            strokeWeight: 1,      // thin hex edges = the honeycomb lattice
-          },
-          {
-            id:           `${coverage}-edge`,
-            coordinates:  scope.multi,
-            fillColor:    colors.primary,
-            fillOpacity:  0,      // boundary only
-            strokeColor:  colors.primary,
-            strokeWeight: 2.5,    // bold area outline over the lattice
-          },
-        ];
-      }
+      return [
+        // Ship the compact H3 cell indexes; the WebView expands them to
+        // hexagons in-page (h3-js). Keeps a whole district's ~17k-cell
+        // honeycomb to ~270 KB of strings instead of ~2.4 MB of pre-expanded
+        // coordinates — the reason Long (r8) now transfers + renders.
+        {
+          id:           `${coverage}-hex`,
+          cells:        scope.cells,
+          fillColor:    colors.primary,
+          fillOpacity:  0.14,
+          strokeColor:  colors.primary,
+          strokeWeight: 1,      // thin hex edges = the honeycomb lattice
+        },
+        {
+          id:           `${coverage}-edge`,
+          coordinates:  scope.multi,
+          fillColor:    colors.primary,
+          fillOpacity:  0,      // boundary only
+          strokeColor:  colors.primary,
+          strokeWeight: 2.5,    // bold area outline over the lattice
+        },
+      ];
     }
 
     // Fallback (large area with no cell list): the dissolved area fill + edge.
