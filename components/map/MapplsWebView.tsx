@@ -94,8 +94,14 @@ export interface MapPolygon {
   fillColor?:    string;      // hex (default Apana Blue)
   fillOpacity?:  number;      // 0–1 (default 0.45, the harness value)
   outlineColor?: string;      // hairline fill-outline-color (default = fill)
-  strokeColor?:  string;      // legacy border colour
-  strokeWeight?: number;      // legacy border px; 0 = no border polyline
+  strokeColor?:  string;      // thin top border colour (the crisp centreline)
+  strokeWeight?: number;      // thin top border px; 0 = no top line
+  // Optional heavier "casing" drawn UNDER the thin line → a cased
+  // (thick + thin) cartographic border on every polygon. Absent / 0 = a
+  // plain single-line border (back-compatible).
+  casingColor?:   string;     // thick underlay colour (default white halo)
+  casingWeight?:  number;     // thick underlay px; 0 = no casing
+  casingOpacity?: number;     // 0–1 (default 0.9)
 }
 
 export interface MapplsWebViewHandle {
@@ -363,10 +369,11 @@ function buildMapHTML(opts: {
     //   3. a closed Polyline tracing the ring (always renders the border)
     function glRemove(entry) {
       try { if (entry.glTimer) clearInterval(entry.glTimer); } catch(e) {}
-      // Line layer must go before the fill layer, both before the source.
-      try { if (entry.glLine && map.getLayer && map.getLayer(entry.glLine)) map.removeLayer(entry.glLine); } catch(e) {}
-      try { if (entry.glLyr && map.getLayer && map.getLayer(entry.glLyr)) map.removeLayer(entry.glLyr); } catch(e) {}
-      try { if (entry.glSrc && map.getSource && map.getSource(entry.glSrc)) map.removeSource(entry.glSrc); } catch(e) {}
+      // Layers before the source; thin line and thick casing before the fill.
+      try { if (entry.glLine   && map.getLayer && map.getLayer(entry.glLine))   map.removeLayer(entry.glLine); } catch(e) {}
+      try { if (entry.glCasing && map.getLayer && map.getLayer(entry.glCasing)) map.removeLayer(entry.glCasing); } catch(e) {}
+      try { if (entry.glLyr    && map.getLayer && map.getLayer(entry.glLyr))    map.removeLayer(entry.glLyr); } catch(e) {}
+      try { if (entry.glSrc    && map.getSource && map.getSource(entry.glSrc))  map.removeSource(entry.glSrc); } catch(e) {}
     }
 
     function renderPolygons(polygons) {
@@ -381,6 +388,7 @@ function buildMapHTML(opts: {
           var stale = polygonMap[id] || {};
           try { stale.fill && stale.fill.remove && stale.fill.remove(); } catch(e) {}
           try { stale.line && stale.line.remove && stale.line.remove(); } catch(e) {}
+          try { stale.casingLine && stale.casingLine.remove && stale.casingLine.remove(); } catch(e) {}
           glRemove(stale);
           delete polygonMap[id];
         }
@@ -396,6 +404,9 @@ function buildMapHTML(opts: {
         var outline = p.outlineColor || fill;
         var color   = p.strokeColor || fill;
         var weight  = (p.strokeWeight != null) ? p.strokeWeight : 0;
+        var casing  = p.casingColor || '#ffffff';
+        var casingW = (p.casingWeight != null) ? p.casingWeight : 0;
+        var casingO = (p.casingOpacity != null) ? p.casingOpacity : 0.9;
         var entry = {};
 
         // GeoJSON geometry — MultiPolygon straight through (holes intact,
@@ -419,13 +430,15 @@ function buildMapHTML(opts: {
         // loaded, and an entry is immutable-by-id, so a single missed attempt
         // used to lose the fill forever. Now: try immediately, re-try on map
         // events, AND poll until it lands (<= 10s).
-        (function(pid, geometry, fill, op, outline, stroke, weight){
-          var srcId  = 'cov-src-'  + pid;
-          var lyrId  = 'cov-fill-' + pid;
-          var lineId = 'cov-line-' + pid;
+        (function(pid, geometry, fill, op, outline, stroke, weight, casing, casingW, casingO){
+          var srcId    = 'cov-src-'    + pid;
+          var lyrId    = 'cov-fill-'   + pid;
+          var casingId = 'cov-casing-' + pid;
+          var lineId   = 'cov-line-'   + pid;
           entry.glSrc = srcId;
           entry.glLyr = lyrId;
-          if (weight > 0) entry.glLine = lineId;
+          if (casingW > 0) entry.glCasing = casingId;
+          if (weight > 0)  entry.glLine   = lineId;
           var lastErr = '';
           function doAdd(){
             try {
@@ -444,10 +457,29 @@ function buildMapHTML(opts: {
                   'fill-outline-color': outline,
                 },
               });
+              // Cased border: thick casing FIRST (drawn underneath), then the
+              // thin crisp line on top. Layers stack in insertion order, so
+              // this order gives the thin line a clean thick halo on every ring.
+              //
+              // MITER joins + BUTT caps (NOT round): the real boundary is an H3
+              // hex staircase; round joins on a thick line smear the hex steps
+              // into a blob (reads as a circle). Miter keeps every corner sharp
+              // so the true district/sub-district structure stays visible.
+              if (casingW > 0) {
+                map.addLayer({
+                  id: casingId, type: 'line', source: srcId,
+                  layout: { 'line-join': 'miter', 'line-cap': 'butt', 'line-miter-limit': 8 },
+                  paint: {
+                    'line-color': casing,
+                    'line-width': casingW,
+                    'line-opacity': casingO,
+                  },
+                });
+              }
               if (weight > 0) {
                 map.addLayer({
                   id: lineId, type: 'line', source: srcId,
-                  layout: { 'line-join': 'round', 'line-cap': 'round' },
+                  layout: { 'line-join': 'miter', 'line-cap': 'butt', 'line-miter-limit': 8 },
                   paint: {
                     'line-color': stroke,
                     'line-width': weight,
@@ -466,24 +498,36 @@ function buildMapHTML(opts: {
             if (doAdd()) { clearInterval(entry.glTimer); entry.glTimer = null; report(true); }
             else if (++tries >= 40) { clearInterval(entry.glTimer); entry.glTimer = null; report(false); }
           }, 250);
-        })(p.id, geometry, fill, op, outline, color, weight);
+        })(p.id, geometry, fill, op, outline, color, weight, casing, casingW, casingO);
 
         // Legacy border polyline — fallback only for SDK builds without the
         // GL layer APIs (otherwise the line layer above already drew the
         // border, and this would double-stroke it).
         var hasGl = !!(map.addSource && map.addLayer);
-        if (!hasGl && weight > 0 && p.paths && p.paths.length) {
+        if (!hasGl && (weight > 0 || casingW > 0) && p.paths && p.paths.length) {
           try {
             var loop = p.paths.slice();
             var a = loop[0], b = loop[loop.length - 1];
             if (a && b && (a.lat !== b.lat || a.lng !== b.lng)) loop.push(a);
-            entry.line = new mappls.Polyline({
-              map:           map,
-              paths:         loop,
-              strokeColor:   color,
-              strokeOpacity: 0.95,
-              strokeWeight:  weight,
-            });
+            // Thick casing first (under), then the thin line on top.
+            if (casingW > 0) {
+              entry.casingLine = new mappls.Polyline({
+                map:           map,
+                paths:         loop,
+                strokeColor:   casing,
+                strokeOpacity: casingO,
+                strokeWeight:  casingW,
+              });
+            }
+            if (weight > 0) {
+              entry.line = new mappls.Polyline({
+                map:           map,
+                paths:         loop,
+                strokeColor:   color,
+                strokeOpacity: 0.95,
+                strokeWeight:  weight,
+              });
+            }
           } catch(e) {}
         }
 

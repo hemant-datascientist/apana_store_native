@@ -2,8 +2,10 @@
 // COVERAGE MAP PREVIEW — Apana Store (Customer App)
 //
 // A REAL Mappls map centred on the customer's LIVE location, marking
-// them as "You", with their coverage area drawn as a FILLED polygon
-// (solid tinted region, no border outline — strokeWeight 0).
+// them as "You", with their coverage area drawn as a TRUE H3 honeycomb —
+// one hexagon per r8 coverage cell (backend `cells`) — under a bold outline
+// of the area edge. Large areas (districts) with no cell list fall back to
+// the dissolved fill.
 // The area comes from the backend (geolocation /customer/stores/coverage
 // → the true sub-district / district from the §19.10 admin partition,
 // the same shape the Testing/ harness renders) — not a synthetic ring.
@@ -27,6 +29,7 @@ import { DEFAULT_LAT, DEFAULT_LNG } from "../../config/mapplsConfig";
 import {
   fetchCoverageGeometry, CoverageGeometry, LatLng,
 } from "../../services/coverageService";
+import { cellToBoundary } from "../../services/h3";
 import MapplsWebView, { MapPolygon, MapplsWebViewHandle } from "../map/MapplsWebView";
 
 interface CoverageMapPreviewProps {
@@ -48,9 +51,10 @@ export default function CoverageMapPreview({
   const { coverage, meta } = useCoverage();
   const mapRef = useRef<MapplsWebViewHandle>(null);
 
-  const [coords, setCoords] = useState<LatLng | null>(null);
-  const [geo, setGeo]       = useState<CoverageGeometry | null>(null);
-  const [mapErr, setErr]    = useState<string | null>(null);
+  const [coords, setCoords]   = useState<LatLng | null>(null);
+  const [geo, setGeo]         = useState<CoverageGeometry | null>(null);
+  const [resolved, setResolved] = useState(false); // BE fetch attempted (loading vs empty)
+  const [mapErr, setErr]      = useState<string | null>(null);
 
   // 1) Resolve the customer's pin. Show the map IMMEDIATELY on the best
   //    pin we already have (saved address → city default) so it never
@@ -83,26 +87,65 @@ export default function CoverageMapPreview({
   useEffect(() => {
     if (!coords) return;
     let cancelled = false;
+    setResolved(false);
     fetchCoverageGeometry(coords.lat, coords.lng)
-      .then((g) => { if (!cancelled) setGeo(g); })
-      .catch(() => { if (!cancelled) setGeo(null); });
+      .then((g) => { if (!cancelled) { setGeo(g); setResolved(true); } })
+      .catch(() => { if (!cancelled) { setGeo(null); setResolved(true); } });
     return () => { cancelled = true; };
   }, [coords]);
 
   // 3) Active scope's area → ONE MultiPolygon overlay (Testing/ harness
-  // polygon system: a single GeoJSON source + MapLibre fill layer with a
-  // hairline fill-outline — solid tinted region, no border polyline).
+  // polygon system: a single GeoJSON source + MapLibre fill layer, plus a
+  // cased border — thick white casing under a thin primary line).
   const polygons: MapPolygon[] = useMemo(() => {
     const scope = geo ? geo[coverage] : null;
-    if (!scope || !scope.multi.length) return [];
+    if (!scope) return [];
+
+    // Preferred: TRUE r8 honeycomb — one hexagon per coverage cell (the real
+    // §19.10 partition the backend ships in `cells`). The hex FILL tiles the
+    // area, the thin hex LINES draw the lattice. A bold outline of the
+    // dissolved shape sits on top to define the area edge. The backend omits
+    // `cells` for very large areas (districts) — we fall back to the fill.
+    if (scope.cells && scope.cells.length) {
+      const hexes: number[][][][] = [];
+      for (const cell of scope.cells) {
+        try {
+          const ring = cellToBoundary(cell, true) as number[][]; // [lng,lat], closed
+          if (ring.length >= 4) hexes.push([ring]);
+        } catch {
+          // skip a malformed cell token — never break the overlay
+        }
+      }
+      if (hexes.length) {
+        return [
+          {
+            id:           `${coverage}-hex`,
+            coordinates:  hexes,
+            fillColor:    colors.primary,
+            fillOpacity:  0.14,
+            strokeColor:  colors.primary,
+            strokeWeight: 1,      // thin hex edges = the honeycomb lattice
+          },
+          {
+            id:           `${coverage}-edge`,
+            coordinates:  scope.multi,
+            fillColor:    colors.primary,
+            fillOpacity:  0,      // boundary only
+            strokeColor:  colors.primary,
+            strokeWeight: 2.5,    // bold area outline over the lattice
+          },
+        ];
+      }
+    }
+
+    // Fallback (large area with no cell list): the dissolved area fill + edge.
+    if (!scope.multi.length) return [];
     return [{
       id:           coverage,
       coordinates:  scope.multi,
       fillColor:    colors.primary,
-      fillOpacity:  0.32,
+      fillOpacity:  0.28,
       outlineColor: colors.primary,
-      // Border: a GL line layer over the same shape (fill-outline-color
-      // alone is a 1 px hairline and reads as no border at all).
       strokeColor:  colors.primary,
       strokeWeight: 2.5,
     }];
@@ -121,11 +164,13 @@ export default function CoverageMapPreview({
   const areaName = scope?.name;
   const caption  = mapErr
     ? mapErr
-    : !geo
+    : !resolved
       ? "Loading your coverage area…"
-      : areaName
-        ? `Showing ${areaName} · your ${meta.scopeWord}`
-        : `Approximate ${meta.scopeWord} coverage · connect for your exact area`;
+      : !geo
+        ? `Coverage area unavailable · connect to see your ${meta.scopeWord}`
+        : areaName
+          ? `Showing ${areaName} · your ${meta.scopeWord}`
+          : `Your ${meta.scopeWord} · area name unavailable`;
 
   return (
     <View style={styles.wrap}>
@@ -155,9 +200,9 @@ export default function CoverageMapPreview({
       {/* Scope caption */}
       <View style={styles.captionRow}>
         <Ionicons
-          name={mapErr ? "alert-circle-outline" : "navigate-circle-outline"}
+          name={mapErr ? "alert-circle-outline" : (resolved && !geo) ? "cloud-offline-outline" : "navigate-circle-outline"}
           size={13}
-          color={mapErr ? colors.danger : colors.primary}
+          color={mapErr ? colors.danger : (resolved && !geo) ? colors.subText : colors.primary}
         />
         <Text
           numberOfLines={1}

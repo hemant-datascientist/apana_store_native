@@ -14,13 +14,12 @@
 //   map polygon, giving the customer their true admin-area shape.
 //
 // Mode gate (same as services/api/client.ts):
-//   local|prod → real fetch; on failure DEGRADE to a local outline so
-//                the map is never blank (flagged source:"local").
-//   mock       → a local H3 outline around the pin. Names stay null
-//                (§19.8 — never invent an area label we didn't resolve).
+//   local|prod → real fetch from the backend geolocation module.
+//   mock / no backend / fetch failure → NOTHING (returns null). We never
+//                fabricate a coverage shape around the pin — empty means
+//                empty (§19.8). The map still renders with the "You" dot;
+//                there is simply no polygon until the backend resolves one.
 // ============================================================
-
-import { latLngToCell, cellToParent, cellsToMultiPolygon, gridDisk, H3_RES } from "./h3";
 
 const API_MODE = process.env.EXPO_PUBLIC_API_MODE ?? "mock";
 const TOWER_IP = process.env.EXPO_PUBLIC_TOWER_IP ?? "10.153.78.94";
@@ -45,6 +44,10 @@ export interface CoverageScopeGeo {
   // source has them) — the same shape language the Testing/ harness renders
   // through a single MapLibre fill layer. Preferred by the map.
   multi: number[][][][];
+  // Raw r8 coverage cells (H3 indexes) — the TRUE partition. When present the
+  // map draws a honeycomb (one hexagon per cell). Omitted by the backend for
+  // very large areas, where the map falls back to the dissolved `multi`.
+  cells?: string[];
 }
 
 export interface CoverageGeometry {
@@ -56,7 +59,7 @@ export interface CoverageGeometry {
   };
   nearest: CoverageScopeGeo;
   long:    CoverageScopeGeo;
-  source:  "backend" | "local"; // honest provenance for the UI caption
+  source:  "backend"; // coverage geometry is backend-only (never fabricated)
 }
 
 // ── BE wire shape ─────────────────────────────────────────────
@@ -68,6 +71,7 @@ interface WireScope {
   res:    number;
   rings:  Ring[];
   multi?: number[][][][];
+  cells?: string[];
 }
 interface WireCoverage {
   center: LatLng;
@@ -101,12 +105,14 @@ function fromWire(w: WireCoverage): CoverageGeometry {
       res:   w.nearest.res,
       rings: nearestRings,
       multi: w.nearest.multi?.length ? w.nearest.multi : ringsToMulti(nearestRings),
+      cells: w.nearest.cells,
     },
     long: {
       name:  w.long.name,
       res:   w.long.res,
       rings: longRings,
       multi: w.long.multi?.length ? w.long.multi : ringsToMulti(longRings),
+      cells: w.long.cells,
     },
     source:  "backend",
   };
@@ -128,65 +134,20 @@ async function fetchLive(lat: number, lng: number): Promise<CoverageGeometry> {
   }
 }
 
-// ── Mock / offline (local H3 outline around the pin) ──────────
-// A k-ring of cells around the pin, traced to a single outline polygon —
-// the same SHAPE language as the real area, just an approximation around
-// the customer instead of the true admin border. Names stay null so the
-// UI labels it honestly as approximate (§19.8).
-const NEAREST_RES = 7;
-const LONG_RES    = 6;
-
-function localScope(lat: number, lng: number, res: number, k: number): CoverageScopeGeo {
-  const rings: Ring[] = [];
-  let multi: number[][][][] = [];
-  try {
-    const center = cellToParent(latLngToCell(lat, lng, H3_RES.HOT), res);
-    const cells  = gridDisk(center, k);
-    // geojson mode: [lng,lat] closed loops, holes preserved — exactly what
-    // the Testing/ harness feeds its MapLibre fill layer.
-    multi = cellsToMultiPolygon(cells, true) as number[][][][];
-    for (const poly of multi) {
-      const outer = poly[0];
-      if (outer && outer.length) {
-        rings.push(outer.map(([ln, la]) => ({ lat: la, lng: ln })));
-      }
-    }
-  } catch {
-    // h3 hiccup — return an empty shape; the map + marker still render
-  }
-  return { name: null, res, rings, multi };
-}
-
-// Offline/mock = an honest H3 approximation around the pin, anywhere in
-// India. The REAL admin shapes (all states) live backend-side only
-// (location_db.area_geometry) — no admin geometry is bundled in the app,
-// so the FE carries no backend work and no single-state special case.
-function fetchMock(lat: number, lng: number): CoverageGeometry {
-  return {
-    center:  { lat, lng },
-    area:    { subdistrict: null, district: null, state: null },
-    nearest: localScope(lat, lng, NEAREST_RES, 2),
-    long:    localScope(lat, lng, LONG_RES, 3),
-    source:  "local",
-  };
-}
-
 // ── Public entry — single swap surface ────────────────────────
-// Live mode tries the backend first; if it's unreachable or the route
-// isn't deployed yet, we DEGRADE to the local H3 approximation rather
-// than leaving the map blank — the customer always sees their coverage
-// shape, and the `source: "local"` flag lets the UI label it honestly
-// as approximate (vs the true admin area the backend returns).
+// The coverage shape is BACKEND TRUTH only. Without a live backend — mock
+// mode, an unreachable API, or a route that isn't deployed — we return
+// null. The map still renders (centred on the pin, with the "You" dot), but
+// no polygon is drawn: we never trace a fake ring around the customer to
+// fill the space (§19.8 — empty means empty).
 export async function fetchCoverageGeometry(
   lat: number,
   lng: number,
-): Promise<CoverageGeometry> {
-  if (IS_LIVE) {
-    try {
-      return await fetchLive(lat, lng);
-    } catch {
-      return fetchMock(lat, lng);
-    }
+): Promise<CoverageGeometry | null> {
+  if (!IS_LIVE) return null;
+  try {
+    return await fetchLive(lat, lng);
+  } catch {
+    return null;
   }
-  return fetchMock(lat, lng);
 }
