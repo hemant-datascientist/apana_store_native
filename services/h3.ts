@@ -28,12 +28,11 @@ import {
   isValidCell,
 } from "h3-js";
 
-// Standard Apana resolutions — mirror @apana/geo on backend.
+// The single Apana resolution — mirror @apana/geo on backend. r8 ONLY:
+// one grid for the partition, store/partner cell, discovery and ETA.
+// Precision comes from lat/lng + Mappls DIGIPIN, not a finer hex.
 export const H3_RES = {
-  HOT:        9,  // store hot-index, partner marker snap
-  DISCOVERY:  8,  // map view bucket
-  CITY:       7,
-  REGION:     6,
+  DISCOVERY: 8,  // ~460 m — THE grid
 } as const;
 
 export type H3Resolution = typeof H3_RES[keyof typeof H3_RES];
@@ -49,12 +48,12 @@ export {
   isValidCell,
 };
 
-// Hot-path cell for a lat/lng (R9 ~150m).
+// The r8 index cell for a lat/lng.
 export function cellHot(lat: number, lng: number): string {
-  return latLngToCell(lat, lng, H3_RES.HOT);
+  return latLngToCell(lat, lng, H3_RES.DISCOVERY);
 }
 
-// K=2 ring for q-commerce default nearby lookup (~19 cells, ~600m diameter).
+// K=2 ring for q-commerce default nearby lookup (19 cells, ~2 km across at r8).
 export function ringHot(cell: string, k: number = 2): string[] {
   return gridDisk(cell, k);
 }

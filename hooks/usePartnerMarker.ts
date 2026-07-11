@@ -137,8 +137,8 @@ export function usePartnerMarker(fix: PartnerFix | null): MarkerState | null {
       let next: MarkerState;
 
       if (ageMs > STALE_MS) {
-        // GPS dead — snap to the last known cell, do not drift.
-        const [cLat, cLng] = cellToLatLng(latLngToCell(base.lat, base.lng, H3_RES.HOT));
+        // GPS dead — snap to the last known r8 cell, do not drift.
+        const [cLat, cLng] = cellToLatLng(latLngToCell(base.lat, base.lng, H3_RES.DISCOVERY));
         next = { lat: cLat, lng: cLng, mode: "stale" };
       } else if (base.speedMps && base.speedMps > 0) {
         // Reckon forward along the last bearing at the last speed.
