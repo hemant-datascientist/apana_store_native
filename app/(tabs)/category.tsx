@@ -23,6 +23,7 @@ import {
   DiscoveryMode,
 } from "../../data/homeData";
 import { CATEGORY_GROUPS, STORE_TYPES, CategoryGroup } from "../../data/categoryData";
+import { apcForTile } from "../../data/categoryApcMap";
 import HomeHeader      from "../../components/tabs/home/HomeHeader";
 import HomeSearchBar   from "../../components/tabs/home/HomeSearchBar";
 import DiscoveryToggle from "../../components/tabs/home/DiscoveryToggle";
@@ -58,15 +59,22 @@ export default function CategoryScreen() {
     ({ item: group }: ListRenderItemInfo<CategoryGroup>) => (
       <CategorySection
         group={group}
-        onPress={(_groupKey, subKey) =>
-          Alert.alert(
-            group.title,
-            `"${group.subs.find(s => s.key === subKey)?.label}" coming soon.`
-          )
-        }
+        onPress={(_groupKey, subKey) => {
+          // Merchandising tile -> real §27 classification. A mapped tile opens
+          // its APC class directly; an unmapped one (store-type tiles, a handful
+          // of niche ones) falls back to search, which surfaces the APC category
+          // strip — so a tap is never a dead end.
+          const code = apcForTile(subKey);
+          if (code) {
+            router.push(`/(apc)/${code}` as any);
+            return;
+          }
+          const label = group.subs.find(s => s.key === subKey)?.label ?? "";
+          router.push(`/search-results?q=${encodeURIComponent(label)}` as any);
+        }}
       />
     ),
-    [],
+    [router],
   );
 
   return (
