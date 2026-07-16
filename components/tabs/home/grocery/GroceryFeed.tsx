@@ -9,6 +9,7 @@
 
 import React from "react";
 import { View, Alert, StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
 import BannerCarousel   from "../BannerCarousel";
 import GroceryCategoryGrid from "./GroceryCategoryGrid";
 import GroceryProductGrid  from "./GroceryProductGrid";
@@ -18,10 +19,20 @@ import {
   GrocerySubCategory,
 } from "../../../../data/groceryData";
 import { CATEGORY_FEEDS } from "../../../../data/categoryFeedData";
+import { apcForTile } from "../../../../data/categoryApcMap";
 
 export default function GroceryFeed() {
+  const router = useRouter();
+
+  // Same bridge as the Category tab: a mapped tile opens its APC class; anything
+  // unmapped falls back to search (which shows the APC category strip).
   function handleSubCategory(cat: GrocerySubCategory) {
-    Alert.alert(cat.label, `${cat.label} product list coming soon.`);
+    const code = apcForTile(cat.key);
+    if (code) {
+      router.push(`/(apc)/${code}` as never);
+      return;
+    }
+    router.push(`/search-results?q=${encodeURIComponent(cat.label)}` as never);
   }
 
   return (

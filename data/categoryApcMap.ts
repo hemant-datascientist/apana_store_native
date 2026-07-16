@@ -163,6 +163,19 @@ export const CATEGORY_APC: Record<string, string> = {
   paper: "APC-BOOK",
   filing: "APC-BOOK",
   art_supplies: "APC-ART",
+
+  // ── Home-feed grocery quick-grid (data/groceryData.ts) ───
+  // Its own key set (distinct from the tiles above). dairy / masala / chocolates
+  // are intentionally omitted — already mapped above to the same class.
+  vegetables: "APC-VEG",
+  fruits: "APC-FRT",
+  dryfruits: "APC-DRYF",
+  pulses: "APC-STPL",
+  snacks: "APC-NMK",
+  oil: "APC-OIL",
+  kitchen: "APC-KTCH",
+  drinks: "APC-BEV",
+  dairyprod: "APC-DAI",
 };
 
 /** APC class code for a tile, or null if it has no product mapping. */
