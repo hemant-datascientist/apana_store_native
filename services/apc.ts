@@ -136,3 +136,42 @@ export async function searchTree(q: string, limit = 30): Promise<ApcTreeNode[]> 
     )
   ).items;
 }
+
+// ── Curated category search (/apc/search) ───────────────────
+// Distinct from the tree search: /apc/search returns the curated
+// class → family → variety hits in that order, each with icon_emoji +
+// image_url. That ordering is the whole point of the Blinkit-style strip —
+// typing "Biscuits" surfaces the tappable CATEGORY (🍪) above the products,
+// not buried among them.
+export interface ApcSearchHit {
+  level: "class" | "family" | "variety";
+  code: string;
+  name: string;
+  class_code: string | null;
+  icon_emoji: string | null;
+  image_url: string | null;
+}
+
+export async function searchApcCategories(q: string, limit = 8): Promise<ApcSearchHit[]> {
+  const query = q.trim();
+  if (query.length < 2) return [];
+  const { items } = await getJson<{ items: ApcSearchHit[] }>(
+    `/search?q=${encodeURIComponent(query)}&limit=${limit}`,
+  );
+  // Classes + families are browsable CATEGORY tiles; a variety is a single
+  // product and belongs in the product results, not the category strip.
+  return items.filter((h) => h.level !== "variety");
+}
+
+// image_url is BE-relative ("assets/fruits/mango.webp") — resolve to absolute.
+export function hitImage(h: ApcSearchHit): string | null {
+  const u = h.image_url;
+  if (!u) return null;
+  if (/^https?:\/\//i.test(u)) return u;
+  return `${API_ORIGIN}${u.startsWith("/") ? "" : "/"}${u}`;
+}
+
+// Glyph fallback: the family's own emoji, else a neutral tile. image wins first.
+export function hitGlyph(h: ApcSearchHit): string {
+  return h.icon_emoji ?? "▦";
+}

@@ -41,6 +41,8 @@ import {
 
 import SearchResultsHeader from "../../components/search-results/SearchResultsHeader";
 import SearchResultsTabs, { SearchTab } from "../../components/search-results/SearchResultsTabs";
+import ApcCategoryStrip from "../../components/search-results/ApcCategoryStrip";
+import { searchApcCategories, type ApcSearchHit } from "../../services/apc";
 import SearchSortBar       from "../../components/search-results/SearchSortBar";
 import SearchProductCard   from "../../components/search-results/SearchProductCard";
 import SearchStoreCard     from "../../components/search-results/SearchStoreCard";
@@ -62,8 +64,12 @@ export default function SearchResultsScreen() {
   const [sort,     setSort]     = useState<SearchSort>("relevance");
 
   // ── Results state (driven by the service) ─────────────────
-  const [products, setProducts] = useState<SearchProductResult[]>([]);
-  const [stores,   setStores]   = useState<SearchStoreResult[]>([]);
+  const [products,   setProducts]   = useState<SearchProductResult[]>([]);
+  const [stores,     setStores]     = useState<SearchStoreResult[]>([]);
+  // Matching APC categories (class + family) for the Blinkit-style strip. Kept
+  // separate from products: it queries the taxonomy (/apc/search), not the
+  // product index, and it does not depend on the sort order.
+  const [categories, setCategories] = useState<ApcSearchHit[]>([]);
   // Start in loading state if we already have a query — otherwise
   // the empty state would briefly flash during the debounce window.
   const [loading,  setLoading]  = useState(qParam.trim().length > 0);
@@ -112,6 +118,20 @@ export default function SearchResultsScreen() {
     };
   }, [query, sort, runSearch]);
 
+  // APC category lookup — debounced, query-only. Failure is silent: the strip
+  // just stays empty (no phantom categories, §19.8), products still render.
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) { setCategories([]); return; }
+    let cancelled = false;
+    const t = setTimeout(() => {
+      searchApcCategories(q)
+        .then((hits) => { if (!cancelled) setCategories(hits); })
+        .catch(() => { if (!cancelled) setCategories([]); });
+    }, DEBOUNCE_MS);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [query]);
+
   // ── Handlers ─────────────────────────────────────────────
   const handleProductPress = useCallback((id: string) => {
     router.push(`/product-detail?id=${id}` as any);
@@ -148,7 +168,10 @@ export default function SearchResultsScreen() {
   // ── Content state flags ───────────────────────────────────
   const isBlankQuery = query.trim().length === 0;
   const hasResults   = tab === "products" ? products.length > 0 : stores.length > 0;
-  const showEmpty    = !loading && !fetchErr && !hasResults;
+  // A matched category counts as a result: "Biscuits" with no product hits should
+  // still show the Biscuits tile, not the empty state.
+  const hasCategories = tab === "products" && categories.length > 0;
+  const showEmpty     = !loading && !fetchErr && !hasResults && !hasCategories;
 
   // ── Render ────────────────────────────────────────────────
   return (
@@ -220,13 +243,15 @@ export default function SearchResultsScreen() {
         </ScrollView>
       )}
 
-      {/* ── Products 2-column grid ── */}
-      {!loading && !fetchErr && tab === "products" && products.length > 0 && (
+      {/* ── Categories strip + Products 2-column grid ── */}
+      {!loading && !fetchErr && tab === "products" && (products.length > 0 || categories.length > 0) && (
         <ScrollView
           contentContainerStyle={styles.gridContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Blinkit-style: matched categories on top (returns null if none). */}
+          <ApcCategoryStrip hits={categories} />
           {productRows.map((row, ri) => (
             <View key={ri} style={styles.gridRow}>
               {row.map(p => (
