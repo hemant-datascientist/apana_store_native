@@ -109,7 +109,7 @@ export default function RateStoreSheet({
 }
 
 const styles = StyleSheet.create({
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.45)" },
+  backdrop: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.45)" },
   dock: { flex: 1, justifyContent: "flex-end" },
   sheet: {
     borderTopLeftRadius: 22, borderTopRightRadius: 22, borderWidth: 1,

@@ -124,6 +124,7 @@ export default function OfferZoneScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  scroll: { paddingBottom: 24 },
 
   // Header
   header: {},

@@ -149,11 +149,13 @@ export default function OrderTrackingScreen() {
     const vis    = encodeURIComponent(visitedJson || "[]");
     const seq    = encodeURIComponent(sequenceJson || JSON.stringify(orderedStores.map(s => s.storeId)));
     router.push(
-      `/order-qr?mode=${mode}&orderId=${orderId}&total=${total}` +
+      // Concatenated query string — expo-router's typed Href can't infer a
+      // built-up string, so cast (same convention as the other dynamic pushes).
+      (`/order-qr?mode=${mode}&orderId=${orderId}&total=${total}` +
       `&storeOrdersJson=${single}` +
       `&trackingStoreOrdersJson=${ctx}` +
       `&trackingVisitedJson=${vis}` +
-      `&trackingSequenceJson=${seq}`,
+      `&trackingSequenceJson=${seq}`) as never,
     );
   }, [mode, orderId, total, storeOrdersJson, visitedJson, sequenceJson, orderedStores, router]);
 

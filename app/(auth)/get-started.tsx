@@ -73,7 +73,7 @@ export default function GetStartedScreen() {
         </ScrollView>
 
         {/* ── Dot page indicators ── */}
-        <DotIndicators total={ONBOARDING_SLIDES.length} activeIndex={slideIdx} />
+        <DotIndicators total={ONBOARDING_SLIDES.length} activeIdx={slideIdx} />
       </View>
 
       {/* ── CTA buttons + terms ── */}

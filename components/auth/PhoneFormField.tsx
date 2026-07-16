@@ -66,9 +66,10 @@ export default function PhoneFormField({ value, onChange, error, inputRef, onSub
         <TextInput
           ref={inputRef as RefObject<TextInput>}
           style={[styles.input, {
-            color:      colors.text,
-            fontFamily: typography.fontFamily.regular,
-            fontSize:   typography.size.md - 1,
+            color:         colors.text,
+            fontFamily:    typography.fontFamily.regular,
+            fontSize:      typography.size.md - 1,
+            letterSpacing: 0.5,
           }]}
           placeholder="Enter mobile number"
           placeholderTextColor={colors.subText}
@@ -78,7 +79,6 @@ export default function PhoneFormField({ value, onChange, error, inputRef, onSub
           onChangeText={onChange}
           returnKeyType="done"
           onSubmitEditing={onSubmit}
-          letterSpacing={0.5}
         />
 
         {/* Clear button */}
