@@ -20,7 +20,7 @@ import * as Haptics from "expo-haptics";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { useCart } from "../../context/CartContext";
-import { getProductById } from "../../data/productDetailData";
+import { getProductById, ProductSeller } from "../../data/productDetailData";
 
 import ProductImageCarousel  from "../../components/product-detail/ProductImageCarousel";
 import ProductPriceBlock     from "../../components/product-detail/ProductPriceBlock";
@@ -31,6 +31,7 @@ import ProductHighlights      from "../../components/product-detail/ProductHighl
 import ProductSpecifications  from "../../components/product-detail/ProductSpecifications";
 import ProductReviews         from "../../components/product-detail/ProductReviews";
 import ProductDeliveryInfo    from "../../components/product-detail/ProductDeliveryInfo";
+import ProductSellers         from "../../components/product-detail/ProductSellers";
 import ProductSimilar         from "../../components/product-detail/ProductSimilar";
 import ProductBottomBar       from "../../components/product-detail/ProductBottomBar";
 
@@ -88,6 +89,30 @@ export default function ProductDetailScreen() {
       });
     }
   }, [qty, product, addItem]);
+
+  // ── Add from a specific seller ────────────────────────────
+  // Each seller is its own cart line: their store, their price.
+  // "both" means delivery + pickup are offered — cart defaults to delivery.
+  const handleAddFromSeller = useCallback((seller: ProductSeller) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    addItem({
+      storeId:        seller.storeId,
+      storeName:      seller.storeName,
+      storeType:      seller.storeType,
+      storeTypeColor: seller.storeTypeColor,
+      storeTypeBg:    seller.storeTypeBg,
+      fulfillment:    seller.fulfillment === "pickup" ? "pickup" : "delivery",
+      item: {
+        id:    product.id,
+        name:  product.name,
+        price: seller.price,
+        qty:   1,
+        unit:  product.unit,
+        icon:  product.cartIcon,
+        bg:    product.cartBg,
+      },
+    });
+  }, [product, addItem]);
 
   // ── Buy Now ───────────────────────────────────────────────
   function handleBuyNow() {
@@ -187,6 +212,14 @@ export default function ProductDetailScreen() {
           storeTypeColor={product.storeTypeColor}
           storeTypeBg={product.storeTypeBg}
         />
+
+        {product.sellers.length > 0 && (
+          <ProductSellers
+            sellers={product.sellers}
+            onAdd={handleAddFromSeller}
+            onSelect={s => router.push(`/store-detail?id=${s.storeId}`)}
+          />
+        )}
 
         {product.reviews.length > 0 && (
           <ProductReviews

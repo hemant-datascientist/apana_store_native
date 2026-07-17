@@ -81,6 +81,28 @@ export interface SimilarProduct {
   icon:   string;   // Ionicons glyph
 }
 
+// ── A seller offering THIS product (multi-seller marketplace) ──
+// Core Apana model: one product (APC / barcode) is stocked by many
+// nearby sellers, each with their own price, stock, ETA and distance.
+// The customer picks — list is always sorted Nearest → Far.
+export interface ProductSeller {
+  id:             string;
+  storeId:        string;
+  storeName:      string;
+  storeType:      string;
+  storeTypeColor: string;
+  storeTypeBg:    string;
+  distanceKm:     number;   // straight-line distance, ascending in the list
+  etaMins:        number;   // delivery ETA in minutes
+  price:          number;   // this seller's price (varies per seller)
+  mrp:            number;
+  inStock:        boolean;
+  stockCount:     number;
+  rating:         number;   // 0.0–5.0
+  reviewCount:    number;
+  fulfillment:    "delivery" | "pickup" | "both";
+}
+
 // ── Full product detail ────────────────────────────────────────
 export interface ProductDetail {
   id:               string;
@@ -114,6 +136,7 @@ export interface ProductDetail {
   freeDeliveryAbove: number;
   returnDays:       number;
   isCodAvailable:   boolean;
+  sellers:          ProductSeller[];   // Nearest → Far. Includes the primary store.
   similarProducts:  SimilarProduct[];
 }
 
@@ -225,6 +248,12 @@ export const MOCK_PRODUCTS: ProductDetail[] = [
     freeDeliveryAbove: 199,
     returnDays:        2,
     isCodAvailable:    true,
+    sellers: [
+      { id: "ps1a", storeId: "s1", storeName: "Sharma General Store", storeType: "Grocery",     storeTypeColor: "#166534", storeTypeBg: "#DCFCE7", distanceKm: 0.4, etaMins: 12, price: 89, mrp: 120, inStock: true, stockCount: 45, rating: 4.3, reviewCount: 218, fulfillment: "both"     },
+      { id: "ps1b", storeId: "s7", storeName: "Apna Kirana Bazaar",   storeType: "Grocery",     storeTypeColor: "#166534", storeTypeBg: "#DCFCE7", distanceKm: 0.9, etaMins: 18, price: 85, mrp: 120, inStock: true, stockCount: 30, rating: 4.1, reviewCount: 96,  fulfillment: "delivery" },
+      { id: "ps1c", storeId: "s8", storeName: "FreshMart Supermarket", storeType: "Supermarket", storeTypeColor: "#1E3A5F", storeTypeBg: "#DBEAFE", distanceKm: 1.6, etaMins: 24, price: 92, mrp: 125, inStock: true, stockCount: 60, rating: 4.5, reviewCount: 402, fulfillment: "delivery" },
+      { id: "ps1d", storeId: "s9", storeName: "Green Basket Organics", storeType: "Organic",     storeTypeColor: "#166534", storeTypeBg: "#DCFCE7", distanceKm: 2.7, etaMins: 33, price: 99, mrp: 130, inStock: true, stockCount: 20, rating: 4.6, reviewCount: 150, fulfillment: "both"     },
+    ],
     similarProducts: [
       { id: "p6",  name: "Alphonso Mangoes",    price: 149, mrp: 199, rating: 4.5, color: "#FFF7ED", icon: "nutrition-outline"   },
       { id: "p7",  name: "Fresh Bananas",       price: 39,  mrp: 55,  rating: 4.2, color: "#FEF9C3", icon: "leaf-outline"        },
@@ -321,6 +350,12 @@ export const MOCK_PRODUCTS: ProductDetail[] = [
     freeDeliveryAbove: 499,
     returnDays:        7,
     isCodAvailable:    false,
+    sellers: [
+      { id: "ps2a", storeId: "s2",  storeName: "TechZone Electronics", storeType: "Electronics", storeTypeColor: "#1E3A5F", storeTypeBg: "#DBEAFE", distanceKm: 1.1, etaMins: 35, price: 1299, mrp: 2499, inStock: true, stockCount: 12, rating: 4.1, reviewCount: 543, fulfillment: "delivery" },
+      { id: "ps2b", storeId: "s10", storeName: "Digital World",        storeType: "Electronics", storeTypeColor: "#1E3A5F", storeTypeBg: "#DBEAFE", distanceKm: 2.3, etaMins: 45, price: 1249, mrp: 2499, inStock: true, stockCount: 8,  rating: 4.0, reviewCount: 210, fulfillment: "both"     },
+      { id: "ps2c", storeId: "s11", storeName: "Gadget Point",         storeType: "Electronics", storeTypeColor: "#1E3A5F", storeTypeBg: "#DBEAFE", distanceKm: 3.4, etaMins: 55, price: 1349, mrp: 2599, inStock: true, stockCount: 15, rating: 4.3, reviewCount: 178, fulfillment: "delivery" },
+      { id: "ps2d", storeId: "s12", storeName: "SmartBuy Mobiles",     storeType: "Mobile Store", storeTypeColor: "#4338CA", storeTypeBg: "#E0E7FF", distanceKm: 4.8, etaMins: 70, price: 1399, mrp: 2699, inStock: false, stockCount: 0, rating: 4.4, reviewCount: 320, fulfillment: "delivery" },
+    ],
     similarProducts: [
       { id: "p10", name: "BassMax Earphones",   price: 799,  mrp: 1299, rating: 3.9, color: "#1E3A5F", icon: "headset-outline"        },
       { id: "p11", name: "SoundCore BT Speaker",price: 1599, mrp: 2299, rating: 4.3, color: "#1E3A5F", icon: "volume-high-outline"     },
@@ -421,6 +456,11 @@ export const MOCK_PRODUCTS: ProductDetail[] = [
     freeDeliveryAbove: 499,
     returnDays:        15,
     isCodAvailable:    true,
+    sellers: [
+      { id: "ps3a", storeId: "s4",  storeName: "Style Hub Fashion",  storeType: "Fashion", storeTypeColor: "#6D28D9", storeTypeBg: "#EDE9FE", distanceKm: 1.4, etaMins: 40, price: 549, mrp: 999,  inStock: true, stockCount: 8,  rating: 4.0, reviewCount: 312, fulfillment: "both"     },
+      { id: "ps3b", storeId: "s13", storeName: "Ethnic Junction",    storeType: "Fashion", storeTypeColor: "#6D28D9", storeTypeBg: "#EDE9FE", distanceKm: 2.6, etaMins: 55, price: 529, mrp: 999,  inStock: true, stockCount: 12, rating: 4.2, reviewCount: 145, fulfillment: "delivery" },
+      { id: "ps3c", storeId: "s14", storeName: "Trendz Apparel",     storeType: "Fashion", storeTypeColor: "#6D28D9", storeTypeBg: "#EDE9FE", distanceKm: 3.9, etaMins: 65, price: 579, mrp: 1049, inStock: true, stockCount: 20, rating: 3.9, reviewCount: 88,  fulfillment: "delivery" },
+    ],
     similarProducts: [
       { id: "p13", name: "Linen Nehru Jacket", price: 799,  mrp: 1499, rating: 4.2, color: "#EDE9FE", icon: "shirt-outline"       },
       { id: "p14", name: "Casual Polo T-Shirt",price: 349,  mrp: 599,  rating: 3.8, color: "#DBEAFE", icon: "shirt-outline"       },
@@ -510,6 +550,12 @@ export const MOCK_PRODUCTS: ProductDetail[] = [
     freeDeliveryAbove: 299,
     returnDays:        0,
     isCodAvailable:    true,
+    sellers: [
+      { id: "ps4a", storeId: "s3",  storeName: "Gupta Medical Store", storeType: "Pharmacy", storeTypeColor: "#0F5132", storeTypeBg: "#DCFCE7", distanceKm: 0.6, etaMins: 15, price: 349, mrp: 499, inStock: true, stockCount: 30, rating: 4.6, reviewCount: 892,  fulfillment: "both"     },
+      { id: "ps4b", storeId: "s15", storeName: "Apollo Pharmacy",     storeType: "Pharmacy", storeTypeColor: "#0F5132", storeTypeBg: "#DCFCE7", distanceKm: 1.2, etaMins: 20, price: 339, mrp: 499, inStock: true, stockCount: 50, rating: 4.7, reviewCount: 1240, fulfillment: "delivery" },
+      { id: "ps4c", storeId: "s16", storeName: "Wellness Chemist",    storeType: "Pharmacy", storeTypeColor: "#0F5132", storeTypeBg: "#DCFCE7", distanceKm: 2.1, etaMins: 30, price: 359, mrp: 519, inStock: true, stockCount: 25, rating: 4.4, reviewCount: 210,  fulfillment: "both"     },
+      { id: "ps4d", storeId: "s17", storeName: "MedPlus",             storeType: "Pharmacy", storeTypeColor: "#0F5132", storeTypeBg: "#DCFCE7", distanceKm: 3.0, etaMins: 40, price: 345, mrp: 499, inStock: true, stockCount: 40, rating: 4.5, reviewCount: 560,  fulfillment: "delivery" },
+    ],
     similarProducts: [
       { id: "p16", name: "Omega-3 Fish Oil",   price: 449, mrp: 599, rating: 4.4, color: "#DBEAFE", icon: "water-outline"    },
       { id: "p17", name: "Multivitamin Daily",  price: 299, mrp: 449, rating: 4.1, color: "#DCFCE7", icon: "fitness-outline"  },
@@ -598,6 +644,11 @@ export const MOCK_PRODUCTS: ProductDetail[] = [
     freeDeliveryAbove: 199,
     returnDays:        0,
     isCodAvailable:    false,
+    sellers: [
+      { id: "ps5a", storeId: "s5",  storeName: "Fresh Bakes",      storeType: "Bakery", storeTypeColor: "#92400E", storeTypeBg: "#FEF3C7", distanceKm: 0.8, etaMins: 20, price: 149, mrp: 180, inStock: true, stockCount: 6,  rating: 4.7, reviewCount: 156, fulfillment: "both"     },
+      { id: "ps5b", storeId: "s18", storeName: "The Artisan Oven", storeType: "Bakery", storeTypeColor: "#92400E", storeTypeBg: "#FEF3C7", distanceKm: 1.9, etaMins: 30, price: 159, mrp: 190, inStock: true, stockCount: 10, rating: 4.8, reviewCount: 240, fulfillment: "delivery" },
+      { id: "ps5c", storeId: "s19", storeName: "Daily Bread Co.",  storeType: "Bakery", storeTypeColor: "#92400E", storeTypeBg: "#FEF3C7", distanceKm: 2.5, etaMins: 38, price: 139, mrp: 175, inStock: true, stockCount: 4,  rating: 4.5, reviewCount: 98,  fulfillment: "both"     },
+    ],
     similarProducts: [
       { id: "p19", name: "Multigrain Loaf",     price: 129, mrp: 160, rating: 4.5, color: "#FEF3C7", icon: "restaurant-outline" },
       { id: "p20", name: "Croissant (4 pcs)",   price: 120, mrp: 149, rating: 4.6, color: "#FED7AA", icon: "cafe-outline"       },
