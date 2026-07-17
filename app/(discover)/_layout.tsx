@@ -20,6 +20,7 @@ export default function DiscoverLayout() {
       <Stack.Screen name="brands"          />
       <Stack.Screen name="offer-zone"      />
       <Stack.Screen name="new-launchers"   />
+      <Stack.Screen name="live-products"   />
     </Stack>
   );
 }
