@@ -12,10 +12,9 @@ import { View, Alert, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import BannerCarousel   from "../BannerCarousel";
 import GroceryCategoryGrid from "./GroceryCategoryGrid";
-import GroceryProductGrid  from "./GroceryProductGrid";
+import CategoryLiveProducts from "../live/CategoryLiveProducts";
 import {
   GROCERY_SUB_CATEGORIES,
-  GROCERY_SECTIONS,
   GrocerySubCategory,
 } from "../../../../data/groceryData";
 import { CATEGORY_FEEDS } from "../../../../data/categoryFeedData";
@@ -50,10 +49,8 @@ export default function GroceryFeed() {
         onSelect={handleSubCategory}
       />
 
-      {/* Product sections: Regular Items + Seasonal */}
-      {GROCERY_SECTIONS.map(section => (
-        <GroceryProductGrid key={section.key} section={section} />
-      ))}
+      {/* Real seller inventory for grocery (was mock product grids) */}
+      <CategoryLiveProducts categoryKey="grocery" title="Available now" icon="basket-outline" />
 
       <View style={{ height: 16 }} />
     </View>

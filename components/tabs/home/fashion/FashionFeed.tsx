@@ -14,6 +14,7 @@ import { View, Alert, StyleSheet } from "react-native";
 import BannerCarousel         from "../BannerCarousel";
 import FashionGenderTabs      from "./FashionGenderTabs";
 import FashionSubCategoryGrid from "./FashionSubCategoryGrid";
+import CategoryLiveProducts   from "../live/CategoryLiveProducts";
 import { CATEGORY_FEEDS }     from "../../../../data/categoryFeedData";
 import {
   FASHION_GENDERS,
@@ -49,6 +50,9 @@ export default function FashionFeed() {
         subCats={activeConfig.subCats}
         accent={FASHION_ACCENT}
       />
+
+      {/* Real seller inventory for fashion */}
+      <CategoryLiveProducts categoryKey="fashion" accentColor={FASHION_ACCENT} />
 
       <View style={{ height: 16 }} />
     </View>

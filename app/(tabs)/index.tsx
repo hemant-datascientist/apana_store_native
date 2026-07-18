@@ -37,7 +37,6 @@ import CategoryScroll      from "../../components/tabs/home/CategoryScroll";
 import StoreDiscoveryTabs, { StoreTab }    from "../../components/tabs/home/StoreDiscoveryTabs";
 import StoreFilterBar,     { StoreFilters } from "../../components/tabs/home/StoreFilterBar";
 import MenuDrawer                          from "../../components/tabs/home/MenuDrawer";
-import LiveProductsSection                 from "../../components/tabs/home/live/LiveProductsSection";
 import { handleMenuSelect }                from "../../lib/menuNav";
 
 // ── Product category feeds ───────────────────────────────────
@@ -213,11 +212,6 @@ export default function HomeScreen() {
             onSortPress={()   => Alert.alert("Sort",   "Sort options coming soon.")}
           />
         )}
-
-        {/* ── Fresh on Apana — real just-added shop inventory (BE-backed).
-            Renders nothing when there's no live stock, so mock-mode home is
-            unchanged. Shown on the All feed only, above the mock categories. ── */}
-        {mode === "products" && category === "all" && <LiveProductsSection />}
 
         {/* ── Products feed — one component per category ── */}
         {mode === "products" && renderCategoryFeed()}

@@ -1,49 +1,28 @@
 // ============================================================
 // ALL FEED — Apana Store (Home, Products > All Items)
 //
-// Rich multi-section home feed:
-//   1. BannerCarousel            — promo banners
-//   2. Seasonal Picks            — 4-col grid, arrow-browsed seasons
-//   3. Discover                  — Offer Zone / Brands / New Launches tiles
-//   4. Daily Essentials          — horizontal scroll + add button
-//   5. Flash Deals               — horizontal scroll + % off + add button
-//   6. New Arrivals              — horizontal scroll + add button
-//   7. Popular Near You          — horizontal scroll of top-rated stores
-//   8. Trending in {city}        — PARKED at the bottom (Pune-only data;
-//                                  needs real per-city data, see §below)
+// Multi-section home feed. Product LISTS are real seller inventory only
+// (CategoryLiveProducts); the mock product rails (Daily Essentials, Flash
+// Deals, New Arrivals, Trending) were removed. The non-product sections —
+// promo banners, seasonal CATEGORY tiles, the Discover row, brand-funded
+// promos, and popular stores — stay to keep the layout intact.
 // ============================================================
 
 import React from "react";
 import { View } from "react-native";
 
 import BannerCarousel          from "../BannerCarousel";
-import TrendingCitySection     from "./TrendingCitySection";
 import SeasonalCategorySection from "./SeasonalCategorySection";
-import ProductHScrollSection   from "./ProductHScrollSection";
-import FlashDealsSection       from "./FlashDealsSection";
 import BrandDealsSection       from "./BrandDealsSection";
 import PopularStoresSection    from "./PopularStoresSection";
-import HomeDiscoverRow        from "../HomeDiscoverRow";
+import HomeDiscoverRow         from "../HomeDiscoverRow";
+import CategoryLiveProducts    from "../live/CategoryLiveProducts";
 
 import { BANNERS }          from "../../../../data/homeData";
-import { useLocation }      from "../../../../context/LocationContext";
-import {
-  getTrendingForCity,
-  SEASONS,
-  DAILY_ESSENTIALS,
-  FLASH_DEALS,
-  NEW_ARRIVALS,
-  POPULAR_STORES,
-} from "../../../../data/allFeedData";
+import { SEASONS, POPULAR_STORES } from "../../../../data/allFeedData";
 import { getActiveBrandDeals } from "../../../../data/brandPromoData";
 
-const BRAND_BLUE = "#0F4C81";
-const PURPLE     = "#7C3AED";
-
 export default function AllFeed() {
-  const { selectedAddress } = useLocation();
-  const city = selectedAddress.city;
-
   // Brand-funded promos live now (empty → the section renders nothing).
   const brandDeals = getActiveBrandDeals();
 
@@ -51,54 +30,24 @@ export default function AllFeed() {
     <View>
 
       {/* ── 1. Promo banners ── */}
-      <BannerCarousel
-        banners={BANNERS}
-        onPress={() => {}}
-      />
+      <BannerCarousel banners={BANNERS} onPress={() => {}} />
 
-      {/* ── 2. Seasonal Picks — Summer/Monsoon/Winter/Festive, arrow-browsed ── */}
+      {/* ── 2. Seasonal Picks — category tiles, arrow-browsed ── */}
       <SeasonalCategorySection seasons={SEASONS} />
 
-      {/* ── 4. Discover — Offer Zone · Brands · New Launches ── */}
+      {/* ── 3. Discover — Offer Zone · Brands · New Launches ── */}
       <View style={{ paddingVertical: 14 }}>
         <HomeDiscoverRow />
       </View>
 
-      {/* ── 4. Daily Essentials — horizontal scroll ── */}
-      <ProductHScrollSection
-        icon="cart-outline"
-        title="Daily Essentials"
-        accentColor={BRAND_BLUE}
-        products={DAILY_ESSENTIALS}
-      />
+      {/* ── 4. Real seller inventory (replaces the mock product rails) ── */}
+      <CategoryLiveProducts categoryKey="all" title="Fresh from local shops" icon="storefront-outline" />
 
-      {/* ── 5. Flash Deals — horizontal scroll with % off ── */}
-      <FlashDealsSection deals={FLASH_DEALS} />
-
-      {/* ── 5b. Brand Deals — brand-FUNDED co-op (Engine-B); seller kept whole ── */}
+      {/* ── 5. Brand Deals — brand-FUNDED co-op; seller kept whole (empty → hidden) ── */}
       <BrandDealsSection deals={brandDeals} />
 
-      {/* ── 6. New Arrivals — horizontal scroll ── */}
-      <ProductHScrollSection
-        icon="sparkles-outline"
-        title="New Arrivals"
-        accentColor={PURPLE}
-        products={NEW_ARRIVALS}
-      />
-
-      {/* ── 7. Popular Stores Near You ── */}
+      {/* ── 6. Popular Stores Near You ── */}
       <PopularStoresSection stores={POPULAR_STORES} />
-
-      {/* ── 8. Trending in {city} — MOVED TO LAST (parked) ──
-           Current data is Pune-only (famous local places/shops/items). India
-           cities differ wildly — no shared metro wholesale, food, or places —
-           so this needs real per-city data before it's promoted up the feed.
-           Replace getTrendingForCity() with
-           GET /api/customer/home/trending?city={city} when backend ready. */}
-      <TrendingCitySection
-        city={city}
-        items={getTrendingForCity(city)}
-      />
 
       <View style={{ height: 24 }} />
     </View>

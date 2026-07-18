@@ -79,7 +79,15 @@ export default function LiveProductsScreen() {
           numColumns={2}
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.list}
-          renderItem={({ item }) => <LiveProductCard product={item} />}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.cell}
+              activeOpacity={0.85}
+              onPress={() => router.push(`/live-product-detail?id=${item.id}`)}
+            >
+              <LiveProductCard product={item} />
+            </TouchableOpacity>
+          )}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           }
@@ -113,6 +121,7 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: typography.size.xs, marginTop: 1 },
   list: { padding: 12, gap: 12, flexGrow: 1 },
   row: { gap: 12 },
+  cell: { flex: 1 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 40, gap: 10 },
   emptyTitle: { fontSize: typography.size.md, textAlign: "center" },
   emptyBody: { fontSize: typography.size.sm, textAlign: "center", lineHeight: 20 },

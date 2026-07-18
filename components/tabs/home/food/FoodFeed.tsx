@@ -5,10 +5,9 @@
 import React from "react";
 import { View, Alert } from "react-native";
 import BannerCarousel    from "../BannerCarousel";
-import TrendingSection   from "../TrendingSection";
+import CategoryLiveProducts from "../live/CategoryLiveProducts";
 import CategorySubGrid, { SubCat } from "../shared/CategorySubGrid";
 import { CATEGORY_FEEDS } from "../../../../data/categoryFeedData";
-import { MOCK_LOCATION }  from "../../../../data/homeData";
 
 const ACCENT = "#6F4C81";
 
@@ -35,13 +34,7 @@ export default function FoodFeed() {
         onPress={b => Alert.alert(b.title, b.subtitle)}
       />
       <CategorySubGrid subCats={SUB_CATS} accent={ACCENT} />
-      <TrendingSection
-        city={MOCK_LOCATION.area}
-        items={CATEGORY_FEEDS.food.items}
-        title={CATEGORY_FEEDS.food.sectionTitle}
-        icon={CATEGORY_FEEDS.food.sectionIcon}
-        onPress={item => Alert.alert(item.name, `${item.category} · ${item.area}`)}
-      />
+      <CategoryLiveProducts categoryKey="food" accentColor={ACCENT} />
     </View>
   );
 }
