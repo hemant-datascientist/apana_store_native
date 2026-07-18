@@ -33,7 +33,7 @@ export default function IceCreamFeed() {
         banners={CATEGORY_FEEDS.icecream.banners}
         onPress={b => Alert.alert(b.title, b.subtitle)}
       />
-      <CategorySubGrid subCats={SUB_CATS} accent={ACCENT} />
+      <CategorySubGrid subCats={SUB_CATS} accent={ACCENT} apc="APC-01-DAI" />
       <CategoryLiveProducts categoryKey="icecream" accentColor={ACCENT} />
     </View>
   );

@@ -43,6 +43,7 @@ export default function AppliancesFeed() {
         title="Home Appliances"
         subCats={APPLIANCE_CATS}
         accent={ACCENT}
+        apc="APC-14-A9"
       />
       <CategoryLiveProducts categoryKey="appliances" accentColor={ACCENT} />
     </View>

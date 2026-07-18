@@ -33,7 +33,7 @@ export default function BooksFeed() {
         banners={CATEGORY_FEEDS.books.banners}
         onPress={b => Alert.alert(b.title, b.subtitle)}
       />
-      <CategorySubGrid subCats={SUB_CATS} accent={ACCENT} />
+      <CategorySubGrid subCats={SUB_CATS} accent={ACCENT} apc="APC-21-BOOK" />
       <CategoryLiveProducts categoryKey="books" accentColor={ACCENT} />
     </View>
   );

@@ -11,6 +11,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert, Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { typography } from "../../../../theme/typography";
 import { FashionSubCat } from "../../../../data/fashionData";
 import useTheme from "../../../../theme/useTheme";
@@ -18,6 +19,7 @@ import useTheme from "../../../../theme/useTheme";
 interface FashionSubCategoryGridProps {
   subCats: FashionSubCat[];
   accent:  string;   // fashion primary color
+  apc?:    string;   // APC class every tile opens (§27 routing)
 }
 
 const { width: SW } = Dimensions.get("window");
@@ -27,13 +29,18 @@ const COLS          = 4;
 const CELL_W        = Math.floor((SW - H_PAD * 2 - COL_GAP * (COLS - 1)) / COLS);
 const IMG_H         = Math.floor(CELL_W * 0.88);
 
-export default function FashionSubCategoryGrid({ subCats, accent }: FashionSubCategoryGridProps) {
+export default function FashionSubCategoryGrid({ subCats, accent, apc }: FashionSubCategoryGridProps) {
   // Theme so sub-category label flips in dark mode
   const { colors } = useTheme();
+  const router = useRouter();
   const [active, setActive] = useState<string | null>(null);
 
   function handlePress(cat: FashionSubCat) {
     setActive(cat.key);
+    if (apc) {
+      router.push(`/(apc)/${apc}` as never);
+      return;
+    }
     Alert.alert(cat.label, `${cat.label} collection coming soon.`);
   }
 

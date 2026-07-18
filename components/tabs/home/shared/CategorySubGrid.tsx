@@ -15,6 +15,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert, Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { typography } from "../../../../theme/typography";
 import useTheme       from "../../../../theme/useTheme";
 
@@ -23,6 +24,7 @@ export interface SubCat {
   label: string;
   icon:  string;   // Ionicons glyph
   bg:    string;   // placeholder background color
+  apc?:  string;   // APC class this tile opens (overrides the grid's `apc`)
   imageUrl?: any;
 }
 
@@ -30,6 +32,7 @@ interface CategorySubGridProps {
   title?:  string;       // section header (optional)
   subCats: SubCat[];
   accent:  string;
+  apc?:    string;       // default APC class for every tile (§27 routing)
 }
 
 const { width: SW } = Dimensions.get("window");
@@ -39,13 +42,20 @@ const COLS          = 4;
 const CELL_W        = Math.floor((SW - H_PAD * 2 - COL_GAP * (COLS - 1)) / COLS);
 const IMG_H         = Math.floor(CELL_W * 0.88);
 
-export default function CategorySubGrid({ title, subCats, accent }: CategorySubGridProps) {
+export default function CategorySubGrid({ title, subCats, accent, apc }: CategorySubGridProps) {
   // Theme so title + label invert in dark mode
   const { colors } = useTheme();
+  const router = useRouter();
   const [active, setActive] = useState<string | null>(null);
 
   function handlePress(cat: SubCat) {
     setActive(cat.key);
+    // Per-tile APC class wins; else the grid's default. Opens the §27 browser.
+    const code = cat.apc ?? apc;
+    if (code) {
+      router.push(`/(apc)/${code}` as never);
+      return;
+    }
     Alert.alert(cat.label, `${cat.label} coming soon.`);
   }
 

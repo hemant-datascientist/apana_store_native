@@ -30,6 +30,7 @@ import DiscoveryToggle from "../../components/tabs/home/DiscoveryToggle";
 import CategorySection from "../../components/tabs/category/CategorySection";
 import StoreTypeGrid   from "../../components/tabs/category/StoreTypeGrid";
 import ApcBrowseBanner from "../../components/apc/ApcBrowseBanner";
+import CategoryLiveProducts from "../../components/tabs/home/live/CategoryLiveProducts";
 import MenuDrawer      from "../../components/tabs/home/MenuDrawer";
 import { handleMenuSelect } from "../../lib/menuNav";
 import { useLocation } from "../../context/LocationContext";
@@ -134,7 +135,13 @@ export default function CategoryScreen() {
           data={CATEGORY_GROUPS}
           keyExtractor={group => group.key}
           renderItem={renderGroup}
-          ListHeaderComponent={ApcBrowseBanner}
+          ListHeaderComponent={
+            <>
+              <ApcBrowseBanner />
+              {/* Real seller inventory (same as the home feed) */}
+              <CategoryLiveProducts categoryKey="all" title="Fresh from local shops" icon="storefront-outline" />
+            </>
+          }
           showsVerticalScrollIndicator={false}
           removeClippedSubviews
           initialNumToRender={3}

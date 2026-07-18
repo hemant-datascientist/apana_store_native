@@ -49,6 +49,7 @@ export default function FashionFeed() {
       <FashionSubCategoryGrid
         subCats={activeConfig.subCats}
         accent={FASHION_ACCENT}
+        apc="APC-10-FASH"
       />
 
       {/* Real seller inventory for fashion */}

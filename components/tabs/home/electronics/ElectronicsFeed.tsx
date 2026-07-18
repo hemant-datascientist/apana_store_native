@@ -49,6 +49,7 @@ export default function ElectronicsFeed() {
         title="Computer Electronics"
         subCats={COMPUTER_CATS}
         accent={ACCENT}
+        apc="APC-13-A8"
       />
       <CategoryLiveProducts categoryKey="electronics" accentColor={ACCENT} />
     </View>

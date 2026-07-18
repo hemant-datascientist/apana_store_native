@@ -33,7 +33,7 @@ export default function SportsFeed() {
         banners={CATEGORY_FEEDS.sports.banners}
         onPress={b => Alert.alert(b.title, b.subtitle)}
       />
-      <CategorySubGrid subCats={SUB_CATS} accent={ACCENT} />
+      <CategorySubGrid subCats={SUB_CATS} accent={ACCENT} apc="APC-25-SPRT" />
       <CategoryLiveProducts categoryKey="sports" accentColor={ACCENT} />
     </View>
   );

@@ -1,10 +1,10 @@
 // ============================================================
 // GROCERY FEED — Apana Store (Home, Products > Grocery)
 //
-// Complete grocery category screen:
+// Grocery category screen:
 //   BannerCarousel (grocery-specific promos)
-//   GroceryCategoryGrid (12 sub-categories)
-//   GroceryProductGrid × N (Regular Items, Seasonal, etc.)
+//   GroceryCategoryGrid (12 APC-aligned grocery sub-categories)
+//   CategoryLiveProducts (real seller grocery inventory)
 // ============================================================
 
 import React from "react";
@@ -18,20 +18,14 @@ import {
   GrocerySubCategory,
 } from "../../../../data/groceryData";
 import { CATEGORY_FEEDS } from "../../../../data/categoryFeedData";
-import { apcForTile } from "../../../../data/categoryApcMap";
 
 export default function GroceryFeed() {
   const router = useRouter();
 
-  // Same bridge as the Category tab: a mapped tile opens its APC class; anything
-  // unmapped falls back to search (which shows the APC category strip).
+  // Each grocery tile carries its own APC class (§27) — open the classification
+  // browser for it directly.
   function handleSubCategory(cat: GrocerySubCategory) {
-    const code = apcForTile(cat.key);
-    if (code) {
-      router.push(`/(apc)/${code}` as never);
-      return;
-    }
-    router.push(`/search-results?q=${encodeURIComponent(cat.label)}` as never);
+    router.push(`/(apc)/${cat.apc}` as never);
   }
 
   return (

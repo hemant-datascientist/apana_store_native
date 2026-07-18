@@ -33,7 +33,7 @@ export default function MobilesFeed() {
         banners={CATEGORY_FEEDS.mobiles.banners}
         onPress={b => Alert.alert(b.title, b.subtitle)}
       />
-      <CategorySubGrid subCats={SUB_CATS} accent={ACCENT} />
+      <CategorySubGrid subCats={SUB_CATS} accent={ACCENT} apc="APC-12-A7" />
       <CategoryLiveProducts categoryKey="mobiles" accentColor={ACCENT} />
     </View>
   );
