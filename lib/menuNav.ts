@@ -25,6 +25,10 @@ export function handleMenuSelect(router: AppRouter, key: string): void {
     case "favourite":      router.push("/favourite");      break;
     case "auto_riders":    router.push("/auto-riders");    break;
     case "scanner":        router.push("/scanner");        break;
+    // §16.11 services + §16.12 food — real taxonomy-backed surfaces.
+    case "book_service":   router.push("/service-stores");  break;
+    case "order_food":     router.push("/menu-stores");     break;
+    case "my_bookings":    router.push("/my-bookings");     break;
     default:
       Alert.alert("Coming Soon", `"${key}" is coming soon.`);
   }

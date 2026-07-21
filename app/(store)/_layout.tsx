@@ -20,6 +20,11 @@ export default function StoreLayout() {
       <Stack.Screen name="store-categories" />
       <Stack.Screen name="service-detail" />
       <Stack.Screen name="store-type" />
+      {/* §16.11 ASvC booking + §16.12 AMC dish ordering */}
+      <Stack.Screen name="service-stores" />
+      <Stack.Screen name="service-store" />
+      <Stack.Screen name="menu-stores" />
+      <Stack.Screen name="menu-store" />
     </Stack>
   );
 }

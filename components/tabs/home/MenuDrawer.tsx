@@ -35,6 +35,9 @@ interface MenuItem {
 
 const MENU_ITEMS: MenuItem[] = [
   { key: "offer_zone",    label: "Offer Zone",      icon: "pricetag-outline"           },
+  { key: "book_service",  label: "Book a Service",  icon: "construct-outline"          },
+  { key: "order_food",    label: "Order Food",      icon: "restaurant-outline"         },
+  { key: "my_bookings",   label: "My Bookings",     icon: "calendar-outline"           },
   { key: "shop_brands",   label: "Shop by Brands",  icon: "brand_b"                    },
   { key: "new_launches",  label: "New Launches",    icon: "sparkles-outline"           },
   { key: "product_finder",label: "Product Finder",  icon: "search-outline"             },
