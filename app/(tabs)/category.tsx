@@ -10,8 +10,8 @@
 
 import React, { useState, useCallback } from "react";
 import {
-  View, ScrollView, FlatList, StyleSheet, StatusBar, Alert,
-  ListRenderItemInfo,
+  View, Text, ScrollView, FlatList, StyleSheet, StatusBar, Alert,
+  ActivityIndicator, ListRenderItemInfo,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter }    from "expo-router";
@@ -22,19 +22,22 @@ import {
   HEADER_BG,
   DiscoveryMode,
 } from "../../data/homeData";
-import { CATEGORY_GROUPS, STORE_TYPES, CategoryGroup } from "../../data/categoryData";
-import { apcForTile } from "../../data/categoryApcMap";
+import { STORE_TYPES } from "../../data/categoryData";
+import { useApcBrowser, ApcBrowseGroup } from "../../hooks/useApcBrowser";
+import ApcCategorySection from "../../components/tabs/category/ApcCategorySection";
 import HomeHeader      from "../../components/tabs/home/HomeHeader";
 import HomeSearchBar   from "../../components/tabs/home/HomeSearchBar";
 import DiscoveryToggle from "../../components/tabs/home/DiscoveryToggle";
 import CategorySection from "../../components/tabs/category/CategorySection";
 import StoreTypeGrid   from "../../components/tabs/category/StoreTypeGrid";
 import ApcBrowseBanner from "../../components/apc/ApcBrowseBanner";
-import CategoryLiveProducts from "../../components/tabs/home/live/CategoryLiveProducts";
 import MenuDrawer      from "../../components/tabs/home/MenuDrawer";
 import { handleMenuSelect } from "../../lib/menuNav";
 import { useLocation } from "../../context/LocationContext";
 import { useStoreLiveStats } from "../../hooks/useStoreLiveStats";
+
+// Presentation-only accents, rotated per department (APC carries no colours).
+const SECTION_ACCENTS = ["#0F4C81", "#E8862E", "#15803D", "#7C3AED", "#B45309", "#0E7490"];
 
 export default function CategoryScreen() {
   const { colors } = useTheme();
@@ -52,27 +55,18 @@ export default function CategoryScreen() {
   });
   const storesLiveCount = liveStats.stats?.totalLive ?? null;
 
-  // One section per group. Rendered through a FlatList so only the on-screen
-  // groups mount — the grid holds 308 tiles / 279 images, and mounting them
-  // all at once (old ScrollView) thrashed decode + memory and stalled scroll.
-  // Windowing keeps ~3-4 groups (≈ 30-48 images) live at any time.
+  // The browser is driven by the §27 APC classification itself (departments +
+  // classes read from the live taxonomy), so it can never drift from the canvas.
+  const { groups, loading: apcLoading } = useApcBrowser();
+
+  // One section per department, windowed through a FlatList so only the
+  // on-screen departments mount.
   const renderGroup = useCallback(
-    ({ item: group }: ListRenderItemInfo<CategoryGroup>) => (
-      <CategorySection
+    ({ item: group, index }: ListRenderItemInfo<ApcBrowseGroup>) => (
+      <ApcCategorySection
         group={group}
-        onPress={(_groupKey, subKey) => {
-          // Merchandising tile -> real §27 classification. A mapped tile opens
-          // its APC class directly; an unmapped one (store-type tiles, a handful
-          // of niche ones) falls back to search, which surfaces the APC category
-          // strip — so a tap is never a dead end.
-          const code = apcForTile(subKey);
-          if (code) {
-            router.push(`/(apc)/${code}` as any);
-            return;
-          }
-          const label = group.subs.find(s => s.key === subKey)?.label ?? "";
-          router.push(`/search-results?q=${encodeURIComponent(label)}` as any);
-        }}
+        accent={SECTION_ACCENTS[index % SECTION_ACCENTS.length]}
+        onPress={(code) => router.push(`/(apc)/${code}` as any)}
       />
     ),
     [router],
@@ -132,15 +126,18 @@ export default function CategoryScreen() {
         <FlatList
           style={[styles.scroll, { backgroundColor: colors.background }]}
           contentContainerStyle={styles.content}
-          data={CATEGORY_GROUPS}
-          keyExtractor={group => group.key}
+          data={groups}
+          keyExtractor={group => group.code}
           renderItem={renderGroup}
-          ListHeaderComponent={
-            <>
-              <ApcBrowseBanner />
-              {/* Real seller inventory (same as the home feed) */}
-              <CategoryLiveProducts categoryKey="all" title="Fresh from local shops" icon="storefront-outline" />
-            </>
+          ListHeaderComponent={ApcBrowseBanner}
+          ListEmptyComponent={
+            <View style={styles.state}>
+              {apcLoading
+                ? <ActivityIndicator color={colors.primary} />
+                : <Text style={{ color: colors.subText, textAlign: "center" }}>
+                    Couldn't load the product classification. Pull to retry.
+                  </Text>}
+            </View>
           }
           showsVerticalScrollIndicator={false}
           removeClippedSubviews
@@ -159,4 +156,5 @@ const styles = StyleSheet.create({
   hero:    {},
   scroll:  { flex: 1 },
   content: { paddingVertical: 12, paddingBottom: 32 },
+  state:   { paddingVertical: 60, paddingHorizontal: 32, alignItems: "center" },
 });

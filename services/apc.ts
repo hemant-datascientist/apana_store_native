@@ -121,6 +121,56 @@ export async function getTreeRoots(): Promise<ApcTreeNode[]> {
   return (await getJson<{ items: ApcTreeNode[] }>("/tree/roots")).items;
 }
 
+// ── APC classes (§27 class tier) ────────────────────────────
+// The canonical browsable classes — "APC-01-VEG" Vegetables, etc. Used to
+// drive the category browser straight from the classification, so the UI can
+// never drift from the canvas.
+export interface ApcClass {
+  code: string;          // "APC-01-VEG"
+  name: string;
+  name_hi: string | null;
+  slug: string;          // "VEG"
+  icon_emoji: string | null;
+  numeric_code: string | null;
+  sort_order: number;
+}
+
+export async function getClasses(): Promise<ApcClass[]> {
+  return (await getJson<{ items: ApcClass[] }>("/classes")).items;
+}
+
+// ── APC families (§27 family tier) — the real sub-categories of a class ──
+export interface ApcFamily {
+  code: string;            // "APC-10-FASH-FOOTWEARS"
+  class_code: string;
+  name: string;
+  name_hi: string | null;
+  slug: string;
+  icon_emoji: string | null;
+  image_url: string | null; // BE-relative tile art when the family has one
+  numeric_code: string | null;
+  sort_order: number;
+}
+
+export async function getFamilies(classCode: string): Promise<ApcFamily[]> {
+  return (
+    await getJson<{ items: ApcFamily[] }>(`/classes/${encodeURIComponent(classCode)}/families`)
+  ).items;
+}
+
+// Family tile art -> absolute URL (BE serves these relative, same as nodeImage).
+export function familyImage(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
+}
+
+// Department number a class belongs to: "APC-01-VEG" -> "01" (root "APC-D01").
+export function classDeptNo(code: string): string | null {
+  const m = /^APC-(\d{2})-/.exec(code);
+  return m ? m[1] : null;
+}
+
 // Node + its children + ancestor chain (for breadcrumb).
 export async function getTreeNode(code: string): Promise<ApcNodeContext> {
   return getJson<ApcNodeContext>(`/tree/node/${encodeURIComponent(code)}`);
