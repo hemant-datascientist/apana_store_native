@@ -19,6 +19,7 @@ export default function StoreLayout() {
       <Stack.Screen name="bharat-bazaar" />
       <Stack.Screen name="store-categories" />
       <Stack.Screen name="service-detail" />
+      <Stack.Screen name="store-type" />
     </Stack>
   );
 }

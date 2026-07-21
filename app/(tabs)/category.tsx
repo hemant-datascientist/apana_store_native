@@ -10,7 +10,7 @@
 
 import React, { useState, useCallback } from "react";
 import {
-  View, Text, ScrollView, FlatList, StyleSheet, StatusBar, Alert,
+  View, Text, FlatList, StyleSheet, StatusBar, Alert,
   ActivityIndicator, ListRenderItemInfo,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,14 +22,14 @@ import {
   HEADER_BG,
   DiscoveryMode,
 } from "../../data/homeData";
-import { STORE_TYPES } from "../../data/categoryData";
 import { useApcBrowser, ApcBrowseGroup } from "../../hooks/useApcBrowser";
 import ApcCategorySection from "../../components/tabs/category/ApcCategorySection";
+import { useAscBrowser, AscBrowseGroup } from "../../hooks/useAscBrowser";
+import AscCategorySection from "../../components/tabs/category/AscCategorySection";
 import HomeHeader      from "../../components/tabs/home/HomeHeader";
 import HomeSearchBar   from "../../components/tabs/home/HomeSearchBar";
 import DiscoveryToggle from "../../components/tabs/home/DiscoveryToggle";
 import CategorySection from "../../components/tabs/category/CategorySection";
-import StoreTypeGrid   from "../../components/tabs/category/StoreTypeGrid";
 import ApcBrowseBanner from "../../components/apc/ApcBrowseBanner";
 import MenuDrawer      from "../../components/tabs/home/MenuDrawer";
 import { handleMenuSelect } from "../../lib/menuNav";
@@ -67,6 +67,20 @@ export default function CategoryScreen() {
         group={group}
         accent={SECTION_ACCENTS[index % SECTION_ACCENTS.length]}
         onPress={(code) => router.push(`/(apc)/${code}` as any)}
+      />
+    ),
+    [router],
+  );
+
+  // Stores mode is driven by the §16 ASC taxonomy the same way.
+  const { groups: ascGroups, loading: ascLoading } = useAscBrowser();
+
+  const renderAscGroup = useCallback(
+    ({ item: group, index }: ListRenderItemInfo<AscBrowseGroup>) => (
+      <AscCategorySection
+        group={group}
+        accent={SECTION_ACCENTS[index % SECTION_ACCENTS.length]}
+        onPress={(code) => router.push(`/store-type?code=${encodeURIComponent(code)}` as any)}
       />
     ),
     [router],
@@ -110,17 +124,28 @@ export default function CategoryScreen() {
 
       {/* ── Category browser ── */}
       {mode === "stores" ? (
-        /* Stores mode — small list, non-virtualized ScrollView is fine */
-        <ScrollView
+        /* Stores mode — the §16 ASC taxonomy: 5 classes, 106 store types */
+        <FlatList
           style={[styles.scroll, { backgroundColor: colors.background }]}
           contentContainerStyle={styles.content}
+          data={ascGroups}
+          keyExtractor={g => g.cls.id}
+          renderItem={renderAscGroup}
           showsVerticalScrollIndicator={false}
-        >
-          <StoreTypeGrid
-            stores={STORE_TYPES}
-            onPress={item => Alert.alert(item.label, `${item.sub} — coming soon.`)}
-          />
-        </ScrollView>
+          removeClippedSubviews
+          initialNumToRender={2}
+          maxToRenderPerBatch={2}
+          windowSize={5}
+          ListEmptyComponent={
+            <View style={styles.state}>
+              {ascLoading
+                ? <ActivityIndicator color={colors.primary} />
+                : <Text style={{ color: colors.subText, textAlign: "center" }}>
+                    Couldn't load the store classification. Pull to retry.
+                  </Text>}
+            </View>
+          }
+        />
       ) : (
         /* Products mode — APC banner header, then virtualized group sections */
         <FlatList
