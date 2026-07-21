@@ -1,22 +1,29 @@
 // ============================================================
 // AscCategorySection — one ASC store class: header (icon + name + the
-// class's real tagline) and a 2-column grid of its store types.
+// class's real tagline) and the original 2-column store-card grid.
 //
-// Types carry no glyph of their own in ASC, so tiles use the class icon —
-// nothing invented. Tap opens the store-type detail.
+// Cards keep the old Stores-mode look; a type shows its photo when one
+// exists, else the class emoji.
 // ============================================================
 
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
+import { View, Text, StyleSheet, Dimensions } from "react-native";
 import useTheme from "../../../theme/useTheme";
 import { typography } from "../../../theme/typography";
+import AscStoreCard, { AscStoreItem } from "./AscStoreCard";
+import { ascStoreImage } from "../../../data/ascStoreImages";
 import type { AscBrowseGroup } from "../../../hooks/useAscBrowser";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const H_PADDING = 12;
-const COLS = 2;
-const COL_GAP = 8;
-const CARD_WIDTH = Math.floor((SCREEN_WIDTH - H_PADDING * 2 - COL_GAP * (COLS - 1)) / COLS);
+const GAP = 10;
+const CARD_WIDTH = Math.floor((SCREEN_WIDTH - H_PADDING * 2 - GAP) / 2);
+
+// Soft tile backgrounds, rotated (ASC carries no colours of its own).
+const TILE_COLORS = [
+  "#DCFCE7", "#DBEAFE", "#FEF3C7", "#FCE7F3", "#EDE9FE",
+  "#FFEDD5", "#FEE2E2", "#ECFDF5", "#E0F2FE", "#F3F4F6",
+];
 
 interface AscCategorySectionProps {
   group: AscBrowseGroup;
@@ -27,6 +34,17 @@ interface AscCategorySectionProps {
 function AscCategorySection({ group, accent, onPress }: AscCategorySectionProps) {
   const { colors } = useTheme();
   const { cls, types } = group;
+
+  const items: AscStoreItem[] = types.map((t, i) => ({
+    code: t.code,
+    label: t.name,
+    sub:
+      t.short ??
+      (t.subcategories.length > 0 ? t.subcategories.slice(0, 2).join(" · ") : cls.name),
+    emoji: cls.icon,
+    color: TILE_COLORS[i % TILE_COLORS.length],
+    imageUrl: ascStoreImage(t.code),
+  }));
 
   return (
     <View style={styles.section}>
@@ -53,33 +71,9 @@ function AscCategorySection({ group, accent, onPress }: AscCategorySectionProps)
         </Text>
       </View>
 
-      {/* Store types */}
       <View style={styles.grid}>
-        {types.map((t) => (
-          <TouchableOpacity
-            key={t.code}
-            style={[styles.card, { width: CARD_WIDTH, backgroundColor: colors.card, borderColor: colors.border }]}
-            activeOpacity={0.75}
-            onPress={() => onPress(t.code)}
-          >
-            <Text style={styles.tileIcon}>{cls.icon}</Text>
-            <View style={styles.cardText}>
-              <Text
-                numberOfLines={2}
-                style={[styles.name, { color: colors.text, fontFamily: typography.fontFamily.medium }]}
-              >
-                {t.name}
-              </Text>
-              {t.subcategories.length > 0 && (
-                <Text
-                  numberOfLines={1}
-                  style={[styles.sub, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}
-                >
-                  {t.subcategories.length} categories
-                </Text>
-              )}
-            </View>
-          </TouchableOpacity>
+        {items.map((it) => (
+          <AscStoreCard key={it.code} item={it} width={CARD_WIDTH} onPress={onPress} />
         ))}
       </View>
     </View>
@@ -105,21 +99,9 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: COL_GAP,
+    gap: GAP,
     paddingHorizontal: H_PADDING,
   },
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: 10,
-  },
-  tileIcon: { fontSize: 18 },
-  cardText: { flex: 1 },
-  name: { fontSize: typography.size.xs, lineHeight: 15 },
-  sub: { fontSize: typography.size.ss, marginTop: 2 },
 });
 
 export default React.memo(AscCategorySection);
