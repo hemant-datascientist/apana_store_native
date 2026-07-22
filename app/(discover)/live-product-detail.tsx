@@ -22,6 +22,10 @@ import DetailHeader from "../../components/live-products/detail/DetailHeader";
 import DetailTabs from "../../components/live-products/detail/DetailTabs";
 import DetailMoreRail from "../../components/live-products/detail/DetailMoreRail";
 import { buildTabs } from "../../components/live-products/detail/buildTabs";
+import VariantPicker from "../../components/live-products/detail/VariantPicker";
+import {
+  initialSelection, resolveVariant, variantMrp, variantPrice, variantStock,
+} from "../../lib/variantSelect";
 import { fetchProductDetail, ProductDetail } from "../../services/liveCatalogService";
 
 function rupee(n: number): string {
@@ -36,6 +40,9 @@ export default function LiveProductDetailScreen() {
   const [detail, setDetail] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // §23 — which SKU the customer is looking at. Seeded to something the shop
+  // can actually sell so the price block is never blank on arrival.
+  const [selection, setSelection] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     if (!id) { setError("Missing product."); setLoading(false); return; }
@@ -44,6 +51,7 @@ export default function LiveProductDetailScreen() {
       const d = await fetchProductDetail(id);
       if (!d) setError("Product not found.");
       setDetail(d);
+      setSelection(d ? initialSelection(d.product.variants) : {});
     } catch {
       setError("Couldn't load this product.");
     } finally {
@@ -55,6 +63,14 @@ export default function LiveProductDetailScreen() {
 
   const p = detail?.product;
   const isIndia = (detail?.enrichment?.country ?? "").toLowerCase().includes("india");
+
+  // Everything money- and stock-related follows the chosen SKU, falling back to
+  // the parent when the listing has no variants at all.
+  const variants = p?.variants ?? [];
+  const chosen = resolveVariant(variants, selection);
+  const shownPrice = variantPrice(chosen, p?.price ?? 0);
+  const shownMrp = variantMrp(chosen, p?.mrp ?? null);
+  const shownStock = variantStock(chosen, variants, p?.stockQty ?? 0);
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "bottom"]}>
@@ -86,14 +102,14 @@ export default function LiveProductDetailScreen() {
           <DetailHero images={p.images} isIndia={isIndia} />
           <DetailHeader name={p.name} brand={p.brand} verified={detail?.enrichment?.verified ?? false} gtin={detail?.enrichment?.gtin ?? null} />
 
-          {/* ── Price row ── */}
+          {/* ── Price row — follows the selected SKU ── */}
           <View style={styles.priceRow}>
             <Text style={[styles.price, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>
-              {rupee(p.price)}
+              {rupee(shownPrice)}
             </Text>
-            {p.mrp != null && p.mrp > p.price && (
+            {shownMrp != null && shownMrp > shownPrice && (
               <Text style={[styles.mrp, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>
-                {rupee(p.mrp)}
+                {rupee(shownMrp)}
               </Text>
             )}
             <Text style={[styles.unit, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>
@@ -105,6 +121,32 @@ export default function LiveProductDetailScreen() {
               </View>
             )}
           </View>
+
+          {/* ── §23 size / colour picker ── */}
+          <View style={styles.pickerWrap}>
+            <VariantPicker
+              variants={variants}
+              selection={selection}
+              onSelect={(axisKey, value) =>
+                setSelection((prev) => ({ ...prev, [axisKey]: value }))
+              }
+            />
+          </View>
+
+          {/* Stock line is about the CHOSEN size, not the product overall — a
+              shop with 40 shirts and no Large must say so plainly. */}
+          {variants.length > 0 && (
+            <Text
+              style={[styles.stockLine, {
+                color: shownStock > 0 ? colors.success : colors.danger,
+                fontFamily: typography.fontFamily.semiBold,
+              }]}
+            >
+              {shownStock > 0
+                ? `${shownStock} left in this option`
+                : "This option is out of stock"}
+            </Text>
+          )}
 
           <Text style={[styles.availLine, { color: colors.subText, fontFamily: typography.fontFamily.medium }]}>
             Available at {detail?.stores.length ?? 0} {(detail?.stores.length ?? 0) === 1 ? "shop" : "shops"} near you
@@ -136,4 +178,7 @@ const styles = StyleSheet.create({
   vegMark: { width: 16, height: 16, borderRadius: 3, borderWidth: 1.5, alignItems: "center", justifyContent: "center", alignSelf: "center" },
   vegDot: { width: 7, height: 7, borderRadius: 4 },
   availLine: { fontSize: typography.size.sm, marginTop: 8 },
+  // Picker draws its own horizontal padding, so cancel the screen's.
+  pickerWrap: { marginHorizontal: -16, marginTop: 14 },
+  stockLine: { fontSize: typography.size.sm, marginTop: 12 },
 });

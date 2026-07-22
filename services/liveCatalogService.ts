@@ -43,6 +43,21 @@ export interface LiveProductStore {
   ascCode: string | null;
 }
 
+// §23 — one sellable SKU of a product. `price`/`mrp` are null when the SKU
+// inherits the parent's; the picker resolves that, never the raw null.
+export interface ProductVariant {
+  id: string;
+  axes: Record<string, string>;
+  axisSig: string;
+  sku: string | null;
+  barcode: string | null;
+  price: number | null; // rupees, null = same as parent
+  mrp: number | null;
+  dealPrice: number | null;
+  stockQty: number;
+  isActive: boolean;
+}
+
 export interface LiveProduct {
   id: string;
   name: string;
@@ -58,6 +73,11 @@ export interface LiveProduct {
   category: string | null;
   subCategory: string | null;
   apcClassCode: string | null;
+  // §28 schema key + free-form descriptive fields the category defined.
+  kind: string | null;
+  attributes: Record<string, unknown>;
+  // Empty when the listing does not sell as SKUs.
+  variants: ProductVariant[];
   store: LiveProductStore;
 }
 
@@ -113,6 +133,18 @@ interface WireStore {
   city: string;
   asc_code: string | null;
 }
+interface WireVariant {
+  id: string;
+  axes: Record<string, string>;
+  axis_sig: string;
+  sku: string | null;
+  barcode: string | null;
+  price_cents: number | null;
+  mrp_cents: number | null;
+  deal_price_cents: number | null;
+  stock_qty: number;
+  is_active: boolean;
+}
 interface WireProduct {
   id: string;
   name: string;
@@ -127,6 +159,9 @@ interface WireProduct {
   category: string | null;
   sub_category: string | null;
   apc_class_code: string | null;
+  kind: string | null;
+  attributes: Record<string, unknown>;
+  variants: WireVariant[];
   store: WireStore;
 }
 interface WireList {
@@ -191,6 +226,13 @@ function toLiveProduct(w: WireProduct): LiveProduct {
     category: w.category,
     subCategory: w.sub_category,
     apcClassCode: w.apc_class_code,
+    kind: w.kind ?? null,
+    attributes: w.attributes ?? {},
+    // Only SKUs the shop can actually sell reach the picker — a paused
+    // variant is not a choice, and offering it is a phantom option (§19.8).
+    variants: (w.variants ?? [])
+      .filter((v) => v.is_active)
+      .map(toVariant),
     store: {
       id: w.store.id,
       name: w.store.name,
@@ -198,6 +240,21 @@ function toLiveProduct(w: WireProduct): LiveProduct {
       city: w.store.city,
       ascCode: w.store.asc_code,
     },
+  };
+}
+
+function toVariant(w: WireVariant): ProductVariant {
+  return {
+    id: w.id,
+    axes: w.axes ?? {},
+    axisSig: w.axis_sig,
+    sku: w.sku,
+    barcode: w.barcode,
+    price: w.price_cents != null ? w.price_cents / 100 : null,
+    mrp: w.mrp_cents != null ? w.mrp_cents / 100 : null,
+    dealPrice: w.deal_price_cents != null ? w.deal_price_cents / 100 : null,
+    stockQty: w.stock_qty,
+    isActive: w.is_active,
   };
 }
 
