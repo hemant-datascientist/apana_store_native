@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import * as Haptics from "expo-haptics";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import DetailHero from "../../components/live-products/detail/DetailHero";
@@ -23,6 +24,9 @@ import DetailTabs from "../../components/live-products/detail/DetailTabs";
 import DetailMoreRail from "../../components/live-products/detail/DetailMoreRail";
 import { buildTabs } from "../../components/live-products/detail/buildTabs";
 import VariantPicker from "../../components/live-products/detail/VariantPicker";
+import DetailBuyBar from "../../components/live-products/detail/DetailBuyBar";
+import { cartRowId, useCart } from "../../context/CartContext";
+import { storeTint } from "../../lib/storeTint";
 import {
   initialSelection, resolveVariant, variantMrp, variantPrice, variantStock,
 } from "../../lib/variantSelect";
@@ -43,6 +47,7 @@ export default function LiveProductDetailScreen() {
   // §23 — which SKU the customer is looking at. Seeded to something the shop
   // can actually sell so the price block is never blank on arrival.
   const [selection, setSelection] = useState<Record<string, string>>({});
+  const { cart, addItem } = useCart();
 
   const load = useCallback(async () => {
     if (!id) { setError("Missing product."); setLoading(false); return; }
@@ -71,6 +76,46 @@ export default function LiveProductDetailScreen() {
   const shownPrice = variantPrice(chosen, p?.price ?? 0);
   const shownMrp = variantMrp(chosen, p?.mrp ?? null);
   const shownStock = variantStock(chosen, variants, p?.stockQty ?? 0);
+  // A variant listing with nothing resolved yet is not orderable — the
+  // customer has an axis left to pick, or picked a combination nobody stocks.
+  const needsChoice = variants.length > 0 && chosen == null;
+
+  const rowId = p != null ? cartRowId(p.id, chosen?.id ?? null) : "";
+  const inCartQty =
+    cart.find((s) => s.id === p?.store.id)?.items.find((i) => i.id === rowId)?.qty ?? 0;
+
+  function handleAdd() {
+    if (p == null || needsChoice || shownStock <= 0) return;
+    const tint = storeTint(p.store.id);
+    addItem({
+      storeId: p.store.id,
+      storeName: p.store.name,
+      storeType: p.store.type,
+      storeTypeColor: tint.color,
+      storeTypeBg: tint.bg,
+      // Real fulfilment selection happens in the cart; pickup is the only mode
+      // that needs no address, so it is the honest default.
+      fulfillment: "pickup",
+      item: {
+        id: rowId,
+        productId: p.id,
+        variantId: chosen?.id ?? null,
+        variantLabel: chosen != null ? Object.values(chosen.axes).join(" / ") : null,
+        maxQty: shownStock,
+        image: p.image,
+        name: p.name,
+        unit: p.unit,
+        price: shownPrice,
+        qty: 1,
+        icon: "pricetag-outline",
+        bg: tint.bg,
+        // Stop-loss floor travels with the line so the cart can show the
+        // unlock nudge; the server still decides what is actually charged.
+        floorPrice: chosen?.dealPrice ?? p.dealPrice ?? undefined,
+      },
+    });
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+  }
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "bottom"]}>
@@ -158,6 +203,18 @@ export default function LiveProductDetailScreen() {
           {/* ── Suggestions ── */}
           <DetailMoreRail excludeId={p.id} />
         </ScrollView>
+      )}
+
+      {p != null && (
+        <DetailBuyBar
+          price={shownPrice}
+          mrp={shownMrp}
+          needsChoice={needsChoice}
+          stock={shownStock}
+          inCartQty={inCartQty}
+          onAdd={handleAdd}
+          onGoToCart={() => router.push("/cart")}
+        />
       )}
     </SafeAreaView>
   );

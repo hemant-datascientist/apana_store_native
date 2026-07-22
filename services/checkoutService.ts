@@ -17,6 +17,11 @@ import { FulfillmentMode } from "../data/cartData";
 // ── Order item (one line on a store's sub-order) ──────────
 export interface OrderItemInput {
   itemId:    string;
+  // seller_products.id — what the backend actually orders against. Absent for
+  // a legacy/mock row, which checkout now refuses rather than silently drops.
+  productId?: string;
+  // §23 seller_product_variants.id — which SKU.
+  variantId?: string | null;
   name:      string;
   qty:       number;
   unitPrice: number;   // ₹ per unit at time of order (price snapshot)
@@ -51,6 +56,9 @@ export interface PlaceOrderRequest {
   storeOrders:     StoreOrderInput[];
   promoCode:       string | null;
   note:            string;
+  // The signed-in phone. §13 checkout keys orders on it (there is no customer
+  // FK yet), so without it an order could never be found again.
+  customerId?:     string | null;
 }
 
 // ── POST /api/orders success response ────────────────────
@@ -78,68 +86,152 @@ export interface PromoValidateResponse {
   message:     string;
 }
 
-// ── Helper: generate a deterministic per-store order ID ───
-// Format: <masterOrderId>-<storeIndex> e.g. "APX-20260419-7X3K-S1"
-// Backend will generate these server-side — this is only the mock.
-function generateStoreOrderId(masterOrderId: string, index: number): string {
-  return `${masterOrderId}-S${index + 1}`;
+// ── Live §13 checkout ─────────────────────────────────────
+// POST {BASE}/orders/checkout — modules/orders/src/service.ts.
+// One request, N orders back: the backend splits a multi-store basket into one
+// order per seller, because each seller fulfils and is paid independently.
+// There is no "master order" server-side, so the id shown to the customer is
+// the first order's §17 invoice rather than an invented wrapper id.
+
+const API_MODE = process.env.EXPO_PUBLIC_API_MODE ?? "mock";
+const TOWER_IP = process.env.EXPO_PUBLIC_TOWER_IP ?? "10.153.78.94";
+const IS_LIVE = API_MODE === "local" || API_MODE === "prod";
+
+const BASE_URL =
+  API_MODE === "prod"
+    ? "https://api.apana.in/api/customer"
+    : `http://${TOWER_IP}:8000/api/customer`;
+
+const CHECKOUT_TIMEOUT_MS = 20_000;
+
+// The cart's three modes collapse to the backend's fulfillment enum. "ride"
+// and "delivery" are both instant fulfilment; they differ in who carries it,
+// which is a delivery-module concern, not an order-state one.
+const FULFILLMENT: Record<FulfillmentMode, "instant" | "scheduled" | "pickup"> = {
+  pickup: "pickup",
+  delivery: "instant",
+  ride: "instant",
+};
+
+interface WireOrderItem {
+  product_id: string;
+  variant_id: string | null;
+  name: string;
+  qty: number;
+  unit_price_cents: number;
+  line_total_cents: number;
+}
+interface WireOrder {
+  id: string;
+  invoice_display: string;
+  seller_id: string;
+  seller_name: string | null;
+  status: string;
+  subtotal_cents: number;
+  total_cents: number;
+  payment_status: string;
+  fulfillment: string;
+  items: WireOrderItem[];
 }
 
-// ── Service stubs ─────────────────────────────────────────
-// Replace each stub body with a real fetch() call when backend is live.
-// Type signatures are frozen — no component rewrites needed.
-
-// POST /api/orders
 export async function placeOrder(
   req: PlaceOrderRequest,
 ): Promise<PlaceOrderResponse> {
-  // TODO: replace stub with real call ↓
-  // const res = await fetch(`${API_BASE}/orders`, {
-  //   method:  "POST",
-  //   headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-  //   body:    JSON.stringify(req),
-  // });
-  // if (!res.ok) throw new Error((await res.json()).message ?? "Order failed");
-  // return res.json();
+  if (!IS_LIVE) {
+    throw new Error("Ordering needs a live connection.");
+  }
 
-  await new Promise(r => setTimeout(r, 1200));   // simulate ~1.2 s network latency
+  const customerId = (req.customerId ?? "").trim();
+  if (!customerId) {
+    throw new Error("Sign in before placing an order.");
+  }
 
-  const masterOrderId = `APX-${Date.now()}`;
+  // Flatten to the backend's shape. A row without a productId came from an
+  // older cart and cannot be ordered — surfacing that beats posting a partial
+  // basket and charging for less than the customer sees.
+  const items: { product_id: string; variant_id: string | null; qty: number }[] = [];
+  for (const store of req.storeOrders) {
+    for (const item of store.items) {
+      if (!item.productId) {
+        throw new Error(
+          `"${item.name}" is from an older cart and can no longer be ordered. Remove it and add it again.`,
+        );
+      }
+      items.push({
+        product_id: item.productId,
+        variant_id: item.variantId ?? null,
+        qty: item.qty,
+      });
+    }
+  }
+  if (items.length === 0) throw new Error("Your cart is empty.");
 
-  // ── Build per-store results (mock store metadata — real values come from backend) ──
-  // The storeType / color / bg are echoed back from the server in the real API.
-  const STORE_META: Record<string, { storeType: string; storeTypeColor: string; storeTypeBg: string }> = {
-    s1: { storeType: "Grocery",     storeTypeColor: "#166534", storeTypeBg: "#DCFCE7" },
-    s2: { storeType: "Electronics", storeTypeColor: "#1E3A5F", storeTypeBg: "#DBEAFE" },
-    s3: { storeType: "Pharmacy",    storeTypeColor: "#0F5132", storeTypeBg: "#DCFCE7" },
-    s4: { storeType: "Fashion",     storeTypeColor: "#6D28D9", storeTypeBg: "#EDE9FE" },
-    s5: { storeType: "Food",        storeTypeColor: "#92400E", storeTypeBg: "#FEF3C7" },
-  };
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), CHECKOUT_TIMEOUT_MS);
+  let body: { orders: WireOrder[] };
+  try {
+    const res = await fetch(`${BASE_URL}/orders/checkout`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      signal: ctl.signal,
+      body: JSON.stringify({
+        customer_id: customerId,
+        items,
+        // V1 settles on collection/delivery; the payment module owns the rest.
+        payment_mode: "cod",
+        fulfillment: FULFILLMENT[req.mode],
+        delivery_address: req.addressId ? { address_id: req.addressId } : null,
+      }),
+    });
+    const text = await res.text();
+    if (!res.ok) {
+      // The backend's message is the useful one — "Cotton Tee (L / Navy):
+      // have 3, need 4" tells the customer exactly what to change.
+      let message = `Order failed (${res.status})`;
+      try {
+        const err = JSON.parse(text) as { message?: string; error?: string };
+        message = err.message ?? err.error ?? message;
+      } catch {
+        // non-JSON body — keep the status message
+      }
+      throw new Error(message);
+    }
+    body = JSON.parse(text) as { orders: WireOrder[] };
+  } finally {
+    clearTimeout(timer);
+  }
 
-  const storeOrders: StoreOrderResult[] = req.storeOrders.map((s, i) => {
-    const meta     = STORE_META[s.storeId] ?? { storeType: "Store", storeTypeColor: "#6B7280", storeTypeBg: "#F3F4F6" };
-    const subtotal = s.items.reduce((acc, item) => acc + item.unitPrice * item.qty, 0);
-    return {
-      storeOrderId:   generateStoreOrderId(masterOrderId, i),
-      storeId:        s.storeId,
-      storeName:      s.storeName,
-      storeType:      meta.storeType,
-      storeTypeColor: meta.storeTypeColor,
-      storeTypeBg:    meta.storeTypeBg,
-      subtotal,
-      estimatedMins:  req.mode === "pickup" ? 15 + i * 5 : req.mode === "ride" ? 10 : 35,
-    };
-  });
+  const orders = body.orders ?? [];
+  if (orders.length === 0) throw new Error("The order did not come back. Please check your orders before retrying.");
 
-  const maxEta = storeOrders.reduce((max, s) => Math.max(max, s.estimatedMins), 0);
+  // Echo the cart's own store styling back — the backend has no colours, and
+  // re-deriving them here would make the confirmation screen disagree with the
+  // cart the customer just left.
+  const styleBySeller = new Map(
+    req.storeOrders.map((s) => [s.storeId, s]),
+  );
+
+  const storeOrders: StoreOrderResult[] = orders.map((o) => ({
+    // The §17 invoice IS the scannable per-store id — no parallel scheme.
+    storeOrderId: o.invoice_display,
+    storeId: o.seller_id,
+    storeName: o.seller_name ?? styleBySeller.get(o.seller_id)?.storeName ?? "Store",
+    storeType: "Store",
+    storeTypeColor: "#6B7280",
+    storeTypeBg: "#F3F4F6",
+    subtotal: o.subtotal_cents / 100,
+    // No ETA engine yet — the delivery module owns it. 0 reads as "not known"
+    // to the tracking screen instead of a fabricated number (§19.8).
+    estimatedMins: 0,
+  }));
 
   return {
-    success:       true,
-    orderId:       masterOrderId,
+    success: true,
+    orderId: orders[0].invoice_display,
     storeOrders,
-    estimatedTime: maxEta,
-    paymentStatus: req.mode === "delivery" ? "authorized" : "captured",
-    message:       "Order placed successfully",
+    estimatedTime: 0,
+    paymentStatus: orders[0].payment_status === "paid" ? "captured" : "pending",
+    message: "Order placed",
   };
 }
 

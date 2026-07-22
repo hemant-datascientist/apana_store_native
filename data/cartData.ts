@@ -9,7 +9,26 @@
 export type FulfillmentMode = "pickup" | "delivery" | "ride";
 
 export interface CartItem {
+  // Cart-row key. For a variant listing this is `${productId}::${variantId}`,
+  // so two sizes of the same shirt are two rows the customer can count and
+  // remove independently — keying on productId alone would merge them.
   id:    string;
+  // ── Real backend identity (§13 checkout) ──────────────────
+  // seller_products.id. Without it the cart cannot be ordered, only drawn.
+  productId?: string;
+  // §23 seller_product_variants.id — which SKU. null/absent for listings that
+  // do not sell as variants. Checkout 422s a variant product without it, and
+  // that is correct: shipping an arbitrary size is worse than an error.
+  variantId?: string | null;
+  // "L / Navy" — shown under the item name so the customer can see WHICH one
+  // they added before they pay, not after it arrives.
+  variantLabel?: string | null;
+  // Stock available for this exact SKU, captured when added. Caps the qty
+  // stepper so the customer is stopped at the shelf, not at checkout.
+  maxQty?: number;
+  // Resolved product image, when the listing has one (falls back to icon/bg).
+  image?: string | null;
+
   name:  string;
   unit:  string;     // display unit e.g. "1 kg", "500 ml"
   price: number;     // everyday per-unit price in ₹ (≤ MRP)
@@ -39,56 +58,11 @@ export interface CartStore {
   unlockThreshold?: number;
 }
 
-// IDs aligned to canonical s1–s5 per CLAUDE.md so per-store invoices,
-// QR codes, and tracking screens resolve to the correct store name
-// across all data files (storeDetailData, nearbyMapData, invoiceData…).
-export const INITIAL_CART: CartStore[] = [
-  {
-    id:          "s1",
-    name:        "Sharma General Store",
-    type:        "Grocery",
-    typeColor:   "#166534",
-    typeBg:      "#D1FAE5",
-    fulfillment: "delivery",
-    // Seller A's stop-loss demo (matches the spec worked example):
-    // basket ≥ ₹500 → items drop to their floor. ₹580 here → unlocked,
-    // pays ₹460, saves ₹120. (Soap has no floor — seller's choice.)
-    unlockThreshold: 500,
-    items: [
-      { id:"i1", name:"Maggi Noodles",   unit:"70 g pack", price:10, floorPrice:8,  qty:20, icon:"fast-food-outline",  bg:"#FEF3C7" },
-      { id:"i2", name:"Parle-G Biscuit", unit:"100 g",     price:18, floorPrice:16, qty:10, icon:"nutrition-outline",  bg:"#FDE68A" },
-      { id:"i3", name:"Lays Chips",      unit:"52 g",      price: 5, floorPrice:3,  qty:30, icon:"fast-food-outline",  bg:"#FEE2E2" },
-      { id:"i8", name:"Lux Soap",        unit:"100 g",     price:10,                qty: 5, icon:"sparkles-outline",   bg:"#DBEAFE" },
-    ],
-  },
-  {
-    id:          "s3",
-    name:        "Gupta Medical Store",
-    type:        "Pharmacy",
-    typeColor:   "#0F5132",
-    typeBg:      "#DCFCE7",
-    fulfillment: "delivery",
-    items: [
-      // Dettol carries a brand-funded promo (Reckitt) — the brand covers the
-      // markdown, Gupta Medical still receives the full ₹89. Shows the
-      // Engine-B layer in the cart alongside Sharma's seller-funded stop-loss.
-      { id:"i4", name:"Dettol Handwash",   unit:"250 ml",  price: 89,  qty:1, icon:"water-outline",   bg:"#DBEAFE", brandPromoId:"p-dettol" },
-      { id:"i5", name:"Vitamin C Tablets", unit:"60 tabs", price:145,  qty:1, icon:"fitness-outline", bg:"#DCFCE7" },
-    ],
-  },
-  {
-    id:          "s5",
-    name:        "Fresh Bakes",
-    type:        "Food & Drink",
-    typeColor:   "#92400E",
-    typeBg:      "#FEF3C7",
-    fulfillment: "pickup",
-    items: [
-      { id:"i6", name:"Butter Croissant",  unit:"1 piece", price: 45,  qty:2, icon:"cafe-outline",        bg:"#FEF3C7" },
-      { id:"i7", name:"Sourdough Loaf",    unit:"500 g",   price:120,  qty:1, icon:"restaurant-outline", bg:"#FDE68A" },
-    ],
-  },
-];
+// The cart starts EMPTY and fills from real seller listings (§19.8 — no
+// phantom items). It used to open pre-loaded with four fake stores of fake
+// products, which made the screen demo well and made checkout impossible:
+// none of those ids existed in seller_products, so nothing could be ordered.
+export const INITIAL_CART: CartStore[] = [];
 
 // Promo codes
 export const PROMO_CODES: Record<string, { label: string; discount: number }> = {

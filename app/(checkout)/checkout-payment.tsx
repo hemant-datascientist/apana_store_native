@@ -35,6 +35,7 @@ import { FulfillmentMode, FULFILLMENT_CONFIG, DELIVERY_FEE } from "../../data/ca
 import { CHECKOUT_STEPS }    from "../../data/checkoutData";
 import { MOCK_PAYMENT_METHODS, PaymentMethod } from "../../data/paymentData";
 import { useCart }           from "../../context/CartContext";
+import { useAuth }           from "../../context/AuthContext";
 import {
   placeOrder, PlaceOrderRequest, StoreOrderInput, StoreOrderResult,
 } from "../../services/checkoutService";
@@ -59,7 +60,8 @@ const ACTIVE_STEP = "payment";
 export default function CheckoutPaymentScreen() {
   const { colors, isDark } = useTheme();
   const router             = useRouter();
-  const { cart: fullCart } = useCart();
+  const { cart: fullCart, clearCart } = useCart();
+  const { user } = useAuth();
 
   // ── Route params passed from checkout (Review) screen ────────
   const {
@@ -129,6 +131,9 @@ export default function CheckoutPaymentScreen() {
         storeName: store.name,
         items:     store.items.map(item => ({
           itemId:    item.id,
+          // Real backend identity — without these the order cannot be placed.
+          productId: item.productId,
+          variantId: item.variantId ?? null,
           name:      item.name,
           qty:       item.qty,
           unitPrice: item.price,
@@ -142,6 +147,8 @@ export default function CheckoutPaymentScreen() {
         storeOrders,
         promoCode,
         note,
+        // §13 keys orders on the phone; there is no customer FK yet.
+        customerId: user?.phone ?? null,
       };
 
       const res = await placeOrder(req);
@@ -152,6 +159,10 @@ export default function CheckoutPaymentScreen() {
       }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      // The basket is now an order on the server. Leaving it in the cart
+      // invites a duplicate order on the next tap.
+      clearCart();
 
       // All modes go to Track first — QR is shown from there after order is ready.
       // storeOrdersJson is forwarded so Track can pass it to the QR screen.

@@ -8,6 +8,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import type { CartItem } from "../../data/cartData";
@@ -46,7 +47,11 @@ export default function CartItemRow({ item, storeId, isLast, unlocked, onUpdateQ
 
       {/* Image placeholder */}
       <View style={[styles.img, { backgroundColor: item.bg }]}>
-        <Ionicons name={item.icon as any} size={26} color="rgba(0,0,0,0.25)" />
+        {item.image != null && item.image.length > 0 ? (
+          <Image source={{ uri: item.image }} style={styles.imgFill} contentFit="cover" transition={200} />
+        ) : (
+          <Ionicons name={item.icon as any} size={26} color="rgba(0,0,0,0.25)" />
+        )}
       </View>
 
       {/* Name + unit + price */}
@@ -58,6 +63,15 @@ export default function CartItemRow({ item, storeId, isLast, unlocked, onUpdateQ
         <Text style={[styles.unit, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
           {item.unit}
         </Text>
+        {/* §23 — WHICH SKU. Without it two sizes of the same shirt are two
+            identical-looking rows and the customer cannot tell them apart. */}
+        {item.variantLabel != null && item.variantLabel.length > 0 && (
+          <View style={[styles.variantTag, { backgroundColor: colors.background, borderColor: colors.border }]}>
+            <Text style={[styles.variantText, { color: colors.text, fontFamily: typography.fontFamily.semiBold }]}>
+              {item.variantLabel}
+            </Text>
+          </View>
+        )}
         {onDeal ? (
           <>
             <View style={styles.priceRow}>
@@ -124,6 +138,16 @@ export default function CartItemRow({ item, storeId, isLast, unlocked, onUpdateQ
 }
 
 const styles = StyleSheet.create({
+  imgFill: { width: "100%", height: "100%" },
+  variantTag: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    marginTop: 3,
+  },
+  variantText: { fontSize: typography.size.ss },
   row: {
     flexDirection:     "row",
     alignItems:        "center",

@@ -40,7 +40,7 @@ export default function CartScreen() {
   const router             = useRouter();
 
   // ── Cart state from shared context ───────────────────────
-  const { cart, updateQty, removeItem, setFulfillment, clearCart } = useCart();
+  const { cart, hydrated, updateQty, removeItem, setFulfillment, clearCart } = useCart();
 
   // ── Local-only UI state ───────────────────────────────────
   const [promoInput,      setPromoInput]      = useState("");
@@ -138,7 +138,10 @@ export default function CartScreen() {
   }
 
   // ── Empty state ───────────────────────────────────────────
-  if (cart.length === 0) {
+  // Only once the stored cart has been read back. Before that an empty array
+  // means "not loaded yet", and showing "Your cart is empty" over a basket
+  // that is about to appear reads as the app having lost it.
+  if (cart.length === 0 && hydrated) {
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "bottom"]}>
         <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.card} />
@@ -146,6 +149,18 @@ export default function CartScreen() {
           <CartHeader totalItems={0} onClear={() => {}} />
         </View>
         <CartEmptyState />
+      </SafeAreaView>
+    );
+  }
+
+  if (cart.length === 0) {
+    // Hydrating — header only, no verdict either way.
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "bottom"]}>
+        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.card} />
+        <View style={[styles.emptyHeader, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+          <CartHeader totalItems={0} onClear={() => {}} />
+        </View>
       </SafeAreaView>
     );
   }
