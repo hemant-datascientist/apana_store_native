@@ -26,15 +26,19 @@ import { useDebounce } from "../../hooks/useDebounce";
 export default function MenuStoresScreen() {
   const { colors } = useTheme();
   const router = useRouter();
-  const { selectedAddress, deviceCoords } = useLocation();
+  const { selectedAddress, deviceCity, deviceCoords } = useLocation();
 
   const [query, setQuery] = useState("");
   const debounced = useDebounce(query, 350);
   // Coordinates when we have a fix — the backend then scopes by §19.10
   // district instead of an exact city-name match, so a customer one town over
   // still sees the shops they can actually reach. City is the fallback.
+  // Coordinates and city must describe the SAME place. Sending the device's
+  // GPS with the saved address's city would let shops from a town the
+  // customer is not in leak into the list (unpinned sellers match on city).
+  const usingDeviceFix = deviceCoords != null;
   const { stores, loading, error, scope, elsewhere } = useMenuStores({
-    city: selectedAddress.city,
+    city: usingDeviceFix ? (deviceCity ?? undefined) : selectedAddress.city,
     q: debounced,
     lat: deviceCoords?.lat ?? selectedAddress.lat ?? null,
     lng: deviceCoords?.lng ?? selectedAddress.lng ?? null,
