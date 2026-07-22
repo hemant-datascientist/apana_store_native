@@ -239,19 +239,48 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 // ── Public API ────────────────────────────────────────────────
 
+// What the list was scoped to, plus how many live shops sit outside it. The
+// screen needs both to explain an empty result instead of just showing one.
+export interface DiscoveryScope {
+  label: string | null;
+  level: "area" | "city" | "all";
+}
+
+export interface MenuStoreList {
+  items: MenuStore[];
+  scope: DiscoveryScope;
+  elsewhere: number;
+}
+
 export async function fetchMenuStores(opts: {
   city?: string;
   q?: string;
   classCode?: string;
-} = {}): Promise<MenuStore[]> {
-  if (!IS_LIVE) return [];
+  lat?: number | null;
+  lng?: number | null;
+} = {}): Promise<MenuStoreList> {
+  if (!IS_LIVE) return { items: [], scope: { label: null, level: "all" }, elsewhere: 0 };
   const params = new URLSearchParams();
+  // Send BOTH. The backend prefers the §19.10 district the coordinates
+  // resolve to; the city is what it falls back to when they resolve to
+  // nothing (a fix outside India's cell coverage). Sending coordinates alone
+  // would widen an off-grid customer's search to the entire country.
+  if (opts.lat != null && opts.lng != null) {
+    params.set("lat", String(opts.lat));
+    params.set("lng", String(opts.lng));
+  }
   if (opts.city?.trim()) params.set("city", opts.city.trim());
   if (opts.q?.trim()) params.set("q", opts.q.trim());
   if (opts.classCode) params.set("class", opts.classCode);
   const qs = params.toString();
-  const body = await request<{ items: WireStore[] }>(`/menu/stores${qs ? `?${qs}` : ""}`);
-  return body.items.map(toStore);
+  const body = await request<{ items: WireStore[]; scope: DiscoveryScope; elsewhere: number }>(
+    `/menu/stores${qs ? `?${qs}` : ""}`,
+  );
+  return {
+    items: body.items.map(toStore),
+    scope: body.scope ?? { label: null, level: "all" },
+    elsewhere: body.elsewhere ?? 0,
+  };
 }
 
 export async function fetchMenuStore(id: string): Promise<MenuStoreDetail | null> {

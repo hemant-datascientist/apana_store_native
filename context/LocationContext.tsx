@@ -34,6 +34,10 @@ interface LocationContextValue {
   // selectedAddress.city for "near me" queries — the saved address is a
   // delivery target, not necessarily where the user is standing now.
   deviceCity:         string | null;
+  // The raw fix behind deviceCity. Area-scoped discovery (§19.10 district)
+  // needs coordinates, not a name: "Pimpri-Chinchwad" never string-matches
+  // "Pune" even though they are one district and twenty minutes apart.
+  deviceCoords:       { lat: number; lng: number } | null;
   locationReady:      boolean;          // true once user sets any location
   setSelectedAddress: (addr: UserAddress) => void;
   confirmLocation:    (addr: UserAddress) => void;   // sets address + marks ready
@@ -45,6 +49,7 @@ const LocationContext = createContext<LocationContextValue | null>(null);
 export function LocationProvider({ children }: { children: ReactNode }) {
   const [selectedAddress, setSelectedAddressState] = useState<UserAddress>(SAVED_ADDRESSES[0]);
   const [deviceCity,      setDeviceCity]           = useState<string | null>(null);
+  const [deviceCoords,    setDeviceCoords]         = useState<{ lat: number; lng: number } | null>(null);
   const [locationReady,   setLocationReadyState]   = useState(false);
   const [hydrated,        setHydrated]             = useState(false);
 
@@ -58,6 +63,11 @@ export function LocationProvider({ children }: { children: ReactNode }) {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") return;
         const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        // Keep the fix regardless of whether the reverse-geocode names it —
+        // the coordinates are the more useful half for discovery.
+        if (!cancelled) {
+          setDeviceCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        }
         const places = await Location.reverseGeocodeAsync({
           latitude:  pos.coords.latitude,
           longitude: pos.coords.longitude,
@@ -125,6 +135,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     <LocationContext.Provider value={{
       selectedAddress,
       deviceCity,
+      deviceCoords,
       locationReady,
       setSelectedAddress,
       confirmLocation,

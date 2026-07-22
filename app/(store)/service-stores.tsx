@@ -26,18 +26,24 @@ import { useDebounce } from "../../hooks/useDebounce";
 export default function ServiceStoresScreen() {
   const { colors } = useTheme();
   const router = useRouter();
-  const { selectedAddress } = useLocation();
+  const { selectedAddress, deviceCoords } = useLocation();
 
   const [query, setQuery] = useState("");
   const debounced = useDebounce(query, 350);
-  const { stores, loading, error } = useServiceStores({
+  // Coordinates when we have a fix — the backend then scopes by §19.10
+  // district instead of an exact city-name match, so a customer one town over
+  // still sees the shops they can actually reach. City is the fallback.
+  const { stores, loading, error, scope, elsewhere } = useServiceStores({
     city: selectedAddress.city,
     q: debounced,
+    lat: deviceCoords?.lat ?? selectedAddress.lat ?? null,
+    lng: deviceCoords?.lng ?? selectedAddress.lng ?? null,
   });
+  const areaLabel = scope.label ?? selectedAddress.city;
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "bottom"]}>
-      <ScreenHeader title="Book a service" subtitle={selectedAddress.city} />
+      <ScreenHeader title="Book a service" subtitle={areaLabel} />
 
       <View style={[styles.searchWrap, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Ionicons name="search" size={17} color={colors.subText} />
@@ -77,7 +83,10 @@ export default function ServiceStoresScreen() {
                 </Text>
                 <Text style={[styles.emptyBody, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>
                   {error ??
-                    `No shop in ${selectedAddress.city} is taking bookings on Apana yet. As they join, they'll show here.`}
+                    `No shop in ${areaLabel} is taking bookings on Apana yet.`
+                    + (elsewhere > 0
+                        ? ` ${elsewhere} shops are live elsewhere on Apana — we're expanding.`
+                        : " As they join, they'll show here.")}
                 </Text>
               </>
             )}

@@ -26,18 +26,24 @@ import { useDebounce } from "../../hooks/useDebounce";
 export default function MenuStoresScreen() {
   const { colors } = useTheme();
   const router = useRouter();
-  const { selectedAddress } = useLocation();
+  const { selectedAddress, deviceCoords } = useLocation();
 
   const [query, setQuery] = useState("");
   const debounced = useDebounce(query, 350);
-  const { stores, loading, error } = useMenuStores({
+  // Coordinates when we have a fix — the backend then scopes by §19.10
+  // district instead of an exact city-name match, so a customer one town over
+  // still sees the shops they can actually reach. City is the fallback.
+  const { stores, loading, error, scope, elsewhere } = useMenuStores({
     city: selectedAddress.city,
     q: debounced,
+    lat: deviceCoords?.lat ?? selectedAddress.lat ?? null,
+    lng: deviceCoords?.lng ?? selectedAddress.lng ?? null,
   });
+  const areaLabel = scope.label ?? selectedAddress.city;
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "bottom"]}>
-      <ScreenHeader title="Order food" subtitle={selectedAddress.city} />
+      <ScreenHeader title="Order food" subtitle={areaLabel} />
 
       <View style={[styles.searchWrap, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Ionicons name="search" size={17} color={colors.subText} />
@@ -77,7 +83,10 @@ export default function MenuStoresScreen() {
                 </Text>
                 <Text style={[styles.emptyBody, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>
                   {error ??
-                    `No shop in ${selectedAddress.city} has a menu up on Apana today.`}
+                    `No kitchen in ${areaLabel} has a menu up on Apana today.`
+                    + (elsewhere > 0
+                        ? ` ${elsewhere} kitchens are live elsewhere on Apana — we're expanding.`
+                        : " As they join, they'll show here.")}
                 </Text>
               </>
             )}
