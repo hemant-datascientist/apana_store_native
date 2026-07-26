@@ -49,6 +49,7 @@ import {
   MOCK_PARTNERS, TRACKING_MODE_CONFIG, MOCK_CUSTOMER_LOCATION,
 } from "../../data/orderTrackingData";
 import { useMockPartnerFix }    from "../../hooks/useMockPartnerFix";
+import { usePartnerFix }        from "../../hooks/usePartnerFix";
 
 import TrackingProgress         from "../../components/order-tracking/TrackingProgress";
 import TrackingMapPlaceholder   from "../../components/order-tracking/TrackingMapPlaceholder";
@@ -81,8 +82,16 @@ export default function OrderTrackingScreen() {
   const mode    = modeParam as FulfillmentMode;
   const totalAmt= parseFloat(total);
 
-  // ── Live partner stream (§19.5) — mock WS fixes, smoothed by the map ──
-  const partnerFix = useMockPartnerFix(mode);
+  // ── Live partner stream (§19.5) — REAL fixes for a real order, smoothed by
+  // the map; the mock walk only for the demo/default order id. A real order id
+  // is a uuid; "APX-MOCK-001" (the param default) drives the mock.
+  const isRealOrder = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
+  // Both hooks are called every render (rules of hooks); only one feeds the map.
+  // For a real order we use the real fix — null means "no partner yet", and the
+  // map honestly shows no marker rather than falling back to a fake one (§19.8).
+  const realFix = usePartnerFix(isRealOrder ? orderId : undefined);
+  const mockFix = useMockPartnerFix(mode);
+  const partnerFix = isRealOrder ? realFix : mockFix;
 
   // ── Parse storeOrders (expo-router already URL-decoded) ─────
   const storeOrdersRaw = useMemo<StoreOrderResult[]>(() => {
