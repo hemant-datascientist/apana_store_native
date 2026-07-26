@@ -36,6 +36,7 @@ import {
   DEFAULT_STORE_ID,
   StoreProductCategory,
 } from "../../data/storeDetailData";
+import { useStoreCatalog }     from "../../hooks/useStoreCatalog";
 import { useFollow }           from "../../hooks/useFollow";
 import { useStoreMute }        from "../../hooks/useNotificationPrefs";
 import StoreShareSheet         from "../../components/store/StoreShareSheet";
@@ -54,7 +55,31 @@ export default function StoreDetailScreen() {
   const { id, follow }     = useLocalSearchParams<{ id?: string; follow?: string }>();
   const insets             = useSafeAreaInsets();
 
-  const store = getStoreById(id ?? DEFAULT_STORE_ID);
+  // Real catalog for this store id (§16.9 APC-arranged). Falls back to bundled
+  // sample data when the id isn't a real approved store (dev / offline / mock).
+  const live = useStoreCatalog(id);
+
+  // Real meta + real APC categories overlay the mock CHROME (hero colour, hours
+  // and contact placeholders still await BE fields — clearly generic, never
+  // presented as this shop's real numbers). Substance — name, city, rating,
+  // and the product categories — is real when the store resolves.
+  const base = getStoreById(id ?? DEFAULT_STORE_ID);
+  const store = live.meta
+    ? {
+        ...base,
+        id: live.meta.id,
+        name: live.meta.name,
+        tagline: live.meta.categoryLabel,
+        category: live.meta.categoryLabel,
+        city: live.meta.city,
+        rating: live.meta.rating,
+        reviewCount: live.meta.reviewCount,
+        isLive: live.meta.isLive,
+        lat: live.meta.lat ?? base.lat,
+        lng: live.meta.lng ?? base.lng,
+        categories: live.categories,
+      }
+    : base;
 
   const [productSearch, setProductSearch] = useState("");
   const [showShare, setShowShare] = useState(false);

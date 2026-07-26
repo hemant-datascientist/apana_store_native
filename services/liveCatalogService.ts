@@ -323,6 +323,60 @@ export async function fetchStoreProducts(storeId: string, limit = 50): Promise<L
   return body.items.map(toLiveProduct);
 }
 
+// ── One store's header meta (name, category, city, rating, live) ──
+export interface StoreMeta {
+  id: string;
+  name: string;
+  type: string;
+  ascCode: string | null;
+  categoryLabel: string;
+  city: string;
+  lat: number | null;
+  lng: number | null;
+  isLive: boolean;
+  rating: number;
+  reviewCount: number;
+}
+interface WireStoreMeta {
+  id: string;
+  name: string;
+  type: string;
+  asc_code: string | null;
+  category_label: string;
+  city: string;
+  lat: number | null;
+  lng: number | null;
+  is_live: boolean;
+  rating: number;
+  review_count: number;
+}
+
+// null when the id isn't an approved store (404) or in mock mode — the caller
+// then falls back to bundled sample data rather than inventing a store (§19.8).
+export async function fetchStoreMeta(storeId: string): Promise<StoreMeta | null> {
+  if (!IS_LIVE) return null;
+  try {
+    const w = await fetchJson<WireStoreMeta>(
+      `${BASE_URL}/stores/${encodeURIComponent(storeId)}`,
+    );
+    return {
+      id: w.id,
+      name: w.name,
+      type: w.type,
+      ascCode: w.asc_code,
+      categoryLabel: w.category_label,
+      city: w.city,
+      lat: w.lat,
+      lng: w.lng,
+      isLive: w.is_live,
+      rating: w.rating,
+      reviewCount: w.review_count,
+    };
+  } catch {
+    return null;
+  }
+}
+
 // Full SmartConsumer-style detail: product + GTIN enrichment + stocking stores.
 // null when the id doesn't resolve (404) or in mock mode.
 export async function fetchProductDetail(id: string): Promise<ProductDetail | null> {
