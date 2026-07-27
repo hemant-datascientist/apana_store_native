@@ -21,11 +21,16 @@ import type { paths } from "../../types/api";
 const API_MODE = process.env.EXPO_PUBLIC_API_MODE ?? "mock";
 const TOWER_IP = process.env.EXPO_PUBLIC_TOWER_IP ?? "10.153.78.94";
 
+// EXPO_PUBLIC_BE_BASE_URL (a full origin — Cloudflare tunnel, ngrok, LAN) wins
+// when set, so the phone works off-Wi-Fi. Else build from the LAN IP.
+const BE_ORIGIN =
+  (process.env.EXPO_PUBLIC_BE_BASE_URL ?? "").replace(/\/+$/, "") || `http://${TOWER_IP}:8000`;
+
 export const API_BASE_URL =
   API_MODE === "prod"
     ? "https://api.apana.in/api/customer"
     : API_MODE === "local"
-      ? `http://${TOWER_IP}:8000/api/customer`
+      ? `${BE_ORIGIN}/api/customer`
       : "http://localhost:4010"; // Prism mock
 
 // ── Auth middleware — pulls JWT from AsyncStorage every request ──

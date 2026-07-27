@@ -23,7 +23,7 @@ const IS_LIVE = API_MODE === "local" || API_MODE === "prod";
 const BASE_URL =
   API_MODE === "prod"
     ? "https://api.apana.in/api/customer"
-    : `http://${TOWER_IP}:8000/api/customer`;
+    : `${(process.env.EXPO_PUBLIC_BE_BASE_URL ?? "").replace(/\/+$/, "") || `http://${TOWER_IP}:8000`}/api/customer`;
 
 // BE origin — seller-uploaded images are stored as BE-relative refs
 // (/api/seller/uploads/file/… or bare assets/…); master/CDN images are

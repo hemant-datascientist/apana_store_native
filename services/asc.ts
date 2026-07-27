@@ -16,7 +16,7 @@ export const ASC_BASE_URL =
   process.env.EXPO_PUBLIC_ASC_API_URL ??
   (API_MODE === "prod"
     ? "https://api.apana.in/api/asc"
-    : `http://${TOWER_IP}:8000/api/asc`);
+    : `${(process.env.EXPO_PUBLIC_BE_BASE_URL ?? "").replace(/\/+$/, "") || `http://${TOWER_IP}:8000`}/api/asc`);
 
 export interface AscClass {
   id: string;        // "inventory" | "service" | "menu" | "factory" | "wholesale"
