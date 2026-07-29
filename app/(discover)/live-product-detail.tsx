@@ -22,6 +22,7 @@ import DetailHero from "../../components/live-products/detail/DetailHero";
 import DetailHeader from "../../components/live-products/detail/DetailHeader";
 import DetailTabs from "../../components/live-products/detail/DetailTabs";
 import DetailClassification from "../../components/live-products/detail/DetailClassification";
+import DetailReviews from "../../components/live-products/detail/DetailReviews";
 import DetailMoreRail from "../../components/live-products/detail/DetailMoreRail";
 import { buildTabs } from "../../components/live-products/detail/buildTabs";
 import VariantPicker from "../../components/live-products/detail/VariantPicker";
@@ -198,12 +199,28 @@ export default function LiveProductDetailScreen() {
             Available at {detail?.stores.length ?? 0} {(detail?.stores.length ?? 0) === 1 ? "shop" : "shops"} near you
           </Text>
 
+          {/* Compact rating chip — only when there are REAL reviews (§19.8) */}
+          {(detail?.reviewCount ?? 0) > 0 && (
+            <View style={styles.ratingChip}>
+              <Ionicons name="star" size={13} color="#F59E0B" />
+              <Text style={[styles.ratingChipTxt, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>
+                {detail?.rating.toFixed(1)}
+              </Text>
+              <Text style={[styles.ratingChipSub, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>
+                ({detail?.reviewCount})
+              </Text>
+            </View>
+          )}
+
           {/* ── §27 Apana Product Classification (code + names) ── */}
           <DetailClassification
             classCode={p.apcClassCode}
             familyCode={p.apcFamilyCode}
             varietyCode={p.apcVarietyCode}
           />
+
+          {/* ── Ratings & reviews (real, buyer-gated) ── */}
+          <DetailReviews productId={p.id} initialRating={detail?.rating ?? 0} initialCount={detail?.reviewCount ?? 0} />
 
           {/* ── Tabbed spec cards ── */}
           <DetailTabs tabs={buildTabs(detail!)} />
@@ -243,6 +260,9 @@ const styles = StyleSheet.create({
   vegMark: { width: 16, height: 16, borderRadius: 3, borderWidth: 1.5, alignItems: "center", justifyContent: "center", alignSelf: "center" },
   vegDot: { width: 7, height: 7, borderRadius: 4 },
   availLine: { fontSize: typography.size.sm, marginTop: 8 },
+  ratingChip: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 8 },
+  ratingChipTxt: { fontSize: typography.size.sm },
+  ratingChipSub: { fontSize: typography.size.xs },
   // Picker draws its own horizontal padding, so cancel the screen's.
   pickerWrap: { marginHorizontal: -16, marginTop: 14 },
   stockLine: { fontSize: typography.size.sm, marginTop: 12 },

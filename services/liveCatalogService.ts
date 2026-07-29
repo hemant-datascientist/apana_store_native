@@ -125,6 +125,22 @@ export interface ProductDetail {
   product: LiveProduct;
   enrichment: ProductEnrichment | null;
   stores: StockingStore[];
+  rating: number;       // real AVG; 0 = no ratings yet (never a fake star)
+  reviewCount: number;
+}
+
+// One customer review of a product.
+export interface ProductReview {
+  id: string;
+  rating: number;
+  comment: string | null;
+  authorName: string | null;
+  createdAt: string;
+}
+export interface ProductReviews {
+  rating: number;
+  reviewCount: number;
+  items: ProductReview[];
 }
 
 // ── BE wire shape (snake_case, cents) ─────────────────────────
@@ -211,6 +227,20 @@ interface WireDetail {
   product: WireProduct;
   enrichment: WireEnrichment | null;
   stores: WireStockingStore[];
+  rating: number;
+  review_count: number;
+}
+interface WireReview {
+  id: string;
+  rating: number;
+  comment: string | null;
+  author_name: string | null;
+  created_at: string;
+}
+interface WireReviews {
+  rating: number;
+  review_count: number;
+  items: WireReview[];
 }
 
 function resolveImage(u: string | undefined): string | null {
@@ -434,8 +464,47 @@ export async function fetchProductDetail(id: string): Promise<ProductDetail | nu
       product: toLiveProduct(body.product),
       enrichment: body.enrichment ? toEnrichment(body.enrichment) : null,
       stores: (body.stores ?? []).map(toStockingStore),
+      rating: body.rating ?? 0,
+      reviewCount: body.review_count ?? 0,
     };
   } catch {
     return null;
   }
+}
+
+// ── Product reviews (§ real-buyer gated) ──────────────────────
+export async function fetchProductReviews(productId: string, limit = 20): Promise<ProductReviews> {
+  if (!IS_LIVE) return { rating: 0, reviewCount: 0, items: [] };
+  const body = await fetchJson<WireReviews>(
+    `${BASE_URL}/catalog/products/${encodeURIComponent(productId)}/reviews?limit=${limit}`,
+  );
+  return {
+    rating: body.rating,
+    reviewCount: body.review_count,
+    items: (body.items ?? []).map((r) => ({
+      id: r.id, rating: r.rating, comment: r.comment, authorName: r.author_name, createdAt: r.created_at,
+    })),
+  };
+}
+
+// Submit a 1–5★ review. The BE gates on a delivered order containing the
+// product; a non-buyer gets a 403, no auth a 401 — both surface to the caller
+// (never silently swallowed). Returns the fresh aggregate.
+export async function submitProductReview(
+  productId: string,
+  input: { customerId: string; rating: number; comment?: string; authorName?: string },
+): Promise<{ rating: number; reviewCount: number }> {
+  const res = await fetch(`${BASE_URL}/catalog/products/${encodeURIComponent(productId)}/review`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      customer_id: input.customerId,
+      rating: input.rating,
+      comment: input.comment,
+      author_name: input.authorName,
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((data as { message?: string }).message ?? `review failed (${res.status})`);
+  return { rating: (data as { rating: number }).rating, reviewCount: (data as { review_count: number }).review_count };
 }
