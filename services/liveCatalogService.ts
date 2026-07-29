@@ -74,6 +74,7 @@ export interface LiveProduct {
   subCategory: string | null;
   apcClassCode: string | null;
   apcFamilyCode: string | null;
+  apcVarietyCode: string | null;
   // §28 schema key + free-form descriptive fields the category defined.
   kind: string | null;
   attributes: Record<string, unknown>;
@@ -161,6 +162,7 @@ interface WireProduct {
   sub_category: string | null;
   apc_class_code: string | null;
   apc_family_code: string | null;
+  apc_variety_code: string | null;
   kind: string | null;
   attributes: Record<string, unknown>;
   variants: WireVariant[];
@@ -235,6 +237,7 @@ function toLiveProduct(w: WireProduct): LiveProduct {
     subCategory: w.sub_category,
     apcClassCode: w.apc_class_code,
     apcFamilyCode: w.apc_family_code ?? null,
+    apcVarietyCode: w.apc_variety_code ?? null,
     kind: w.kind ?? null,
     attributes: w.attributes ?? {},
     // Only SKUs the shop can actually sell reach the picker — a paused

@@ -21,6 +21,7 @@ import { typography } from "../../theme/typography";
 import DetailHero from "../../components/live-products/detail/DetailHero";
 import DetailHeader from "../../components/live-products/detail/DetailHeader";
 import DetailTabs from "../../components/live-products/detail/DetailTabs";
+import DetailClassification from "../../components/live-products/detail/DetailClassification";
 import DetailMoreRail from "../../components/live-products/detail/DetailMoreRail";
 import { buildTabs } from "../../components/live-products/detail/buildTabs";
 import VariantPicker from "../../components/live-products/detail/VariantPicker";
@@ -196,6 +197,13 @@ export default function LiveProductDetailScreen() {
           <Text style={[styles.availLine, { color: colors.subText, fontFamily: typography.fontFamily.medium }]}>
             Available at {detail?.stores.length ?? 0} {(detail?.stores.length ?? 0) === 1 ? "shop" : "shops"} near you
           </Text>
+
+          {/* ── §27 Apana Product Classification (code + names) ── */}
+          <DetailClassification
+            classCode={p.apcClassCode}
+            familyCode={p.apcFamilyCode}
+            varietyCode={p.apcVarietyCode}
+          />
 
           {/* ── Tabbed spec cards ── */}
           <DetailTabs tabs={buildTabs(detail!)} />
