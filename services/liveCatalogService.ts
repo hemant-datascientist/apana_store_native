@@ -73,6 +73,7 @@ export interface LiveProduct {
   category: string | null;
   subCategory: string | null;
   apcClassCode: string | null;
+  apcFamilyCode: string | null;
   // §28 schema key + free-form descriptive fields the category defined.
   kind: string | null;
   attributes: Record<string, unknown>;
@@ -159,16 +160,23 @@ interface WireProduct {
   category: string | null;
   sub_category: string | null;
   apc_class_code: string | null;
+  apc_family_code: string | null;
   kind: string | null;
   attributes: Record<string, unknown>;
   variants: WireVariant[];
   store: WireStore;
+}
+interface WireFamilyFacet {
+  code: string | null;
+  name: string | null;
+  count: number;
 }
 interface WireList {
   items: WireProduct[];
   page: number;
   limit: number;
   total: number;
+  families?: WireFamilyFacet[];
 }
 interface WireEnrichment {
   gtin: string | null;
@@ -226,6 +234,7 @@ function toLiveProduct(w: WireProduct): LiveProduct {
     category: w.category,
     subCategory: w.sub_category,
     apcClassCode: w.apc_class_code,
+    apcFamilyCode: w.apc_family_code ?? null,
     kind: w.kind ?? null,
     attributes: w.attributes ?? {},
     // Only SKUs the shop can actually sell reach the picker — a paused
@@ -321,6 +330,39 @@ export async function fetchStoreProducts(storeId: string, limit = 50): Promise<L
     `${BASE_URL}/catalog/stores/${encodeURIComponent(storeId)}/products?limit=${limit}`,
   );
   return body.items.map(toLiveProduct);
+}
+
+// ── Products of one APC class (§27) — the customer category listing ──────────
+// A family that has live products in the class, for the left sub-category rail.
+export interface ApcFamilyFacet {
+  code: string | null;
+  name: string | null;
+  count: number;
+}
+
+export interface ApcProductsResult {
+  products: LiveProduct[];
+  families: ApcFamilyFacet[];
+  total: number;
+}
+
+// Every visible product classified under an APC class (e.g. Mobile = APC-12-A7),
+// plus the family facet for the rail. `family` narrows further. Honest-empty in
+// mock mode (there is no bundled real inventory) and on any error in live mode
+// the caller shows a retry state — never invents products (§19.8).
+export async function fetchApcProducts(
+  apcClass: string,
+  opts: { family?: string; limit?: number } = {},
+): Promise<ApcProductsResult> {
+  if (!IS_LIVE) return { products: [], families: [], total: 0 };
+  const params = new URLSearchParams({ apc_class: apcClass, limit: String(opts.limit ?? 100) });
+  if (opts.family) params.set("apc_family", opts.family);
+  const body = await fetchJson<WireList>(`${BASE_URL}/catalog/products?${params.toString()}`);
+  return {
+    products: body.items.map(toLiveProduct),
+    families: body.families ?? [],
+    total: body.total,
+  };
 }
 
 // ── One store's header meta (name, category, city, rating, live) ──

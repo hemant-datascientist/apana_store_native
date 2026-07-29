@@ -66,7 +66,10 @@ export default function CategoryScreen() {
       <ApcCategorySection
         group={group}
         accent={SECTION_ACCENTS[index % SECTION_ACCENTS.length]}
-        onPress={(code) => router.push(`/(apc)/${code}` as any)}
+        // Tapping a class shows its REAL listings (e.g. Mobile → the mobiles
+        // sellers have listed), not the taxonomy tree. The classification tree
+        // stays reachable via the "explore classification" banner.
+        onPress={(code) => router.push(`/category-products?code=${encodeURIComponent(code)}` as any)}
       />
     ),
     [router],
