@@ -14,12 +14,11 @@ import { View } from "react-native";
 import BannerCarousel          from "../BannerCarousel";
 import SeasonalCategorySection from "./SeasonalCategorySection";
 import BrandDealsSection       from "./BrandDealsSection";
-import PopularStoresSection    from "./PopularStoresSection";
 import HomeDiscoverRow         from "../HomeDiscoverRow";
 import CategoryLiveProducts    from "../live/CategoryLiveProducts";
 
 import { BANNERS }          from "../../../../data/homeData";
-import { SEASONS, POPULAR_STORES } from "../../../../data/allFeedData";
+import { SEASONS }          from "../../../../data/allFeedData";
 import { getActiveBrandDeals } from "../../../../data/brandPromoData";
 
 export default function AllFeed() {
@@ -46,9 +45,8 @@ export default function AllFeed() {
       {/* ── 5. Brand Deals — brand-FUNDED co-op; seller kept whole (empty → hidden) ── */}
       <BrandDealsSection deals={brandDeals} />
 
-      {/* ── 6. Popular Stores Near You ── */}
-      <PopularStoresSection stores={POPULAR_STORES} />
-
+      {/* Real nearby stores live in the Stores discovery mode (NearbyStoresFeed);
+          the old mock "Popular Stores" rail was removed (§19.8 — no phantom shops). */}
       <View style={{ height: 24 }} />
     </View>
   );
