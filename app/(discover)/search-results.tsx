@@ -134,7 +134,8 @@ export default function SearchResultsScreen() {
 
   // ── Handlers ─────────────────────────────────────────────
   const handleProductPress = useCallback((id: string) => {
-    router.push(`/product-detail?id=${id}` as any);
+    // Real product id → the live detail screen (the mock /product-detail is gone).
+    router.push(`/live-product-detail?id=${id}` as any);
   }, [router]);
 
   const handleStorePress = useCallback((id: string) => {

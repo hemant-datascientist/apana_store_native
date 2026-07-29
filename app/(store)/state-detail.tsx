@@ -27,7 +27,7 @@ import MenuDrawer      from "../../components/tabs/home/MenuDrawer";
 import { handleMenuSelect } from "../../lib/menuNav";
 import { useStoreLiveStats } from "../../hooks/useStoreLiveStats";
 import { HEADER_BG }    from "../../data/homeData";
-import { fetchStateData, StateDetailData, StateProduct, StateStore } from "../../data/stateDetailData";
+import { fetchStateData, StateDetailData } from "../../data/stateDetailData";
 import { Animated } from "react-native";
 import { formatCount } from "../../utils/formatUtils";
 
@@ -66,112 +66,6 @@ const sh = StyleSheet.create({
   left:  { flexDirection:"row", alignItems:"center", gap:6 },
   title: { fontSize:15 }, // color set inline from theme
   seeAll:{ fontSize:12 },
-});
-
-// ── Product H-Scroll (matches ProductHScrollSection) ──────────
-function ProductSection({ accent, products }: { accent:string; products:StateProduct[] }) {
-  const { colors } = useTheme();
-  const router     = useRouter();
-
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={ps.scroll}>
-      {products.map(p => (
-        <TouchableOpacity 
-          key={p.id} 
-          style={[ps.card, { backgroundColor: colors.card, borderColor: colors.border }]}
-          activeOpacity={0.8}
-          onPress={() => router.push(`/(product)/product-detail?id=${p.id}` as any)}
-        >
-          <View style={[ps.img, { backgroundColor: p.bg }]}>
-            <Ionicons name={p.icon as any} size={36} color="rgba(0,0,0,0.18)" />
-            {p.badge && (
-              <View style={[ps.badge, { backgroundColor: accent }]}>
-                <Text style={[ps.badgeTxt, { fontFamily: typography.fontFamily.bold }]}>{p.badge}</Text>
-              </View>
-            )}
-          </View>
-          <View style={ps.info}>
-            <Text numberOfLines={2} style={[ps.name, { fontFamily: typography.fontFamily.semiBold, color: colors.text }]}>{p.name}</Text>
-            <Text numberOfLines={1} style={[ps.unit, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>{p.unit}</Text>
-            <View style={ps.priceRow}>
-              <Text style={[ps.price, { color: accent, fontFamily: typography.fontFamily.bold }]}>
-                ₹{p.price.toLocaleString("en-IN")}
-              </Text>
-              <TouchableOpacity style={[ps.addBtn, { backgroundColor: accent }]}
-                onPress={() => Alert.alert("Added", `${p.name} added to cart.`)}
-              >
-                <Ionicons name="add" size={14} color="#fff" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
-  );
-}
-const ps = StyleSheet.create({
-  scroll:   { paddingHorizontal:16, gap:8, paddingBottom:4 },
-  card:     { width:115, borderRadius:10, overflow:"hidden", borderWidth:1, shadowColor:"#000", shadowOffset:{width:0,height:1}, shadowOpacity:0.06, shadowRadius:3, elevation:2 },
-  img:      { width:"100%", height:100, alignItems:"center", justifyContent:"center" },
-  badge:    { position:"absolute", top:5, left:5, paddingHorizontal:5, paddingVertical:2, borderRadius:4 },
-  badgeTxt: { color:"#fff", fontSize:8 },
-  info:     { padding:7, paddingTop:6, gap:2 },
-  name:     { fontSize:11, lineHeight:14 },
-  unit:     { fontSize:9.5 }, // color set inline from theme
-  priceRow: { flexDirection:"row", alignItems:"center", justifyContent:"space-between", marginTop:4 },
-  price:    { fontSize:12 },
-  addBtn:   { width:24, height:24, borderRadius:6, alignItems:"center", justifyContent:"center" },
-});
-
-// ── Store H-Scroll (matches PopularStoresSection) ─────────────
-function StoreSection({ accent, stores }: { accent:string; stores:StateStore[] }) {
-  const router = useRouter();
-  const { colors } = useTheme();
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={ss.scroll}>
-      {stores.map(s => (
-        <TouchableOpacity key={s.id} style={[ss.card, { backgroundColor: colors.card, borderColor: colors.border }]}
-          onPress={() => router.push(`/(store)/store-detail?id=${s.id}` as any)} activeOpacity={0.8}
-        >
-          <View style={[ss.img, { backgroundColor: s.bg }]}>
-            <Ionicons name={s.icon as any} size={38} color="rgba(0,0,0,0.18)" />
-            <View style={[ss.badge, { backgroundColor: s.badgeBg }]}>
-              <Text style={[ss.badgeTxt, { color: s.badgeColor, fontFamily: typography.fontFamily.bold }]}>{s.badge}</Text>
-            </View>
-          </View>
-          <View style={ss.info}>
-            <Text numberOfLines={1} style={[ss.name, { fontFamily: typography.fontFamily.bold, color: colors.text }]}>{s.name}</Text>
-            <Text numberOfLines={1} style={[ss.cat, { color: accent, fontFamily: typography.fontFamily.medium }]}>{s.category}</Text>
-            <View style={ss.meta}>
-              <View style={ss.locRow}>
-                <Ionicons name="location-outline" size={10} color={colors.subText} />
-                <Text style={[ss.area, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>{s.area}</Text>
-              </View>
-              <View style={ss.ratingRow}>
-                <Ionicons name="star" size={10} color="#F59E0B" />
-                <Text style={[ss.rating, { fontFamily: typography.fontFamily.semiBold, color: colors.text }]}>{s.rating.toFixed(1)}</Text>
-              </View>
-            </View>
-          </View>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
-  );
-}
-const ss = StyleSheet.create({
-  scroll:    { paddingHorizontal:16, gap:10, paddingBottom:4 },
-  card:      { width:148, borderRadius:12, overflow:"hidden", borderWidth:1, shadowColor:"#000", shadowOffset:{width:0,height:1}, shadowOpacity:0.07, shadowRadius:4, elevation:2 },
-  img:       { width:"100%", height:88, alignItems:"center", justifyContent:"center" },
-  badge:     { position:"absolute", top:6, right:6, paddingHorizontal:6, paddingVertical:2, borderRadius:5 },
-  badgeTxt:  { fontSize:8.5 },
-  info:      { padding:8, gap:2 },
-  name:      { fontSize:12 },
-  cat:       { fontSize:10.5 },
-  meta:      { flexDirection:"row", alignItems:"center", justifyContent:"space-between", marginTop:3 },
-  locRow:    { flexDirection:"row", alignItems:"center", gap:2, flex:1 },
-  area:      { fontSize:9.5, flex:1 }, // color set inline from theme
-  ratingRow: { flexDirection:"row", alignItems:"center", gap:2 },
-  rating:    { fontSize:10.5 },
 });
 
 // ── Skeleton Loader ──────────────────────────────────────────
@@ -309,8 +203,10 @@ export default function StateDetailScreen() {
 
   const tab        = TABS.find(t => t.key === activeTab) ?? TABS[0];
   const tabData    = stateData.tabs[activeTab] ?? stateData.tabs["made_in"];
-  const products   = tabData?.products ?? [];
-  const stores     = stateData.stores ?? [];
+  // §19.8 — there is no real "Made in {state}" catalog yet (products aren't
+  // origin-tagged), so the Featured Products + Stores sections are honest-empty
+  // rather than showing invented items. Wire to real state-scoped inventory when
+  // the area→catalog scope exists; until then, no phantom products/stores.
 
   return (
     <Animated.View 
@@ -427,20 +323,15 @@ export default function StateDetailScreen() {
             ))}
           </View>
         </View>
-        {/* ── 3. Featured Products ── */}
+        {/* ── 3. Local makers — honest-empty until a real state catalog exists (§19.8) ── */}
         <View style={styles.section}>
-          <SectionHeader icon="cart-outline" title="Featured Products" accent={tab.color} />
-          <ProductSection accent={tab.color} products={products} />
-        </View>
-
-        {/* ── Stores in this state section ── */}
-        <View style={styles.section}>
-          <SectionHeader
-            icon="storefront-outline"
-            title={`${stateName} Stores`}
-            accent="#0F4C81"
-          />
-          <StoreSection accent="#0F4C81" stores={stores} />
+          <SectionHeader icon="cart-outline" title={`Made in ${stateName}`} accent={tab.color} />
+          <View style={styles.emptyNote}>
+            <Ionicons name="storefront-outline" size={26} color={colors.subText} />
+            <Text style={[styles.emptyText, { color: colors.subText, fontFamily: typography.fontFamily.medium }]}>
+              Local makers and shops from {stateName} will appear here as they join Apana.
+            </Text>
+          </View>
         </View>
 
         <View style={{ height: 32 }} />
@@ -477,6 +368,10 @@ const styles = StyleSheet.create({
   // Feed
   feed:    { paddingTop: 4, paddingBottom: 24 },
   section: { marginTop: 20 },
+
+  // Honest-empty note (§19.8 — no fabricated state products/stores)
+  emptyNote:  { alignItems: "center", gap: 8, paddingHorizontal: 32, paddingVertical: 20 },
+  emptyText:  { fontSize: typography.size.sm, textAlign: "center", lineHeight: 19 },
 
   // Sub-category grid (4-col, like SeasonalCategorySection)
   subGrid:  { flexDirection:"row", flexWrap:"wrap", gap:8, paddingHorizontal:16 },

@@ -12,7 +12,7 @@
 // ============================================================
 
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
@@ -40,9 +40,13 @@ export default function SearchProductCard({ product, onPress, onAddCart }: Searc
       onPress={onPress}
       activeOpacity={0.88}
     >
-      {/* ── Thumbnail ── */}
+      {/* ── Thumbnail — real photo when the listing has one, else the icon ── */}
       <View style={[styles.imagePlaceholder, { backgroundColor: product.iconBg }]}>
-        <Ionicons name={product.icon as any} size={38} color={colors.text} style={{ opacity: 0.5 }} />
+        {product.image ? (
+          <Image source={{ uri: product.image }} style={styles.thumb} resizeMode="contain" />
+        ) : (
+          <Ionicons name={product.icon as any} size={38} color={colors.text} style={{ opacity: 0.5 }} />
+        )}
 
         {/* Badge overlay (e.g. "FRESH", "BESTSELLER") */}
         {!!product.badge && (
@@ -97,13 +101,17 @@ export default function SearchProductCard({ product, onPress, onAddCart }: Searc
           )}
         </View>
 
-        {/* Rating + store */}
+        {/* Store — with a rating star ONLY when there are real reviews (no fake stars) */}
         <View style={styles.metaRow}>
-          <Ionicons name="star" size={10} color={colors.warning} />
-          <Text style={[styles.rating, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: 10 }]}>
-            {product.rating}
-          </Text>
-          <View style={[styles.dot, { backgroundColor: colors.border }]} />
+          {product.reviewCount > 0 && (
+            <>
+              <Ionicons name="star" size={10} color={colors.warning} />
+              <Text style={[styles.rating, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: 10 }]}>
+                {product.rating}
+              </Text>
+              <View style={[styles.dot, { backgroundColor: colors.border }]} />
+            </>
+          )}
           <Text numberOfLines={1} style={[styles.store, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: 10 }]}>
             {product.storeName}
           </Text>
@@ -140,6 +148,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     position:       "relative",
   },
+  thumb: { width: "100%", height: "100%" },
   badge: {
     position:          "absolute",
     top:               8,
