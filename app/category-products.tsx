@@ -21,7 +21,7 @@ import useTheme from "../theme/useTheme";
 import { typography } from "../theme/typography";
 import { cartRowId, useCart } from "../context/CartContext";
 import { storeTint } from "../lib/storeTint";
-import { getClasses } from "../services/apc";
+import { getClasses, getFamilies, familyImage } from "../services/apc";
 import {
   fetchApcProducts, ApcFamilyFacet, LiveProduct,
 } from "../services/liveCatalogService";
@@ -42,6 +42,7 @@ export default function CategoryProducts() {
   const [products, setProducts] = useState<LiveProduct[]>([]);
   const [families, setFamilies] = useState<ApcFamilyFacet[]>([]);
   const [family, setFamily] = useState<string | null>(null);
+  const [familyImages, setFamilyImages] = useState<Record<string, string | null>>({});
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
 
@@ -63,6 +64,10 @@ export default function CategoryProducts() {
       .then((res) => { if (!alive) return; setProducts(res.products); setFamilies(res.families); })
       .catch(() => { if (alive) setFailed(true); })
       .finally(() => { if (alive) setLoading(false); });
+    // Family tile art for the rail thumbnails (resolved to absolute URLs).
+    getFamilies(code)
+      .then((fs) => { if (alive) setFamilyImages(Object.fromEntries(fs.map((f) => [f.code, familyImage(f.image_url)]))); })
+      .catch(() => {});
     return () => { alive = false; };
   }, [code]);
 
@@ -131,7 +136,7 @@ export default function CategoryProducts() {
         </View>
       ) : (
         <View style={styles.bodyRow}>
-          <ApcFamilyRail families={families} totalCount={products.length} selected={family} onSelect={setFamily} />
+          <ApcFamilyRail families={families} totalCount={products.length} selected={family} onSelect={setFamily} images={familyImages} />
           <FlatList
             style={{ flex: 1 }}
             data={shown}

@@ -75,6 +75,12 @@ export interface LiveProduct {
   apcClassCode: string | null;
   apcFamilyCode: string | null;
   apcVarietyCode: string | null;
+  // Real review aggregate for the card ★ (0/0 = no reviews yet, never faked).
+  rating: number;
+  reviewCount: number;
+  // Food prep time (minutes) when the seller set one; drives an honest ETA
+  // chip. null = not a made-to-order item → no ETA shown (no fake "8 mins").
+  prepMinutes: number | null;
   // §28 schema key + free-form descriptive fields the category defined.
   kind: string | null;
   attributes: Record<string, unknown>;
@@ -179,6 +185,9 @@ interface WireProduct {
   apc_class_code: string | null;
   apc_family_code: string | null;
   apc_variety_code: string | null;
+  rating?: number;
+  review_count?: number;
+  prep_minutes?: number | null;
   kind: string | null;
   attributes: Record<string, unknown>;
   variants: WireVariant[];
@@ -268,6 +277,9 @@ function toLiveProduct(w: WireProduct): LiveProduct {
     apcClassCode: w.apc_class_code,
     apcFamilyCode: w.apc_family_code ?? null,
     apcVarietyCode: w.apc_variety_code ?? null,
+    rating: w.rating ?? 0,
+    reviewCount: w.review_count ?? 0,
+    prepMinutes: w.prep_minutes ?? null,
     kind: w.kind ?? null,
     attributes: w.attributes ?? {},
     // Only SKUs the shop can actually sell reach the picker — a paused

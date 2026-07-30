@@ -86,6 +86,25 @@ export default function ApcGridCard({ product, qty, onOpen, onAdd, onInc, onDec 
           </Text>
         </View>
 
+        {/* Real rating (only with reviews) + prep ETA (only when set) — no fakes */}
+        {(product.reviewCount > 0 || product.prepMinutes != null) && (
+          <View style={styles.metaRow}>
+            {product.reviewCount > 0 && (
+              <View style={styles.metaChip}>
+                <Ionicons name="star" size={10} color="#F59E0B" />
+                <Text style={[styles.metaTxt, { color: colors.text, fontFamily: typography.fontFamily.semiBold }]}>{product.rating.toFixed(1)}</Text>
+                <Text style={[styles.metaSub, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>({product.reviewCount})</Text>
+              </View>
+            )}
+            {product.prepMinutes != null && (
+              <View style={styles.metaChip}>
+                <Ionicons name="time-outline" size={10} color={colors.subText} />
+                <Text style={[styles.metaSub, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>{product.prepMinutes} min</Text>
+              </View>
+            )}
+          </View>
+        )}
+
         {/* ADD control */}
         {outOfStock ? (
           <View style={[styles.addBtn, { borderColor: colors.border }]}>
@@ -140,6 +159,10 @@ const styles = StyleSheet.create({
   mrp: { fontSize: typography.size.xs, textDecorationLine: "line-through" },
   storeRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
   store: { fontSize: typography.size.xs, flex: 1 },
+  metaRow: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 3 },
+  metaChip: { flexDirection: "row", alignItems: "center", gap: 3 },
+  metaTxt: { fontSize: typography.size.ss },
+  metaSub: { fontSize: typography.size.ss },
   addBtn: {
     marginTop: 8, height: 34, borderRadius: 9, borderWidth: 1.5,
     alignItems: "center", justifyContent: "center",
