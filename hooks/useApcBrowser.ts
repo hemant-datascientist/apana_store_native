@@ -13,19 +13,20 @@
 
 import { useEffect, useState } from "react";
 import {
-  ApcClass, classDeptNo, getClasses, getTreeRoots,
+  ApcClass, classDeptNo, getClasses, getTreeRoots, nodeEmoji,
 } from "../services/apc";
 
 export interface ApcBrowseGroup {
   code: string;     // department code, e.g. "APC-D01"
   title: string;    // department name, e.g. "Food & Fresh"
+  icon: string | null; // department glyph (tree-root icon_emoji)
   classes: ApcClass[];
 }
 
 let cache: ApcBrowseGroup[] | null = null;
 let inflight: Promise<ApcBrowseGroup[]> | null = null;
 
-function group(classes: ApcClass[], roots: { code: string; name: string }[]): ApcBrowseGroup[] {
+function group(classes: ApcClass[], roots: { code: string; name: string; icon: string | null }[]): ApcBrowseGroup[] {
   const byDept = new Map<string, ApcClass[]>();
   for (const c of classes) {
     const d = classDeptNo(c.code);
@@ -43,6 +44,7 @@ function group(classes: ApcClass[], roots: { code: string; name: string }[]): Ap
     out.push({
       code: r.code,
       title: r.name,
+      icon: r.icon,
       classes: [...list].sort((a, b) => a.sort_order - b.sort_order),
     });
   }
@@ -54,7 +56,7 @@ async function loadOnce(): Promise<ApcBrowseGroup[]> {
   if (!inflight) {
     inflight = Promise.all([getClasses(), getTreeRoots()])
       .then(([classes, roots]) => {
-        cache = group(classes, roots.map((r) => ({ code: r.code, name: r.name })));
+        cache = group(classes, roots.map((r) => ({ code: r.code, name: r.name, icon: nodeEmoji(r) })));
         return cache;
       })
       .catch(() => {

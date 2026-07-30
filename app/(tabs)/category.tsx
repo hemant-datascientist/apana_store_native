@@ -10,7 +10,7 @@
 
 import React, { useState, useCallback } from "react";
 import {
-  View, Text, FlatList, StyleSheet, StatusBar, Alert,
+  View, Text, FlatList, ScrollView, StyleSheet, StatusBar, Alert,
   ActivityIndicator, ListRenderItemInfo,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,7 +23,7 @@ import {
   DiscoveryMode,
 } from "../../data/homeData";
 import { useApcBrowser, ApcBrowseGroup } from "../../hooks/useApcBrowser";
-import ApcCategorySection from "../../components/tabs/category/ApcCategorySection";
+import ApcDeptGrid from "../../components/tabs/category/ApcDeptGrid";
 import { useAscBrowser, AscBrowseGroup } from "../../hooks/useAscBrowser";
 import AscCategorySection from "../../components/tabs/category/AscCategorySection";
 import HomeHeader      from "../../components/tabs/home/HomeHeader";
@@ -59,19 +59,17 @@ export default function CategoryScreen() {
   // classes read from the live taxonomy), so it can never drift from the canvas.
   const { groups, loading: apcLoading } = useApcBrowser();
 
-  // One section per department, windowed through a FlatList so only the
-  // on-screen departments mount.
-  const renderGroup = useCallback(
-    ({ item: group, index }: ListRenderItemInfo<ApcBrowseGroup>) => (
-      <ApcCategorySection
-        group={group}
-        accent={SECTION_ACCENTS[index % SECTION_ACCENTS.length]}
-        // Tapping a class shows its REAL listings (e.g. Mobile → the mobiles
-        // sellers have listed), not the taxonomy tree. The classification tree
-        // stays reachable via the "explore classification" banner.
-        onPress={(code) => router.push(`/category-products?code=${encodeURIComponent(code)}` as any)}
-      />
-    ),
+  // Level-1 nested browser: tap a DEPARTMENT → its classes (Level 2). A
+  // single-class department (Beverages, Fashion…) skips straight to products so
+  // the seller/customer never sees a "Beverages → Beverages" repeat.
+  const handleDept = useCallback(
+    (group: ApcBrowseGroup) => {
+      if (group.classes.length === 1) {
+        router.push(`/category-products?code=${encodeURIComponent(group.classes[0].code)}` as any);
+      } else {
+        router.push(`/apc-classes?code=${encodeURIComponent(group.code)}&title=${encodeURIComponent(group.title)}` as any);
+      }
+    },
     [router],
   );
 
@@ -150,15 +148,14 @@ export default function CategoryScreen() {
           }
         />
       ) : (
-        /* Products mode — APC banner header, then virtualized group sections */
-        <FlatList
+        /* Products mode — Level 1: the department grid (nested browser). */
+        <ScrollView
           style={[styles.scroll, { backgroundColor: colors.background }]}
           contentContainerStyle={styles.content}
-          data={groups}
-          keyExtractor={group => group.code}
-          renderItem={renderGroup}
-          ListHeaderComponent={ApcBrowseBanner}
-          ListEmptyComponent={
+          showsVerticalScrollIndicator={false}
+        >
+          <ApcBrowseBanner />
+          {groups.length === 0 ? (
             <View style={styles.state}>
               {apcLoading
                 ? <ActivityIndicator color={colors.primary} />
@@ -166,13 +163,10 @@ export default function CategoryScreen() {
                     Couldn't load the product classification. Pull to retry.
                   </Text>}
             </View>
-          }
-          showsVerticalScrollIndicator={false}
-          removeClippedSubviews
-          initialNumToRender={3}
-          maxToRenderPerBatch={3}
-          windowSize={5}
-        />
+          ) : (
+            <ApcDeptGrid groups={groups} onSelect={handleDept} />
+          )}
+        </ScrollView>
       )}
 
     </View>
