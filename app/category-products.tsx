@@ -34,14 +34,21 @@ export default function CategoryProducts() {
   const { colors } = useTheme();
   const router = useRouter();
   const params = useLocalSearchParams<{ code: string; title?: string }>();
-  const code = String(params.code ?? "");
+  // The browser may hand us a CLASS code (APC-02-BEV), a FAMILY code
+  // (APC-02-BEV-SOFTDRINK) or a variety — single-class departments show family
+  // tiles. The catalog filters by CLASS, so derive the class from the first 3
+  // segments and pre-select the family (4th segment present) in the rail.
+  const raw = String(params.code ?? "");
+  const parts = raw.split("-");
+  const code = parts.length >= 3 ? parts.slice(0, 3).join("-") : raw; // class code
+  const initialFamily = parts.length >= 4 ? parts.slice(0, 4).join("-") : null;
 
   const { cart, addItem, updateQty, removeItem, getItemQty } = useCart();
 
   const [title, setTitle] = useState(params.title ?? "");
   const [products, setProducts] = useState<LiveProduct[]>([]);
   const [families, setFamilies] = useState<ApcFamilyFacet[]>([]);
-  const [family, setFamily] = useState<string | null>(null);
+  const [family, setFamily] = useState<string | null>(initialFamily);
   const [familyImages, setFamilyImages] = useState<Record<string, string | null>>({});
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
