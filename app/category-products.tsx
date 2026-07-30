@@ -12,7 +12,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  View, Text, FlatList, StyleSheet, StatusBar, ActivityIndicator, TouchableOpacity,
+  View, Text, ScrollView, StyleSheet, StatusBar, ActivityIndicator, TouchableOpacity, Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -29,6 +29,15 @@ import ApcFamilyRail from "../components/category/ApcFamilyRail";
 import ApcGridCard from "../components/category/ApcGridCard";
 
 const ACCENT = "#0F4C81";
+// 2-col product grid sitting to the right of the 96px family rail.
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const RAIL_W = 96;
+const GRID_PAD = 10;
+const CARD_GAP = 10;
+const CARD_W = Math.floor((SCREEN_WIDTH - RAIL_W - GRID_PAD * 2 - CARD_GAP) / 2);
+
+interface FamilyMeta { code: string; name: string; image: string | null }
+interface Section { code: string; name: string; products: LiveProduct[] }
 
 export default function CategoryProducts() {
   const { colors } = useTheme();
@@ -49,7 +58,9 @@ export default function CategoryProducts() {
   const [products, setProducts] = useState<LiveProduct[]>([]);
   const [families, setFamilies] = useState<ApcFamilyFacet[]>([]);
   const [family, setFamily] = useState<string | null>(initialFamily);
-  const [familyImages, setFamilyImages] = useState<Record<string, string | null>>({});
+  // The class's families in CANVAS order (getFamilies = sort_order) — drives
+  // both the rail thumbnails and the family section headers below.
+  const [taxo, setTaxo] = useState<FamilyMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
 
@@ -71,19 +82,39 @@ export default function CategoryProducts() {
       .then((res) => { if (!alive) return; setProducts(res.products); setFamilies(res.families); })
       .catch(() => { if (alive) setFailed(true); })
       .finally(() => { if (alive) setLoading(false); });
-    // Family tile art for the rail thumbnails (resolved to absolute URLs).
+    // The class's families, in canvas order, with tile art (for rail + headers).
     getFamilies(code)
-      .then((fs) => { if (alive) setFamilyImages(Object.fromEntries(fs.map((f) => [f.code, familyImage(f.image_url)]))); })
+      .then((fs) => { if (alive) setTaxo(fs.map((f) => ({ code: f.code, name: f.name, image: familyImage(f.image_url) }))); })
       .catch(() => {});
     return () => { alive = false; };
   }, [code]);
 
-  // Family filter is client-side over the fetched page (rail comes from the BE
-  // facet, so it is complete even when the grid is capped).
-  const shown = useMemo(
-    () => (family ? products.filter((p) => p.apcFamilyCode === family) : products),
-    [products, family],
+  const familyImages = useMemo(
+    () => Object.fromEntries(taxo.map((f) => [f.code, f.image])),
+    [taxo],
   );
+
+  // Arrange products BY FAMILY, in canvas order (as per the APC canvas). "All"
+  // shows one section per family that has products (+ a trailing "More" for
+  // products with no family); a rail tap narrows to that single family.
+  const sections = useMemo<Section[]>(() => {
+    const byFamily = new Map<string, LiveProduct[]>();
+    for (const p of products) {
+      const k = p.apcFamilyCode ?? "__none";
+      const list = byFamily.get(k) ?? [];
+      list.push(p);
+      byFamily.set(k, list);
+    }
+    if (family) {
+      return [{ code: family, name: taxo.find((f) => f.code === family)?.name ?? "Products", products: byFamily.get(family) ?? [] }];
+    }
+    const out: Section[] = taxo
+      .filter((f) => byFamily.has(f.code))
+      .map((f) => ({ code: f.code, name: f.name, products: byFamily.get(f.code)! }));
+    const none = byFamily.get("__none");
+    if (none?.length) out.push({ code: "__none", name: "More", products: none });
+    return out;
+  }, [products, taxo, family]);
 
   const cartCount = cart.reduce((n, s) => n + s.items.reduce((m, i) => m + i.qty, 0), 0);
 
@@ -144,32 +175,38 @@ export default function CategoryProducts() {
       ) : (
         <View style={styles.bodyRow}>
           <ApcFamilyRail families={families} totalCount={products.length} selected={family} onSelect={setFamily} images={familyImages} />
-          <FlatList
-            style={{ flex: 1 }}
-            data={shown}
-            keyExtractor={(p) => p.id}
-            numColumns={2}
-            columnWrapperStyle={styles.col}
-            contentContainerStyle={styles.grid}
-            showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => (
-              <View style={styles.cell}>
-                <ApcGridCard
-                  product={item}
-                  qty={getItemQty(item.store.id, item.id)}
-                  onOpen={() => router.push(`/live-product-detail?id=${item.id}` as never)}
-                  onAdd={() => addProduct(item)}
-                  onInc={() => updateQty(item.store.id, item.id, 1)}
-                  onDec={() => decProduct(item)}
-                />
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
+            {sections.map((sec) => (
+              <View key={sec.code} style={styles.section}>
+                {/* Family header — the canvas family this block of products sits under */}
+                <View style={styles.secHead}>
+                  <Text style={[styles.secTitle, { color: colors.text, fontFamily: typography.fontFamily.bold }]} numberOfLines={1}>
+                    {sec.name}
+                  </Text>
+                  <Text style={[styles.secCount, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>{sec.products.length}</Text>
+                </View>
+                <View style={styles.secGrid}>
+                  {sec.products.map((item) => (
+                    <View key={item.id} style={{ width: CARD_W }}>
+                      <ApcGridCard
+                        product={item}
+                        qty={getItemQty(item.store.id, item.id)}
+                        onOpen={() => router.push(`/live-product-detail?id=${item.id}` as never)}
+                        onAdd={() => addProduct(item)}
+                        onInc={() => updateQty(item.store.id, item.id, 1)}
+                        onDec={() => decProduct(item)}
+                      />
+                    </View>
+                  ))}
+                </View>
               </View>
-            )}
-            ListEmptyComponent={
+            ))}
+            {sections.length === 0 && (
               <Text style={[styles.note, { color: colors.subText, fontFamily: typography.fontFamily.medium, padding: 24 }]}>
                 Nothing in this sub-category yet.
               </Text>
-            }
-          />
+            )}
+          </ScrollView>
         </View>
       )}
 
@@ -201,9 +238,12 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24, gap: 12 },
   note: { textAlign: "center" },
   bodyRow: { flex: 1, flexDirection: "row" },
-  grid: { padding: 10, paddingBottom: 96 },
-  col: { gap: 10 },
-  cell: { flex: 1, marginBottom: 10 },
+  grid: { padding: GRID_PAD, paddingBottom: 96 },
+  section: { marginBottom: 6 },
+  secHead: { flexDirection: "row", alignItems: "baseline", gap: 6, marginTop: 6, marginBottom: 8 },
+  secTitle: { fontSize: typography.size.md },
+  secCount: { fontSize: typography.size.xs },
+  secGrid: { flexDirection: "row", flexWrap: "wrap", gap: CARD_GAP },
   cartBar: {
     position: "absolute", left: 16, right: 16, bottom: 20, height: 52, borderRadius: 14,
     flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10,
