@@ -35,7 +35,7 @@ export const CATEGORY_APC: Record<string, string> = {
   chocolates: "APC-01-PKGF",
   noodles: "APC-01-PKGF",
   honey_spreads: "APC-01-PKGF",
-  baby_food: "APC-09-BABY",
+  baby_food: "APC-09-BABYM",
   frozen_veg: "APC-01-VEG",
   packaged_food: "APC-01-PKGF",
 
@@ -129,7 +129,7 @@ export const CATEGORY_APC: Record<string, string> = {
   health_monitor: "APC-07-WELL",
   diabetic: "APC-07-WELL",
   ortho: "APC-07-WELL",
-  baby_health: "APC-09-BABY",
+  baby_health: "APC-09-BABYM",
   eye_care: "APC-07-WELL",
 
   // ── Sports & Fitness ─────────────────────────────────────
