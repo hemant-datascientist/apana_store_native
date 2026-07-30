@@ -139,6 +139,22 @@ export async function getClasses(): Promise<ApcClass[]> {
   return (await getJson<{ items: ApcClass[] }>("/classes")).items;
 }
 
+// ── Browse departments (§27 top of the category grid) ───────
+// Department → its classes, grouped + ordered SERVER-SIDE from the one
+// departments map (which also composes the frozen code prefix). The client no
+// longer re-derives departments from the class-code prefix — that second copy
+// broke the Food split (Packaged Foods / Bakery & Sweets showing under Grocery).
+export interface ApcDepartment {
+  code: string;          // "APC-D01"
+  name: string;
+  icon: string | null;
+  classes: ApcClass[];
+}
+
+export async function getDepartments(): Promise<ApcDepartment[]> {
+  return (await getJson<{ items: ApcDepartment[] }>("/departments")).items;
+}
+
 // ── APC families (§27 family tier) — the real sub-categories of a class ──
 export interface ApcFamily {
   code: string;            // "APC-10-FASH-FOOTWEARS"
@@ -163,12 +179,6 @@ export function familyImage(url: string | null | undefined): string | null {
   if (!url) return null;
   if (/^https?:\/\//i.test(url)) return url;
   return `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
-}
-
-// Department number a class belongs to: "APC-01-VEG" -> "01" (root "APC-D01").
-export function classDeptNo(code: string): string | null {
-  const m = /^APC-(\d{2})-/.exec(code);
-  return m ? m[1] : null;
 }
 
 // Node + its children + ancestor chain (for breadcrumb).
