@@ -17,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../theme/typography";
 import { UserLocation } from "../../../data/homeData";
 import { formatCount } from "../../../utils/formatUtils";
+import AppLogo from "../../brand/AppLogo";
 
 const DOT_LIVE    = "#22C55E";
 const DOT_NONE    = "#EF4444";
@@ -35,6 +36,11 @@ export default function HomeHeader({ location, storesLive, onLocationPress, onSt
 
   return (
     <View style={styles.row}>
+
+      {/* ── Brand mark ── */}
+      <View style={styles.brand}>
+        <AppLogo size={30} />
+      </View>
 
       {/* ── Location selector ── */}
       <TouchableOpacity style={styles.locationBtn} onPress={onLocationPress} activeOpacity={0.75}>
@@ -67,6 +73,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical:    10,
+  },
+
+  brand: {
+    marginRight: 8,
   },
 
   locationBtn: {

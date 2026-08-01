@@ -21,6 +21,7 @@
 //   Guest        → skipAsGuest() → (tabs) with browse-only access
 // ============================================================
 
+import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import {
@@ -36,6 +37,7 @@ import { LocationProvider } from "../context/LocationContext";
 import { CoverageProvider } from "../context/CoverageContext";
 import { AuthProvider }     from "../context/AuthContext";
 import { CartProvider }     from "../context/CartContext";
+import { loadOverride }     from "../lib/backendOverride";
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -45,6 +47,9 @@ export default function RootLayout() {
     Poppins_600SemiBold,
     Poppins_700Bold,
   });
+
+  // Load a previously scanned backend override (no-op if none) before requests.
+  useEffect(() => { loadOverride(); }, []);
 
   // Blank screen while fonts load — prevents unstyled text flash
   if (!fontsLoaded) return <View />;
@@ -82,6 +87,8 @@ export default function RootLayout() {
             <Stack.Screen name="(info)"     />
             {/* Rides — auto-riders (Apana Partner fleet: personal + order rides) */}
             <Stack.Screen name="(rides)"    />
+            {/* Connect — scan backend /connect QR to point at a live tunnel */}
+            <Stack.Screen name="connect"    />
           </Stack>
           </CartProvider>
           </CoverageProvider>

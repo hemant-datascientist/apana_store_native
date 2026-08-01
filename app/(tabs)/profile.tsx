@@ -69,6 +69,7 @@ export default function ProfileScreen() {
     if (key === "help")         { router.push("/help-support");        return; }
     if (key === "orders_hist") { router.push("/order-history");       return; }
     if (key === "payments")    { router.push("/payment-methods");     return; }
+    if (key === "connect")     { router.push("/connect");             return; }
     Alert.alert("Coming Soon", `"${key}" feature is on the way.`);
   }
 

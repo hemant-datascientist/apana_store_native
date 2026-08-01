@@ -100,6 +100,7 @@ export const SETTING_GROUPS: SettingGroup[] = [
       { key: "notifications", label: "Notifications",     icon: "notifications-outline"   },
       { key: "language",      label: "Language",          icon: "language-outline"        },
       { key: "appearance",    label: "Appearance",        icon: "color-palette-outline"   },
+      { key: "connect",       label: "Connect to backend", icon: "qr-code-outline"        },
     ],
   },
   {
