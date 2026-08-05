@@ -18,6 +18,7 @@
 
 import { distanceMeters } from "./geo";
 import { getStoreHeroImage } from "../data/storeHeroImages";
+import type { AssetImage } from "./assetImg";
 
 export interface LatLng {
   lat: number;
@@ -37,7 +38,7 @@ export interface HeroStore {
   bgColor:     string;     // placeholder bg (real app uses photo)
   accentColor: string;
   icon:        string;     // Ionicons for placeholder centre
-  imageUrl?:   number;     // require()'d asset (undefined → colour fallback)
+  imageUrl?:   AssetImage; // backend-served image (undefined → colour fallback)
 }
 
 // Minimal shape any tab's store must provide to appear in the banner.

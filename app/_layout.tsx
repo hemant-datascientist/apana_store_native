@@ -40,7 +40,7 @@ import { CartProvider }     from "../context/CartContext";
 import { loadOverride }     from "../lib/backendOverride";
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Poppins_300Light,
     Poppins_400Regular,
     Poppins_500Medium,
@@ -51,8 +51,8 @@ export default function RootLayout() {
   // Load a previously scanned backend override (no-op if none) before requests.
   useEffect(() => { loadOverride(); }, []);
 
-  // Blank screen while fonts load — prevents unstyled text flash
-  if (!fontsLoaded) return <View />;
+  // Failsafe font loader guard — doesn't lock app if font loading encounters an issue
+  if (!fontsLoaded && !fontError) return null;
 
   return (
     <ThemeProvider>
@@ -61,6 +61,8 @@ export default function RootLayout() {
           <CoverageProvider>
           <CartProvider>
           <Stack screenOptions={{ headerShown: false }}>
+            {/* Root redirect guard */}
+            <Stack.Screen name="index"      />
             {/* Auth flow — get-started, login, otp, create-account, edit-profile */}
             <Stack.Screen name="(auth)"     />
             {/* Bottom tab bar — Home, Category, Cart, Bharat, Profile */}

@@ -81,8 +81,8 @@ let installed = false;
 export function installFetchOverride(): void {
   if (installed) return;
   installed = true;
-  const orig = global.fetch;
-  global.fetch = ((input: any, init?: any) => {
+  const orig = (globalThis as any).fetch;
+  (globalThis as any).fetch = ((input: any, init?: any) => {
     try {
       if (typeof input === "string") {
         input = rewriteUrl(input);

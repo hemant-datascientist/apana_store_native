@@ -10,13 +10,15 @@
 // Backend: replace with the store's cover_image URL from GET /stores/:id.
 // ============================================================
 
-export const STORE_HERO_IMAGES: Record<string, number> = {
-  s1: require("../assets/images/home/stores/hero_sharma.png"),
-  s5: require("../assets/images/home/stores/hero_fresh_bakes.png"),
-  s2: require("../assets/images/home/stores/hero_techzone.png"),
-  s4: require("../assets/images/home/stores/hero_style_hub.png"),
+import { assetImg, type AssetImage } from "../lib/assetImg";
+
+export const STORE_HERO_IMAGES: Record<string, AssetImage> = {
+  s1: assetImg("home/stores/hero_sharma.png"),
+  s5: assetImg("home/stores/hero_fresh_bakes.png"),
+  s2: assetImg("home/stores/hero_techzone.png"),
+  s4: assetImg("home/stores/hero_style_hub.png"),
 };
 
-export function getStoreHeroImage(id: string): number | undefined {
+export function getStoreHeroImage(id: string): AssetImage | undefined {
   return STORE_HERO_IMAGES[id];
 }

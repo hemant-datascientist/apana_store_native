@@ -12,6 +12,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import useTheme from "../../../theme/useTheme";
 import { typography } from "../../../theme/typography";
+import type { AssetImage } from "../../../lib/assetImg";
 
 export interface AscStoreItem {
   code: string;
@@ -19,7 +20,7 @@ export interface AscStoreItem {
   sub: string;
   emoji: string;
   color: string;
-  imageUrl: number | null;
+  imageUrl: AssetImage | null;
 }
 
 interface AscStoreCardProps {
