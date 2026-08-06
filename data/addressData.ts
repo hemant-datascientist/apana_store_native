@@ -1,11 +1,14 @@
 // ============================================================
 // ADDRESS DATA — Apana Store (Customer App)
 //
-// Saved addresses for the customer.
-// Each address maps to a city that drives city-specific data
-// (e.g. getTrendingForCity in AllFeed).
+// The UserAddress shape. Real addresses come from the server
+// (services/addressService → GET /api/customer/addresses).
 //
-// Backend: GET /api/customer/addresses  →  UserAddress[]
+// There is deliberately NO bundled address list here any more. Four screens
+// used to read one, so a brand-new install shipped with someone's flat in
+// Kothrud already "saved" — and skipping the location screen confirmed it as
+// the customer's real location. An order could be paid for and dispatched to
+// an address nobody had ever entered (§19.8: empty is empty).
 // ============================================================
 
 export interface UserAddress {
@@ -21,51 +24,22 @@ export interface UserAddress {
   lat?:               number;    // GPS latitude  (set when location-detected)
   lng?:               number;    // GPS longitude (set when location-detected)
   isCurrentLocation?: boolean;   // true = detected via device GPS
+  // The address checkout preselects. The server keeps exactly one per customer
+  // and always leaves one standing, so the app never has to reconcile it.
+  isDefault?:         boolean;
 }
 
-export const SAVED_ADDRESSES: UserAddress[] = [
-  {
-    id:      "addr_1",
-    label:   "Home",
-    icon:    "home-outline",
-    name:    "Hemant Lokhande",
-    line1:   "Flat 203, Sai Residency",
-    line2:   "Kothrud",
-    city:    "Pune",
-    state:   "Maharashtra",
-    pincode: "411038",
-  },
-  {
-    id:      "addr_2",
-    label:   "Work",
-    icon:    "business-outline",
-    name:    "Hemant Lokhande",
-    line1:   "Office 4B, Tech Park",
-    line2:   "Hinjewadi Phase 1",
-    city:    "Pune",
-    state:   "Maharashtra",
-    pincode: "411057",
-  },
-  {
-    id:      "addr_3",
-    label:   "Uncle House",
-    icon:    "people-outline",
-    name:    "Rajesh Lokhande",
-    line1:   "12, Nehru Nagar",
-    line2:   "Vijay Nagar",
-    city:    "Indore",
-    state:   "Madhya Pradesh",
-    pincode: "452001",
-  },
-  {
-    id:      "addr_4",
-    label:   "College Hostel",
-    icon:    "school-outline",
-    name:    "Hemant Lokhande",
-    line1:   "Room 14, Boys Hostel",
-    line2:   "Andheri East",
-    city:    "Mumbai",
-    state:   "Maharashtra",
-    pincode: "400069",
-  },
-];
+// Shown before the customer has set a location, and after they skip that
+// screen. Its id is not a server row, so checkout will not accept it — which
+// is the point: the app says "set your location" instead of quietly picking
+// a city and ordering to it.
+export const UNSET_ADDRESS: UserAddress = {
+  id:      "unset",
+  label:   "Set your location",
+  icon:    "location-outline",
+  line1:   "",
+  line2:   "",
+  city:    "",
+  state:   "",
+  pincode: "",
+};

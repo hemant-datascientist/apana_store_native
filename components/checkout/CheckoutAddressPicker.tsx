@@ -15,7 +15,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
-import { UserAddress, SAVED_ADDRESSES } from "../../data/addressData";
+import { useLocation } from "../../context/LocationContext";
+import { UserAddress } from "../../data/addressData";
 
 interface CheckoutAddressPickerProps {
   visible:    boolean;
@@ -29,6 +30,9 @@ export default function CheckoutAddressPicker({
 }: CheckoutAddressPickerProps) {
   const { colors } = useTheme();
   const router     = useRouter();
+  // Server-backed list. This used to render the bundled mock, so a customer
+  // could pick an address at checkout that exists on no one's map.
+  const { addresses } = useLocation();
 
   // ── Handle adding a new address ───────────────────────────
   function handleAddNew() {
@@ -116,12 +120,17 @@ export default function CheckoutAddressPicker({
 
         {/* ── Address list ── */}
         <FlatList
-          data={SAVED_ADDRESSES}
+          data={addresses}
           keyExtractor={a => a.id}
           renderItem={renderRow}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+          ListEmptyComponent={
+            <Text style={[styles.rowLine, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.sm, textAlign: "center", paddingVertical: 20 }]}>
+              No saved addresses. Add one below.
+            </Text>
+          }
         />
 
         {/* ── Add new address button ── */}

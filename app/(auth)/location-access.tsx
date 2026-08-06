@@ -32,7 +32,7 @@ import { useRouter }      from "expo-router";
 import useTheme           from "../../theme/useTheme";
 import { typography }     from "../../theme/typography";
 import { useLocation }    from "../../context/LocationContext";
-import { SAVED_ADDRESSES, UserAddress } from "../../data/addressData";
+import { UNSET_ADDRESS, UserAddress } from "../../data/addressData";
 import {
   autosuggest, reverseGeocode, PlaceSuggestion,
 } from "../../services/mapplsService";
@@ -131,9 +131,12 @@ export default function LocationAccessScreen() {
     proceed(addr);
   }
 
-  // ── Skip — use first saved address as fallback ────────────────
+  // ── Skip — enter the app with NO location set ────────────────
+  // This used to confirm a bundled Pune address as the customer's real
+  // location. Skipping now means skipping: the header prompts them to set
+  // one, and checkout refuses delivery until they do.
   function handleSkip() {
-    proceed(SAVED_ADDRESSES[0]);
+    proceed(UNSET_ADDRESS);
   }
 
   return (

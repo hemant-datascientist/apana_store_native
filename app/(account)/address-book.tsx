@@ -11,26 +11,28 @@
 //   • OR divider
 //   • "+ Add New Address" dashed button → /add-address?mode=add
 //
-// New/edited addresses returned from add-address via router
-// params (`newAddressJson`) are merged into local addresses state
-// so the list updates without a backend round-trip.
+// The list is the SERVER's (via LocationContext). It used to be a bundled mock
+// with edits kept in local state, so a "saved" address lived only until the
+// screen unmounted — and delete removed the card while the row stayed on the
+// server, ready to reappear.
 //
-// Backend: GET /api/customer/addresses  (swap SAVED_ADDRESSES)
-//          PUT /api/customer/active-address  (swap setSelectedAddress)
+// Backend: GET /api/customer/addresses · DELETE /api/customer/addresses/:id
 // ============================================================
 
-import React, { useState, useCallback } from "react";
+import React, { useCallback } from "react";
 import {
   View, Text, TouchableOpacity, ScrollView, StyleSheet,
-  StatusBar, Alert,
+  StatusBar, Alert, ActivityIndicator,
 } from "react-native";
 import { SafeAreaView }  from "react-native-safe-area-context";
 import { Ionicons }      from "@expo/vector-icons";
-import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import useTheme         from "../../theme/useTheme";
 import { typography }    from "../../theme/typography";
 import { useLocation }   from "../../context/LocationContext";
-import { SAVED_ADDRESSES, UserAddress } from "../../data/addressData";
+import { useAuth }       from "../../context/AuthContext";
+import { deleteAddress } from "../../services/addressService";
+import { UserAddress }   from "../../data/addressData";
 
 // Deliberate dark-navy header — brand chrome, not body text
 const BRAND_BLUE = "#0F4C81";
@@ -38,35 +40,14 @@ const BRAND_BLUE = "#0F4C81";
 export default function AddressBookScreen() {
   const router                               = useRouter();
   const { colors }                           = useTheme();
-  const { selectedAddress, setSelectedAddress } = useLocation();
+  const { selectedAddress, setSelectedAddress, addresses, addressesLoading, reloadAddresses } = useLocation();
+  const { user } = useAuth();
+  const customerId = user?.phone ?? "";
 
-  // ── Local address list (starts from mock, updated on add/edit) ──
-  const [addresses, setAddresses] = useState<UserAddress[]>(SAVED_ADDRESSES);
-
-  // ── Pick up new/edited address returned from add-address screen ──
-  // expo-router passes params on router.setParams before back().
-  // useFocusEffect fires each time this screen comes back into focus.
-  const { newAddressJson } = useLocalSearchParams<{ newAddressJson?: string }>();
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!newAddressJson) return;
-      try {
-        const incoming: UserAddress = JSON.parse(newAddressJson);
-        setAddresses(prev => {
-          const exists = prev.findIndex(a => a.id === incoming.id);
-          if (exists >= 0) {
-            // Edit — replace in-place
-            const next = [...prev];
-            next[exists] = incoming;
-            return next;
-          }
-          // Add — append
-          return [...prev, incoming];
-        });
-      } catch { /* malformed param — ignore */ }
-    }, [newAddressJson]),
-  );
+  // Refetch on focus — coming back from add-address, the new row is on the
+  // server. Merging a router param instead only looked right until the next
+  // launch, when the list was rebuilt from the server anyway.
+  useFocusEffect(useCallback(() => { reloadAddresses(); }, [reloadAddresses]));
 
   function handleSelect(addr: UserAddress) {
     setSelectedAddress(addr);
@@ -82,7 +63,16 @@ export default function AddressBookScreen() {
         {
           text:    "Delete",
           style:   "destructive",
-          onPress: () => setAddresses(prev => prev.filter(a => a.id !== addr.id)),
+          // Delete on the SERVER, then refetch. Dropping it from local state
+          // only hid the row: the address stayed, and reappeared on next load.
+          onPress: async () => {
+            try {
+              await deleteAddress(customerId, addr.id);
+              await reloadAddresses();
+            } catch (e) {
+              Alert.alert("Could not delete", e instanceof Error ? e.message : "Please try again.");
+            }
+          },
         },
       ],
     );
@@ -120,6 +110,17 @@ export default function AddressBookScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+
+        {/* Empty is EMPTY (§19.8) — say so rather than showing a bare button
+            that leaves the customer guessing whether the list failed to load. */}
+        {addressesLoading && addresses.length === 0 && (
+          <ActivityIndicator color={BRAND_BLUE} style={styles.loader} />
+        )}
+        {!addressesLoading && addresses.length === 0 && (
+          <Text style={[styles.empty, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
+            No saved addresses yet. Add one so your order knows where to go.
+          </Text>
+        )}
 
         {/* ── Saved address cards ── */}
         {addresses.map(addr => {
@@ -260,6 +261,14 @@ const styles = StyleSheet.create({
     paddingTop:        20,
     paddingBottom:     40,
     gap:               12,
+  },
+
+  loader: { marginTop: 24 },
+  empty: {
+    fontSize:   13,
+    textAlign:  "center",
+    marginTop:  24,
+    lineHeight: 20,
   },
 
   // ── Address cards ───────────────────────────────────────────

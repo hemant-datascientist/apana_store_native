@@ -186,7 +186,10 @@ export async function placeOrder(
         // order paid just because checkout asked it to.
         payment_mode: req.paymentMode ?? "cod",
         fulfillment: FULFILLMENT[req.mode],
-        delivery_address: req.addressId ? { address_id: req.addressId } : null,
+        // Just the id — the server looks the row up against THIS customer and
+        // snapshots it onto the order. It used to take an address blob from
+        // here, which meant the client decided where its own order went.
+        address_id: req.addressId,
       }),
     });
     const text = await res.text();

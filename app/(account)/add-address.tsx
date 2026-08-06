@@ -23,14 +23,16 @@
 import React, { useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
-  StyleSheet, StatusBar, KeyboardAvoidingView, Platform, Alert,
+  StyleSheet, StatusBar, KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
 } from "react-native";
 import { SafeAreaView }  from "react-native-safe-area-context";
 import { Ionicons }      from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import useTheme         from "../../theme/useTheme";
 import { typography }    from "../../theme/typography";
-import { SAVED_ADDRESSES, UserAddress } from "../../data/addressData";
+import { useLocation }   from "../../context/LocationContext";
+import { useAuth }       from "../../context/AuthContext";
+import { createAddress, updateAddress } from "../../services/addressService";
 
 // Deliberate dark-navy header — brand chrome, not body text
 const BRAND_BLUE = "#0F4C81";
@@ -91,9 +93,15 @@ export default function AddAddressScreen() {
     id?:   string;
   }>();
 
-  // Pre-fill when editing an existing address
+  const { addresses, reloadAddresses } = useLocation();
+  const { user } = useAuth();
+  const customerId = user?.phone ?? "";
+  const [saving, setSaving] = useState(false);
+
+  // Pre-fill when editing — from the SERVER list, not a bundled mock. Editing a
+  // mock row wrote a patch for an id the server has never seen.
   const existing = mode === "edit" && id
-    ? SAVED_ADDRESSES.find(a => a.id === id)
+    ? addresses.find(a => a.id === id)
     : undefined;
 
   const [selectedLabel, setSelectedLabel] = useState(
@@ -115,15 +123,21 @@ export default function AddAddressScreen() {
     return true;
   }
 
-  function handleSave() {
-    if (!validate()) return;
+  // Save = a real write. This used to build a local object and hand it back
+  // through a router param: the card appeared, nothing was stored, and the
+  // address was gone by the next launch — after checkout had already used it.
+  async function handleSave() {
+    if (!validate() || saving) return;
+    if (!customerId) {
+      Alert.alert("Sign in first", "Saved addresses are tied to your phone number.");
+      return;
+    }
 
     const iconEntry = LABEL_OPTIONS.find(o => o.label === selectedLabel);
-    const address: UserAddress = {
-      id:      existing?.id ?? `addr_${Date.now()}`,
+    const payload = {
       label:   selectedLabel,
       icon:    iconEntry?.icon ?? "location-outline",
-      name:    name.trim() || undefined,
+      name:    name.trim() || null,
       line1:   line1.trim(),
       line2:   line2.trim(),
       city:    city.trim(),
@@ -131,13 +145,19 @@ export default function AddAddressScreen() {
       pincode: pincode.trim(),
     };
 
-    // Pass the saved address back to address-book via search params
-    router.back();
-    // NOTE: address-book listens to `useLocalSearchParams` for `newAddressJson`
-    // (expo-router passes params back when using router.push with result pattern).
-    // Since expo-router v3 doesn't have a formal "result" API, the address-book
-    // re-reads on focus and we encode the new address in the URL before going back.
-    router.setParams({ newAddressJson: JSON.stringify(address) });
+    setSaving(true);
+    try {
+      if (existing) await updateAddress(customerId, existing.id, payload);
+      else          await createAddress(customerId, payload);
+      await reloadAddresses();
+      router.back();
+    } catch (e) {
+      // Stay on the form with the typed values intact — going back on a failed
+      // save is how a customer ends up believing an address exists.
+      Alert.alert("Could not save", e instanceof Error ? e.message : "Please try again.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -249,13 +269,16 @@ export default function AddAddressScreen() {
 
         {/* ── Save button ── */}
         <TouchableOpacity
-          style={styles.saveBtn}
+          style={[styles.saveBtn, saving && styles.saveBtnBusy]}
           onPress={handleSave}
           activeOpacity={0.85}
+          disabled={saving}
         >
-          <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+          {saving
+            ? <ActivityIndicator color="#fff" />
+            : <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />}
           <Text style={[styles.saveBtnText, { fontFamily: typography.fontFamily.bold }]}>
-            {mode === "edit" ? "Update Address" : "Save Address"}
+            {saving ? "Saving…" : mode === "edit" ? "Update Address" : "Save Address"}
           </Text>
         </TouchableOpacity>
 
@@ -360,6 +383,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     marginTop:       4,
   },
+  saveBtnBusy: { opacity: 0.65 },
   saveBtnText: {
     fontSize: 15,
     color:    "#fff",

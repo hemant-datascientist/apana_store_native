@@ -39,7 +39,8 @@ import {
   CartStore,
 } from "../../data/cartData";
 import { useCart } from "../../context/CartContext";
-import { SAVED_ADDRESSES, UserAddress } from "../../data/addressData";
+import { useLocation } from "../../context/LocationContext";
+import { UserAddress } from "../../data/addressData";
 import { CHECKOUT_STEPS } from "../../data/checkoutData";
 import { validatePromoCode } from "../../services/checkoutService";
 
@@ -72,7 +73,19 @@ export default function CheckoutScreen() {
   const needsAddress = mode !== "pickup";
 
   // ── UI state ──────────────────────────────────────────────
-  const [selectedAddress,   setSelectedAddress]   = useState<UserAddress>(SAVED_ADDRESSES[0]);
+  // The delivery address must be one the SERVER knows — an order is dispatched
+  // to a row id, so the bundled mock that used to seed this produced paid
+  // orders pointing at an address that exists nowhere. Null when the customer
+  // has saved none; `handlePlaceOrder` refuses in that case (§19.8).
+  const { addresses, selectedAddress: activeAddress } = useLocation();
+  const [pickedId, setPickedId] = useState<string | null>(null);
+  const selectedAddress = useMemo<UserAddress | null>(() => {
+    if (pickedId) return addresses.find(a => a.id === pickedId) ?? null;
+    return addresses.find(a => a.id === activeAddress.id)      // what the header shows
+        ?? addresses.find(a => a.isDefault)
+        ?? addresses[0]
+        ?? null;
+  }, [addresses, activeAddress.id, pickedId]);
   const [addressPickerOpen, setAddressPickerOpen] = useState(false);
 
   const [note, setNote] = useState("");
@@ -143,13 +156,17 @@ export default function CheckoutScreen() {
       return;
     }
     if (needsAddress && !selectedAddress) {
-      setOrderError("Please select a delivery address.");
+      setOrderError(
+        addresses.length === 0
+          ? "Add a delivery address before placing this order."
+          : "Please select a delivery address.",
+      );
       return;
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const params = new URLSearchParams({
       mode,
-      addressId:  needsAddress ? selectedAddress.id : "",
+      addressId:  needsAddress ? (selectedAddress?.id ?? "") : "",
       promoCode:  appliedPromo ?? "",
       discount:   String(promoDiscount),
       note:       encodeURIComponent(note.trim()),
@@ -256,11 +273,23 @@ export default function CheckoutScreen() {
         </View>
 
         {/* ── Delivery address (delivery + ride only) ── */}
-        {needsAddress && (
+        {needsAddress && selectedAddress && (
           <CheckoutAddressCard
             address={selectedAddress}
             onChangePress={() => setAddressPickerOpen(true)}
           />
+        )}
+        {needsAddress && !selectedAddress && (
+          <TouchableOpacity
+            style={[styles.pickupNote, { backgroundColor: colors.warningLight ?? colors.card, borderColor: colors.warning }]}
+            onPress={() => router.push("/add-address?mode=add" as any)}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="location-outline" size={18} color={colors.warning} />
+            <Text style={[styles.pickupNoteText, { color: colors.warning, fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
+              No delivery address saved. Tap to add one.
+            </Text>
+          </TouchableOpacity>
         )}
 
         {/* ── Pickup info banner — success tokens for dark-mode safety ── */}
@@ -393,8 +422,8 @@ export default function CheckoutScreen() {
       {/* ── Address picker modal ── */}
       <CheckoutAddressPicker
         visible={addressPickerOpen}
-        selectedId={selectedAddress.id}
-        onSelect={addr => { setSelectedAddress(addr); setAddressPickerOpen(false); }}
+        selectedId={selectedAddress?.id ?? ""}
+        onSelect={addr => { setPickedId(addr.id); setAddressPickerOpen(false); }}
         onClose={() => setAddressPickerOpen(false)}
       />
     </View>

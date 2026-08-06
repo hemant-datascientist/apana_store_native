@@ -8,7 +8,8 @@
 //   Persisted in AsyncStorage so returning users skip the screen.
 //
 // selectedAddress — the active delivery address. Defaults to
-//   SAVED_ADDRESSES[0] until the user sets a real location.
+//   UNSET_ADDRESS until the user sets a real one — never a
+//   fabricated city standing in for one they never entered.
 //
 // Backend:
 //   GET /api/customer/active-address   → restore on login
@@ -16,11 +17,13 @@
 // ============================================================
 
 import React, {
-  createContext, useContext, useState, useEffect, ReactNode,
+  createContext, useContext, useState, useEffect, useCallback, ReactNode,
 } from "react";
 import AsyncStorage               from "@react-native-async-storage/async-storage";
 import * as Location              from "expo-location";
-import { UserAddress, SAVED_ADDRESSES } from "../data/addressData";
+import { UserAddress, UNSET_ADDRESS } from "../data/addressData";
+import { fetchAddresses, ADDRESSES_LIVE } from "../services/addressService";
+import { useAuth } from "./AuthContext";
 
 // ── Storage keys ──────────────────────────────────────────────
 const KEY_ADDRESS  = "@apana_store:active_address";
@@ -42,16 +45,56 @@ interface LocationContextValue {
   setSelectedAddress: (addr: UserAddress) => void;
   confirmLocation:    (addr: UserAddress) => void;   // sets address + marks ready
   clearLocation:      () => void;       // resets to default (dev/testing)
+
+  // ── Saved addresses, from the server ──────────────────────
+  // These used to be a bundled mock, so checkout sent an address id that
+  // existed nowhere and a paid order had no real destination. Off-backend the
+  // list is EMPTY rather than fake: a wrong address is worse than none, because
+  // the customer only finds out when nothing arrives (§19.8).
+  addresses:          UserAddress[];
+  addressesLoading:   boolean;
+  reloadAddresses:    () => Promise<void>;
 }
 
 const LocationContext = createContext<LocationContextValue | null>(null);
 
 export function LocationProvider({ children }: { children: ReactNode }) {
-  const [selectedAddress, setSelectedAddressState] = useState<UserAddress>(SAVED_ADDRESSES[0]);
+  const [selectedAddress, setSelectedAddressState] = useState<UserAddress>(UNSET_ADDRESS);
   const [deviceCity,      setDeviceCity]           = useState<string | null>(null);
   const [deviceCoords,    setDeviceCoords]         = useState<{ lat: number; lng: number } | null>(null);
   const [locationReady,   setLocationReadyState]   = useState(false);
   const [hydrated,        setHydrated]             = useState(false);
+  const [addresses,       setAddresses]            = useState<UserAddress[]>([]);
+  const [addressesLoading, setAddressesLoading]    = useState(false);
+
+  // Saved addresses come from the server, keyed on the signed-in phone (the
+  // same key orders use). No phone = no addresses, not mock ones.
+  const { user } = useAuth();
+  const customerId = user?.phone ?? "";
+
+  const reloadAddresses = useCallback(async () => {
+    if (!customerId || !ADDRESSES_LIVE) { setAddresses([]); return; }
+    setAddressesLoading(true);
+    try {
+      setAddresses(await fetchAddresses(customerId));
+    } catch {
+      // Keep whatever is already shown. Replacing a real list with an empty one
+      // because the network blipped would look like the customer lost their
+      // saved addresses.
+    } finally {
+      setAddressesLoading(false);
+    }
+  }, [customerId]);
+
+  useEffect(() => { reloadAddresses(); }, [reloadAddresses]);
+
+  // Once the real list arrives, prefer the customer's DEFAULT over the bundled
+  // placeholder — but never overwrite an address they have actively chosen.
+  useEffect(() => {
+    if (addresses.length === 0 || locationReady) return;
+    const preferred = addresses.find((a) => a.isDefault) ?? addresses[0];
+    if (preferred) setSelectedAddressState(preferred);
+  }, [addresses, locationReady]);
 
   // ── Resolve the real current city from device GPS (reverse-geocode) ──
   // Runs once; permission denial / any failure silently leaves deviceCity
@@ -120,7 +163,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
 
   // ── Reset (for dev / logout flows) ───────────────────────────
   function clearLocation() {
-    setSelectedAddressState(SAVED_ADDRESSES[0]);
+    setSelectedAddressState(UNSET_ADDRESS);
     setLocationReadyState(false);
     Promise.all([
       AsyncStorage.removeItem(KEY_ADDRESS),
@@ -140,6 +183,9 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       setSelectedAddress,
       confirmLocation,
       clearLocation,
+      addresses,
+      addressesLoading,
+      reloadAddresses,
     }}>
       {children}
     </LocationContext.Provider>
