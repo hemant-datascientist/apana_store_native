@@ -59,6 +59,10 @@ export interface PlaceOrderRequest {
   // The signed-in phone. §13 checkout keys orders on it (there is no customer
   // FK yet), so without it an order could never be found again.
   customerId?:     string | null;
+  // "cod" pays on delivery; "online" creates the order UNPAID and hands off to
+  // the payments module. Absent = cod, the safe default — an order that is
+  // wrongly pending gets chased, one that is wrongly paid does not.
+  paymentMode?:    "cod" | "online";
 }
 
 // ── POST /api/orders success response ────────────────────
@@ -177,8 +181,10 @@ export async function placeOrder(
       body: JSON.stringify({
         customer_id: customerId,
         items,
-        // V1 settles on collection/delivery; the payment module owns the rest.
-        payment_mode: "cod",
+        // COD settles on delivery. Anything else creates the order UNPAID and
+        // the payments module takes it from there — the server will not mark an
+        // order paid just because checkout asked it to.
+        payment_mode: req.paymentMode ?? "cod",
         fulfillment: FULFILLMENT[req.mode],
         delivery_address: req.addressId ? { address_id: req.addressId } : null,
       }),

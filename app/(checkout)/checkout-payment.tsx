@@ -39,6 +39,7 @@ import { useAuth }           from "../../context/AuthContext";
 import {
   placeOrder, PlaceOrderRequest, StoreOrderInput, StoreOrderResult,
 } from "../../services/checkoutService";
+import { payForOrder } from "../../services/paymentsService";
 
 import CheckoutPaymentSelector from "../../components/checkout/CheckoutPaymentSelector";
 
@@ -149,6 +150,9 @@ export default function CheckoutPaymentScreen() {
         note,
         // §13 keys orders on the phone; there is no customer FK yet.
         customerId: user?.phone ?? null,
+        // Cash settles on delivery; every other method is an online payment the
+        // server will not treat as paid until a signature verifies.
+        paymentMode: selectedPayment.type === "cod" ? "cod" : "online",
       };
 
       const res = await placeOrder(req);
@@ -156,6 +160,25 @@ export default function CheckoutPaymentScreen() {
       if (!res.success) {
         setPayError(res.message ?? "Payment failed. Please try again.");
         return;
+      }
+
+      // The order exists but is UNPAID. Collect the money before calling this
+      // done — navigating first would show the customer a confirmed order the
+      // shop has not been paid for.
+      if (selectedPayment.type !== "cod") {
+        try {
+          // The order id is the idempotency key: retrying this exact payment
+          // must reuse the same attempt, never open a second one.
+          await payForOrder(res.orderId, user?.phone ?? "", `order-${res.orderId}`);
+        } catch (payErr: any) {
+          // The order stands, unpaid — deleting it would lose a basket the
+          // customer may still want to pay for. Say what happened and let them
+          // retry from their orders.
+          setPayError(
+            `${payErr?.message ?? "Payment failed."} Your order was created but is not paid yet — you can retry from My Orders.`,
+          );
+          return;
+        }
       }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
