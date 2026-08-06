@@ -33,6 +33,11 @@ import {
   initialSelection, resolveVariant, variantMrp, variantPrice, variantStock,
 } from "../../lib/variantSelect";
 import { fetchProductDetail, ProductDetail } from "../../services/liveCatalogService";
+import DetailOfferings from "../../components/live-products/detail/DetailOfferings";
+import WeightPicker from "../../components/live-products/detail/WeightPicker";
+import { useOfferings } from "../../hooks/useOfferings";
+import { formatMeasure, measureLineTotalCents } from "../../lib/measure";
+import type { Offering } from "../../services/offeringsService";
 
 function rupee(n: number): string {
   return `₹${n % 1 === 0 ? n.toFixed(0) : n.toFixed(2)}`;
@@ -85,6 +90,61 @@ export default function LiveProductDetailScreen() {
   const rowId = p != null ? cartRowId(p.id, chosen?.id ?? null) : "";
   const inCartQty =
     cart.find((s) => s.id === p?.store.id)?.items.find((i) => i.id === rowId)?.qty ?? 0;
+
+  // The same APC product sold other ways nearby — the sealed brand and the
+  // uncle's loose scoop under one identity (§ unified_listing_model §4).
+  const { offerings, loading: offeringsLoading } = useOfferings({
+    varietyCode: p?.apcVarietyCode,
+    familyCode: p?.apcFamilyCode,
+    classCode: p?.apcClassCode,
+    excludeProductId: p?.id,
+  });
+
+  // A loose offering cannot be added with one tap — the customer has to say HOW
+  // MUCH first, in amounts the shop can actually weigh.
+  const [weighing, setWeighing] = useState<Offering | null>(null);
+
+  function handleSelectOffering(o: Offering) {
+    if (o.sale_mode === "loose") { setWeighing(o); return; }
+    // A packaged alternative is a different listing — open it rather than
+    // adding it blind from a summary row.
+    router.push(`/live-product-detail?id=${o.id}` as never);
+  }
+
+  // Add a weighed amount. `qty` is the amount in base units (500 = 500 g),
+  // which is exactly what checkout expects for a loose line.
+  function handleAddLoose(o: Offering, amount: number) {
+    const tint = storeTint(o.seller_id);
+    addItem({
+      storeId: o.seller_id,
+      storeName: o.name,
+      storeType: "Loose",
+      storeTypeColor: tint.color,
+      storeTypeBg: tint.bg,
+      fulfillment: "pickup",
+      item: {
+        id: cartRowId(o.id, null),
+        productId: o.id,
+        variantId: null,
+        variantLabel: formatMeasure(o.measure_kind, amount, o.unit),
+        maxQty: o.stock,
+        image: o.images?.[0] ?? null,
+        name: o.name,
+        unit: o.unit ?? "",
+        // Rupees for the line, matching what the server will charge.
+        price: measureLineTotalCents(o.measure_kind, amount, o.price_per_measure_cents) / 100,
+        qty: amount,
+        icon: "leaf-outline",
+        bg: tint.bg,
+        measureKind: o.measure_kind,
+        pricePerMeasureCents: o.price_per_measure_cents,
+        minMeasure: o.min_measure,
+        stepMeasure: o.step_measure,
+      },
+    });
+    setWeighing(null);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+  }
 
   function handleAdd() {
     if (p == null || needsChoice || shownStock <= 0) return;
@@ -212,6 +272,13 @@ export default function LiveProductDetailScreen() {
             </View>
           )}
 
+          {/* ── One product, every way it is sold nearby (§ unified listing) ── */}
+          <DetailOfferings
+            offerings={offerings}
+            loading={offeringsLoading}
+            onSelect={handleSelectOffering}
+          />
+
           {/* ── §27 Apana Product Classification (code + names) ── */}
           <DetailClassification
             classCode={p.apcClassCode}
@@ -239,6 +306,22 @@ export default function LiveProductDetailScreen() {
           inCartQty={inCartQty}
           onAdd={handleAdd}
           onGoToCart={() => router.push("/cart")}
+        />
+      )}
+
+      {/* ── How much? — only amounts this shop can actually weigh ── */}
+      {weighing != null && (
+        <WeightPicker
+          visible
+          name={weighing.name}
+          measureKind={weighing.measure_kind}
+          pricePerMeasureCents={weighing.price_per_measure_cents}
+          minMeasure={weighing.min_measure}
+          stepMeasure={weighing.step_measure}
+          stock={weighing.stock}
+          unit={weighing.unit}
+          onClose={() => setWeighing(null)}
+          onConfirm={(amount) => handleAddLoose(weighing, amount)}
         />
       )}
     </SafeAreaView>

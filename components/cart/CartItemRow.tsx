@@ -13,6 +13,7 @@ import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import type { CartItem } from "../../data/cartData";
 import { resolveLine } from "../../lib/discount";
+import { formatMeasure, isLooseItem } from "../../lib/measure";
 
 interface CartItemRowProps {
   item:       CartItem;
@@ -36,8 +37,11 @@ export default function CartItemRow({ item, storeId, isLast, unlocked, onUpdateQ
   const onDeal      = info.source !== "everyday";
   const isBrand     = info.source === "brand";
   const dealColor   = isBrand ? BRAND_BLUE : FLOOR_GREEN;
-  const everydayTot = item.price * item.qty;
-  const chargedTot  = info.unit * item.qty;
+  // A loose line's qty is an AMOUNT (500 g), not a multiplier — its price is
+  // already the total for that amount, so multiplying would show 500× the bill.
+  const loose       = isLooseItem(item);
+  const everydayTot = loose ? item.price : item.price * item.qty;
+  const chargedTot  = loose ? info.unit  : info.unit * item.qty;
 
   return (
     <View style={[
@@ -116,11 +120,17 @@ export default function CartItemRow({ item, storeId, isLast, unlocked, onUpdateQ
             onPress={() => onUpdateQty(storeId, item.id, -1)}
             activeOpacity={0.7}
           >
-            <Ionicons name="remove" size={16} color={item.qty === 1 ? colors.subText : colors.primary} />
+            <Ionicons
+              name="remove"
+              size={16}
+              color={item.qty <= (loose ? (item.minMeasure ?? 1) : 1) ? colors.subText : colors.primary}
+            />
           </TouchableOpacity>
 
+          {/* A weighed line reads "500 g", not a bare 500 — the number alone
+              would look like a packet count. */}
           <Text style={[styles.qtyNum, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-            {item.qty}
+            {loose ? formatMeasure(item.measureKind!, item.qty, item.unit) : item.qty}
           </Text>
 
           <TouchableOpacity

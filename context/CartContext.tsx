@@ -19,6 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   INITIAL_CART, CartStore, CartItem, FulfillmentMode,
 } from "../data/cartData";
+import { isLooseItem } from "../lib/measure";
 
 const STORAGE_KEY = "apana_cart_v2";
 
@@ -102,7 +103,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         // was added — the customer gets stopped here rather than at checkout
         // with a 409 after they have entered an address.
         const ceiling = item.maxQty != null && item.maxQty > 0 ? item.maxQty : Infinity;
-        return { ...item, qty: Math.min(ceiling, Math.max(1, item.qty + delta)) };
+        // A loose line moves in the shop's own increments (50 g at a time), not
+        // by 1 gram, and floors at the smallest amount the counter will serve.
+        // Stepping by 1 here would build a 501 g order that checkout then 422s.
+        const loose = isLooseItem(item);
+        const step = loose ? Math.max(1, item.stepMeasure ?? 1) : 1;
+        const floor = loose ? Math.max(step, item.minMeasure ?? step) : 1;
+        return { ...item, qty: Math.min(ceiling, Math.max(floor, item.qty + delta * step)) };
       }),
     }));
   }

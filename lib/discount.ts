@@ -52,7 +52,14 @@ export interface StoreDiscount {
 }
 
 // Line total at everyday price.
+//
+// A LOOSE line does not multiply: its `qty` is an amount in base units (500 g),
+// so `price × qty` would bill 500 × the scoop. `price` already holds the total
+// for the chosen amount — the same figure the server computes from the rate —
+// so the line is simply that. Getting this wrong shows the customer a price
+// 500× the one they pay, which is worse than showing nothing.
 export function lineEveryday(item: CartItem): number {
+  if (item.measureKind != null && item.measureKind !== "count") return item.price;
   return item.price * item.qty;
 }
 

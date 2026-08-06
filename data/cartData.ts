@@ -25,7 +25,25 @@ export interface CartItem {
   variantLabel?: string | null;
   // Stock available for this exact SKU, captured when added. Caps the qty
   // stepper so the customer is stopped at the shelf, not at checkout.
+  // For a loose line this is the stock in BASE UNITS (grams), same as `qty`.
   maxQty?: number;
+
+  // ── Loose line (unified listing) ──────────────────────────
+  // Absent/"count" = an ordinary packaged line and everything below is ignored,
+  // so packaged rows are untouched by any of this.
+  //
+  // For a loose line `qty` stops being a packet count and becomes an AMOUNT in
+  // the measure's base unit — 500 means 500 g, not 500 packets. That is the
+  // same meaning the backend gives order_items.qty, so the cart can be sent as-is.
+  measureKind?: "count" | "weight" | "volume" | "piece";
+  // Rate per 100 base units (weight/volume) or per piece, in paise. The line
+  // total is amount × rate / basis — NOT qty × price.
+  pricePerMeasureCents?: number | null;
+  // Smallest servable amount and the increment the shop can actually weigh.
+  // The stepper moves by `stepMeasure` and floors at `minMeasure`, so the
+  // customer cannot build a 175 g order the counter would refuse at checkout.
+  minMeasure?: number | null;
+  stepMeasure?: number | null;
   // Resolved product image, when the listing has one (falls back to icon/bg).
   image?: string | null;
 
