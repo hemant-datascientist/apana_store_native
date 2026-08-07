@@ -31,6 +31,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import useTheme              from "../../theme/useTheme";
 import { useAuth, AuthUser } from "../../context/AuthContext";
 import { useLocation }       from "../../context/LocationContext";
+import { sendOtp, verifyOtp, toE164 } from "../../services/authService";
 import AuthHeader          from "../../components/auth/AuthHeader";
 import StepIndicator       from "../../components/otp/StepIndicator";
 import OtpIcon             from "../../components/otp/OtpIcon";
@@ -52,10 +53,11 @@ export default function OtpScreen() {
   // ── Params — login uses method/contact/display; register uses phone/email/name ──
   const {
     flow, method, contact, display,
-    name, phone, phoneDisplay, email,
+    name, phone, phoneDisplay, email, devOtp,
   } = useLocalSearchParams<{
     flow?: string; method?: string; contact?: string; display?: string;
     name?: string; phone?: string; phoneDisplay?: string; email?: string;
+    devOtp?: string;
   }>();
 
   const isRegister = flow === "register";
@@ -74,7 +76,14 @@ export default function OtpScreen() {
     : (display ?? contact ?? "");
 
   // ── OTP digit state ───────────────────────────────────────────
-  const [digits,    setDigits]    = useState<string[]>(Array(OTP_LENGTH).fill(""));
+  // Prefilled from the send response when the MOCK provider is in use, so a
+  // tester is not staring at empty boxes waiting for an SMS nobody sent.
+  const [digits,    setDigits]    = useState<string[]>(() => {
+    const code = (devOtp ?? "").replace(/\D/g, "").slice(0, OTP_LENGTH);
+    return code
+      ? [...code.split(""), ...Array(OTP_LENGTH - code.length).fill("")]
+      : Array(OTP_LENGTH).fill("");
+  });
   const [loading,   setLoading]   = useState(false);
   const [resending, setResending] = useState(false);
   const [timer,     setTimer]     = useState(RESEND_COOLDOWN);
@@ -139,12 +148,20 @@ export default function OtpScreen() {
 
   // ── Advance register flow to email step ───────────────────────
   async function advanceToEmailStep() {
-    // TODO: POST /auth/send-otp { email, app:"customer", flow:"register" }
-    await new Promise(r => setTimeout(r, 500));
+    const target = (email ?? "").trim();
+    const res = await sendOtp(target, "email");
     setPhoneVerified(true);
     setVerifyStep("email");
-    setDigits(Array(OTP_LENGTH).fill(""));
+    setDigits(res.devOtp ? prefillDigits(res.devOtp) : Array(OTP_LENGTH).fill(""));
     startTimer();
+  }
+
+  // With the mock provider the code comes back in the send response, so a
+  // tester never waits for an SMS that is never sent. Absent with a real
+  // provider and absent in production.
+  function prefillDigits(code: string): string[] {
+    const next = code.slice(0, OTP_LENGTH).split("");
+    return [...next, ...Array(OTP_LENGTH - next.length).fill("")];
   }
 
   // ── Verify OTP ───────────────────────────────────────────────
@@ -152,34 +169,43 @@ export default function OtpScreen() {
     if (!isComplete) return;
     setLoading(true);
     try {
-      // TODO: POST /auth/verify-otp { method: currentMethod, contact: currentContact, otp }
-      await new Promise(r => setTimeout(r, 800));
+      const otp = digits.join("");
 
       if (isRegister && verifyStep === "phone") {
-        // Phone verified → advance to email step
+        // Phone step of registration: verify it, then move to the email step.
+        await verifyOtp(toE164(currentContact), otp);
         await advanceToEmailStep();
         return;
       }
 
-      // Final step (login single-step OR register email step)
+      // The identifier the SERVER will know this person by. It is the customer
+      // id used by orders and saved addresses, so it must be the canonical form
+      // — a phone as E.164, not the ten digits that were typed.
+      const identifier =
+        currentMethod === "phone" ? toE164(currentContact) : currentContact.trim();
+
+      const { token } = await verifyOtp(identifier, otp);
+
       const authUser: AuthUser = {
-        id:         "usr_" + Date.now(),
+        // The identifier IS the identity — a locally invented "usr_<timestamp>"
+        // matched nothing on the server, so orders and addresses keyed off it
+        // belonged to nobody.
+        id:         identifier,
         name:       isRegister ? (name ?? "User") : "User",
-        phone:      isRegister ? (phone ?? null)  : (currentMethod === "phone" ? currentContact : null),
-        email:      isRegister ? (email ?? null)  : (currentMethod === "email" ? currentContact : null),
+        phone:      isRegister ? toE164(phone ?? "") : (currentMethod === "phone" ? identifier : null),
+        email:      isRegister ? (email ?? null)     : (currentMethod === "email" ? identifier : null),
         avatar_url: null,
         is_new:     isRegister,
       };
 
-      // TODO: for register, POST /auth/register { name, phone, email, verified }
-      await login(authUser, {
-        access:  "mock_access_"  + Date.now(),
-        refresh: "mock_refresh_" + Date.now(),
-      });
+      // Refresh tokens are a V2 concern; the access token is the real one now.
+      await login(authUser, { access: token, refresh: "" });
       // First login → ask for location; returning user → go straight to tabs
       router.replace(locationReady ? "/(tabs)" : "/location-access");
-    } catch {
-      Alert.alert("Error", "Invalid OTP. Please try again.");
+    } catch (e) {
+      // Surface the server's own words — "Too many codes requested. Try again
+      // in 12 min." tells the person what to do; "Invalid OTP" does not.
+      Alert.alert("Could not sign in", e instanceof Error ? e.message : "Please try again.");
       setDigits(Array(OTP_LENGTH).fill(""));
       inputRefs.current[0]?.focus();
     } finally {
@@ -192,13 +218,16 @@ export default function OtpScreen() {
     if (timer !== 0) return;
     setResending(true);
     try {
-      // TODO: POST /auth/send-otp { [currentMethod]: currentContact, app:"customer" }
-      await new Promise(r => setTimeout(r, 600));
-      setDigits(Array(OTP_LENGTH).fill(""));
+      const target =
+        currentMethod === "phone" ? toE164(currentContact) : currentContact.trim();
+      const res = await sendOtp(target, currentMethod === "phone" ? "sms" : "email");
+      setDigits(res.devOtp ? prefillDigits(res.devOtp) : Array(OTP_LENGTH).fill(""));
       inputRefs.current[0]?.focus();
       startTimer();
-    } catch {
-      Alert.alert("Error", "Could not resend OTP. Please try again.");
+    } catch (e) {
+      // The rate limiter refuses after 5 codes in 15 minutes and says how long
+      // to wait — much more useful than a generic failure.
+      Alert.alert("Could not resend", e instanceof Error ? e.message : "Please try again.");
     } finally {
       setResending(false);
     }

@@ -25,6 +25,7 @@ import {
 import { useRouter }        from "expo-router";
 import useTheme             from "../../theme/useTheme";
 import { useAuth }          from "../../context/AuthContext";
+import { sendOtp, toE164 }  from "../../services/authService";
 import { useLocation }      from "../../context/LocationContext";
 import AuthHeader           from "../../components/auth/AuthHeader";
 import WelcomeBlock         from "../../components/auth/WelcomeBlock";
@@ -74,19 +75,24 @@ export default function LoginScreen() {
     if (!isValid) return;
     setLoading(true);
     try {
-      // TODO: POST /auth/send-otp { [method]: value, app: "customer" }
-      await new Promise(r => setTimeout(r, 800));
+      const contact = isPhone ? toE164(phone) : email.trim();
+      const res = await sendOtp(contact, isPhone ? "sms" : "email");
 
       router.push({
         pathname: "/otp",
         params: {
           method,
-          contact: isPhone ? `+91${phone.replace(/\s/g, "")}` : email,
+          contact,
           display: isPhone ? `+91 ${phone.slice(0, 5)} ${phone.slice(5)}` : email,
+          // Mock provider only — lets the next screen prefill so a tester is not
+          // waiting for an SMS that was never sent.
+          ...(res.devOtp ? { devOtp: res.devOtp } : {}),
         },
       });
-    } catch {
-      Alert.alert("Error", "Could not send OTP. Please try again.");
+    } catch (e) {
+      // STAY on this screen. Pushing to the code boxes after a failed send
+      // leaves someone waiting for a code that does not exist.
+      Alert.alert("Could not send code", e instanceof Error ? e.message : "Please try again.");
     } finally {
       setLoading(false);
     }

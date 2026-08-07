@@ -10,12 +10,32 @@
 // ============================================================
 
 import React, { useMemo } from "react";
-import { View, Text, Alert, StyleSheet } from "react-native";
+import { View, Text, Alert, StyleSheet, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
 import useTheme from "../../../../theme/useTheme";
-import { B2C_PROMOS, B2C_STORES, B2CPromo, B2CStore } from "../../../../data/b2cStoresData";
+import { B2C_PROMOS, B2CPromo, B2CStore } from "../../../../data/b2cStoresData";
+import { useStoreBucket } from "../../../../hooks/useStoreBucket";
+import { toCardData, type StoreCardData } from "../../../../services/storeBucketService";
+
+// The B2C card carries brand chrome (logo letters, website flag) the API does
+// not return. Derived here rather than invented: the initials come from the
+// real name, and `website` is false because we genuinely do not know one.
+function toB2CCard(s: StoreCardData): B2CStore {
+  return {
+    id: s.id, name: s.name,
+    category: s.type, categoryColor: s.typeColor, categoryBg: s.typeBg,
+    rating: s.rating, reviews: s.reviews, distanceKm: s.distanceKm ?? 0,
+    website: false,
+    tags: s.categories,
+    description: "",
+    logoColor: s.bgColor,
+    logoText: s.name.split(/\s+/).slice(0, 2).map(w => w[0] ?? "").join("").toUpperCase() || "A",
+    logoTextColor: s.typeColor,
+    icon: s.icon,
+  };
+}
 import { buildHeroStores, sortByDistance, BannerableStore, HeroStore } from "../../../../lib/storeBanner";
 import { getStoreById } from "../../../../data/storeDetailData";
 import B2CHeroBanner from "./B2CHeroBanner";
@@ -28,16 +48,27 @@ export default function B2CStoresFeed() {
 
   // Same store banner as Nearby: top-4 brands, city + why-shown pill.
   // B2C carries its categories as `tags` and brand colour as `logoColor`.
+  // REAL brand-direct sellers: the `brand_direct` bucket = manufacturers
+  // (ASC-FAC-*) plus retail sellers who declared own_brand / franchise.
+  //
+  // ⚠ NOT the backend's `channel: "b2c"`. That channel covers all 83 retail
+  // types INCLUDING every kirana, so using it here would fill this tab with
+  // exactly the neighbourhood shops it exists to separate out.
+  //
+  // Not proximity-scoped: a manufacturer ships from wherever it ships from.
+  const { stores: liveStores, loading, error, isEmpty } = useStoreBucket("brand_direct");
+  const cards = useMemo(() => liveStores.map(toCardData), [liveStores]);
+
   const heroStores = useMemo(
     () => buildHeroStores(sortByDistance(
-      B2C_STORES.map((s): BannerableStore => ({
-        id: s.id, name: s.name, rating: s.rating, distanceKm: s.distanceKm,
-        categories: s.tags, icon: s.icon, bgColor: s.logoColor,
-        city: getStoreById(s.id).city,
+      cards.map((s): BannerableStore => ({
+        id: s.id, name: s.name, rating: s.rating, distanceKm: s.distanceKm ?? 0,
+        categories: s.categories, icon: s.icon, bgColor: s.bgColor,
+        city: s.city ?? "",
       })),
       null,
     )),
-    [],
+    [cards],
   );
 
   function handleHeroPress(store: HeroStore) {
@@ -82,15 +113,27 @@ export default function B2CStoresFeed() {
           </Text>
         </View>
         <Text style={[styles.sectionCount, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-          {B2C_STORES.length} brands
+          {loading ? "…" : `${cards.length} brands`}
         </Text>
       </View>
 
+      {loading && <ActivityIndicator color={colors.primary} style={{ marginVertical: 24 }} />}
+      {error && (
+        <Text style={[styles.emptyText, { color: colors.danger, fontFamily: typography.fontFamily.regular }]}>
+          {error}
+        </Text>
+      )}
+      {isEmpty && (
+        <Text style={[styles.emptyText, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>
+          No brands or manufacturers listed yet.
+        </Text>
+      )}
+
       {/* Brand list */}
-      {B2C_STORES.map(store => (
+      {cards.map(store => (
         <B2CStoreCard
           key={store.id}
-          store={store}
+          store={toB2CCard(store)}
           onPress={handleStorePress}
           onDirection={handleDirection}
           onViewItems={handleViewItems}
@@ -120,4 +163,11 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {},
   sectionCount: {},
+  emptyText: {
+    textAlign:  "center",
+    fontSize:   13,
+    lineHeight: 20,
+    marginVertical: 24,
+    paddingHorizontal: 24,
+  },
 });

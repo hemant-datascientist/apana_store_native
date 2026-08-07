@@ -10,11 +10,27 @@
 // ============================================================
 
 import React, { useMemo } from "react";
-import { View, Text, Alert, StyleSheet } from "react-native";
+import { View, Text, Alert, StyleSheet, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
 import useTheme from "../../../../theme/useTheme";
-import { SERVICE_PROMOS, SERVICE_STORES, ServicePromo, ServiceStore } from "../../../../data/serviceStoresData";
+import { SERVICE_PROMOS, ServicePromo, ServiceStore } from "../../../../data/serviceStoresData";
+import { useStoreBucket } from "../../../../hooks/useStoreBucket";
+import { toCardData, type StoreCardData } from "../../../../services/storeBucketService";
+
+// The service card wants owner/contact chrome the API does not expose yet.
+// Left EMPTY rather than invented — a fake phone number on a Call Now button is
+// worse than a disabled one (§19.8).
+function toServiceCard(s: StoreCardData): ServiceStore {
+  return {
+    id: s.id, name: s.name,
+    type: s.type, typeColor: s.typeColor, typeBg: s.typeBg,
+    rating: s.rating, reviews: s.reviews, distanceKm: s.distanceKm ?? 0,
+    website: false,
+    bgColor: s.bgColor, icon: s.icon,
+    phone: "", ownerName: "", ownerPhoto: "", ownerMessage: "",
+  };
+}
 import { buildHeroStores, sortByDistance, BannerableStore, HeroStore } from "../../../../lib/storeBanner";
 import { getStoreById } from "../../../../data/storeDetailData";
 import ServiceHeroBanner from "./ServiceHeroBanner";
@@ -29,16 +45,22 @@ export default function ServiceStoresFeed() {
 
   // Same store banner as Nearby: top-4 providers, city + why-shown pill.
   // Service stores have no category list, so the cards show name + rating.
+  // REAL service providers — the ASvC side (ASC-SVC-*). Was a bundled mock, so
+  // the tab listed salons and repair shops that exist nowhere and cannot be
+  // booked.
+  const { stores: liveStores, loading, error, isEmpty } = useStoreBucket("service");
+  const cards = useMemo(() => liveStores.map(toCardData), [liveStores]);
+
   const heroStores = useMemo(
     () => buildHeroStores(sortByDistance(
-      SERVICE_STORES.map((s): BannerableStore => ({
-        id: s.id, name: s.name, rating: s.rating, distanceKm: s.distanceKm,
+      cards.map((s): BannerableStore => ({
+        id: s.id, name: s.name, rating: s.rating, distanceKm: s.distanceKm ?? 0,
         categories: [], icon: s.icon, bgColor: s.bgColor,
-        city: getStoreById(s.id).city,
+        city: s.city ?? "",
       })),
       null,
     )),
-    [],
+    [cards],
   );
 
   function handleHeroPress(store: HeroStore) {
@@ -79,15 +101,27 @@ export default function ServiceStoresFeed() {
           </Text>
         </View>
         <Text style={[styles.sectionCount, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-          {SERVICE_STORES.length} providers
+          {loading ? "…" : `${cards.length} providers`}
         </Text>
       </View>
 
+      {loading && <ActivityIndicator color={colors.primary} style={{ marginVertical: 24 }} />}
+      {error && (
+        <Text style={[styles.emptyText, { color: colors.danger, fontFamily: typography.fontFamily.regular }]}>
+          {error}
+        </Text>
+      )}
+      {isEmpty && (
+        <Text style={[styles.emptyText, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>
+          No service providers here yet.
+        </Text>
+      )}
+
       {/* Service store list */}
-      {SERVICE_STORES.map(store => (
+      {cards.map(store => (
         <ServiceStoreCard
           key={store.id}
-          store={store}
+          store={toServiceCard(store)}
           onCall={handleCall}
           onDirection={handleDirection}
           onViewInfo={handleViewInfo}
@@ -116,4 +150,11 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {},
   sectionCount: {},
+  emptyText: {
+    textAlign:  "center",
+    fontSize:   13,
+    lineHeight: 20,
+    marginVertical: 24,
+    paddingHorizontal: 24,
+  },
 });

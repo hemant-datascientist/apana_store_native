@@ -24,6 +24,7 @@ import React, {
   createContext, useContext, useState, useEffect, ReactNode,
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { revokeToken } from "../services/authService";
 
 // ── Types ─────────────────────────────────────────────────────
 export interface AuthUser {
@@ -89,6 +90,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function logout() {
+    // Tell the server first, while the token is still readable. The backend
+    // blocklists the jti, so a token that leaves this device stops working —
+    // clearing only local storage would leave it valid until it expired.
+    // Best-effort: being offline must never prevent signing out locally.
+    const token = await AsyncStorage.getItem(STORAGE_KEYS.access);
+    if (token) await revokeToken(token);
+
     setUser(null);
     setIsGuest(false);
     await Promise.all([
