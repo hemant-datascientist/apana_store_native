@@ -19,18 +19,17 @@
 // Backend: GET /customer/orders?status=all|active|delivered|cancelled
 // ============================================================
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
-  View, Text, ScrollView, Alert, StyleSheet,
+  View, Text, ScrollView, Alert, StyleSheet, ActivityIndicator,
 } from "react-native";
 import { SafeAreaView }   from "react-native-safe-area-context";
 import { Ionicons }       from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native";
-import { useRouter }      from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import useTheme           from "../../theme/useTheme";
 import { typography }     from "../../theme/typography";
 import {
-  MOCK_ORDERS,
   ORDER_FILTER_TABS,
   ACTIVE_STATUSES,
   Order,
@@ -41,13 +40,40 @@ import OrderCard        from "../../components/orders/OrderCard";
 import OrderEmptyState  from "../../components/orders/OrderEmptyState";
 import RateStoreSheet   from "../../components/orders/RateStoreSheet";
 import { submitStoreReview } from "../../services/reviewService";
+import { fetchOrderHistory, ORDERS_LIVE } from "../../services/orderHistoryService";
+import { useAuth } from "../../context/AuthContext";
 
 export default function OrderHistoryScreen() {
   const { colors } = useTheme();
   const router     = useRouter();
 
   const [activeFilter, setActiveFilter] = useState<OrderFilter>("all");
-  const [orders]                        = useState<Order[]>(MOCK_ORDERS);
+  // REAL orders for THIS customer. Rendered MOCK_ORDERS before, so a tester
+  // placed a real order and saw four invented ones from shops that do not
+  // exist — the worst possible answer to "did my order go through?".
+  const { user } = useAuth();
+  const customerId = user?.phone ?? "";
+  const [orders,  setOrders]  = useState<Order[]>([]);
+  const [loading, setLoading] = useState(ORDERS_LIVE);
+  const [error,   setError]   = useState<string | null>(null);
+
+  const loadOrders = useCallback(() => {
+    if (!ORDERS_LIVE || !customerId) { setOrders([]); setLoading(false); return; }
+    setLoading(true);
+    setError(null);
+    fetchOrderHistory(customerId)
+      .then(setOrders)
+      .catch((e) => {
+        // Keep the list empty AND say why. A silent empty list reads as "you
+        // have never ordered", which is a lie when the network simply failed.
+        setOrders([]);
+        setError(e instanceof Error ? e.message : "Could not load your orders.");
+      })
+      .finally(() => setLoading(false));
+  }, [customerId]);
+
+  // Refetch on focus: coming back from checkout, the new order is on the server.
+  useFocusEffect(loadOrders);
   const [rateOrder, setRateOrder]       = useState<Order | null>(null);
   const [rating,    setRating]          = useState(false);
 
@@ -156,18 +182,44 @@ export default function OrderHistoryScreen() {
         />
 
         {/* ── Order cards ── */}
-        {filtered.length > 0
-          ? filtered.map(order => (
-              <OrderCard
-                key={order.id}
-                order={order}
-                onTrack={handleTrack}
-                onReorder={handleReorder}
-                onRate={setRateOrder}
-              />
-            ))
-          : <OrderEmptyState filter={activeFilter} />
-        }
+        {/* Four distinct states. "Signed out", "loading", "failed" and "you
+            have no orders" are different facts, and collapsing them into one
+            empty card is how a tester reports "my order vanished" when they
+            were simply logged out or offline. */}
+        {loading && <ActivityIndicator color={colors.primary} style={styles.notice} />}
+
+        {!loading && error && (
+          <View style={styles.notice}>
+            <Text style={[styles.noticeText, { color: colors.danger, fontFamily: typography.fontFamily.medium }]}>
+              {error}
+            </Text>
+            <TouchableOpacity onPress={loadOrders} activeOpacity={0.8}>
+              <Text style={[styles.retry, { color: colors.primary, fontFamily: typography.fontFamily.semiBold }]}>
+                Try again
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {!loading && !error && !customerId && (
+          <Text style={[styles.notice, styles.noticeText, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>
+            Sign in to see your orders.
+          </Text>
+        )}
+
+        {!loading && !error && customerId && (
+          filtered.length > 0
+            ? filtered.map(order => (
+                <OrderCard
+                  key={order.id}
+                  order={order}
+                  onTrack={handleTrack}
+                  onReorder={handleReorder}
+                  onRate={setRateOrder}
+                />
+              ))
+            : <OrderEmptyState filter={activeFilter} />
+        )}
 
       </ScrollView>
 
@@ -205,5 +257,20 @@ const styles = StyleSheet.create({
     paddingTop:        16,
     paddingBottom:     40,
     gap:               12,
+  },
+
+  notice: {
+    alignItems:     "center",
+    marginVertical: 28,
+    paddingHorizontal: 24,
+    gap:            10,
+  },
+  noticeText: {
+    fontSize:   13,
+    lineHeight: 20,
+    textAlign:  "center",
+  },
+  retry: {
+    fontSize: 14,
   },
 });
