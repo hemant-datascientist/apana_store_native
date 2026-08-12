@@ -86,8 +86,16 @@ async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
     if (!res.ok) {
       const e = parsed as { message?: string; error?: string };
       // Server messages here are written for a shopper ("pincode must be 6
-      // digits and cannot start with 0"), so pass them through.
-      throw new Error(e.message ?? e.error ?? `Request failed (${res.status})`);
+      // digits and cannot start with 0"), so pass them through — but ONLY the
+      // real ones. A framework 404 arrives as message:"NOT_FOUND", and passing
+      // that straight to an Alert told the customer their address failed for a
+      // reason they cannot act on, while the actual fault was a bad URL in this
+      // file. A machine token has no spaces and no lowercase; that is the tell.
+      const msg = e.message ?? e.error;
+      const isSentence = !!msg && /\s/.test(msg); // real copy has spaces; NOT_FOUND / not_found do not
+      throw new Error(
+        isSentence ? (msg as string) : `Could not reach the server (${res.status}). Try again.`,
+      );
     }
     return parsed as T;
   } finally {
@@ -106,7 +114,17 @@ export async function createPinAddress(
   customerId: string,
   input: PinAddressInput,
 ): Promise<UserAddress> {
-  return call<UserAddress>(`/api/customer/addresses/pin`, {
+  // Refuse in mock mode rather than saving into a backend the list never reads
+  // (fetchAddresses returns [] when !ADDRESSES_LIVE) — the address would appear
+  // to save and then simply not be there.
+  if (!ADDRESSES_LIVE) {
+    throw new Error("Addresses are not connected in this build. Set EXPO_PUBLIC_API_MODE=local.");
+  }
+  // Path is RELATIVE to BASE_URL, which already ends in /api/customer. Writing
+  // the absolute path here produced /api/customer/api/customer/addresses/pin —
+  // a 404 the screen surfaced verbatim as "Could not save · NOT_FOUND" while
+  // the pin itself was perfectly good.
+  return call<UserAddress>(`/addresses/pin`, {
     method: "POST",
     body: JSON.stringify({ ...input, customer_id: customerId }),
   });
