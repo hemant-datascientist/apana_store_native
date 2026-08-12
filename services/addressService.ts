@@ -28,6 +28,27 @@ const BASE_URL =
 
 const TIMEOUT_MS = 12_000;
 
+/**
+ * PIN-FIRST address. The customer drops a pin and types ONE thing.
+ *
+ * There is no street/city/pincode field, and that is the point: the SERVER
+ * resolves those from the pin via Mappls and derives the DIGIPIN from the same
+ * lat/lng, so the printed address and the routed coordinates cannot describe
+ * two different places. A client that could send both would eventually send a
+ * mismatched pair, and the partner would follow the text while the ETA followed
+ * the pin.
+ */
+export interface PinAddressInput {
+  lat: number;
+  lng: number;
+  /** The only typed field — "Flat 402", "Ground floor, green gate". */
+  door?: string;
+  label?: string;
+  icon?: string;
+  name?: string | null;
+  is_default?: boolean;
+}
+
 export interface AddressInput {
   label?: string;
   icon?: string;
@@ -78,6 +99,17 @@ export async function fetchAddresses(customerId: string): Promise<UserAddress[]>
   if (!ADDRESSES_LIVE || !customerId) return [];
   const body = await call<{ items: UserAddress[] }>(`/addresses?${q(customerId)}`);
   return body.items ?? [];
+}
+
+/** Create from a dropped pin. The server resolves and stores the address. */
+export async function createPinAddress(
+  customerId: string,
+  input: PinAddressInput,
+): Promise<UserAddress> {
+  return call<UserAddress>(`/api/customer/addresses/pin`, {
+    method: "POST",
+    body: JSON.stringify({ ...input, customer_id: customerId }),
+  });
 }
 
 export async function createAddress(customerId: string, input: AddressInput): Promise<UserAddress> {

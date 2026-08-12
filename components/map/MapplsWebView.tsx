@@ -46,6 +46,9 @@
 //   routeLine     — [origin, destination] route (auto-syncs)
 //   onMarkerPress — fired when a store pin is tapped
 //   onMapPress    — fired when the bare map canvas is tapped
+//   onCenterChanged — fired ~180 ms after the map settles from a pan/zoom.
+//                   Powers "drag the map under a fixed crosshair", the way a
+//                   doorstep is picked: the thumb never covers the target.
 //   onMapReady    — fired once the Mappls SDK finishes loading
 //   onMapError    — fired if the SDK fails to load in time
 //   isDark        — pass isDark from useTheme() for map style
@@ -132,6 +135,8 @@ interface MapplsWebViewProps {
   routeLine?:     Array<{ lat: number; lng: number }>;
   onMarkerPress?: (id: string) => void;
   onMapPress?:    () => void;
+  /** Map settled after a pan/zoom. Debounced — NOT one call per frame. */
+  onCenterChanged?: (lat: number, lng: number) => void;
   onMapReady?:    () => void;
   onMapError?:    (reason: string) => void;
   onMapDiag?:     (caps: Record<string, boolean>) => void;
@@ -652,6 +657,30 @@ function buildMapHTML(opts: {
       postToRN({ type: 'mapPress' });
     }
 
+    // ── Map settled after a pan/zoom → notify RN ─────────────
+    // Powers "drag the map under a fixed crosshair", which is how every
+    // q-commerce app picks a doorstep: the thumb never covers the target, and
+    // the pin is always at a known screen position. Tap-to-place would put the
+    // finger exactly where the user needs to look.
+    //
+    // Emitted on IDLE, not on every frame of the drag — a message per frame
+    // would flood the bridge and each one triggers a reverse-geocode upstream.
+    var centerTimer = null;
+    function reportCenter() {
+      try {
+        var c = map.getCenter ? map.getCenter() : null;
+        if (!c) return;
+        var lat = (typeof c.lat === 'function') ? c.lat() : c.lat;
+        var lng = (typeof c.lng === 'function') ? c.lng() : c.lng;
+        if (typeof lat !== 'number' || typeof lng !== 'number') return;
+        postToRN({ type: 'centerChanged', lat: lat, lng: lng });
+      } catch(e) {}
+    }
+    function onMapIdle() {
+      if (centerTimer) clearTimeout(centerTimer);
+      centerTimer = setTimeout(reportCenter, 180);
+    }
+
     // ── Init sequence ────────────────────────────────────────
     function finishInit() {
       if (mapInitialized) return;
@@ -673,6 +702,17 @@ function buildMapHTML(opts: {
 
       // Map tap listener
       try { map.addListener('click', onMapClick); } catch(e) {}
+
+      // Centre-settled listener. Several event names are attached because the
+      // Mappls build in the field is a MapLibre fork on some versions and a
+      // Google-style API on others — 'idle' exists on one, 'dragend'/'zoomend'
+      // on the other. Attaching all three costs nothing (they debounce into the
+      // same call) and means the crosshair keeps working across SDK builds
+      // instead of silently going dead after a CDN bump.
+      ['idle', 'dragend', 'zoomend', 'moveend'].forEach(function(evt) {
+        try { if (map.on) map.on(evt, onMapIdle); } catch(e) {}
+        try { if (map.addListener) map.addListener(evt, onMapIdle); } catch(e) {}
+      });
 
       // Replay any RN messages that arrived before init
       var queued = pendingActions.slice();
@@ -782,6 +822,7 @@ const MapplsWebView = forwardRef<MapplsWebViewHandle, MapplsWebViewProps>(
       routeLine,
       onMarkerPress,
       onMapPress,
+      onCenterChanged,
       onMapReady,
       onMapError,
       onMapDiag,
@@ -835,6 +876,10 @@ const MapplsWebView = forwardRef<MapplsWebViewHandle, MapplsWebViewProps>(
         const msg = JSON.parse(e.nativeEvent.data);
         if (msg.type === "markerPress") onMarkerPress?.(msg.id);
         else if (msg.type === "mapPress")  onMapPress?.();
+        else if (msg.type === "centerChanged" &&
+                 typeof msg.lat === "number" && typeof msg.lng === "number") {
+          onCenterChanged?.(msg.lat, msg.lng);
+        }
         else if (msg.type === "mapReady")  { setReady(true); onMapReady?.(); }
         else if (msg.type === "mapDiag")   { onMapDiag?.(msg.caps || {}); }
         else if (msg.type === "polygonStatus") { onPolygonStatus?.({ id: msg.id, ok: !!msg.ok, err: msg.err || "" }); }
@@ -843,7 +888,7 @@ const MapplsWebView = forwardRef<MapplsWebViewHandle, MapplsWebViewProps>(
           onMapError?.(msg.reason || "Map could not be loaded.");
         }
       } catch {}
-    }, [onMarkerPress, onMapPress, onMapReady, onMapError, onMapDiag, onPolygonStatus]);
+    }, [onMarkerPress, onMapPress, onCenterChanged, onMapReady, onMapError, onMapDiag, onPolygonStatus]);
 
     // ── Auto-sync markers prop → map ──────────────────────────
     // Stringify as a key so React re-runs only on meaningful changes.

@@ -282,7 +282,7 @@ export default function CheckoutScreen() {
         {needsAddress && !selectedAddress && (
           <TouchableOpacity
             style={[styles.pickupNote, { backgroundColor: colors.warningLight ?? colors.card, borderColor: colors.warning }]}
-            onPress={() => router.push("/add-address?mode=add" as any)}
+            onPress={() => router.push("/pin-address" as any)}
             activeOpacity={0.85}
           >
             <Ionicons name="location-outline" size={18} color={colors.warning} />

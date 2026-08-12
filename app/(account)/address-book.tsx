@@ -9,7 +9,11 @@
 //   • Header bar: back arrow + "Manage Address" + add icon
 //   • Radio cards: icon + label + full address + edit action
 //   • OR divider
-//   • "+ Add New Address" dashed button → /add-address?mode=add
+//   • "+ Add New Address" → /pin-address (drop a pin; the server resolves the
+//     address and derives the DIGIPIN). The typed form is gone: a customer
+//     cannot write a street any more, only a door.
+//   • Edit also re-pins. There is nothing typed left to edit — street, city and
+//     pincode are the server's, resolved from the coordinates.
 //
 // The list is the SERVER's (via LocationContext). It used to be a bundled mock
 // with edits kept in local state, so a "saved" address lived only until the
@@ -99,7 +103,7 @@ export default function AddressBookScreen() {
         <TouchableOpacity
           style={styles.headerBtn}
           activeOpacity={0.75}
-          onPress={() => router.push("/add-address?mode=add" as any)}
+          onPress={() => router.push("/pin-address" as any)}
         >
           <Ionicons name="add" size={24} color="#fff" />
         </TouchableOpacity>
@@ -175,7 +179,7 @@ export default function AddressBookScreen() {
                 {/* Edit */}
                 <TouchableOpacity
                   style={styles.actionBtn}
-                  onPress={() => router.push(`/add-address?mode=edit&id=${addr.id}` as any)}
+                  onPress={() => router.push("/pin-address" as any)}
                   hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                   activeOpacity={0.7}
                 >
@@ -213,7 +217,7 @@ export default function AddressBookScreen() {
         <TouchableOpacity
           style={[styles.addBtn, { backgroundColor: colors.primaryLight, borderColor: BRAND_BLUE + "55" }]}
           activeOpacity={0.82}
-          onPress={() => router.push("/add-address?mode=add" as any)}
+          onPress={() => router.push("/pin-address" as any)}
         >
           <Ionicons name="add-circle-outline" size={20} color={BRAND_BLUE} />
           <Text style={[styles.addText, { fontFamily: typography.fontFamily.semiBold }]}>

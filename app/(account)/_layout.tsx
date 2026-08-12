@@ -13,7 +13,11 @@ export default function AccountLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="address-book"    />
+      {/* Typed address form — RETIRED. A customer cannot write a street any
+          more; /pin-address drops a pin and the server resolves the address.
+          The route stays registered only so an old deep link does not crash. */}
       <Stack.Screen name="add-address"     />
+      <Stack.Screen name="pin-address"     />
       <Stack.Screen name="payment-methods" />
       <Stack.Screen name="add-payment"     />
       <Stack.Screen name="favourite"       />
