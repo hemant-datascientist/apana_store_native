@@ -13,12 +13,11 @@ export interface UserProfile {
   avatar: string | null; // null → show initials
 }
 
-export const MOCK_USER: UserProfile = {
-  name:   "Hemant Sharma",
-  phone:  "+91 98765 43210",
-  email:  "hemant@apanastore.in",
-  avatar: null,
-};
+// MOCK_USER is DELETED. It was "Hemant Sharma" / "+91 98765 43210" /
+// "hemant@apanastore.in" — the same person on every phone, which is exactly
+// what stops several people testing as themselves. Real identity:
+// hooks/useCustomerProfile (GET/PATCH /api/customer/me), with the phone from
+// the verified OTP.
 
 // ── Stats ─────────────────────────────────────────────────────
 export interface ProfileStat {

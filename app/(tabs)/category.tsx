@@ -17,7 +17,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter }    from "expo-router";
 import useTheme from "../../theme/useTheme";
 import {
-  MOCK_LOCATION,
   STORES_LIVE_COUNT,
   HEADER_BG,
   DiscoveryMode,
@@ -102,7 +101,7 @@ export default function CategoryScreen() {
       <SafeAreaView style={[styles.hero, { backgroundColor: HEADER_BG }]} edges={["top"]}>
 
         <HomeHeader
-          location={MOCK_LOCATION}
+          location={{ area: selectedAddress.city, state: selectedAddress.state, pincode: selectedAddress.pincode }}
           storesLive={storesLiveCount}
           onLocationPress={() => Alert.alert("Change Location", "Area selector coming soon.")}
         />

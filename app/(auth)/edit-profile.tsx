@@ -13,7 +13,7 @@
 //             LockedField, SaveButton, DangerZone
 // ============================================================
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView, Platform, ScrollView,
   StyleSheet, StatusBar, Alert, ActivityIndicator, Text,
@@ -21,7 +21,7 @@ import {
 } from "react-native";
 import { useRouter }    from "expo-router";
 import useTheme         from "../../theme/useTheme";
-import { MOCK_USER }    from "../../data/profileData";
+import { useCustomerProfile } from "../../hooks/useCustomerProfile";
 import { typography }   from "../../theme/typography";
 import AuthHeader       from "../../components/auth/AuthHeader";
 import AvatarSection    from "../../components/tabs/profile/AvatarSection";
@@ -36,9 +36,19 @@ export default function EditProfileScreen() {
   const router     = useRouter();
   const { colors } = useTheme();
 
-  // Pre-fill from mock — swap with useAuth().user or API response
-  const [name,    setName]    = useState(MOCK_USER.name);
-  const [email,   setEmail]   = useState(MOCK_USER.email);
+  // THIS person's saved details, not MOCK_USER. Empty until they load — and
+  // empty is correct for someone who has never given a name.
+  const { profile, save } = useCustomerProfile();
+  const [name,    setName]    = useState("");
+  const [email,   setEmail]   = useState("");
+  // Seed once the profile arrives, without clobbering anything already typed.
+  const seeded = useRef(false);
+  useEffect(() => {
+    if (seeded.current || !profile) return;
+    seeded.current = true;
+    setName(profile.name ?? "");
+    setEmail(profile.email ?? "");
+  }, [profile]);
   const [loading, setLoading] = useState(false);
   const [dirty,   setDirty]   = useState(false);
 
@@ -53,8 +63,14 @@ export default function EditProfileScreen() {
     if (!canSave) return;
     setLoading(true);
     try {
-      // TODO: PUT /customer/profile { name: name.trim(), email: email.trim() }
-      await new Promise(r => setTimeout(r, 700));
+      // A REAL save. This was a 700 ms sleep followed by "Your profile has been
+      // updated" — nothing was written, and the next screen still showed the
+      // old details. Same shape as the withdrawal that was never processed.
+      const okSaved = await save({ name: name.trim(), email: email.trim() });
+      if (!okSaved) {
+        Alert.alert("Could not save", "Check your connection and try again.");
+        return;
+      }
       Alert.alert("Saved", "Your profile has been updated.", [
         { text: "OK", onPress: () => router.back() },
       ]);
@@ -138,7 +154,7 @@ export default function EditProfileScreen() {
         <LockedField
           label="Mobile Number"
           icon="phone-portrait-outline"
-          value={MOCK_USER.phone}
+          value={profile?.phone ?? ""}
           hint="Phone is linked to your OTP login and cannot be changed here"
         />
 

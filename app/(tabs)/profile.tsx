@@ -23,12 +23,12 @@ import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { useAuth } from "../../context/AuthContext";
 import {
-  MOCK_USER,
   profileStats,
   SETTING_GROUPS,
 } from "../../data/profileData";
 import { useFollowedStores } from "../../hooks/useFollow";
 import { fetchOrderHistory } from "../../services/orderHistoryService";
+import { useCustomerProfile, displayName } from "../../hooks/useCustomerProfile";
 import { useCoverage } from "../../context/CoverageContext";
 import ProfileHeader         from "../../components/tabs/profile/ProfileHeader";
 import ProfileStats          from "../../components/tabs/profile/ProfileStats";
@@ -46,6 +46,10 @@ export default function ProfileScreen() {
   const [appearanceVisible, setAppearanceVisible] = useState(false);
   const [coverageVisible,   setCoverageVisible]   = useState(false);
   const followedStores = useFollowedStores();
+
+  // THIS person, not MOCK_USER ("Hemant Sharma" on every phone). Name and email
+  // come from customer_db via /customer/me; the phone is the verified identity.
+  const { profile } = useCustomerProfile();
 
   // Real order count. fetchOrderHistory returns [] when signed out or off
   // backend, so a new customer sees 0 — which is true — instead of the "24"
@@ -116,7 +120,14 @@ export default function ProfileScreen() {
 
         {/* ── Header: avatar + name + edit ── */}
         <ProfileHeader
-          user={MOCK_USER}
+          user={{
+            name: displayName(profile, user?.phone),
+            phone: profile?.phone ?? user?.phone ?? "",
+            // Null, not a stand-in address. Someone who has not given an email
+            // should see that they have not, rather than another person's.
+            email: profile?.email ?? "",
+            avatar: null,
+          }}
           onEdit={() => router.push("/edit-profile")}
         />
 
