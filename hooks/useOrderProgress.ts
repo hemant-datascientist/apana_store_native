@@ -31,6 +31,12 @@ export interface OrderProgress {
   status: string | null;
   /** Rider's first name once assigned; null before that. */
   partnerName: string | null;
+  /**
+   * The rider's real number, so the customer can ring them from the device
+   * dialer. MVP has no masking layer — this is the actual number, and the
+   * server only sends it while the order is live (delivery/tracking.ts).
+   */
+  partnerPhone: string | null;
   /** The active step's KEY (TRACKING_STEPS uses keys, not indexes), or null. */
   stepKey: string | null;
   /** Routed window in minutes, or null when it cannot be computed. */
@@ -64,6 +70,7 @@ export function useOrderProgress(orderId: string | undefined): OrderProgress {
   const [state, setState] = useState<OrderProgress>({
     status: null,
     partnerName: null,
+    partnerPhone: null,
     stepKey: null,
     eta: null,
     destination: null,
@@ -80,6 +87,7 @@ export function useOrderProgress(orderId: string | undefined): OrderProgress {
         setState({
           status: t.status,
           partnerName: t.partnerName,
+          partnerPhone: t.partnerPhone,
           stepKey: STEP_FOR_STATUS[t.status] ?? null,
           eta: t.eta,
           destination: t.destination,

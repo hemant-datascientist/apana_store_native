@@ -3,7 +3,7 @@
 //
 // Shows the delivery partner / driver / store contact:
 //   Avatar (initials) + name, vehicle, rating
-//   Call + Chat action buttons (masked phone number)
+//   Call (device dialer) + Chat action buttons
 //   Vehicle number plate badge
 // ============================================================
 
@@ -11,6 +11,7 @@ import React from "react";
 import {
   View, Text, TouchableOpacity, StyleSheet, Alert,
 } from "react-native";
+import { callPhone } from "../../lib/callPhone";
 import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
@@ -77,14 +78,20 @@ export default function TrackingPartnerCard({ partner, mode }: TrackingPartnerCa
         </View>
 
         {/* Action buttons — success token for call so it stays green-on-green in dark */}
+        {/* The call button appears only when there IS a number: the server sends
+            the rider's number while the order is live and withholds it
+            otherwise, so a button here with nothing behind it would be a promise
+            the screen cannot keep. */}
         <View style={styles.actions}>
-          <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: colors.successLight, borderColor: colors.success + "40" }]}
-            onPress={() => Alert.alert("Call", `Calling ${partner.phone}`)}
-            activeOpacity={0.75}
-          >
-            <Ionicons name="call-outline" size={18} color={colors.success} />
-          </TouchableOpacity>
+          {partner.phone !== "" && (
+            <TouchableOpacity
+              style={[styles.actionBtn, { backgroundColor: colors.successLight, borderColor: colors.success + "40" }]}
+              onPress={() => void callPhone(partner.phone, "rider")}
+              activeOpacity={0.75}
+            >
+              <Ionicons name="call-outline" size={18} color={colors.success} />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity
             style={[styles.actionBtn, { backgroundColor: colors.primary + "15", borderColor: colors.primary + "40" }]}
             onPress={() => Alert.alert("Chat", "In-app chat coming soon")}

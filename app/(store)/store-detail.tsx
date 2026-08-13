@@ -59,16 +59,21 @@ export default function StoreDetailScreen() {
   // sample data when the id isn't a real approved store (dev / offline / mock).
   const live = useStoreCatalog(id);
 
-  // Real meta + real APC categories overlay the mock CHROME (hero colour, hours
-  // and contact placeholders still await BE fields — clearly generic, never
-  // presented as this shop's real numbers). Substance — name, city, rating,
-  // and the product categories — is real when the store resolves.
+  // Real meta + real APC categories overlay the mock CHROME (hero colour and
+  // hours still await BE fields — clearly generic, never presented as this
+  // shop's real opening times). Substance — name, city, rating, PHONE and the
+  // product categories — is real when the store resolves.
+  //
+  // The phone matters more than the rest: StoreContactCard DIALS it. Left on
+  // the bundled sample it would ring a number this shop never gave out, and on
+  // a real handset that is somebody else's phone.
   const base = getStoreById(id ?? DEFAULT_STORE_ID);
   const store = live.meta
     ? {
         ...base,
         id: live.meta.id,
         name: live.meta.name,
+        phone: live.meta.phone,
         tagline: live.meta.categoryLabel,
         category: live.meta.categoryLabel,
         city: live.meta.city,

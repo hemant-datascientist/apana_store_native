@@ -414,6 +414,8 @@ export async function fetchApcProducts(
 export interface StoreMeta {
   id: string;
   name: string;
+  /** The shop's real number, for the store screen's call button. */
+  phone: string;
   type: string;
   ascCode: string | null;
   categoryLabel: string;
@@ -427,6 +429,7 @@ export interface StoreMeta {
 interface WireStoreMeta {
   id: string;
   name: string;
+  phone: string;
   type: string;
   asc_code: string | null;
   category_label: string;
@@ -449,6 +452,7 @@ export async function fetchStoreMeta(storeId: string): Promise<StoreMeta | null>
     return {
       id: w.id,
       name: w.name,
+      phone: w.phone,
       type: w.type,
       ascCode: w.asc_code,
       categoryLabel: w.category_label,

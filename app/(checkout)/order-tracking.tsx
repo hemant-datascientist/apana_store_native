@@ -319,13 +319,22 @@ export default function OrderTrackingScreen() {
 
         {/* ── Partner card (delivery + ride) ── */}
         {/* A real order shows the rider's real first name, and only once one is
-            assigned. Before that there is genuinely nobody to name. No phone:
-            there is no call-masking layer, and a rider's personal number must
-            not go to every customer they deliver to. */}
+            assigned. Before that there is genuinely nobody to name.
+
+            The phone comes from the same poll and is empty until the rider is
+            actually carrying the order — the card hides its call button rather
+            than offering a dial that cannot connect. MVP has no masking layer,
+            so this is the rider's real number: the deliberate trade for having
+            a working call at all. */}
         {!isPickup && (isRealOrder
           ? (progress.partnerName ? (
               <TrackingPartnerCard
-                partner={{ ...partner, name: progress.partnerName, initials: String(progress.partnerName).slice(0, 1).toUpperCase() }}
+                partner={{
+                  ...partner,
+                  name: progress.partnerName,
+                  initials: String(progress.partnerName).slice(0, 1).toUpperCase(),
+                  phone: progress.partnerPhone ?? "",
+                }}
                 mode={mode}
               />
             ) : null)

@@ -38,6 +38,8 @@ export interface OrderTracking {
   /** Rider's first name once assigned. No phone: there is no call-masking
    *  layer, and the rider's personal number must not go to every customer. */
   partnerName: string | null;
+  /** The rider's real number, and only while they are carrying the order. */
+  partnerPhone: string | null;
   /** Routed window, or null when it cannot be computed. Never a constant. */
   eta: { min_minutes: number; max_minutes: number } | null;
   partner: TrackPoint | null;
@@ -50,6 +52,7 @@ interface WireTracking {
   status: string;
   partner_id: string | null;
   partner_name: string | null;
+  partner_phone: string | null;
   eta: { min_minutes: number; max_minutes: number } | null;
   partner: TrackPoint | null;
   trail: TrackPoint[];
@@ -73,6 +76,7 @@ export async function fetchOrderTracking(orderId: string): Promise<OrderTracking
       status: w.status,
       partnerId: w.partner_id,
     partnerName: w.partner_name ?? null,
+    partnerPhone: w.partner_phone ?? null,
     eta: w.eta ?? null,
       partner: w.partner,
       trail: w.trail ?? [],
