@@ -28,11 +28,18 @@ export interface ProfileStat {
   icon:  string;
 }
 
-export const PROFILE_STATS: ProfileStat[] = [
-  { key: "orders",  label: "Orders",      value: "24",  icon: "bag-check-outline"    },
-  { key: "stores",  label: "Fav Stores",  value: "7",   icon: "heart-outline"        },
-  { key: "rides",   label: "Rides",       value: "12",  icon: "car-outline"          },
-];
+// PROFILE_STATS was a hardcoded "24 Orders · 7 Fav Stores · 12 Rides", shown
+// to every customer including one who had just installed the app (§19.8).
+//
+// Orders and followed stores are both real and already reachable from the
+// screen (fetchOrderHistory + useFollowedStores). Rides are GONE: there is no
+// ride system at all, so the tile counted trips that could not have happened.
+export function profileStats(orders: number, followedStores: number): ProfileStat[] {
+  return [
+    { key: "orders", label: "Orders",     value: String(orders),         icon: "bag-check-outline" },
+    { key: "stores", label: "Fav Stores", value: String(followedStores), icon: "heart-outline"     },
+  ];
+}
 
 // NOTE: the old FavouriteStore/FAVOURITE_STORES mock was removed — stores
 // merged into the §30 follow relationship (lib/followStore + useFollowedStores).
@@ -50,7 +57,11 @@ export interface AssignedPartner {
   active:  boolean;
 }
 
-export const MOCK_DELIVERY_BOY: AssignedPartner = {
+// A rider and a driver with names, phone numbers and ratings, "assigned" to
+// every customer. Nobody is assigned a permanent partner — an order gets one
+// when it is claimed — and the phone numbers belonged to nobody. Kept as types
+// only; the screen no longer renders these cards.
+const _UNUSED_MOCK_DELIVERY_BOY: AssignedPartner = {
   type:    "delivery",
   name:    "Ravi Kumar",
   phone:   "+91 91234 56789",
@@ -60,7 +71,7 @@ export const MOCK_DELIVERY_BOY: AssignedPartner = {
   active:  true,
 };
 
-export const MOCK_RIDER: AssignedPartner = {
+const _UNUSED_MOCK_RIDER: AssignedPartner = {
   type:    "rider",
   name:    "Sunil Patil",
   phone:   "+91 93456 78901",

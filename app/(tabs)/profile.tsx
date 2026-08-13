@@ -12,7 +12,7 @@
 // Data: GET /customer/profile — replace mocks from profileData.ts
 // ============================================================
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View, ScrollView, StyleSheet, Alert, TouchableOpacity, Text,
 } from "react-native";
@@ -24,12 +24,11 @@ import { typography } from "../../theme/typography";
 import { useAuth } from "../../context/AuthContext";
 import {
   MOCK_USER,
-  PROFILE_STATS,
-  MOCK_DELIVERY_BOY,
-  MOCK_RIDER,
+  profileStats,
   SETTING_GROUPS,
 } from "../../data/profileData";
 import { useFollowedStores } from "../../hooks/useFollow";
+import { fetchOrderHistory } from "../../services/orderHistoryService";
 import { useCoverage } from "../../context/CoverageContext";
 import ProfileHeader         from "../../components/tabs/profile/ProfileHeader";
 import ProfileStats          from "../../components/tabs/profile/ProfileStats";
@@ -42,11 +41,28 @@ import CoverageModal         from "../../components/tabs/profile/CoverageModal";
 export default function ProfileScreen() {
   const { colors }  = useTheme();
   const router      = useRouter();
-  const { logout }  = useAuth();
+  const { logout, user }  = useAuth();
   const { meta: coverageMeta } = useCoverage();
   const [appearanceVisible, setAppearanceVisible] = useState(false);
   const [coverageVisible,   setCoverageVisible]   = useState(false);
   const followedStores = useFollowedStores();
+
+  // Real order count. fetchOrderHistory returns [] when signed out or off
+  // backend, so a new customer sees 0 — which is true — instead of the "24"
+  // this screen used to show everybody.
+  const [orderCount, setOrderCount] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const orders = await fetchOrderHistory(user?.phone ?? "");
+        if (!cancelled) setOrderCount(orders.length);
+      } catch {
+        // Leave it at 0. A network blip must not invent a purchase history.
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user?.phone]);
 
   // Surface the live coverage choice as the row's badge so the current
   // scope is readable without opening the modal.
@@ -105,7 +121,7 @@ export default function ProfileScreen() {
         />
 
         {/* ── Stats row ── */}
-        <ProfileStats stats={PROFILE_STATS} />
+        <ProfileStats stats={profileStats(orderCount, followedStores.length)} />
 
         {/* ── Stores You Follow — §30, the single store relationship.
              View All → Favourite hub (Stores tab), same as the partner
@@ -116,17 +132,11 @@ export default function ProfileScreen() {
           onPress={store => router.push(`/store-detail?id=${store.id}`)}
         />
 
-        {/* ── My Delivery Boy — tapping card section links to Delivery tab ── */}
-        <PartnerCard
-          partner={MOCK_DELIVERY_BOY}
-          onViewFavourites={() => router.push("/favourite?tab=delivery")}
-        />
-
-        {/* ── My Rider — tapping card section links to Riders tab ── */}
-        <PartnerCard
-          partner={MOCK_RIDER}
-          onViewFavourites={() => router.push("/favourite?tab=riders")}
-        />
+        {/* The "My Delivery Boy" and "My Rider" cards are gone. They rendered a
+            rider and a driver — names, phone numbers, ratings — permanently
+            "assigned" to every customer. Nobody has a permanent partner: an
+            order gets one when it is claimed, and the numbers belonged to
+            nobody (§19.8). Favourites remain reachable from the menu. */}
 
         {/* ── Settings sections ── */}
         {settingGroups.map(group => (
