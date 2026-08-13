@@ -277,14 +277,19 @@ export default function OrderTrackingScreen() {
           total={totalAmt}
         />
 
-        {/* ── Live map ── */}
+        {/* ── Live map ──
+            customerLocation is the order's REAL drop. It used to be
+            MOCK_CUSTOMER_LOCATION: one hardcoded Deccan coordinate for every
+            customer in every city, so the destination marker and the route line
+            both pointed at the wrong place while a genuinely moving rider
+            marker made it look right. */}
         <TrackingMapPlaceholder
           mode={mode}
           etaMinutes={etaMinutes}
           partnerInitials={partner.initials}
           partnerColor={partner.avatarColor}
           fix={partnerFix}
-          customerLocation={MOCK_CUSTOMER_LOCATION}
+          customerLocation={isRealOrder ? (progress.destination ?? undefined) : MOCK_CUSTOMER_LOCATION}
         />
 
         {/* ── Pickup-only: reorderable store list ── */}

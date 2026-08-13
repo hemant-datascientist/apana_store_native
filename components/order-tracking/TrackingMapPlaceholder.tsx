@@ -41,12 +41,13 @@ import {
 const SW = Dimensions.get("window").width;
 const MAP_H = 200;
 
-// ── Default locations (Pune) — replaced by real coords from WS ──
-// Partner starts a few blocks away from the customer for demo purposes.
+// ── Demo locations (Pune) — MOCK MODE ONLY ──
+// The partner starts a few blocks from the customer so the sample order has
+// something to animate. These must never stand in for a real order: a
+// destination marker in the wrong city, with a route line drawn to it and a
+// genuinely moving rider marker beside it, reads as correct.
 const DEFAULT_PARTNER_LAT  = 18.5235;
 const DEFAULT_PARTNER_LNG  = 73.8530;
-const DEFAULT_CUSTOMER_LAT = DEFAULT_LAT;
-const DEFAULT_CUSTOMER_LNG = DEFAULT_LNG;
 
 interface TrackingMapProps {
   mode:             FulfillmentMode;
@@ -77,15 +78,20 @@ export default function TrackingMapPlaceholder({
 
   const pLat = marker?.lat ?? partnerLocation?.lat ?? DEFAULT_PARTNER_LAT;
   const pLng = marker?.lng ?? partnerLocation?.lng ?? DEFAULT_PARTNER_LNG;
-  const cLat = customerLocation?.lat ?? DEFAULT_CUSTOMER_LAT;
-  const cLng = customerLocation?.lng ?? DEFAULT_CUSTOMER_LNG;
+  // No fallback. An order whose address has no pin has no destination to draw,
+  // and the marker + route line are omitted rather than pointed at a default.
+  const cLat = customerLocation?.lat ?? null;
+  const cLng = customerLocation?.lng ?? null;
+  const hasDrop = cLat != null && cLng != null;
 
   // ── Map centre — stable midpoint from the START fix, not the live
   // marker, so the map doesn't chase the rider every frame. ────────
   const startPLat = partnerLocation?.lat ?? DEFAULT_PARTNER_LAT;
   const startPLng = partnerLocation?.lng ?? DEFAULT_PARTNER_LNG;
-  const centerLat = (startPLat + cLat) / 2;
-  const centerLng = (startPLng + cLng) / 2;
+  // Centre between the two when there is a drop; on the partner alone when
+  // there is not.
+  const centerLat = hasDrop ? (startPLat + cLat) / 2 : startPLat;
+  const centerLng = hasDrop ? (startPLng + cLng) / 2 : startPLng;
 
   // ── Markers ───────────────────────────────────────────────
   const markers: MapMarker[] = [
@@ -101,15 +107,17 @@ export default function TrackingMapPlaceholder({
       isLive:   !isStale,
       isOpen:   true,
     },
-    {
+  ];
+  if (hasDrop) {
+    markers.push({
       id:       "customer",
       lat:      cLat,
       lng:      cLng,
       title:    mode === "pickup" ? "Store" : "Your Location",
       icon:     "customer",
       isOpen:   true,
-    },
-  ];
+    });
+  }
 
   return (
     <View style={[styles.wrap, { borderColor: colors.border }]}>
@@ -121,7 +129,7 @@ export default function TrackingMapPlaceholder({
         center={{ lat: centerLat, lng: centerLng }}
         zoom={14}
         markers={markers}
-        routeLine={[{ lat: pLat, lng: pLng }, { lat: cLat, lng: cLng }]}
+        routeLine={hasDrop ? [{ lat: pLat, lng: pLng }, { lat: cLat, lng: cLng }] : undefined}
         isDark={isDark}
       />
 

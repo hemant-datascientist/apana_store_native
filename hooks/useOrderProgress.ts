@@ -35,6 +35,16 @@ export interface OrderProgress {
   stepKey: string | null;
   /** Routed window in minutes, or null when it cannot be computed. */
   eta: { min_minutes: number; max_minutes: number } | null;
+  /**
+   * The order's REAL drop coordinates, from the address snapshot.
+   *
+   * The tracking map drew its destination marker at a hardcoded Deccan point
+   * for every order, so a customer in Baner watched the rider approach the
+   * wrong pin — with the route line drawn to it. Null when the address has no
+   * pin (a pre-pin typed address), and the map then shows no destination
+   * marker rather than one in the wrong place.
+   */
+  destination: { lat: number; lng: number } | null;
 }
 
 // Order status → the delivery timeline's step key.
@@ -56,6 +66,7 @@ export function useOrderProgress(orderId: string | undefined): OrderProgress {
     partnerName: null,
     stepKey: null,
     eta: null,
+    destination: null,
   });
 
   useEffect(() => {
@@ -71,6 +82,7 @@ export function useOrderProgress(orderId: string | undefined): OrderProgress {
           partnerName: t.partnerName,
           stepKey: STEP_FOR_STATUS[t.status] ?? null,
           eta: t.eta,
+          destination: t.destination,
         });
       }
     };
