@@ -71,8 +71,12 @@ export default function ServiceStoresFeed() {
     Alert.alert(promo.headline, "Service category page coming soon.");
   }
 
+  // toServiceCard sets phone: "" — this feed's card data has never carried a
+  // number, so the old Alert read "Calling <shop> at " with nothing after it.
+  // The store detail screen holds the real number (getStoreMeta), so Call takes
+  // you where calling actually works instead of faking it here.
   function handleCall(store: ServiceStore) {
-    Alert.alert("Call Now", `Calling ${store.name} at ${store.phone}`);
+    router.push(`/service-detail?id=${store.id}`);
   }
 
   function handleDirection(store: ServiceStore) {

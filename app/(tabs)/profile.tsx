@@ -5,7 +5,6 @@
 //   ProfileHeader        — avatar, name, phone, edit button
 //   ProfileStats         — Orders · Fav Stores · Rides counts
 //   FavouriteStores      — horizontal scroll of saved stores
-//   PartnerCard (x2)     — My Delivery Boy · My Rider
 //   ProfileSettingSection — Account / Preferences / Support
 //   Logout button
 //
@@ -33,7 +32,6 @@ import { useCoverage } from "../../context/CoverageContext";
 import ProfileHeader         from "../../components/tabs/profile/ProfileHeader";
 import ProfileStats          from "../../components/tabs/profile/ProfileStats";
 import FavouriteStores       from "../../components/tabs/profile/FavouriteStores";
-import PartnerCard           from "../../components/tabs/profile/PartnerCard";
 import ProfileSettingSection from "../../components/tabs/profile/ProfileSettingSection";
 import AppearanceModal       from "../../components/tabs/profile/AppearanceModal";
 import CoverageModal         from "../../components/tabs/profile/CoverageModal";

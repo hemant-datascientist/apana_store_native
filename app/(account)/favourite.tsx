@@ -1,24 +1,24 @@
 // ============================================================
 // FAVOURITE — Apana Store (Customer App)
 //
-// 4-tab screen showing saved favourites:
-//   Products  — saved products (empty until backend)
+// 2-tab screen showing saved favourites:
+//   Products  — saved products (honest-empty until a backend exists)
 //   Stores    — stores you follow (§30 followStore — the single store
 //               relationship; old separate favourite-stores list merged)
-//   Riders    — saved auto/cab riders (uses FAVOURITE_RIDERS)
-//   Delivery  — saved delivery partners (uses FAVOURITE_DELIVERIES)
+//
+// RIDERS + DELIVERY TABS REMOVED. They listed invented people — names, vehicle
+// numbers, "Available" badges and PHONE NUMBERS with a Call button — as the
+// customer's "saved riders" and "saved delivery partners". Three things were
+// wrong at once: /api/customer/favourites/{riders,delivery} has never existed
+// (404), there is no ride system in the product at all, and nobody has a
+// permanent delivery partner — an order gets whoever claims it. Same defect as
+// the "My Delivery Boy" / "My Rider" cards already removed from Profile.
 //
 // Navigation:
 //   router.push("/favourite?tab=stores")   → opens Stores tab
-//   router.push("/favourite?tab=riders")   → opens Riders tab
-//   router.push("/favourite?tab=delivery") → opens Delivery tab
 //
 // Backend API:
 //   GET  /customer/following                → StoreSummary[]   (stores tab)
-//   GET  /api/customer/favourites/riders    → FavouriteRider[]
-//   GET  /api/customer/favourites/delivery  → FavouriteDelivery[]
-//   POST /api/customer/favourites/{type}    { id } → 201
-//   DELETE /api/customer/favourites/{type}/:id     → 204
 // ============================================================
 
 import React, { useState } from "react";
@@ -31,10 +31,6 @@ import { Ionicons }          from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import useTheme             from "../../theme/useTheme";
 import { typography }        from "../../theme/typography";
-import {
-  FAVOURITE_RIDERS,   FavouriteRider,
-  FAVOURITE_DELIVERIES, FavouriteDelivery,
-} from "../../data/favouriteData";
 import { useFollowedStores } from "../../hooks/useFollow";
 import { toggleFollow }      from "../../lib/followStore";
 import { StoreDetail }       from "../../data/storeDetailData";
@@ -44,7 +40,7 @@ const BRAND_BLUE  = "#0F4C81";
 const { width: SW } = Dimensions.get("window");
 
 // ── Tab config ────────────────────────────────────────────────
-type FavTab = "products" | "stores" | "riders" | "delivery";
+type FavTab = "products" | "stores";
 
 interface TabConfig {
   key:   FavTab;
@@ -55,8 +51,6 @@ interface TabConfig {
 const TABS: TabConfig[] = [
   { key: "products", label: "Products", icon: "bag-outline"       },
   { key: "stores",   label: "Stores",   icon: "storefront-outline" },
-  { key: "riders",   label: "Riders",   icon: "car-outline"        },
-  { key: "delivery", label: "Delivery", icon: "bicycle-outline"    },
 ];
 
 const TAB_GAP   = 8;
@@ -133,139 +127,6 @@ function StoreCard({ store, onOpen }: { store: StoreDetail; onOpen: () => void }
   );
 }
 
-// ── Rider card ────────────────────────────────────────────────
-function RiderCard({ rider }: { rider: FavouriteRider }) {
-  const { colors } = useTheme();
-  return (
-    <TouchableOpacity
-      style={[styles.listCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-      activeOpacity={0.8}
-      onPress={() => Alert.alert(rider.name, `${rider.vehicle} · ${rider.vehicleNo}`)}
-    >
-      <Initials name={rider.name} bg={rider.avatarBg} />
-
-      <View style={styles.cardBody}>
-        <View style={styles.nameRow}>
-          <Text style={[styles.cardName, { fontFamily: typography.fontFamily.semiBold, color: colors.text }]}>
-            {rider.name}
-          </Text>
-          <View style={[styles.badge, { backgroundColor: rider.badgeBg }]}>
-            <Text style={[styles.badgeText, { color: rider.badgeColor, fontFamily: typography.fontFamily.bold }]}>
-              {rider.badge}
-            </Text>
-          </View>
-        </View>
-        <Text style={[styles.cardSub, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
-          {rider.vehicle} · {rider.vehicleNo}
-        </Text>
-        <View style={styles.metaRow}>
-          <Ionicons name="star" size={11} color={colors.warning} />
-          <Text style={[styles.metaText, { fontFamily: typography.fontFamily.medium, color: colors.subText }]}>
-            {rider.rating.toFixed(1)}
-          </Text>
-          <Text style={[styles.metaDot, { fontFamily: typography.fontFamily.regular, color: colors.border }]}>·</Text>
-          <Text style={[styles.metaText, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
-            {rider.totalRides} rides
-          </Text>
-          <View style={[styles.availBadge, {
-            backgroundColor: rider.available ? colors.successLight : colors.border,
-          }]}>
-            <Text style={[styles.availText, {
-              fontFamily: typography.fontFamily.semiBold,
-              color: rider.available ? colors.success : colors.subText,
-            }]}>
-              {rider.available ? "Available" : "Busy"}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.cardActions}>
-        <TouchableOpacity
-          style={styles.callBtn}
-          onPress={() => Alert.alert("Call", `Calling ${rider.name} at ${rider.phone}`)}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="call-outline" size={16} color={BRAND_BLUE} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => Alert.alert("Remove", `Remove ${rider.name} from favourites?`)}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Ionicons name="heart" size={18} color={colors.danger} />
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-// ── Delivery card ─────────────────────────────────────────────
-function DeliveryCard({ partner }: { partner: FavouriteDelivery }) {
-  const { colors } = useTheme();
-  return (
-    <TouchableOpacity
-      style={[styles.listCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-      activeOpacity={0.8}
-      onPress={() => Alert.alert(partner.name, `${partner.vehicle} · ${partner.vehicleNo}`)}
-    >
-      <Initials name={partner.name} bg={partner.avatarBg} />
-
-      <View style={styles.cardBody}>
-        <View style={styles.nameRow}>
-          <Text style={[styles.cardName, { fontFamily: typography.fontFamily.semiBold, color: colors.text }]}>
-            {partner.name}
-          </Text>
-          <View style={[styles.badge, { backgroundColor: partner.badgeBg }]}>
-            <Text style={[styles.badgeText, { color: partner.badgeColor, fontFamily: typography.fontFamily.bold }]}>
-              {partner.badge}
-            </Text>
-          </View>
-        </View>
-        <Text style={[styles.cardSub, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
-          {partner.vehicle} · {partner.vehicleNo}
-        </Text>
-        <View style={styles.metaRow}>
-          <Ionicons name="star" size={11} color={colors.warning} />
-          <Text style={[styles.metaText, { fontFamily: typography.fontFamily.medium, color: colors.subText }]}>
-            {partner.rating.toFixed(1)}
-          </Text>
-          <Text style={[styles.metaDot, { fontFamily: typography.fontFamily.regular, color: colors.border }]}>·</Text>
-          <Ionicons name="time-outline" size={11} color={colors.subText} />
-          <Text style={[styles.metaText, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
-            avg {partner.avgDeliveryTime}
-          </Text>
-          <View style={[styles.availBadge, {
-            backgroundColor: partner.available ? colors.successLight : colors.border,
-          }]}>
-            <Text style={[styles.availText, {
-              fontFamily: typography.fontFamily.semiBold,
-              color: partner.available ? colors.success : colors.subText,
-            }]}>
-              {partner.available ? "Available" : "Busy"}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.cardActions}>
-        <TouchableOpacity
-          style={styles.callBtn}
-          onPress={() => Alert.alert("Call", `Calling ${partner.name} at ${partner.phone}`)}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="call-outline" size={16} color={BRAND_BLUE} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => Alert.alert("Remove", `Remove ${partner.name} from favourites?`)}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Ionicons name="heart" size={18} color={colors.danger} />
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  );
-}
-
 // ── Empty state ───────────────────────────────────────────────
 function EmptyState({ icon, title, sub, cta, onCta }: {
   icon: string; title: string; sub: string; cta: string; onCta: () => void;
@@ -328,26 +189,6 @@ export default function FavouriteScreen() {
                 onOpen={() => router.push(`/store-detail?id=${s.id}`)}
               />
             ))}
-          </View>
-        );
-
-      case "riders":
-        return (
-          <View style={styles.list}>
-            <Text style={[styles.countLabel, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
-              {FAVOURITE_RIDERS.length} saved riders
-            </Text>
-            {FAVOURITE_RIDERS.map(r => <RiderCard key={r.id} rider={r} />)}
-          </View>
-        );
-
-      case "delivery":
-        return (
-          <View style={styles.list}>
-            <Text style={[styles.countLabel, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
-              {FAVOURITE_DELIVERIES.length} saved delivery partners
-            </Text>
-            {FAVOURITE_DELIVERIES.map(d => <DeliveryCard key={d.id} partner={d} />)}
           </View>
         );
 
