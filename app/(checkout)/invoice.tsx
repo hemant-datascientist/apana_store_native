@@ -199,6 +199,7 @@ export default function InvoiceScreen() {
               gstNo={invoice.gstNo}
               fssaiNo={invoice.fssaiNo}
               customerCare={invoice.customerCare}
+              isTaxInvoice={invoice.isTaxInvoice ?? false}
             />
 
             <View style={[styles.dashes, { borderColor: colors.border }]} />

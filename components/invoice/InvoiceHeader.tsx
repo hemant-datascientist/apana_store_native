@@ -23,12 +23,16 @@ interface InvoiceHeaderProps {
   gstNo:          string;
   fssaiNo:        string;
   customerCare:   string;
+  /** True only when the seller has a registered GSTIN. A document headed
+   *  "TAX INVOICE" without one is a forged tax document, so this defaults to
+   *  false and the badge reads RECEIPT instead. */
+  isTaxInvoice?:  boolean;
 }
 
 export default function InvoiceHeader({
   storeLogo, storeLogoColor, storeName,
   storeAddress, storeCity, storeState, storePincode,
-  gstNo, fssaiNo, customerCare,
+  gstNo, fssaiNo, customerCare, isTaxInvoice = false,
 }: InvoiceHeaderProps) {
   const { colors } = useTheme();
 
@@ -76,18 +80,21 @@ export default function InvoiceHeader({
         )}
       </View>
 
-      {/* ── Customer care ── */}
-      <View style={styles.careRow}>
-        <Ionicons name="call-outline" size={12} color={colors.subText} />
-        <Text style={[styles.care, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-          Cust. Care: {customerCare}
-        </Text>
-      </View>
+      {/* Only when there IS one. An empty "Cust. Care:" line looks like a
+          failed load, and a fabricated number is worse. */}
+      {customerCare.trim().length > 0 && (
+        <View style={styles.careRow}>
+          <Ionicons name="call-outline" size={12} color={colors.subText} />
+          <Text style={[styles.care, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+            Cust. Care: {customerCare}
+          </Text>
+        </View>
+      )}
 
       {/* ── INVOICE label ── */}
       <View style={[styles.invoiceBadge, { backgroundColor: colors.primary }]}>
         <Text style={[styles.invoiceLabel, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-          TAX INVOICE
+          {isTaxInvoice ? "TAX INVOICE" : "RECEIPT"}
         </Text>
       </View>
     </View>

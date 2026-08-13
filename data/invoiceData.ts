@@ -61,6 +61,12 @@ export interface Invoice {
   // Bill meta
   billNo:         string;
   cashierName:    string;
+  /** Payment status from the order; absent on bundled samples. */
+  paymentStatus?: string;
+  /** FALSE unless the seller has a registered GSTIN. The header must not read
+   *  "TAX INVOICE" when this is false — a receipt calling itself a tax invoice
+   *  without a GSTIN is a forged document in a smaller font. */
+  isTaxInvoice?:  boolean;
   placedAt:       string;   // ISO date string
   counter:        string;
   // Items
