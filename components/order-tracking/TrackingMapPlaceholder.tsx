@@ -50,7 +50,9 @@ const DEFAULT_CUSTOMER_LNG = DEFAULT_LNG;
 
 interface TrackingMapProps {
   mode:             FulfillmentMode;
-  etaMinutes:       number;
+  /** Null when no ETA can be computed — the map then shows the partner state
+   *  rather than a fabricated countdown. */
+  etaMinutes:       number | null;
   partnerInitials:  string;
   partnerColor:     string;
   // Live partner stream (§19.5). Fed sparse fixes; usePartnerMarker
@@ -92,7 +94,9 @@ export default function TrackingMapPlaceholder({
       lat:      pLat,
       lng:      pLng,
       title:    mode === "ride" ? "Your Driver" : "Delivery Partner",
-      subtitle: isStale ? `${partnerInitials} · locating…` : `${partnerInitials} · ETA ~${etaMinutes} min`,
+      subtitle: isStale || etaMinutes == null
+        ? `${partnerInitials} · locating…`
+        : `${partnerInitials} · ETA ~${etaMinutes} min`,
       icon:     "partner",
       isLive:   !isStale,
       isOpen:   true,
@@ -125,7 +129,7 @@ export default function TrackingMapPlaceholder({
       <View style={[styles.etaBubble, { backgroundColor: isStale ? colors.subText : cfg.color }]}>
         <Ionicons name={isStale ? "navigate-outline" : (cfg.icon as keyof typeof Ionicons.glyphMap)} size={13} color="#fff" />
         <Text style={[styles.etaText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.xs }]}>
-          {isStale ? "Locating…" : `~${etaMinutes} min`}
+          {isStale || etaMinutes == null ? "Locating…" : `~${etaMinutes} min`}
         </Text>
       </View>
 

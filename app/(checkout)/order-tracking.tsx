@@ -50,6 +50,7 @@ import {
 } from "../../data/orderTrackingData";
 import { useMockPartnerFix }    from "../../hooks/useMockPartnerFix";
 import { usePartnerFix }        from "../../hooks/usePartnerFix";
+import { useOrderProgress, statusLabel } from "../../hooks/useOrderProgress";
 
 import TrackingProgress         from "../../components/order-tracking/TrackingProgress";
 import TrackingMapPlaceholder   from "../../components/order-tracking/TrackingMapPlaceholder";
@@ -178,9 +179,15 @@ export default function OrderTrackingScreen() {
 
   const cfg     = TRACKING_MODE_CONFIG[mode];
   const steps   = TRACKING_STEPS[mode];
-  const activeStep = MOCK_ACTIVE_STEP[mode];
-  const eta     = MOCK_ETA[mode];
+  // REAL order state. MOCK_ACTIVE_STEP froze the progress bar at a hardcoded
+  // step whatever the shop had actually done; MOCK_PARTNERS put a rider who did
+  // not exist beside a map marker that was genuinely moving.
+  const progress = useOrderProgress(isRealOrder ? orderId : undefined);
+  const activeStep = isRealOrder ? (progress.stepKey ?? "placed") : MOCK_ACTIVE_STEP[mode];
   const partner = MOCK_PARTNERS[mode];
+  // No ETA for a real order. Nothing computes one — no routing, no distance, no
+  // prep-time history — and a time is the one promise a customer plans around.
+  const etaMinutes = isRealOrder ? null : MOCK_ETA[mode].minutes;
 
   const activeProgressIdx = useMemo(
     () => CHECKOUT_STEPS.findIndex(s => s.key === ACTIVE_STEP),
@@ -260,8 +267,8 @@ export default function OrderTrackingScreen() {
         {/* ── Big ETA card ── */}
         <TrackingEtaCard
           mode={mode}
-          minutes={eta.minutes}
-          label={eta.label}
+          minutes={etaMinutes}
+          label={isRealOrder ? statusLabel(progress.status) : MOCK_ETA[mode].label}
           orderId={orderId}
           total={totalAmt}
         />
@@ -269,7 +276,7 @@ export default function OrderTrackingScreen() {
         {/* ── Live map ── */}
         <TrackingMapPlaceholder
           mode={mode}
-          etaMinutes={eta.minutes}
+          etaMinutes={etaMinutes}
           partnerInitials={partner.initials}
           partnerColor={partner.avatarColor}
           fix={partnerFix}
@@ -293,11 +300,27 @@ export default function OrderTrackingScreen() {
               Order Status
             </Text>
             <TrackingProgress steps={steps} activeStep={activeStep} />
+            {isRealOrder && (
+              <Text style={[styles.cardTitle, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs, marginTop: 8 }]}>
+                {statusLabel(progress.status)}
+              </Text>
+            )}
           </View>
         )}
 
         {/* ── Partner card (delivery + ride) ── */}
-        {!isPickup && <TrackingPartnerCard partner={partner} mode={mode} />}
+        {/* A real order shows the rider's real first name, and only once one is
+            assigned. Before that there is genuinely nobody to name. No phone:
+            there is no call-masking layer, and a rider's personal number must
+            not go to every customer they deliver to. */}
+        {!isPickup && (isRealOrder
+          ? (progress.partnerName ? (
+              <TrackingPartnerCard
+                partner={{ ...partner, name: progress.partnerName, initials: String(progress.partnerName).slice(0, 1).toUpperCase() }}
+                mode={mode}
+              />
+            ) : null)
+          : <TrackingPartnerCard partner={partner} mode={mode} />)}
 
         {/* ── Help row ── */}
         <View style={styles.actionRow}>

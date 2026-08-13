@@ -16,8 +16,12 @@ import { TRACKING_MODE_CONFIG } from "../../data/orderTrackingData";
 
 interface TrackingEtaCardProps {
   mode:      FulfillmentMode;
-  minutes:   number;
-  label:     string;    // "Arriving in" | "Ready in" | "Driver in"
+  // Null for a REAL order: nothing computes an ETA (no routing, no distance, no
+  // prep-time history), and a time is the one promise a customer plans their
+  // afternoon around. The card shows `label` alone in that case — a true
+  // statement of what is happening instead of an invented number.
+  minutes:   number | null;
+  label:     string;    // "Arriving in" | "Ready in" | "Driver in" | a status line
   orderId:   string;
   total:     number;
 }
@@ -59,7 +63,7 @@ export default function TrackingEtaCard({ mode, minutes, label, orderId, total }
       {/* Big ETA */}
       <View style={styles.etaRow}>
         <Text style={[styles.etaNum, { fontFamily: typography.fontFamily.bold, fontSize: 48 }]}>
-          {minutes}
+          {minutes ?? ""}
         </Text>
         <View style={styles.etaRight}>
           <Text style={[styles.etaUnit, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.sm }]}>
