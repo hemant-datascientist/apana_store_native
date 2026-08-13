@@ -98,6 +98,13 @@ export interface BookingRequest {
   slotStart: string; // ISO with offset
   customerName: string;
   customerPhone: string; // required — the only identity a booking carries
+  /**
+   * Where the service happens, as the CUSTOMER chose it. Distinct from the
+   * offering's `atHome`, which only says the shop is willing to travel. The
+   * server refuses a home visit the shop does not offer, and refuses one with
+   * no address, rather than quietly downgrading either to in-shop.
+   */
+  atHome?: boolean;
   address?: string | null;
   note?: string | null;
 }
@@ -295,6 +302,7 @@ export async function createBooking(req: BookingRequest): Promise<Booking> {
       slot_start: req.slotStart,
       customer_name: req.customerName,
       customer_phone: req.customerPhone,
+      at_home: req.atHome ?? false,
       address: req.address ?? null,
       note: req.note ?? null,
     }),

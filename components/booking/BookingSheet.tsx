@@ -42,6 +42,9 @@ export default function BookingSheet({
   const [name, setName] = useState(defaultName);
   const [phone, setPhone] = useState(defaultPhone);
   const [address, setAddress] = useState("");
+  // Where the service happens — the customer's choice, not the offering's
+  // capability. In-shop by default; a home visit has to be asked for.
+  const [atHome, setAtHome] = useState(false);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -59,8 +62,11 @@ export default function BookingSheet({
       Alert.alert("Phone needed", "The shop needs a number to confirm your booking.");
       return;
     }
-    if (offering.atHome && address.trim().length === 0) {
-      Alert.alert("Address needed", "This service comes to you — add the address.");
+    // Only a HOME visit needs an address. Demanding one for a walk-in (which is
+    // what keying off offering.atHome did) blocks the common case on a field
+    // the shop will never use.
+    if (atHome && address.trim().length === 0) {
+      Alert.alert("Address needed", "Add the address they should come to.");
       return;
     }
 
@@ -71,7 +77,10 @@ export default function BookingSheet({
         slotStart: slot.toISOString(),
         customerName: name.trim(),
         customerPhone: phone.trim(),
-        address: address.trim() || null,
+        atHome,
+        // Never send an address for an in-shop booking: it would show the shop
+        // a place to travel to for a customer walking through their door.
+        address: atHome ? address.trim() || null : null,
         note: note.trim() || null,
       });
       setSaving(false);
@@ -190,11 +199,37 @@ export default function BookingSheet({
                 placeholderTextColor={colors.subText}
                 style={[styles.input, { color: colors.text, backgroundColor: colors.card, borderColor: colors.border }]}
               />
+              {/* The offering's `atHome` says the shop is WILLING to travel —
+                  it is not a statement that this booking is a home visit. Only
+                  the customer can say that, so when the shop offers both, ask.
+                  Defaults to the shop: a home visit is the exceptional, costlier
+                  arrangement and should be chosen, never assumed. */}
               {offering?.atHome && (
+                <View style={styles.whereRow}>
+                  {([false, true] as const).map((home) => (
+                    <TouchableOpacity
+                      key={String(home)}
+                      onPress={() => setAtHome(home)}
+                      style={[styles.whereChip, {
+                        backgroundColor: atHome === home ? `${colors.primary}18` : colors.card,
+                        borderColor: atHome === home ? colors.primary : colors.border,
+                      }]}
+                    >
+                      <Text style={[styles.whereText, {
+                        color: atHome === home ? colors.primary : colors.subText,
+                        fontFamily: typography.fontFamily.medium,
+                      }]}>
+                        {home ? "At my place" : "At the shop"}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+              {offering?.atHome && atHome && (
                 <TextInput
                   value={address}
                   onChangeText={setAddress}
-                  placeholder="Address (this service comes to you)"
+                  placeholder="Address (where should they come?)"
                   multiline
                   placeholderTextColor={colors.subText}
                   style={[styles.input, styles.multi, { color: colors.text, backgroundColor: colors.card, borderColor: colors.border }]}
@@ -262,6 +297,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14, paddingVertical: 12, fontSize: typography.size.sm,
   },
   multi: { minHeight: 64, textAlignVertical: "top" },
+  whereRow:  { flexDirection: "row", gap: 8 },
+  whereChip: { flex: 1, paddingVertical: 10, borderRadius: 10, borderWidth: 1, alignItems: "center" },
+  whereText: { fontSize: typography.size.sm },
   disclaimer: { fontSize: typography.size.xs, lineHeight: 18, marginTop: 6 },
   footer: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 24, borderTopWidth: StyleSheet.hairlineWidth },
   cta: { borderRadius: 14, paddingVertical: 15, alignItems: "center" },
