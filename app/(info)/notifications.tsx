@@ -27,14 +27,17 @@ import useTheme         from "../../theme/useTheme";
 import { typography }   from "../../theme/typography";
 import { useStoreUpdatesPref } from "../../hooks/useNotificationPrefs";
 import {
-  MOCK_NOTIFICATIONS, NotifItem,
+  NotifItem,
 } from "../../data/notificationsData";
+import { useCustomerNotifications } from "../../hooks/useCustomerNotifications";
 
 export default function NotificationsScreen() {
   const { colors, isDark } = useTheme();
   const router             = useRouter();
 
-  const [items, setItems] = useState<NotifItem[]>(MOCK_NOTIFICATIONS);
+  // REAL order events (§13 Phase 2 dispatch). This was seeded with
+  // MOCK_NOTIFICATIONS — a bundled feed shown to every customer.
+  const { items, markRead, markAllRead } = useCustomerNotifications();
   const { storeUpdates, setStoreUpdates } = useStoreUpdatesPref();
 
   const unread  = useMemo(() => items.filter(n => !n.read),  [items]);
@@ -42,13 +45,15 @@ export default function NotificationsScreen() {
   const unreadCount = unread.length;
 
   // ── Mark single notification as read ─────────────────────
+  // PERSISTS now. The local version cleared the dot on screen and forgot it
+  // the moment the screen reopened.
   function handleTap(id: string) {
-    setItems(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    void markRead(id);
   }
 
   // ── Mark all as read ──────────────────────────────────────
   function handleMarkAllRead() {
-    setItems(prev => prev.map(n => ({ ...n, read: true })));
+    void markAllRead();
   }
 
   return (
