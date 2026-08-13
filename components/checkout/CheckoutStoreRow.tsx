@@ -15,13 +15,21 @@ import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { CartStore, DELIVERY_FEE } from "../../data/cartData";
-import { FULFILLMENT_DISPLAY, formatEta } from "../../data/checkoutData";
+import { FULFILLMENT_DISPLAY, ETA_CONFIG } from "../../data/checkoutData";
+import { useDeliveryEta } from "../../hooks/useDeliveryEta";
 
 interface CheckoutStoreRowProps {
   store: CartStore;
+  /** The selected address's pin. The row routes THIS shop to it; when either
+   *  end has no pin the row shows the fulfilment label with no time rather than
+   *  a fabricated one. Owned here, not passed in, so the hook is called once
+   *  per row instead of in a loop over a list whose length changes. */
+  dropLat?: number | null;
+  dropLng?: number | null;
 }
 
-export default function CheckoutStoreRow({ store }: CheckoutStoreRowProps) {
+export default function CheckoutStoreRow({ store, dropLat, dropLng }: CheckoutStoreRowProps) {
+  const eta = useDeliveryEta(store.id, dropLat, dropLng);
   const { colors }       = useTheme();
   const [expanded, setExpanded] = useState(false);
 
@@ -30,7 +38,13 @@ export default function CheckoutStoreRow({ store }: CheckoutStoreRowProps) {
   const deliveryFee   = DELIVERY_FEE[store.fulfillment];
   const totalItems    = store.items.reduce((s, i) => s + i.qty, 0);
   const fulfillCfg    = FULFILLMENT_DISPLAY[store.fulfillment];
-  const etaText       = formatEta(store.fulfillment);
+  // A ROUTED window when one could be computed, otherwise the label alone.
+  // formatEta() returned a constant — the same "25–45 min" for a shop 400 m
+  // away and one 9 km away — shown as a customer commits.
+  const etaCfg        = ETA_CONFIG[store.fulfillment];
+  const etaText       = eta
+    ? `${etaCfg.label} ${eta.min_minutes}–${eta.max_minutes} min`
+    : etaCfg.label;
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>

@@ -13,10 +13,12 @@
 // This reads the status the endpoint has always returned and the rider's first
 // name, which it now returns too.
 //
-// NO ETA. Nothing can compute one: there is no routing, no distance and no
-// historical prep-time data. A number here is the single most load-bearing
-// promise in the app — a customer plans around it — so it is absent rather
-// than guessed. Status text ("Preparing", "On the way") says what is true.
+// The ETA is now REAL: the endpoint routes the rider's last known position (or
+// the shop, before one is assigned) to the drop through Mappls. It is still
+// null whenever it cannot be computed — a missing pin, an unreachable provider
+// — and the screen then shows the status line alone. A delivery time is the
+// single most load-bearing promise in the app, so it is measured or omitted,
+// never defaulted.
 // ============================================================
 
 import { useEffect, useState } from "react";
@@ -31,6 +33,8 @@ export interface OrderProgress {
   partnerName: string | null;
   /** The active step's KEY (TRACKING_STEPS uses keys, not indexes), or null. */
   stepKey: string | null;
+  /** Routed window in minutes, or null when it cannot be computed. */
+  eta: { min_minutes: number; max_minutes: number } | null;
 }
 
 // Order status → the delivery timeline's step key.
@@ -51,6 +55,7 @@ export function useOrderProgress(orderId: string | undefined): OrderProgress {
     status: null,
     partnerName: null,
     stepKey: null,
+    eta: null,
   });
 
   useEffect(() => {
@@ -65,6 +70,7 @@ export function useOrderProgress(orderId: string | undefined): OrderProgress {
           status: t.status,
           partnerName: t.partnerName,
           stepKey: STEP_FOR_STATUS[t.status] ?? null,
+          eta: t.eta,
         });
       }
     };

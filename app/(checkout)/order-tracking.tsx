@@ -187,7 +187,9 @@ export default function OrderTrackingScreen() {
   const partner = MOCK_PARTNERS[mode];
   // No ETA for a real order. Nothing computes one — no routing, no distance, no
   // prep-time history — and a time is the one promise a customer plans around.
-  const etaMinutes = isRealOrder ? null : MOCK_ETA[mode].minutes;
+  // Real window when the backend could route it; null otherwise — never the old
+  // constant. The card falls back to the status line, which is always true.
+  const etaMinutes = isRealOrder ? (progress.eta?.min_minutes ?? null) : MOCK_ETA[mode].minutes;
 
   const activeProgressIdx = useMemo(
     () => CHECKOUT_STEPS.findIndex(s => s.key === ACTIVE_STEP),
@@ -268,7 +270,9 @@ export default function OrderTrackingScreen() {
         <TrackingEtaCard
           mode={mode}
           minutes={etaMinutes}
-          label={isRealOrder ? statusLabel(progress.status) : MOCK_ETA[mode].label}
+          label={isRealOrder
+            ? (progress.eta ? `Arrives in ${progress.eta.min_minutes}–${progress.eta.max_minutes} min` : statusLabel(progress.status))
+            : MOCK_ETA[mode].label}
           orderId={orderId}
           total={totalAmt}
         />

@@ -308,7 +308,12 @@ export default function CheckoutScreen() {
             Your Order
           </Text>
           {cart.map(store => (
-            <CheckoutStoreRow key={store.id} store={store} />
+            <CheckoutStoreRow
+              key={store.id}
+              store={store}
+              dropLat={selectedAddress?.lat ?? null}
+              dropLng={selectedAddress?.lng ?? null}
+            />
           ))}
         </View>
 
