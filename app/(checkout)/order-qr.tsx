@@ -61,6 +61,7 @@ export default function OrderQrScreen() {
   const {
     mode:                       modeParam,
     orderId:                    orderIdParam,
+    serverOrderId:              serverOrderIdParam = "",
     total:                      totalParam,
     storeOrdersJson:            storeOrdersParam,
     trackingStoreOrdersJson:    trackingStoreOrdersParam = "",
@@ -69,6 +70,7 @@ export default function OrderQrScreen() {
   } = useLocalSearchParams<{
     mode?:                     string;
     orderId?:                  string;
+    serverOrderId?:            string;
     total?:                    string;
     storeOrdersJson?:          string;
     trackingStoreOrdersJson?:  string;
@@ -251,7 +253,7 @@ export default function OrderQrScreen() {
                   // The three `tracking*` params are carried through so
                   // /order-collected can navigate back to /order-tracking
                   // with this storeId merged into `visitedJson`.
-                  const base = `/order-collected?storeOrderId=${so.storeOrderId}&storeId=${so.storeId}&orderId=${orderId}&mode=${mode}&total=${so.subtotal}&storeName=${encodeURIComponent(so.storeName)}`;
+                  const base = `/order-collected?storeOrderId=${so.storeOrderId}&storeId=${so.storeId}&orderId=${orderId}&serverOrderId=${so.id}&mode=${mode}&total=${so.subtotal}&storeName=${encodeURIComponent(so.storeName)}`;
                   const ctx = trackingStoreOrdersParam
                     ? `&trackingStoreOrdersJson=${encodeURIComponent(trackingStoreOrdersParam)}` +
                       `&trackingVisitedJson=${encodeURIComponent(trackingVisitedParam || "[]")}` +
@@ -260,7 +262,7 @@ export default function OrderQrScreen() {
                   router.push((base + ctx) as any);
                 }}
                 onViewInvoice={() =>
-                  router.push(`/invoice?storeOrderId=${so.storeOrderId}&storeId=${so.storeId}` as any)
+                  router.push(`/invoice?storeOrderId=${so.storeOrderId}&storeId=${so.storeId}&serverOrderId=${so.id}` as any)
                 }
               />
             ))}
@@ -312,7 +314,7 @@ export default function OrderQrScreen() {
             <TouchableOpacity
               style={[styles.shareTextBtn, { borderColor: modeCfg.color + "60", backgroundColor: modeCfg.color + "10" }]}
               onPress={() => router.push(
-                `/order-collected?orderId=${orderId}&mode=${mode}&total=${totalAmt}`
+                `/order-collected?orderId=${orderId}&serverOrderId=${serverOrderIdParam}&mode=${mode}&total=${totalAmt}`
               )}
               activeOpacity={0.85}
             >

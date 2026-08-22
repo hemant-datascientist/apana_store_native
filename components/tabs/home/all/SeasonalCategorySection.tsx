@@ -16,6 +16,7 @@ import { Ionicons }        from "@expo/vector-icons";
 import { typography }      from "../../../../theme/typography";
 import SectionHeader       from "./SectionHeader";
 import { Season }          from "../../../../data/allFeedData";
+import { useRouter }   from "expo-router";
 import useTheme            from "../../../../theme/useTheme";
 
 interface SeasonalCategorySectionProps {
@@ -31,6 +32,7 @@ const IMG_H         = Math.floor(CELL_W * 0.90);
 
 export default function SeasonalCategorySection({ seasons }: SeasonalCategorySectionProps) {
   const { colors } = useTheme();
+  const router = useRouter();
   const [idx, setIdx] = useState(0);
 
   const n = seasons.length;
@@ -66,6 +68,16 @@ export default function SeasonalCategorySection({ seasons }: SeasonalCategorySec
     </View>
   );
 
+  // These 48 tiles all opened an Alert saying "collection coming soon".
+  // They now SEARCH for the label — a real screen over real inventory.
+  // Deliberately NOT a hand-written label -> APC class map: several of these
+  // ("Pool & Beach", "Immunity Boost") have no single honest class, and
+  // picking one to fill the table would be inventing a classification.
+  // Search finds nothing when nothing nearby matches, which is the truth.
+  function handlePress(cat: { label: string }) {
+    router.push(`/search-results?q=${encodeURIComponent(cat.label)}` as never);
+  }
+
   return (
     <View style={styles.root}>
       <SectionHeader
@@ -81,7 +93,7 @@ export default function SeasonalCategorySection({ seasons }: SeasonalCategorySec
             key={cat.key}
             style={[styles.cell, { width: CELL_W }]}
             activeOpacity={0.75}
-            onPress={() => Alert.alert(cat.label, `${cat.label} collection coming soon.`)}
+            onPress={() => handlePress(cat)}
           >
             <View style={[styles.imgWrap, { backgroundColor: cat.bg, height: IMG_H }]}>
               {cat.imageUrl ? (

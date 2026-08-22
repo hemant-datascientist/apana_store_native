@@ -41,6 +41,10 @@ export interface LiveProductStore {
   type: string;
   city: string;
   ascCode: string | null;
+  /** Rupees the basket from THIS shop must reach before its deal prices
+   *  apply. null = the shop set no threshold, so a deal is unconditional.
+   *  Showing a deal price without this is a misleading price. */
+  dealUnlockThreshold: number | null;
 }
 
 // §23 — one sellable SKU of a product. `price`/`mrp` are null when the SKU
@@ -156,6 +160,7 @@ interface WireStore {
   type: string;
   city: string;
   asc_code: string | null;
+  deal_unlock_threshold_cents?: number | null;
 }
 interface WireVariant {
   id: string;
@@ -293,6 +298,10 @@ function toLiveProduct(w: WireProduct): LiveProduct {
       type: w.store.type,
       city: w.store.city,
       ascCode: w.store.asc_code,
+      // paise -> rupees, like every other money field here. Absent stays null
+      // rather than becoming 0, which would read as "no minimum".
+      dealUnlockThreshold:
+        w.store.deal_unlock_threshold_cents == null ? null : w.store.deal_unlock_threshold_cents / 100,
     },
   };
 }
@@ -360,10 +369,20 @@ async function fetchJson<T>(url: string): Promise<T> {
 // ── Public API ────────────────────────────────────────────────
 
 // Every visible product across all sellers, newest-add first.
-export async function fetchLiveProducts(limit = 30, q = ""): Promise<LiveProduct[]> {
+export async function fetchLiveProducts(
+  limit = 30,
+  q = "",
+  // Restrict to shops the customer can actually order from (§19.6 k-ring).
+  // The HOME feed passes this; search deliberately does not.
+  near?: { lat: number; lng: number } | null,
+): Promise<LiveProduct[]> {
   if (!IS_LIVE) return []; // mock: no real inventory to show
   const params = new URLSearchParams({ limit: String(limit) });
   if (q.trim()) params.set("q", q.trim());
+  if (near) {
+    params.set("lat", String(near.lat));
+    params.set("lng", String(near.lng));
+  }
   const body = await fetchJson<WireList>(`${BASE_URL}/catalog/products?${params.toString()}`);
   return body.items.map(toLiveProduct);
 }
@@ -397,11 +416,18 @@ export interface ApcProductsResult {
 // the caller shows a retry state — never invents products (§19.8).
 export async function fetchApcProducts(
   apcClass: string,
-  opts: { family?: string; limit?: number } = {},
+  // `near` restricts the result to shops the customer can actually order from
+  // (§19.6 k-ring). Pass it on the HOME feed; leave it off for APC browsing and
+  // search, which legitimately span the whole catalogue.
+  opts: { family?: string; limit?: number; near?: { lat: number; lng: number } | null } = {},
 ): Promise<ApcProductsResult> {
   if (!IS_LIVE) return { products: [], families: [], total: 0 };
   const params = new URLSearchParams({ apc_class: apcClass, limit: String(opts.limit ?? 100) });
   if (opts.family) params.set("apc_family", opts.family);
+  if (opts.near) {
+    params.set("lat", String(opts.near.lat));
+    params.set("lng", String(opts.near.lng));
+  }
   const body = await fetchJson<WireList>(`${BASE_URL}/catalog/products?${params.toString()}`);
   return {
     products: body.items.map(toLiveProduct),
@@ -420,6 +446,16 @@ export interface StoreMeta {
   ascCode: string | null;
   categoryLabel: string;
   city: string;
+  /**
+   * The shop's address, for finding the door — above all on a SELF-PICKUP
+   * order, where the customer walks there and a coordinate leaves them at the
+   * gate. Every part can be absent; nothing here is ever invented (§19.8).
+   */
+  door: string;
+  address: string | null;
+  landmark: string | null;
+  pincode: string | null;
+  state: string | null;
   lat: number | null;
   lng: number | null;
   isLive: boolean;
@@ -434,6 +470,11 @@ interface WireStoreMeta {
   asc_code: string | null;
   category_label: string;
   city: string;
+  door: string;
+  address: string | null;
+  landmark: string | null;
+  pincode: string | null;
+  state: string | null;
   lat: number | null;
   lng: number | null;
   is_live: boolean;
@@ -457,6 +498,11 @@ export async function fetchStoreMeta(storeId: string): Promise<StoreMeta | null>
       ascCode: w.asc_code,
       categoryLabel: w.category_label,
       city: w.city,
+      door: w.door ?? "",
+      address: w.address ?? null,
+      landmark: w.landmark ?? null,
+      pincode: w.pincode ?? null,
+      state: w.state ?? null,
       lat: w.lat,
       lng: w.lng,
       isLive: w.is_live,

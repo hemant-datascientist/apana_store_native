@@ -86,7 +86,7 @@ export default function ServiceStoreCard({ store, onCall, onDirection, onViewInf
           {store.website && (
             <TouchableOpacity
               style={[styles.websiteTag, { backgroundColor: "#EFF6FF", borderColor: "#BFDBFE" }]}
-              onPress={() => Alert.alert(store.name, "Website coming soon.")}
+              onPress={() => Alert.alert(store.name, "Apana doesn't hold a website for this shop.")}
               activeOpacity={0.75}
             >
               <Ionicons name="globe-outline" size={11} color="#1D4ED8" />

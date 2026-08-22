@@ -10,6 +10,7 @@
 // ============================================================
 
 import React, { useMemo } from "react";
+import { openDirections } from "../../../../lib/openDirections";
 import { View, Text, Alert, StyleSheet, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -37,7 +38,6 @@ function toB2CCard(s: StoreCardData): B2CStore {
   };
 }
 import { buildHeroStores, sortByDistance, BannerableStore, HeroStore } from "../../../../lib/storeBanner";
-import { getStoreById } from "../../../../data/storeDetailData";
 import B2CHeroBanner from "./B2CHeroBanner";
 import NearbyHeroBanner from "./NearbyHeroBanner";
 import B2CStoreCard  from "./B2CStoreCard";
@@ -76,11 +76,13 @@ export default function B2CStoresFeed() {
   }
 
   function handlePromoPress(promo: B2CPromo) {
-    Alert.alert(promo.headline, "Brand category page coming soon.");
+    Alert.alert(promo.headline, "This is a category banner — browse the brand-direct sellers listed below it.");
   }
 
+  // Real Mappls navigation. openDirections says so honestly when the shop
+  // never set a pin — it does NOT fall back to a city centre.
   function handleDirection(store: B2CStore) {
-    Alert.alert("Direction", `Directions to ${store.name} — coming soon.`);
+    void openDirections(store.lat, store.lng, store.name);
   }
 
   function handleStorePress(store: B2CStore) {
@@ -92,7 +94,7 @@ export default function B2CStoresFeed() {
   }
 
   function handleWebsite(store: B2CStore) {
-    Alert.alert(store.name, "Opening website — coming soon.");
+    Alert.alert(store.name, "Apana doesn't hold a website for this seller.");
   }
 
   return (

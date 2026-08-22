@@ -37,7 +37,7 @@ export default function SectionHeader({
       {rightSlot ?? (
         <TouchableOpacity
           activeOpacity={0.7}
-          onPress={onSeeAll ?? (() => Alert.alert(title, "Full list coming soon."))}
+          onPress={onSeeAll ?? (() => Alert.alert(title, "This section already shows everything we have for it."))}
         >
           <Text style={[styles.seeAll, { color: accentColor, fontFamily: typography.fontFamily.semiBold }]}>
             See All

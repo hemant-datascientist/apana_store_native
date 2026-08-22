@@ -41,7 +41,7 @@ export default function FashionSubCategoryGrid({ subCats, accent, apc }: Fashion
       router.push(`/(apc)/${apc}` as never);
       return;
     }
-    Alert.alert(cat.label, `${cat.label} collection coming soon.`);
+    Alert.alert(cat.label, `No product category is mapped to ${cat.label} yet.`);
   }
 
   return (

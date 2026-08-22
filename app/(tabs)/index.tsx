@@ -180,7 +180,6 @@ export default function HomeScreen() {
             onSubmit={q => q.trim() && router.push(`/search-results?q=${encodeURIComponent(q.trim())}` as any)}
             mode={mode}
             onMenuPress={() => setDrawerOpen(true)}
-            onMicPress={()    => Alert.alert("Voice",         "Voice search coming soon.")}
             onBellPress={() => router.push("/notifications")}
             onScanPress={()   => router.push("/scanner")}
             onLocatePress={openMapView}
@@ -208,8 +207,8 @@ export default function HomeScreen() {
           <StoreFilterBar
             filters={filters}
             onFilterChange={setFilters}
-            onFilterPress={() => Alert.alert("Filter", "Filter sheet coming soon.")}
-            onSortPress={()   => Alert.alert("Sort",   "Sort options coming soon.")}
+            onFilterPress={() => Alert.alert("Filter", "Filtering shops isn't built yet. The list is every open Apana shop near you.")}
+            onSortPress={()   => Alert.alert("Sort", "Shops are always sorted nearest first. No other order is available yet.")}
           />
         )}
 

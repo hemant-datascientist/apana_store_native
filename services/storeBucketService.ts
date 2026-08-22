@@ -52,6 +52,9 @@ export interface BucketStore {
   is_live: boolean;
   rating: number;
   review_count: number;
+  /** ISO timestamp the shop joined Apana — the only honest source for "new".
+   *  The New Launches screen ran on hand-written launch dates before this. */
+  joined_at: string;
 }
 
 export interface BucketResult {
@@ -79,6 +82,10 @@ export interface StoreCardData {
   bgColor: string;
   icon: string;
   city: string | null;
+  /** The shop pin. null when it never set one — directions must say so, not
+   *  send someone to a defaulted city centre. */
+  lat?: number;
+  lng?: number;
 }
 
 const FALLBACK = {
@@ -108,12 +115,22 @@ export function toCardData(s: BucketStore): StoreCardData {
     bgColor: bg,
     icon: st?.icon ?? FALLBACK.icon,
     city: s.city,
+    // Carried, not dropped: the server has always returned these, and the card
+    // discarding them is why every feed Directions button said "coming soon".
+    lat: s.lat ?? undefined,
+    lng: s.lng ?? undefined,
   };
 }
 
 export async function fetchStoresByBucket(
   bucket: StoreBucket,
-  opts: { lat?: number | null; lng?: number | null; limit?: number } = {},
+  opts: {
+    lat?: number | null;
+    lng?: number | null;
+    limit?: number;
+    /** "newest" = most recently joined first, for the New Launches screen. */
+    sort?: "default" | "newest";
+  } = {},
 ): Promise<BucketResult> {
   // Off-backend the list is EMPTY, never mock. A fabricated shop is worse than
   // an empty tab: someone taps it, tries to order, and nothing exists (§19.8).
@@ -125,6 +142,7 @@ export async function fetchStoresByBucket(
     qs.set("lng", String(opts.lng));
   }
   if (opts.limit) qs.set("limit", String(opts.limit));
+  if (opts.sort === "newest") qs.set("sort", "newest");
 
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);

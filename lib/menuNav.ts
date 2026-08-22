@@ -30,6 +30,6 @@ export function handleMenuSelect(router: AppRouter, key: string): void {
     case "order_food":     router.push("/menu-stores");     break;
     case "my_bookings":    router.push("/my-bookings");     break;
     default:
-      Alert.alert("Coming Soon", `"${key}" is coming soon.`);
+      Alert.alert(key, `There is no "${key}" screen in the app yet.`);
   }
 }

@@ -100,7 +100,12 @@ export interface MenuCheckoutRequest {
   items: { menuItemId: string; qty: number }[];
   paymentMode: "cod" | "mock_upi";
   fulfillment: "instant" | "scheduled" | "pickup";
-  deliveryAddress?: Record<string, unknown> | null;
+  // A saved address row's id — the backend resolves and snapshots it
+  // server-side (same as goods checkout). No current call site sets this
+  // (dish ordering is pickup-only today); kept typed correctly so a future
+  // delivery-mode dish order doesn't reintroduce a client-supplied address
+  // blob, which is what this field used to be.
+  addressId?: string | null;
   note?: string | null;
 }
 
@@ -313,7 +318,7 @@ export async function placeMenuOrder(req: MenuCheckoutRequest): Promise<MenuOrde
       items: req.items.map((i) => ({ menu_item_id: i.menuItemId, qty: i.qty })),
       payment_mode: req.paymentMode,
       fulfillment: req.fulfillment,
-      delivery_address: req.deliveryAddress ?? null,
+      address_id: req.addressId ?? null,
       note: req.note ?? null,
     }),
   });

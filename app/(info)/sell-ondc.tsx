@@ -5,7 +5,7 @@
 // and explains the ONDC network benefits.
 //
 // Layout:
-//   • Dark blue header  (back · "Sell on ONDC" · help)
+//   • Dark blue header  (back · "Sell on ONDC")
 //   • "Sell on Apana Store" action card  (icon · copy · chevron)
 //   • "We are Part of ONDC Network" dark info card
 //   • "Website" button
@@ -14,7 +14,7 @@
 import React from "react";
 import {
   View, Text, TouchableOpacity, ScrollView,
-  StyleSheet, StatusBar, Alert,
+  StyleSheet, StatusBar, Alert, Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons }     from "@expo/vector-icons";
@@ -42,14 +42,10 @@ export default function SellOndcScreen() {
         <Text style={[styles.headerTitle, { fontFamily: typography.fontFamily.semiBold }]}>
           Sell on ONDC
         </Text>
-
-        <TouchableOpacity
-          style={styles.headerBtn}
-          activeOpacity={0.75}
-          onPress={() => Alert.alert("Help", "Seller support coming soon.")}
-        >
-          <Ionicons name="help-circle-outline" size={22} color="#fff" />
-        </TouchableOpacity>
+        {/* Help button removed: there is no support channel — no monitored
+            inbox and no number. An icon that apologises is worse than none,
+            because someone stuck taps it believing help exists. Same call as
+            the seller and partner apps. */}
       </SafeAreaView>
 
       <ScrollView
@@ -62,7 +58,19 @@ export default function SellOndcScreen() {
         <TouchableOpacity
           style={[styles.actionCard, { backgroundColor: colors.card, borderColor: colors.border }]}
           activeOpacity={0.85}
-          onPress={() => Alert.alert("Sell on Apana Store", "Seller registration coming soon.")}
+          // 🔴 I nearly replaced one invention with another here — a Play Store
+          // link for an app that is NOT published, under a package id I had
+          // guessed wrong. A dead store link is worse than "coming soon",
+          // because it looks like it ought to work.
+          //
+          // The honest state: the Apana Seller app exists and is in trial, but
+          // is not on any store yet. Say that, and say what happens instead.
+          onPress={() =>
+            Alert.alert(
+              "Sell on Apana",
+              "The Apana Seller app is in trial with shops in our first cities. It isn't on the Play Store yet — we're onboarding sellers directly while the trial runs.",
+            )
+          }
         >
           <View style={[styles.actionIconWrap, { backgroundColor: colors.primaryLight }]}>
             <Ionicons name="trending-up" size={26} color={BRAND_BLUE} />
@@ -105,7 +113,8 @@ export default function SellOndcScreen() {
         <TouchableOpacity
           style={styles.websiteBtn}
           activeOpacity={0.85}
-          onPress={() => Alert.alert("ONDC Website", "ondc.org — coming soon.")}
+          // ondc.org is a real, live site — there was never anything to wait for.
+          onPress={() => { void Linking.openURL("https://ondc.org"); }}
         >
           <Text style={[styles.websiteBtnText, { fontFamily: typography.fontFamily.semiBold }]}>
             Website

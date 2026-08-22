@@ -184,7 +184,7 @@ export default function MapScreen() {
           value={query}
           onChangeText={onQueryChange}
           mode={mode}
-          onMenu={() => Alert.alert("Filters", "Map filters coming soon.")}
+          onMenu={() => Alert.alert("Filters", "The map has no filters yet — every Apana shop in view is shown.")}
           onScan={() => router.push("/scanner")}
           onCart={() => router.push("/cart")}
         />
@@ -219,7 +219,7 @@ export default function MapScreen() {
           onZoomIn={() => mapRef.current?.zoomIn()}
           onZoomOut={() => mapRef.current?.zoomOut()}
           onLocate={recenter}
-          onLayers={() => Alert.alert("Layers", "Map layers coming soon.")}
+          onLayers={() => Alert.alert("Layers", "Only the standard Mappls layer is available.")}
           onNavigate={recenter}
         />
 

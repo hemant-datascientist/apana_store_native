@@ -56,7 +56,7 @@ export default function CategorySubGrid({ title, subCats, accent, apc }: Categor
       router.push(`/(apc)/${code}` as never);
       return;
     }
-    Alert.alert(cat.label, `${cat.label} coming soon.`);
+    Alert.alert(cat.label, `No product category is mapped to ${cat.label} yet.`);
   }
 
   return (

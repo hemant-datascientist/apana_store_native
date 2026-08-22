@@ -10,6 +10,7 @@
 // ============================================================
 
 import React, { useMemo } from "react";
+import { openDirections } from "../../../../lib/openDirections";
 import { View, Text, Alert, StyleSheet, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { typography } from "../../../../theme/typography";
@@ -32,7 +33,6 @@ function toServiceCard(s: StoreCardData): ServiceStore {
   };
 }
 import { buildHeroStores, sortByDistance, BannerableStore, HeroStore } from "../../../../lib/storeBanner";
-import { getStoreById } from "../../../../data/storeDetailData";
 import ServiceHeroBanner from "./ServiceHeroBanner";
 import NearbyHeroBanner  from "./NearbyHeroBanner";
 import ServiceStoreCard  from "./ServiceStoreCard";
@@ -68,7 +68,7 @@ export default function ServiceStoresFeed() {
   }
 
   function handlePromoPress(promo: ServicePromo) {
-    Alert.alert(promo.headline, "Service category page coming soon.");
+    Alert.alert(promo.headline, "This is a category banner — browse the service shops listed below it.");
   }
 
   // toServiceCard sets phone: "" — this feed's card data has never carried a
@@ -79,8 +79,10 @@ export default function ServiceStoresFeed() {
     router.push(`/service-detail?id=${store.id}`);
   }
 
+  // Real Mappls navigation. openDirections says so honestly when the shop
+  // never set a pin — it does NOT fall back to a city centre.
   function handleDirection(store: ServiceStore) {
-    Alert.alert("Direction", `Directions to ${store.name} — coming soon.`);
+    void openDirections(store.lat, store.lng, store.name);
   }
 
   function handleViewInfo(store: ServiceStore) {

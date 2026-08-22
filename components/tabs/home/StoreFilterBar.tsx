@@ -51,25 +51,12 @@ export default function StoreFilterBar({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.row}
       >
-        {/* Filter button */}
-        <TouchableOpacity style={styles.pill} onPress={onFilterPress} activeOpacity={0.7}>
-          <Ionicons name="options-outline" size={15} color={colors.text} />
-          <Text style={[styles.pillLabel, { color: colors.text, fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
-            Filter
-          </Text>
-        </TouchableOpacity>
-
-        <View style={dividerStyle} />
-
-        {/* Sort by button */}
-        <TouchableOpacity style={styles.pill} onPress={onSortPress} activeOpacity={0.7}>
-          <Ionicons name="swap-vertical-outline" size={15} color={colors.text} />
-          <Text style={[styles.pillLabel, { color: colors.text, fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
-            Sort by
-          </Text>
-        </TouchableOpacity>
-
-        <View style={dividerStyle} />
+        {/* 🔴 "Filter" and "Sort by" REMOVED — neither had a sheet behind it.
+            Both opened an Alert saying "coming soon", sitting at the head of a
+            row of pills that DO work (the quick filters beside them filter the
+            list for real). Two dead controls among live ones is worse than in
+            isolation: it teaches the customer the whole row is decorative.
+            The props are kept so restoring them is one block of JSX. */}
 
         {/* Nearest toggle */}
         <View style={styles.toggleRow}>

@@ -11,9 +11,10 @@
 // backend smoke; encodeURIComponent is not optional here.
 // ============================================================
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import type { NotifItem, NotifType } from "../data/notificationsData";
+import { playSound } from "../lib/sound";
 
 const API_MODE = process.env.EXPO_PUBLIC_API_MODE ?? "mock";
 const TOWER_IP = process.env.EXPO_PUBLIC_TOWER_IP ?? "10.153.78.94";
@@ -72,6 +73,14 @@ export function useCustomerNotifications(): CustomerNotificationsState {
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  // Last unread count observed from the server, so the poll can tell "my
+  // order just moved" from "the same 2 updates are still unread".
+  //
+  // null until the first successful load: opening the app to 3 unread
+  // updates that arrived while it was closed must be silent. The sound
+  // means "this just happened".
+  const prevUnread = useRef<number | null>(null);
+
   const q = `customer_id=${encodeURIComponent(phone)}`;
 
   const reload = useCallback(async () => {
@@ -101,10 +110,21 @@ export function useCustomerNotifications(): CustomerNotificationsState {
           };
         }),
       );
+      // Once per poll, not once per notification — two updates landing in
+      // the same 30s window is one chime, not two overlapping ones.
+      if (prevUnread.current !== null && body.unread > prevUnread.current) {
+        playSound("status");
+      }
+      prevUnread.current = body.unread;
       setUnread(body.unread);
     } catch {
       // Empty, never the bundled feed. No connection means no notifications to
       // show, not somebody else's.
+      //
+      // prevUnread is deliberately NOT reset: a dropped poll is not
+      // "everything became zero". Resetting would make the next good poll
+      // look like every still-unread update had just arrived and chime for
+      // all of them.
       setItems([]);
       setUnread(0);
     } finally {
@@ -118,9 +138,17 @@ export function useCustomerNotifications(): CustomerNotificationsState {
     return () => clearInterval(id);
   }, [reload]);
 
+  // Both handlers move prevUnread in step with the optimistic drop, because
+  // it tracks "what the shopper last knew the count to be". If it only
+  // followed server polls: 2 unread, they read one (badge 1, prevUnread
+  // still 2), a new update arrives making the server say 2 again, 2 > 2 is
+  // false, and a real update chimes for nobody.
   const markRead = useCallback(async (id: string) => {
     setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
     setUnread((u) => Math.max(0, u - 1));
+    if (prevUnread.current !== null) {
+      prevUnread.current = Math.max(0, prevUnread.current - 1);
+    }
     try { await fetch(`${BASE_URL}/notifications/${id}/read?${q}`, { method: "POST" }); }
     catch { void reload(); }
   }, [q, reload]);
@@ -128,6 +156,7 @@ export function useCustomerNotifications(): CustomerNotificationsState {
   const markAllRead = useCallback(async () => {
     setItems((prev) => prev.map((n) => ({ ...n, read: true })));
     setUnread(0);
+    if (prevUnread.current !== null) prevUnread.current = 0;
     try { await fetch(`${BASE_URL}/notifications/read-all?${q}`, { method: "POST" }); }
     catch { void reload(); }
   }, [q, reload]);

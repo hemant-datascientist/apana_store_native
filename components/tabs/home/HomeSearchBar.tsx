@@ -2,10 +2,10 @@
 // HOME SEARCH BAR — Apana Store
 //
 // Full search row:
-//   [≡]  [🔍 Search for products/stores … 🎙]  [🔔] [⊡] [⊙]
+//   [≡]  [🔍 Search for products/stores …]  [🔔] [⊡] [⊙]
 //
 // Hamburger  — opens side drawer / filter panel
-// Search pill— full-width input with mic for voice search
+// Search pill— full-width text input (no mic: voice search is not built)
 // Bell       — notifications
 // Scan       — barcode / QR scanner
 // Map        — opens the nearby-stores map view (stores → map)
@@ -32,7 +32,10 @@ interface HomeSearchBarProps {
   onSubmit?:      (q: string) => void;   // navigate to search results
   mode:           DiscoveryMode;
   onMenuPress:    () => void;
-  onMicPress:     () => void;
+  /** Voice search is not built; the mic was removed. Optional so the two
+   *  callers do not have to pass a handler for a control that no longer
+   *  renders — and so restoring it is one prop, not a refactor. */
+  onMicPress?:    () => void;
   onBellPress:    () => void;
   onScanPress:    () => void;
   onLocatePress:  () => void;
@@ -73,9 +76,13 @@ export default function HomeSearchBar({
           style={[styles.input, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.sm }]}
           returnKeyType="search"
         />
-        <TouchableOpacity onPress={onMicPress} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Ionicons name="mic-outline" size={18} color="rgba(255,255,255,0.75)" />
-        </TouchableOpacity>
+        {/* 🔴 MIC REMOVED — there is no voice search.
+            It opened an Alert saying "Voice search coming soon". Voice needs
+            speech recognition (expo-speech-recognition or a cloud STT), a
+            permission, and a language model that copes with Indian languages
+            and shop names — none of which exists. A microphone icon is a
+            promise a customer taps expecting to speak; an absent icon
+            promises nothing. Restore it when there is something behind it. */}
       </TouchableOpacity>
 
       {/* ── Right action icons ── */}

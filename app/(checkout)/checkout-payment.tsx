@@ -167,9 +167,12 @@ export default function CheckoutPaymentScreen() {
       // shop has not been paid for.
       if (selectedPayment.type !== "cod") {
         try {
-          // The order id is the idempotency key: retrying this exact payment
-          // must reuse the same attempt, never open a second one.
-          await payForOrder(res.orderId, user?.phone ?? "", `order-${res.orderId}`);
+          // MUST be the real backend id — the payment module looks the order
+          // up by primary key (WHERE id = ... AND customer_id = ...), and
+          // res.orderId is the display invoice, which matches no row. The
+          // idempotency key is derived from the same real id, so a retry
+          // reuses the same attempt rather than opening a second one.
+          await payForOrder(res.serverOrderId, user?.phone ?? "", `order-${res.serverOrderId}`);
         } catch (payErr: any) {
           // The order stands, unpaid — deleting it would lose a basket the
           // customer may still want to pay for. Say what happened and let them
@@ -191,7 +194,7 @@ export default function CheckoutPaymentScreen() {
       // storeOrdersJson is forwarded so Track can pass it to the QR screen.
       const storeOrdersJson = encodeURIComponent(JSON.stringify(res.storeOrders));
       router.replace(
-        `/order-tracking?mode=${mode}&orderId=${res.orderId}&total=${total}&storeOrdersJson=${storeOrdersJson}`,
+        `/order-tracking?mode=${mode}&orderId=${res.orderId}&serverOrderId=${res.serverOrderId}&total=${total}&storeOrdersJson=${storeOrdersJson}`,
       );
     } catch (err: any) {
       setPayError(err?.message ?? "Something went wrong. Please try again.");

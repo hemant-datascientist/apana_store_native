@@ -9,8 +9,10 @@
 // ============================================================
 
 import React from "react";
+import { buildStoreShare } from "../../lib/storeShare";
+import StateView from "../../components/ui/StateView";
 import {
-  View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert,
+  View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, Share,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -32,7 +34,24 @@ export default function ServiceDetailScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const insets = useSafeAreaInsets();
 
-  const serviceStore = SERVICE_STORES.find(s => s.id === id) || SERVICE_STORES[0];
+  // 🔴 The same silent substitution removed from store-detail: `|| SERVICE_STORES[0]`
+  // meant ANY id this bundled list does not know — i.e. every real service
+  // shop — rendered the first demo entry under that id, complete with its
+  // name, owner message and colours. A real shop appeared to be a different
+  // one. Undefined now, and the screen says so.
+  const serviceStore = SERVICE_STORES.find(s => s.id === id);
+
+  if (!serviceStore) {
+    return (
+      <SafeAreaView style={{ flex: 1 }}>
+        <StateView
+          variant="notFound"
+          title="Service not available"
+          message="We couldn't load this service provider. Go back and try again."
+        />
+      </SafeAreaView>
+    );
+  }
 
   // Map ServiceStore to StoreDetail format for component compatibility
   const mappedStore: StoreDetail = {
@@ -82,7 +101,10 @@ export default function ServiceDetailScreen() {
   }
 
   function handleBook(serviceName: string) {
-    Alert.alert("Book Service", `Booking ${serviceName} at ${serviceStore.name}`);
+    // mappedStore, not serviceStore: this is a hoisted function declaration, so
+    // it does not carry the narrowing from the `if (!serviceStore) return`
+    // above. mappedStore is unconditionally defined by the time it can run.
+    Alert.alert("Book Service", `Booking ${serviceName} at ${mappedStore.name}`);
   }
 
   return (
@@ -115,7 +137,12 @@ export default function ServiceDetailScreen() {
           <TouchableOpacity
             style={[styles.backBtn, { backgroundColor: "rgba(0,0,0,0.35)" }]}
             activeOpacity={0.8}
-            onPress={() => Alert.alert("Share", "Share store link coming soon.")}
+            // Real OS share sheet — buildStoreShare already produces the link and
+            // message the store page shares; this said "coming soon" beside it.
+            onPress={() => {
+              const share = buildStoreShare(mappedStore.id, mappedStore.name);
+              Share.share({ message: share.message }).catch(() => {});
+            }}
           >
             <Ionicons name="share-outline" size={20} color="#fff" />
           </TouchableOpacity>

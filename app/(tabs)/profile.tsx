@@ -29,6 +29,7 @@ import { useFollowedStores } from "../../hooks/useFollow";
 import { fetchOrderHistory } from "../../services/orderHistoryService";
 import { useCustomerProfile, displayName } from "../../hooks/useCustomerProfile";
 import { useCoverage } from "../../context/CoverageContext";
+import { isSoundEnabled, playSound, setSoundEnabled } from "../../lib/sound";
 import ProfileHeader         from "../../components/tabs/profile/ProfileHeader";
 import ProfileStats          from "../../components/tabs/profile/ProfileStats";
 import FavouriteStores       from "../../components/tabs/profile/FavouriteStores";
@@ -68,14 +69,32 @@ export default function ProfileScreen() {
 
   // Surface the live coverage choice as the row's badge so the current
   // scope is readable without opening the modal.
+  // Scan beep + order-status chime (lib/sound.ts). Read from the in-memory
+  // flag initSound() populated at app start rather than re-reading storage.
+  const [soundOn, setSoundOn] = useState(isSoundEnabled());
+
+  // Surface the live coverage choice as the row's badge so the current
+  // scope is readable without opening the modal. Sounds does the same with
+  // its On/Off state, so the row shows what it is set to without a tap.
   const settingGroups = SETTING_GROUPS.map(group => ({
     ...group,
-    items: group.items.map(item =>
-      item.key === "coverage" ? { ...item, badge: coverageMeta.label } : item,
-    ),
+    items: group.items.map(item => {
+      if (item.key === "coverage") return { ...item, badge: coverageMeta.label };
+      if (item.key === "sounds")   return { ...item, badge: soundOn ? "On" : "Off" };
+      return item;
+    }),
   }));
 
   function handleSetting(key: string) {
+    if (key === "sounds") {
+      const next = !soundOn;
+      setSoundOn(next);
+      void setSoundEnabled(next);
+      // Play it when switching ON so the shopper hears what they enabled —
+      // and learns whether their phone volume is actually up.
+      if (next) playSound("status");
+      return;
+    }
     if (key === "coverage")     { setCoverageVisible(true);           return; }
     if (key === "appearance")   { setAppearanceVisible(true);          return; }
     if (key === "addresses")    { router.push("/address-book");        return; }
@@ -88,7 +107,7 @@ export default function ProfileScreen() {
     if (key === "orders_hist") { router.push("/order-history");       return; }
     if (key === "payments")    { router.push("/payment-methods");     return; }
     if (key === "connect")     { router.push("/connect");             return; }
-    Alert.alert("Coming Soon", `"${key}" feature is on the way.`);
+    Alert.alert(key, `"${key}" is not built yet.`);
   }
 
   function handleLogout() {

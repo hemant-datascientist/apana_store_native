@@ -31,6 +31,7 @@ import * as Haptics from "expo-haptics";
 import { typography } from "../../theme/typography";
 import useTheme from "../../theme/useTheme";
 import { parseStoreId } from "../../lib/storeShare";
+import { playSound } from "../../lib/sound";
 
 // ── Scan zone dimensions ──────────────────────────────────────
 const { width: SW, height: SH } = Dimensions.get("window");
@@ -95,6 +96,10 @@ export default function ScannerScreen() {
     if (scanned) return;
     setScanned(true);
     setResult(data);
+    // Beep alongside the existing haptic: the shopper is holding the phone
+    // at a product, not looking at the screen, and the sound is what tells
+    // them the code was captured.
+    playSound("scan");
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
     // Slide result card up

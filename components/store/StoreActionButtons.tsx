@@ -47,13 +47,16 @@ export default function StoreActionButtons({
       primary:   false,
       onPress:   onDirections,
     },
-    {
-      key:       "ride",
-      label:     "Book Ride",
-      icon:      "car-outline",
-      primary:   true,
-      onPress:   onBookRide,
-    },
+    // 🔴 "Book Ride" REMOVED — there is no ride system.
+    //
+    // It opened an Alert saying ride booking was "coming soon". Ride mode is
+    // documented as not real: there is no booking endpoint, the customer app
+    // has only a browse screen, and taskBridge hardcodes every task as a
+    // delivery. A button that has never been able to work is worse than no
+    // button — a customer taps it expecting a ride to this shop.
+    //
+    // Restore it the day a booking endpoint exists; the handler and prop are
+    // kept so that is a one-line change.
     {
       key:       "call",
       label:     "Call",

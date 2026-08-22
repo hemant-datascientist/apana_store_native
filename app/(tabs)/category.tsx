@@ -103,7 +103,11 @@ export default function CategoryScreen() {
         <HomeHeader
           location={{ area: selectedAddress.city, state: selectedAddress.state, pincode: selectedAddress.pincode }}
           storesLive={storesLiveCount}
-          onLocationPress={() => Alert.alert("Change Location", "Area selector coming soon.")}
+          // Real: the location screen already exists and is the one place a
+          // location can be set. It used to open an Alert saying an area
+          // selector was "coming soon" — while /(auth)/location-access was
+          // sitting there doing exactly that job.
+          onLocationPress={() => router.push("/(auth)/location-access")}
         />
 
         <HomeSearchBar
@@ -112,10 +116,10 @@ export default function CategoryScreen() {
           onSubmit={q => q.trim() && router.push(`/search-results?q=${encodeURIComponent(q.trim())}` as any)}
           mode={mode}
           onMenuPress={()   => setDrawerOpen(true)}
-          onMicPress={()    => Alert.alert("Voice",         "Voice search coming soon.")}
           onBellPress={() => router.push("/notifications")}
           onScanPress={() => router.push("/scanner")}
-          onLocatePress={() => Alert.alert("Locate",        "GPS locate coming soon.")}
+          // Same destination — that screen has the GPS button.
+          onLocatePress={() => router.push("/(auth)/location-access")}
         />
 
         <DiscoveryToggle mode={mode} onChange={setMode} />

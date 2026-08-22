@@ -12,7 +12,7 @@
 // bucket of the products already fetched — no extra round-trip.
 // ============================================================
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   fetchStoreMeta,
   fetchStoreProducts,
@@ -31,6 +31,8 @@ export interface StoreCatalog {
   categories: StoreCategoryGroup[];
   products: LiveProduct[];
   loading: boolean;
+  /** Retry after a failed load, without leaving the screen. */
+  reload: () => void;
 }
 
 // Bucket products by the DISPLAY category (the class-name mirror the picker
@@ -59,34 +61,54 @@ export function useStoreCatalog(storeId: string | undefined): StoreCatalog {
   const [meta, setMeta] = useState<StoreMeta | null>(null);
   const [products, setProducts] = useState<LiveProduct[]>([]);
   const [loading, setLoading] = useState(!!storeId);
-
+  // The fetch lives in a callback so BOTH the mount effect and an explicit
+  // retry can run it. The alternative — an `attempt` counter in the dep array —
+  // is a dependency the effect never actually reads, which the hooks linter
+  // correctly refuses.
+  //
+  // `aliveRef` rather than a per-effect local: a manual reload has no effect
+  // cleanup of its own, so its in-flight promise still needs to know when the
+  // screen has gone away.
+  const aliveRef = useRef(true);
   useEffect(() => {
+    aliveRef.current = true;
+    return () => { aliveRef.current = false; };
+  }, []);
+
+  const load = useCallback(async (): Promise<void> => {
     if (!storeId) {
       setMeta(null);
       setProducts([]);
       setLoading(false);
       return;
     }
-    let alive = true;
     setLoading(true);
-    Promise.all([fetchStoreMeta(storeId), fetchStoreProducts(storeId, 100)])
-      .then(([m, p]) => {
-        if (!alive) return;
-        setMeta(m);
-        setProducts(p);
-      })
-      .catch(() => {
-        if (!alive) return;
-        setMeta(null);
-        setProducts([]);
-      })
-      .finally(() => {
-        if (alive) setLoading(false);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [storeId]);
+    try {
+      const [m, p] = await Promise.all([
+        fetchStoreMeta(storeId),
+        fetchStoreProducts(storeId, 100),
+      ]);
+      if (!aliveRef.current) return;
+      setMeta(m);
+      setProducts(p);
+    } catch {
+      if (!aliveRef.current) return;
+      // Null meta is what the screen reads as "could not load" — it must NOT
+      // fall through to the bundled sample store (see store-detail.tsx).
+      setMeta(null);
+      setProducts([]);
+    } finally {
+      if (aliveRef.current) setLoading(false);
+    }
+  }, [storeId, aliveRef]);
 
-  return { meta, categories: groupByCategory(products), products, loading };
+  useEffect(() => { void load(); }, [load]);
+
+  return {
+    meta,
+    categories: groupByCategory(products),
+    products,
+    loading,
+    reload: () => { void load(); },
+  };
 }

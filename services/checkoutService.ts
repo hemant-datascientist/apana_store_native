@@ -38,7 +38,14 @@ export interface StoreOrderInput {
 // Each store gets its own scannable order ID.
 // The partner / store staff app scans storeOrderId, not the master orderId.
 export interface StoreOrderResult {
-  storeOrderId:  string;   // unique per store, e.g. "APX-20260419-S1-4821"
+  storeOrderId:  string;   // §17 invoice — for DISPLAY, QR content and sharing only
+  // The real backend row id (orders.id, a uuid). Every fetch that actually
+  // hits the API (tracking, invoice, cancel) must key on THIS, never on
+  // storeOrderId — the backend looks orders up by primary key, and
+  // storeOrderId is a display string that key never matches. Kept separate
+  // from storeOrderId rather than replacing it: a customer should see and
+  // scan the human invoice id, not a raw uuid.
+  id:            string;
   storeId:       string;
   storeName:     string;
   storeType:     string;
@@ -66,11 +73,15 @@ export interface PlaceOrderRequest {
 }
 
 // ── POST /api/orders success response ────────────────────
-// orderId     = master order (groups all stores, shown on receipts)
+// orderId     = master order DISPLAY id (groups all stores, shown on receipts)
+// serverOrderId = the same order's REAL backend id — there is no "master
+//   order" server-side (§13), so both are the first store's own order; use
+//   serverOrderId for tracking/payment/invoice, orderId for what's shown.
 // storeOrders = one entry per store — each has its own QR + invoice
 export interface PlaceOrderResponse {
   success:       boolean;
   orderId:       string;             // e.g. "APX-20260419-7X3K" — always server-generated
+  serverOrderId: string;             // orders[0].id (uuid) — for backend fetches, never display
   storeOrders:   StoreOrderResult[]; // one per store — used for per-store QR codes + invoices
   estimatedTime: number;             // overall ETA in minutes (max across stores)
   paymentStatus: "pending" | "authorized" | "captured";
@@ -223,6 +234,7 @@ export async function placeOrder(
   const storeOrders: StoreOrderResult[] = orders.map((o) => ({
     // The §17 invoice IS the scannable per-store id — no parallel scheme.
     storeOrderId: o.invoice_display,
+    id: o.id,
     storeId: o.seller_id,
     storeName: o.seller_name ?? styleBySeller.get(o.seller_id)?.storeName ?? "Store",
     storeType: "Store",
@@ -237,6 +249,7 @@ export async function placeOrder(
   return {
     success: true,
     orderId: orders[0].invoice_display,
+    serverOrderId: orders[0].id,
     storeOrders,
     estimatedTime: 0,
     paymentStatus: orders[0].payment_status === "paid" ? "captured" : "pending",

@@ -44,8 +44,8 @@ export const B2C_PROMOS: B2CPromo[] = [
   {
     id:          "b3",
     headline:    "BABY & FAMILY",
-    subline:     "Safe certified products. Direct from makers.",
-    tag:         "Verified Brands",
+    subline:     "Direct from the makers.",
+    tag:         "Brand Direct",
     bgColor:     "#BE185D",
     accentColor: "#9D174D",
     textColor:   "#fff",
@@ -56,6 +56,9 @@ export const B2C_PROMOS: B2CPromo[] = [
 // ── B2C Store Cards ────────────────────────────────────────────
 
 export interface B2CStore {
+  /** Shop pin from the server; absent when it never set one. */
+  lat?: number;
+  lng?: number;
   id:          string;
   name:        string;
   category:    string;      // main category badge

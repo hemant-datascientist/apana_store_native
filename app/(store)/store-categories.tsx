@@ -1,94 +1,148 @@
 // ============================================================
-// STORE PRODUCTS SCREEN — Apana Store (Customer App)
+// STORE PRODUCTS — the shop's REAL catalogue, filterable by APC category.
 //
-// Full-screen product listing with horizontal category tabs.
+// 🔴 THIS SCREEN USED TO INVENT ITS OWN STOCK.
+//
+// It ran on getStoreById() (bundled demo data) and a getDummyProducts()
+// helper that generated rows called "Personal Care Product 1..4" priced with
+// `Math.random()`. A customer opening a real shop's category saw fabricated
+// items at fabricated prices, and the two entry points into it — the store
+// page's category rows and its search box — were Alert popups saying
+// "Product listing screen coming soon."
+//
+// It now reads the same live catalogue the store page already loaded
+// (useStoreCatalog → GET /customer/catalog/stores/:id/products), so what is
+// listed here is exactly what the seller listed, at the price they set.
+//
+// Params:
+//   id  — the store
+//   cat — optional APC category key to pre-select
+//   q   — optional search term to pre-fill
 // ============================================================
 
-import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput, ScrollView } from "react-native";
+import React, { useMemo, useState } from "react";
+import {
+  View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView, Image,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
-import { getStoreById, DEFAULT_STORE_ID, StoreProductCategory } from "../../data/storeDetailData";
+import { useStoreCatalog } from "../../hooks/useStoreCatalog";
+import type { LiveProduct } from "../../services/liveCatalogService";
+import StateView from "../../components/ui/StateView";
+import { SkeletonList } from "../../components/ui/Skeleton";
 import StoreProductSearch from "../../components/store/StoreProductSearch";
 
 export default function StoreCategoriesScreen() {
   const { colors } = useTheme();
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id?: string }>();
-  const store = getStoreById(id ?? DEFAULT_STORE_ID);
+  const { id, cat, q } = useLocalSearchParams<{ id?: string; cat?: string; q?: string }>();
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const live = useStoreCatalog(id);
 
-  const tabs = [{ key: "all", label: "All Items" }, ...store.categories];
+  const [searchQuery, setSearchQuery] = useState(q ?? "");
+  const [selectedCategory, setSelectedCategory] = useState<string>(cat ?? "all");
 
-  // Placeholder for actual product rendering
-  const renderProductPlaceholder = ({ item, index }: { item: any, index: number }) => (
-    <View style={[styles.productCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <View style={[styles.productImagePlaceholder, { backgroundColor: store.heroBg + "22" }]}>
-        <Ionicons name="cube-outline" size={32} color={store.heroBg} />
-      </View>
-      <View style={styles.productInfo}>
-        <Text style={[styles.productName, { color: colors.text, fontFamily: typography.fontFamily.semiBold }]} numberOfLines={2}>
-          {item.categoryLabel} Product {index + 1}
-        </Text>
-        <Text style={[styles.productPrice, { color: store.heroBg, fontFamily: typography.fontFamily.bold }]}>
-          ₹{Math.floor(Math.random() * 500) + 50}
-        </Text>
-        <TouchableOpacity style={[styles.addBtn, { borderColor: store.heroBg }]}>
-          <Text style={{ color: store.heroBg, fontFamily: typography.fontFamily.semiBold, fontSize: 12 }}>ADD</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+  // Every hook runs before any early return — a bail-out between hooks is the
+  // "Rendered more hooks than during the previous render" crash fixed in
+  // RevenueChart, and this screen has exactly the same empty-first shape.
+  const tabs = useMemo(
+    () => [{ key: "all", label: "All items" }, ...live.categories.map((c) => ({ key: c.key, label: c.label }))],
+    [live.categories],
   );
 
-  // Generate some dummy products based on selected tab
-  const getDummyProducts = () => {
-    let products = [];
-    if (selectedCategory === "all") {
-      store.categories.forEach(cat => {
-        for(let i=0; i<4; i++) {
-          products.push({ id: `${cat.key}-${i}`, categoryLabel: cat.label });
-        }
-      });
-    } else {
-      const cat = store.categories.find(c => c.key === selectedCategory);
-      for(let i=0; i<10; i++) {
-        products.push({ id: `${selectedCategory}-${i}`, categoryLabel: cat?.label || "Item" });
-      }
-    }
-    
-    // Filter by search query
-    if (searchQuery.trim() !== "") {
-      products = products.filter(p => p.categoryLabel.toLowerCase().includes(searchQuery.toLowerCase()) || `product ${p.id}`.includes(searchQuery.toLowerCase()));
-    }
-    return products;
-  };
+  const products = useMemo<LiveProduct[]>(() => {
+    const inCategory =
+      selectedCategory === "all"
+        ? live.products
+        : (live.categories.find((c) => c.key === selectedCategory)?.products ?? []);
+    const term = searchQuery.trim().toLowerCase();
+    if (!term) return inCategory;
+    return inCategory.filter(
+      (p) =>
+        p.name.toLowerCase().includes(term) ||
+        (p.brand ?? "").toLowerCase().includes(term),
+    );
+  }, [live.products, live.categories, selectedCategory, searchQuery]);
 
-  const products = getDummyProducts();
+  const heroColor = colors.primary;
+
+  if (live.loading) {
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
+        <View style={{ padding: 16 }}><SkeletonList count={6} variant="row" /></View>
+      </SafeAreaView>
+    );
+  }
+
+  // A store we could not load is an error, not an empty shop.
+  if (!live.meta) {
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
+        <StateView
+          variant="error"
+          title="Couldn't load this store"
+          message="We couldn't reach the server. Check your connection and try again."
+          actionLabel="Try again"
+          onAction={live.reload}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  const renderProduct = ({ item }: { item: LiveProduct }) => {
+    const price = item.dealPrice ?? item.price;
+    const struck = item.dealPrice != null ? item.price : item.mrp;
+    const outOfStock = item.stockQty <= 0;
+
+    return (
+      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View style={[styles.imageWrap, { backgroundColor: heroColor + "12" }]}>
+          {/* Guarded — an empty string makes <Image> warn and render nothing. */}
+          {item.image ? (
+            <Image source={{ uri: item.image }} style={styles.image} resizeMode="contain" />
+          ) : (
+            <Ionicons name="cube-outline" size={30} color={heroColor} />
+          )}
+        </View>
+
+        <View style={styles.info}>
+          <Text numberOfLines={2} style={[styles.name, { color: colors.text }]}>{item.name}</Text>
+          {item.brand ? (
+            <Text numberOfLines={1} style={[styles.brand, { color: colors.subText }]}>{item.brand}</Text>
+          ) : null}
+
+          <View style={styles.priceRow}>
+            <Text style={[styles.price, { color: heroColor }]}>₹{price}</Text>
+            {/* Only when it is genuinely higher — a struck-through price equal
+                to the real one is a fake discount. */}
+            {struck != null && struck > price && (
+              <Text style={[styles.struck, { color: colors.subText }]}>₹{struck}</Text>
+            )}
+          </View>
+
+          <Text style={[styles.unit, { color: colors.subText }]}>
+            {outOfStock ? "Out of stock" : `${item.unit}`}
+          </Text>
+        </View>
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "bottom"]}>
-      {/* ── Header ── */}
-      <View style={[styles.header, { backgroundColor: store.heroBg }]}>
+      <View style={[styles.header, { backgroundColor: heroColor }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <View style={styles.headerTitleWrap}>
-          <Text style={[styles.headerTitle, { color: "#fff", fontFamily: typography.fontFamily.bold }]}>
-            {store.name}
-          </Text>
-        </View>
-        <View style={styles.headerRight}>
-          <Ionicons name="bag-handle-outline" size={22} color="#fff" />
+          <Text numberOfLines={1} style={styles.headerTitle}>{live.meta.name}</Text>
         </View>
       </View>
 
-      {/* ── Search Bar (Seamless with Header) ── */}
-      <View style={{ backgroundColor: store.heroBg, paddingBottom: 16, paddingTop: 4 }}>
+      <View style={{ backgroundColor: heroColor, paddingBottom: 16, paddingTop: 4 }}>
         <StoreProductSearch
           value={searchQuery}
           onChange={setSearchQuery}
@@ -97,49 +151,51 @@ export default function StoreCategoriesScreen() {
         />
       </View>
 
-      {/* ── Horizontal Category Tabs ── */}
-      <View style={[styles.tabsContainer, { borderBottomColor: colors.border }]}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsScroll}>
-          {tabs.map((tab) => {
-            const isSelected = selectedCategory === tab.key;
-            return (
-              <TouchableOpacity
-                key={tab.key}
-                style={[
-                  styles.tabBtn,
-                  isSelected && { backgroundColor: store.heroBg, borderColor: store.heroBg },
-                  !isSelected && { backgroundColor: colors.card, borderColor: colors.border }
-                ]}
-                onPress={() => setSelectedCategory(tab.key)}
-              >
-                <Text style={[
-                  styles.tabText,
-                  { fontFamily: isSelected ? typography.fontFamily.bold : typography.fontFamily.medium },
-                  isSelected ? { color: "#fff" } : { color: colors.subText }
-                ]}>
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
+      {/* One tab per category the shop ACTUALLY has — no fixed list, so a
+          kirana with three shelves shows three tabs, not twenty empty ones. */}
+      {tabs.length > 1 && (
+        <View style={[styles.tabsContainer, { borderBottomColor: colors.border }]}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsScroll}>
+            {tabs.map((tab) => {
+              const on = selectedCategory === tab.key;
+              return (
+                <TouchableOpacity
+                  key={tab.key}
+                  style={[
+                    styles.tabBtn,
+                    on
+                      ? { backgroundColor: heroColor, borderColor: heroColor }
+                      : { backgroundColor: colors.card, borderColor: colors.border },
+                  ]}
+                  onPress={() => setSelectedCategory(tab.key)}
+                >
+                  <Text style={[styles.tabText, { color: on ? "#fff" : colors.subText }]}>{tab.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
 
-      {/* ── Products Grid ── */}
       <FlatList
         data={products}
         keyExtractor={(item) => item.id}
-        renderItem={renderProductPlaceholder}
+        renderItem={renderProduct}
         numColumns={2}
         contentContainerStyle={styles.listContent}
         columnWrapperStyle={styles.columnWrapper}
         ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Ionicons name="cube-outline" size={48} color={colors.border} />
-            <Text style={[styles.emptyText, { color: colors.subText, fontFamily: typography.fontFamily.medium }]}>
-              No items found.
-            </Text>
-          </View>
+          // "empty", not "error": the request succeeded and this shop simply
+          // has nothing matching. A retry would change nothing, so none offered.
+          <StateView
+            variant="empty"
+            title={searchQuery.trim() ? "Nothing matches that" : "No items here yet"}
+            message={
+              searchQuery.trim()
+                ? `This shop has nothing matching "${searchQuery.trim()}".`
+                : "This shop hasn't listed anything in this section yet."
+            }
+          />
         }
       />
     </SafeAreaView>
@@ -147,89 +203,25 @@ export default function StoreCategoriesScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 12,
-  },
-  backBtn: {
-    padding: 8,
-  },
-  headerTitleWrap: {
-    flex: 1,
-    paddingHorizontal: 12,
-  },
-  headerTitle: {
-    fontSize: 18,
-  },
-  headerRight: {
-    padding: 8,
-  },
-  tabsContainer: {
-    borderBottomWidth: 1,
-    paddingVertical: 12,
-  },
-  tabsScroll: {
-    paddingHorizontal: 16,
-    gap: 8,
-  },
-  tabBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  tabText: {
-    fontSize: 13,
-  },
-  listContent: {
-    padding: 16,
-    paddingBottom: 40,
-    gap: 16,
-  },
-  columnWrapper: {
-    gap: 16,
-  },
-  productCard: {
-    flex: 1,
-    borderRadius: 12,
-    borderWidth: 1,
-    overflow: "hidden",
-  },
-  productImagePlaceholder: {
-    height: 120,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  productInfo: {
-    padding: 12,
-    gap: 6,
-  },
-  productName: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  productPrice: {
-    fontSize: 14,
-  },
-  addBtn: {
-    marginTop: 4,
-    borderWidth: 1,
-    borderRadius: 6,
-    alignItems: "center",
-    paddingVertical: 6,
-  },
-  emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 80,
-    gap: 16,
-  },
-  emptyText: {
-    fontSize: 15,
-  },
+  safe: { flex: 1 },
+  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 8, paddingVertical: 12 },
+  backBtn: { padding: 8 },
+  headerTitleWrap: { flex: 1, paddingHorizontal: 12 },
+  headerTitle: { fontSize: 18, color: "#fff", fontFamily: typography.fontFamily.bold },
+  tabsContainer: { borderBottomWidth: 1, paddingVertical: 12 },
+  tabsScroll: { paddingHorizontal: 16, gap: 8 },
+  tabBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
+  tabText: { fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs },
+  listContent: { padding: 12, paddingBottom: 32 },
+  columnWrapper: { gap: 12 },
+  card: { flex: 1, borderWidth: 1, borderRadius: 14, marginBottom: 12, overflow: "hidden" },
+  imageWrap: { height: 110, alignItems: "center", justifyContent: "center" },
+  image: { width: "100%", height: "100%" },
+  info: { padding: 10, gap: 2 },
+  name: { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm },
+  brand: { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs },
+  priceRow: { flexDirection: "row", alignItems: "baseline", gap: 6, marginTop: 2 },
+  price: { fontFamily: typography.fontFamily.bold, fontSize: typography.size.md },
+  struck: { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs, textDecorationLine: "line-through" },
+  unit: { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs },
 });

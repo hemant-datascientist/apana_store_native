@@ -11,7 +11,8 @@
 // ============================================================
 
 import React, { useMemo } from "react";
-import { View, Text, Alert, StyleSheet, ActivityIndicator } from "react-native";
+import { openDirections } from "../../../../lib/openDirections";
+import { View, Text, Alert, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { typography } from "../../../../theme/typography";
 import useTheme from "../../../../theme/useTheme";
@@ -25,6 +26,8 @@ import { useStoreBucket } from "../../../../hooks/useStoreBucket";
 import { toCardData } from "../../../../services/storeBucketService";
 import NearbyHeroBanner from "./NearbyHeroBanner";
 import StoreListCard from "./StoreListCard";
+import { SkeletonList } from "../../../ui/Skeleton";
+import StateView from "../../../ui/StateView";
 
 export default function NearbyStoresFeed() {
   const { colors } = useTheme();
@@ -42,7 +45,7 @@ export default function NearbyStoresFeed() {
   const lng = deviceCoords?.lng ?? selectedAddress.lng ?? null;
   const coords = lat != null && lng != null ? { lat, lng } : null;
 
-  const { stores: liveStores, loading, error, isEmpty } = useStoreBucket("local", coords);
+  const { stores: liveStores, loading, error, isEmpty, reload } = useStoreBucket("local", coords);
   // The server already sorted by distance; toCardData only reshapes.
   const nearbyStores = useMemo(
     () => liveStores.map(toCardData).map((s) => ({ ...s, distanceKm: s.distanceKm ?? 0, isLive: true })),
@@ -61,8 +64,10 @@ export default function NearbyStoresFeed() {
     router.push(`/store-detail?id=${store.id}`);
   }
 
+  // Real Mappls navigation. openDirections says so honestly when the shop
+  // never set a pin — it does NOT fall back to a city centre.
   function handleDirection(store: NearbyStore) {
-    Alert.alert("Direction", `Getting directions to ${store.name} — coming soon.`);
+    void openDirections(store.lat, store.lng, store.name);
   }
 
   function handleViewItems(store: NearbyStore) {
@@ -85,21 +90,40 @@ export default function NearbyStoresFeed() {
         </Text>
       </View>
 
-      {loading && <ActivityIndicator color={colors.primary} style={{ marginVertical: 24 }} />}
-      {error && (
-        <Text style={[styles.emptyText, { color: colors.danger, fontFamily: typography.fontFamily.regular }]}>
-          {error}
-        </Text>
+      {/* Skeleton rows rather than a lone spinner: this list's shape is
+          known, so the page settles into its real height instead of
+          jumping when the shops land. */}
+      {loading && (
+        <View style={styles.skeletonWrap}>
+          <SkeletonList count={4} variant="row" />
+        </View>
       )}
+
+      {/* A FAILED request is not an empty neighbourhood. This used to print
+          the raw error in red with no way to act on it — a customer with a
+          dropped connection read it as "no shops here". */}
+      {!loading && error && (
+        <View style={styles.stateWrap}>
+          <StateView
+            variant="error"
+            title="Couldn't load shops near you"
+            message={error}
+            actionLabel="Try again"
+            onAction={reload}
+          />
+        </View>
+      )}
+
       {/* Two DIFFERENT empty states. "No pin" is the customer's to fix; "no
           shops" is ours. Showing one message for both sends people looking in
-          the wrong place. */}
+          the wrong place. Neither offers a retry — retrying changes nothing
+          in either case (§19.8: empty is empty). */}
       {!loading && !error && !coords && (
         <Text style={[styles.emptyText, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>
           Set your location to see shops near you.
         </Text>
       )}
-      {isEmpty && coords && (
+      {!error && isEmpty && coords && (
         <Text style={[styles.emptyText, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>
           No Apana shops near you yet.
         </Text>
@@ -123,6 +147,12 @@ export default function NearbyStoresFeed() {
 
 const styles = StyleSheet.create({
   root: {},
+
+  skeletonWrap: { paddingHorizontal: 16 },
+  // StateView is flex:1 by design (it centres in a full screen); inside
+  // this scrolling feed it needs an explicit height or it collapses to
+  // nothing between the section label and the next block.
+  stateWrap:    { minHeight: 280 },
 
   emptyText: {
     textAlign:  "center",

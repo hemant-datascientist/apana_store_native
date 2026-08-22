@@ -25,7 +25,8 @@ import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { useLocation } from "../../context/LocationContext";
 import { DEFAULT_LAT, DEFAULT_LNG } from "../../config/mapplsConfig";
-import { fetchNearbyRiders } from "../../services/ridersService";
+import { fetchNearbyRiders, RIDES_LIVE } from "../../services/ridersService";
+import StateView from "../../components/ui/StateView";
 import { Rider, NearbyRider, VehicleClass } from "../../data/ridersData";
 import { rankRiders, isClassAllowed } from "../../lib/rideLogic";
 import RidersMap from "../../components/rides/RidersMap";
@@ -80,7 +81,7 @@ export default function AutoRidersScreen() {
       `${rider.name} — ${rider.vehicleNo}\n${passengers} passenger${passengers > 1 ? "s" : ""}${isOrderMode ? " · carrying your order" : ""}`,
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Request", onPress: () => Alert.alert("Requested", "Ride requests go live with the partner pipeline — coming soon.") },
+        { text: "Request", onPress: () => Alert.alert("Rides are not available", "Apana does not run rides yet. This screen only lists auto stands people have shared.") },
       ],
     );
   }
@@ -112,31 +113,45 @@ export default function AutoRidersScreen() {
           </View>
         )}
 
-        {/* ── Live riders map ── */}
-        <RidersMap
-          riders={rankRiders(riders, { lat, lng }, 1, filter)}
-          userLat={lat}
-          userLng={lng}
-        />
-
-        {/* ── Passengers + class tabs ── */}
-        <PassengerStepper value={passengers} onChange={onPassengersChange} />
-        <VehicleClassTabs active={filter} passengers={passengers} counts={counts} onSelect={setFilter} />
-
-        {/* ── Nearest-first rider list ── */}
-        <Text style={[styles.sectionLabel, { color: colors.subText, fontFamily: typography.fontFamily.semiBold }]}>
-          {ranked.length} RIDER{ranked.length === 1 ? "" : "S"} · NEAREST FIRST
-        </Text>
-
-        {ranked.length === 0 ? (
-          <View style={styles.emptyWrap}>
-            <Ionicons name="car-outline" size={40} color={colors.subText} />
-            <Text style={[styles.emptyText, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>
-              No riders match — try fewer passengers or another vehicle type.
-            </Text>
-          </View>
+        {/* Rides do not exist yet, so there is nothing to map, filter or
+            count. Showing the map and tabs over an empty fleet implies a
+            fleet that is merely offline right now. */}
+        {!RIDES_LIVE ? (
+          <StateView
+            variant="empty"
+            icon="car-outline"
+            title="Apana doesn't run rides yet"
+            message="There are no Apana auto or bike riders to book. We'll add this once the rider network is live in your city."
+          />
         ) : (
-          ranked.map((r) => <RiderCard key={r.id} rider={r} onBook={onBook} />)
+          <>
+            {/* ── Live riders map ── */}
+            <RidersMap
+              riders={rankRiders(riders, { lat, lng }, 1, filter)}
+              userLat={lat}
+              userLng={lng}
+            />
+
+            {/* ── Passengers + class tabs ── */}
+            <PassengerStepper value={passengers} onChange={onPassengersChange} />
+            <VehicleClassTabs active={filter} passengers={passengers} counts={counts} onSelect={setFilter} />
+
+            {/* ── Nearest-first rider list ── */}
+            <Text style={[styles.sectionLabel, { color: colors.subText, fontFamily: typography.fontFamily.semiBold }]}>
+              {ranked.length} RIDER{ranked.length === 1 ? "" : "S"} · NEAREST FIRST
+            </Text>
+
+            {ranked.length === 0 ? (
+              <View style={styles.emptyWrap}>
+                <Ionicons name="car-outline" size={40} color={colors.subText} />
+                <Text style={[styles.emptyText, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>
+                  No riders match — try fewer passengers or another vehicle type.
+                </Text>
+              </View>
+            ) : (
+              ranked.map((r) => <RiderCard key={r.id} rider={r} onBook={onBook} />)
+            )}
+          </>
         )}
 
       </ScrollView>

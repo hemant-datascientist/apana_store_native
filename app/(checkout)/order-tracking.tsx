@@ -66,6 +66,7 @@ export default function OrderTrackingScreen() {
 
   const {
     orderId          = "APX-MOCK-001",
+    serverOrderId    = "",
     mode:  modeParam = "delivery",
     total            = "0",
     storeOrdersJson  = "",
@@ -73,6 +74,7 @@ export default function OrderTrackingScreen() {
     sequenceJson     = "",
   } = useLocalSearchParams<{
     orderId?:         string;
+    serverOrderId?:   string;
     mode?:            string;
     total?:           string;
     storeOrdersJson?: string;
@@ -84,13 +86,17 @@ export default function OrderTrackingScreen() {
   const totalAmt= parseFloat(total);
 
   // ── Live partner stream (§19.5) — REAL fixes for a real order, smoothed by
-  // the map; the mock walk only for the demo/default order id. A real order id
-  // is a uuid; "APX-MOCK-001" (the param default) drives the mock.
-  const isRealOrder = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
+  // the map; the mock walk only when there is no real order to track.
+  // orderId is the DISPLAY invoice (shown/shared/QR'd) and never matches the
+  // backend's primary key — serverOrderId (checkoutService.placeOrder) is the
+  // one the API actually looks up by. A uuid-shape guess on orderId used to
+  // stand in for this and was always false, so every live order silently fell
+  // back to the mock rider below.
+  const isRealOrder = Boolean(serverOrderId);
   // Both hooks are called every render (rules of hooks); only one feeds the map.
   // For a real order we use the real fix — null means "no partner yet", and the
   // map honestly shows no marker rather than falling back to a fake one (§19.8).
-  const realFix = usePartnerFix(isRealOrder ? orderId : undefined);
+  const realFix = usePartnerFix(isRealOrder ? serverOrderId : undefined);
   const mockFix = useMockPartnerFix(mode);
   const partnerFix = isRealOrder ? realFix : mockFix;
 
@@ -143,16 +149,18 @@ export default function OrderTrackingScreen() {
     const [moved] = next.splice(from, 1);
     next.splice(to, 0, moved);
     router.replace(buildTrackingUrl({
-      mode, orderId, total,
+      mode, orderId, serverOrderId, total,
       storeOrdersJson, visitedJson,
       sequenceJson: JSON.stringify(next),
     }) as any);
-  }, [orderedStores, mode, orderId, total, storeOrdersJson, visitedJson, router]);
+  }, [orderedStores, mode, orderId, serverOrderId, total, storeOrdersJson, visitedJson, router]);
 
   // ── Show QR handler — hands a single store to /order-qr ────
   // Pass full storeOrdersJson + visitedJson + sequenceJson through
   // so order-collected can navigate back here with the new visited
-  // entry merged in.
+  // entry merged in. serverOrderId here is THIS store's own real id
+  // (store.id) — pickup is per-store, so the "master" serverOrderId means
+  // nothing to it; each card's invoice must key on its own order row.
   const handleShowQR = useCallback((store: StoreOrderResult) => {
     const single = encodeURIComponent(JSON.stringify([store]));
     const ctx    = encodeURIComponent(storeOrdersJson || "[]");
@@ -161,7 +169,7 @@ export default function OrderTrackingScreen() {
     router.push(
       // Concatenated query string — expo-router's typed Href can't infer a
       // built-up string, so cast (same convention as the other dynamic pushes).
-      (`/order-qr?mode=${mode}&orderId=${orderId}&total=${total}` +
+      (`/order-qr?mode=${mode}&orderId=${orderId}&serverOrderId=${store.id}&total=${total}` +
       `&storeOrdersJson=${single}` +
       `&trackingStoreOrdersJson=${ctx}` +
       `&trackingVisitedJson=${vis}` +
@@ -173,16 +181,16 @@ export default function OrderTrackingScreen() {
   const handleShowCombinedQR = useCallback(() => {
     const ctx = encodeURIComponent(storeOrdersJson || "[]");
     router.push(
-      `/order-qr?mode=${mode}&orderId=${orderId}&total=${total}&storeOrdersJson=${ctx}`,
+      `/order-qr?mode=${mode}&orderId=${orderId}&serverOrderId=${serverOrderId}&total=${total}&storeOrdersJson=${ctx}`,
     );
-  }, [mode, orderId, total, storeOrdersJson, router]);
+  }, [mode, orderId, serverOrderId, total, storeOrdersJson, router]);
 
   const cfg     = TRACKING_MODE_CONFIG[mode];
   const steps   = TRACKING_STEPS[mode];
   // REAL order state. MOCK_ACTIVE_STEP froze the progress bar at a hardcoded
   // step whatever the shop had actually done; MOCK_PARTNERS put a rider who did
   // not exist beside a map marker that was genuinely moving.
-  const progress = useOrderProgress(isRealOrder ? orderId : undefined);
+  const progress = useOrderProgress(isRealOrder ? serverOrderId : undefined);
   const activeStep = isRealOrder ? (progress.stepKey ?? "placed") : MOCK_ACTIVE_STEP[mode];
   const partner = MOCK_PARTNERS[mode];
   // No ETA for a real order. Nothing computes one — no routing, no distance, no
@@ -438,6 +446,7 @@ export default function OrderTrackingScreen() {
 export function buildTrackingUrl(opts: {
   mode:             string;
   orderId:          string;
+  serverOrderId?:   string;
   total:            string;
   storeOrdersJson:  string;          // already JSON-encoded (NOT URL-encoded)
   visitedJson:      string;          // already JSON-encoded
@@ -450,6 +459,7 @@ export function buildTrackingUrl(opts: {
     `&total=${opts.total}` +
     `&storeOrdersJson=${enc(opts.storeOrdersJson || "[]")}` +
     `&visitedJson=${enc(opts.visitedJson || "[]")}`;
+  if (opts.serverOrderId) url += `&serverOrderId=${enc(opts.serverOrderId)}`;
   if (opts.sequenceJson) url += `&sequenceJson=${enc(opts.sequenceJson)}`;
   return url;
 }

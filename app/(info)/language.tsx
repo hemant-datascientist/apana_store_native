@@ -54,10 +54,14 @@ export default function LanguageScreen() {
       router.back();
       return;
     }
+    // It said "Language Updated — app language set to X". Nothing was set:
+    // the choice is not persisted anywhere and no string in this app is
+    // translated. A false confirmation is worse than no feature, because the
+    // user stops looking for the setting that would actually work.
     Alert.alert(
-      "Language Updated",
-      `App language set to ${currentLang.nativeName}. Full translation coming soon — UI will update in the next app version.`,
-      [{ text: "Got It", onPress: () => router.back() }],
+      "Only English for now",
+      `Apana is not translated into ${currentLang.nativeName} yet, so nothing changed. We have not saved this choice.`,
+      [{ text: "OK", onPress: () => router.back() }],
     );
   }
 

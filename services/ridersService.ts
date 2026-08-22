@@ -1,38 +1,40 @@
 // ============================================================
 // RIDERS SERVICE — Apana Store (Customer App, Auto Riders)
 //
-// Live riders near the customer, all three Partner Ride classes.
+// 🔴 THIS INVENTED DRIVERS AND PLACED THEM AROUND THE REAL CUSTOMER.
 //
-// Backend contract (swap target — §19.4 partner heartbeats feed it):
+// It returned `mockRidersAround(lat, lng)` in EVERY mode — a deterministic
+// fleet of named people with vehicle registration numbers ("Ramesh Pawar,
+// MH 12 AB 4821, 4.8★, 2140 rides") positioned a few hundred metres from
+// wherever the customer actually was, drawn on a real map. The old comment
+// called the mock "the only honest source" while no endpoint existed. That
+// is backwards: no source means show nothing (§19.8). A customer could
+// reasonably have gone outside looking for that auto.
+//
+// Apana has no ride system at all — no booking endpoint, no ride tasks
+// (taskBridge hardcodes `type: "delivery"`), and no partner location feed
+// for Ride-mode partners. So there are no riders to return.
+//
+// Backend contract, for when one exists (§19.4 heartbeats feed it):
 //   GET {API_BASE_URL}/riders/nearby?lat=&lng=&k=2
 //   → { riders: [{ id, name, vehicle_class, vehicle_no, rating,
 //                  rides_done, lat, lng }] }
-//   Server resolves the customer's H3 hot cell → K-ring → online Ride-mode
-//   partners in those cells (§19.6 pattern, same as nearby stores).
-//
-// V1 is frontend-first MOCK in every mode (same precedent as §19.5
-// useMockPartnerFix): the partner-location pipeline (WS /ws/tracking)
-// doesn't exist yet, so there is no honest live source. The mock fleet
-// is deterministic around the customer position — stable, not random.
-// Swapping = implement fetchLive + flip MOCK_ONLY.
+// Implement fetchLive below and the screen needs no change.
 // ============================================================
 
-import { Rider, mockRidersAround } from "../data/ridersData";
-
-const MOCK_ONLY = true; // flip when GET /riders/nearby exists (§19.4/§8)
+import type { Rider } from "../data/ridersData";
 
 export interface FetchRidersParams {
   lat: number;
   lng: number;
 }
 
-function fetchMock(p: FetchRidersParams): Rider[] {
-  return mockRidersAround(p.lat, p.lng);
-}
+/** True once a real /riders/nearby exists. The screen reads this to explain
+ *  an empty list as "Apana runs no rides" rather than "none nearby". */
+export const RIDES_LIVE = false;
 
-export async function fetchNearbyRiders(p: FetchRidersParams): Promise<Rider[]> {
-  if (MOCK_ONLY) return fetchMock(p);
-  // fetchLive lands with the §8 partner pipeline; until then the mock is
-  // the only honest source (no endpoint to call).
-  return fetchMock(p);
+export async function fetchNearbyRiders(_p: FetchRidersParams): Promise<Rider[]> {
+  // Empty, not a mock fleet. An invented driver on a real map is the one
+  // thing this file must never produce again.
+  return [];
 }

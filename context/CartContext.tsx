@@ -21,7 +21,27 @@ import {
 } from "../data/cartData";
 import { isLooseItem } from "../lib/measure";
 
-const STORAGE_KEY = "apana_cart_v2";
+// 🔴 BUMPED v2 → v3 to abandon carts written by an older build.
+//
+// The cart used to ship with four hardcoded sample stores as its initial
+// state. That was removed (INITIAL_CART is now []), but the removal only
+// fixed FRESH installs: any device that had already run the old build had
+// those sample rows PERSISTED, and hydration below restored them on every
+// launch. A tester saw a cart full of products that no shop sells, on a
+// build whose code contains no mock cart at all.
+//
+// Worse than cosmetic: those rows predate real `productId`s, so checkout
+// refuses them ("from an older cart and can no longer be ordered") — the
+// cart was not just wrong, it was unusable and could not be cleared by
+// anything the customer could do except reinstalling.
+//
+// Changing the KEY is the fix rather than a migration: there is nothing in
+// an old cart worth keeping, and a key bump cannot half-succeed the way a
+// field-by-field migration can.
+const STORAGE_KEY = "apana_cart_v3";
+// Read once at hydration so a device upgrading from the old build does not
+// carry the dead payload around forever.
+const LEGACY_STORAGE_KEYS = ["apana_cart_v2", "apana_cart"];
 
 interface AddItemPayload {
   storeId:        string;
@@ -55,6 +75,16 @@ export function cartRowId(productId: string, variantId?: string | null): string 
   return variantId ? `${productId}::${variantId}` : productId;
 }
 
+// Strip rows a restored cart cannot actually order. Kept as free functions so
+// the hydration path below reads as one line.
+function keepOrderableRows(store: CartStore): CartStore {
+  return { ...store, items: (store.items ?? []).filter((i) => Boolean(i?.productId)) };
+}
+function hasItems(store: CartStore): boolean {
+  // A store whose every row was dropped should not linger as an empty header.
+  return store.items.length > 0;
+}
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartStore[]>(INITIAL_CART);
   // Until the stored cart is read back, the in-memory [] is not "the cart is
@@ -65,13 +95,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let alive = true;
+    // Drop anything written under an older key. Fire-and-forget: failing to
+    // clean up must not delay or break hydration of the current cart.
+    AsyncStorage.multiRemove(LEGACY_STORAGE_KEYS).catch(() => {});
+
     AsyncStorage.getItem(STORAGE_KEY)
       .then((raw) => {
         if (!alive) return;
         if (raw) {
           try {
             const parsed = JSON.parse(raw) as CartStore[];
-            if (Array.isArray(parsed)) setCart(parsed);
+            // `Array.isArray` alone was the whole validation, so ANY stored
+            // array was trusted. Rows are now also checked for the one field
+            // that makes a line orderable — a row without productId cannot be
+            // checked out (services/checkoutService.ts throws on it), so
+            // restoring it only builds a cart the customer cannot use and
+            // cannot get rid of.
+            if (Array.isArray(parsed)) setCart(parsed.map(keepOrderableRows).filter(hasItems));
           } catch {
             // Corrupt payload — start clean rather than crash the app on boot.
           }

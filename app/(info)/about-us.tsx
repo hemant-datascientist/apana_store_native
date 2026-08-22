@@ -48,14 +48,10 @@ export default function AboutUsScreen() {
         <Text style={[styles.headerTitle, { fontFamily: typography.fontFamily.semiBold }]}>
           About Us
         </Text>
-
-        <TouchableOpacity
-          style={styles.headerBtn}
-          activeOpacity={0.75}
-          onPress={() => Alert.alert("Help", "Support coming soon.")}
-        >
-          <Ionicons name="help-circle-outline" size={22} color="#fff" />
-        </TouchableOpacity>
+        {/* Help button removed: there is no support channel — no monitored
+            inbox and no number. An icon that apologises is worse than none,
+            because someone stuck taps it believing help exists. Same call as
+            the seller and partner apps. */}
       </SafeAreaView>
 
       <ScrollView
@@ -99,7 +95,7 @@ export default function AboutUsScreen() {
             <TouchableOpacity
               style={styles.storyOverlay}
               activeOpacity={0.85}
-              onPress={() => Alert.alert("Our Journey", "Full story page coming soon.")}
+              onPress={() => Alert.alert("Our Journey", "There is no longer story to read yet — what's on this screen is all of it.")}
             >
               <Text style={[styles.storyOverlayText, { fontFamily: typography.fontFamily.semiBold }]}>
                 Read our full journey
@@ -119,7 +115,7 @@ export default function AboutUsScreen() {
           <TouchableOpacity
             style={styles.websiteBtn}
             activeOpacity={0.82}
-            onPress={() => Alert.alert("Website", "apanastore.in — coming soon.")}
+            onPress={() => Alert.alert("Website", "Apana has no public website yet. The app is the only place we exist.")}
           >
             <Text style={[styles.websiteBtnText, { fontFamily: typography.fontFamily.semiBold }]}>
               Website
@@ -132,7 +128,7 @@ export default function AboutUsScreen() {
               key={s.key}
               style={[styles.socialBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
               activeOpacity={0.8}
-              onPress={() => Alert.alert(s.label, `${s.label} page coming soon.`)}
+              onPress={() => Alert.alert(s.label, `There is no ${s.label} page yet.`)}
             >
               <Ionicons name={s.icon as any} size={22} color={s.color} />
             </TouchableOpacity>

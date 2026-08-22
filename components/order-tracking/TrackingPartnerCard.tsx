@@ -94,7 +94,7 @@ export default function TrackingPartnerCard({ partner, mode }: TrackingPartnerCa
           )}
           <TouchableOpacity
             style={[styles.actionBtn, { backgroundColor: colors.primary + "15", borderColor: colors.primary + "40" }]}
-            onPress={() => Alert.alert("Chat", "In-app chat coming soon")}
+            onPress={() => Alert.alert("No in-app chat", "Apana has no messaging. Use Call to reach your delivery partner.")}
             activeOpacity={0.75}
           >
             <Ionicons name="chatbubble-ellipses-outline" size={18} color={colors.primary} />

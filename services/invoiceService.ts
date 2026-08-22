@@ -25,9 +25,16 @@ export type { Invoice };
 // storeId is the most reliable key for the mock — always pass it
 // when available so the correct store name appears on the invoice.
 export interface FetchInvoiceParams {
-  storeId?:      string;   // "s1"–"s5" — preferred (correct store name guaranteed)
-  storeOrderId?: string;   // per-store sub-order ID (pickup)
-  orderId?:      string;   // master order (delivery / ride fallback)
+  storeId?:       string;   // "s1"–"s5" — preferred (correct store name guaranteed)
+  storeOrderId?:  string;   // per-store sub-order ID (pickup) — DISPLAY only, live mode
+  orderId?:       string;   // master order (delivery / ride fallback) — DISPLAY only, live mode
+  // The real backend row id — live mode fetches by primary key, and neither
+  // storeOrderId nor orderId above is one (both are the §17 display invoice).
+  serverOrderId?: string;
+  // The signed-in phone. The receipt endpoint is scoped to its own customer
+  // (modules/orders/src/routes.ts resolveCustomerId) — without this, a live
+  // fetch is refused before it ever reaches the order.
+  customerId?:    string;
 }
 
 // ── fetchInvoice ──────────────────────────────────────────
@@ -73,8 +80,12 @@ export async function fetchInvoice(params: FetchInvoiceParams): Promise<Invoice>
     return getInvoiceByOrderId(params.storeOrderId ?? params.orderId ?? "");
   }
 
-  const id = params.orderId ?? params.storeOrderId ?? "";
-  const res = await fetch(`${BASE_URL}/orders/${encodeURIComponent(id)}/invoice`);
+  // The backend looks this up by primary key — serverOrderId is the only one
+  // of these that is one. orderId/storeOrderId are kept as a defensive
+  // fallback rather than a throw: every real caller now sends serverOrderId.
+  const id = params.serverOrderId ?? params.orderId ?? params.storeOrderId ?? "";
+  const qs = params.customerId ? `?customer_id=${encodeURIComponent(params.customerId)}` : "";
+  const res = await fetch(`${BASE_URL}/orders/${encodeURIComponent(id)}/invoice${qs}`);
   if (!res.ok) throw new Error(`Could not load this receipt (${res.status}).`);
   const r = (await res.json()) as WireReceipt;
 

@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { Ionicons }   from "@expo/vector-icons";
 import useTheme       from "../../theme/useTheme";
+import { formatStoreAddress } from "../../lib/storeAddress";
 import { typography } from "../../theme/typography";
 import { StoreDetail } from "../../data/storeDetailData";
 
@@ -61,7 +62,15 @@ export default function StoreContactCard({ store }: StoreContactCardProps) {
           fontSize:   typography.size.sm,
           lineHeight: 20,
         }]}>
-          {store.address}, {store.city}, {store.state} – {store.pincode}
+          {/* 🔴 THIS PRINTED THE BUNDLED SAMPLE'S ADDRESS FOR A REAL SHOP.
+              The line was `{store.address}, {store.city}, {store.state} –
+              {store.pincode}` with every part joined unconditionally, so a
+              store missing any of them rendered stray commas and a dangling
+              dash — and before the seller app could even save an address,
+              those parts came from the demo store. Same defect as the phone,
+              which was fixed earlier for the same reason: a customer acts on
+              this. Now composed from what actually exists. */}
+          {formatStoreAddress(store)}
         </Text>
       </View>
 

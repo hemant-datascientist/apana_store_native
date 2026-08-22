@@ -30,6 +30,8 @@ export function useStoreBucket(
   bucket: StoreBucket,
   coords?: { lat: number; lng: number } | null,
   limit = 50,
+  // "newest" = most recently joined first, for the New Launches screen.
+  sort: "default" | "newest" = "default",
 ): StoreBucketState {
   const [stores,  setStores]  = useState<BucketStore[]>([]);
   const [loading, setLoading] = useState(BUCKETS_LIVE);
@@ -45,7 +47,7 @@ export function useStoreBucket(
     let cancelled = false;
     setLoading(true);
     setError(null);
-    fetchStoresByBucket(bucket, { lat, lng, limit })
+    fetchStoresByBucket(bucket, { lat, lng, limit, sort })
       .then((r) => { if (!cancelled) setStores(r.items); })
       .catch((e) => {
         if (cancelled) return;
@@ -57,7 +59,7 @@ export function useStoreBucket(
       })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [bucket, lat, lng, limit]);
+  }, [bucket, lat, lng, limit, sort]);
 
   useEffect(() => load(), [load]);
 

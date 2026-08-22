@@ -21,6 +21,7 @@
 //   Content (loading / error / empty / grid / list)
 // ============================================================
 
+import { openDirections } from "../../lib/openDirections";
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   View, ScrollView, ActivityIndicator,
@@ -146,9 +147,15 @@ export default function SearchResultsScreen() {
     Alert.alert("Added", "Item added to cart.");
   }, []);
 
-  const handleDirection = useCallback(() => {
-    Alert.alert("Directions", "Mappls navigation coming soon.");
-  }, []);
+  // Real Mappls navigation. This said "coming soon" while the store page one
+  // tap away had a working deep link — now both call the same helper, so
+  // neither can drift back into a placeholder.
+  const handleDirection = useCallback(
+    (s: { lat?: number | null; lng?: number | null; name: string }) => {
+      void openDirections(s.lat, s.lng, s.name);
+    },
+    [],
+  );
 
   const handleSuggestion = useCallback((s: string) => {
     setQuery(s);
@@ -284,7 +291,7 @@ export default function SearchResultsScreen() {
               key={s.id}
               store={s}
               onPress={() => handleStorePress(s.id)}
-              onDirection={handleDirection}
+              onDirection={() => handleDirection(s)}
             />
           ))}
           <View style={styles.bottomSpacer} />

@@ -219,13 +219,10 @@ export default function FavouriteScreen() {
           <Text style={[styles.headerTitle, { fontFamily: typography.fontFamily.semiBold }]}>
             Favourite
           </Text>
-          <TouchableOpacity
-            style={styles.headerBtn}
-            activeOpacity={0.75}
-            onPress={() => Alert.alert("Help", "Favourites help coming soon.")}
-          >
-            <Ionicons name="help-circle-outline" size={22} color="#fff" />
-          </TouchableOpacity>
+        {/* Help button removed: there is no support channel — no monitored
+            inbox and no number. An icon that apologises is worse than none,
+            because someone stuck taps it believing help exists. Same call as
+            the seller and partner apps. */}
         </View>
 
         {/* ── Tab pills ── */}

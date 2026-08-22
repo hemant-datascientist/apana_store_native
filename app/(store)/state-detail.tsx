@@ -55,7 +55,7 @@ function SectionHeader({ icon, title, accent, onSeeAll }: { icon:string; title:s
         <Ionicons name={icon as any} size={17} color={accent} />
         <Text style={[sh.title, { fontFamily: typography.fontFamily.bold, color: colors.text }]}>{title}</Text>
       </View>
-      <TouchableOpacity onPress={onSeeAll ?? (() => Alert.alert(title, "Full list coming soon."))}>
+      <TouchableOpacity onPress={onSeeAll ?? (() => Alert.alert(title, "This section already shows everything we have for it."))}>
         <Text style={[sh.seeAll, { color: accent, fontFamily: typography.fontFamily.semiBold }]}>See All</Text>
       </TouchableOpacity>
     </View>
@@ -251,7 +251,7 @@ export default function StateDetailScreen() {
           onSubmit={(q) => q.trim() && router.push(`/search-results?q=${encodeURIComponent(q.trim())}&state=${stateKey}` as any)}
           mode="products"
           onMenuPress={() => setDrawerOpen(true)}
-          onMicPress={() => Alert.alert("Voice", "Voice search coming soon.")}
+          onMicPress={() => Alert.alert("Voice search", "Voice search isn't built. Please type instead.")}
           onBellPress={() => router.push("/notifications")}
           onScanPress={() => router.push("/scanner")}
           onLocatePress={() => Alert.alert("GPS", `Locating stores in ${stateName}…`)}

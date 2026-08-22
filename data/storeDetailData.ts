@@ -26,7 +26,15 @@ export interface StoreDetail {
   category:     string;
   icon:         string;   // Ionicons glyph
   heroBg:       string;   // hero background color
+  /**
+   * Shop / flat number — the part a customer collecting a pickup order
+   * navigates by, and the one no map lookup can supply. Optional because a
+   * shop in a market row genuinely has none, and because stores registered
+   * before migration 0051 have no address at all.
+   */
+  door?:        string;
   address:      string;
+  landmark?:    string;
   city:         string;
   state:        string;
   pincode:      string;
@@ -766,6 +774,18 @@ export const MOCK_STORES: Record<string, StoreDetail> = {
 // Fallback for unknown IDs
 export const DEFAULT_STORE_ID = "s1";
 
-export function getStoreById(id: string): StoreDetail {
-  return MOCK_STORES[id] ?? MOCK_STORES[DEFAULT_STORE_ID];
+/**
+ * The bundled demo store for an id, or UNDEFINED when there is none.
+ *
+ * 🔴 This used to end `?? MOCK_STORES[DEFAULT_STORE_ID]`, so every id it did
+ * not recognise — which is EVERY real store — silently returned the demo shop
+ * in Pune. A real kirana in Jalgaon whose live data failed to load rendered
+ * with the demo store's city, address, hours and hero image, presented as its
+ * own. Nothing in the UI could tell the difference.
+ *
+ * Returning undefined forces each caller to decide what to do when a store is
+ * unknown. That decision is always "say so", never "show a different shop".
+ */
+export function getStoreById(id: string): StoreDetail | undefined {
+  return MOCK_STORES[id];
 }

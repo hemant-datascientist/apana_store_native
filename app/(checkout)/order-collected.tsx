@@ -28,6 +28,7 @@ import {
   COLLECTED_CONFIG, MOCK_AGENTS,
 } from "../../data/orderCollectedData";
 import { StoreOrderResult } from "../../services/checkoutService";
+import { buildTrackingUrl } from "./order-tracking";
 
 import HandshakeHero    from "../../components/order-collected/HandshakeHero";
 import HandshakeDetails from "../../components/order-collected/HandshakeDetails";
@@ -44,6 +45,7 @@ export default function OrderCollectedScreen() {
   // is absent we fall back to "Back to Home".
   const {
     orderId:                  orderIdParam,
+    serverOrderId:            serverOrderIdParam,
     storeOrderId:             storeOrderIdParam,
     storeId:                  storeIdParam,
     mode:                     modeParam,
@@ -54,6 +56,7 @@ export default function OrderCollectedScreen() {
     trackingSequenceJson:     trackingSequenceParam    = "",
   } = useLocalSearchParams<{
     orderId?:                  string;
+    serverOrderId?:            string;
     storeOrderId?:             string;
     storeId?:                  string;
     mode?:                     string;
@@ -66,6 +69,10 @@ export default function OrderCollectedScreen() {
 
   const mode         = (modeParam ?? "pickup") as FulfillmentMode;
   const orderId      = orderIdParam      ?? "APX000001";
+  // The real backend id of THIS confirmed order — the per-store id for
+  // pickup, the master order's for delivery/ride. Needed downstream by
+  // /invoice, which fetches by primary key and cannot use orderId (display).
+  const serverOrderId = serverOrderIdParam ?? "";
   // storeOrderId and storeId are set for pickup (per-store handshake), null for delivery/ride
   const storeOrderId = storeOrderIdParam ?? null;
   const storeId      = storeIdParam      ?? null;
@@ -203,7 +210,10 @@ export default function OrderCollectedScreen() {
                 ? `storeOrderId=${storeOrderId}`
                 : `orderId=${orderId}`;
               const sid = storeId ? `&storeId=${storeId}` : "";
-              router.push(`/invoice?${idPart}${sid}` as any);
+              // The real id — /invoice fetches by primary key, and neither
+              // idPart value above is one.
+              const srv = serverOrderId ? `&serverOrderId=${serverOrderId}` : "";
+              router.push(`/invoice?${idPart}${sid}${srv}` as any);
             }}
             activeOpacity={0.8}
           >
@@ -222,15 +232,25 @@ export default function OrderCollectedScreen() {
                 // Always return to tracking — even if all stores are
                 // collected — so the customer sees the "Order Complete"
                 // state with all rows ✓ before going home.
-                const so  = encodeURIComponent(trackingStoreOrdersParam || "[]");
-                const vis = encodeURIComponent(JSON.stringify(updatedVisited));
-                const seq = trackingSequenceParam
-                  ? `&sequenceJson=${encodeURIComponent(trackingSequenceParam)}`
-                  : "";
-                router.replace(
-                  `/order-tracking?mode=pickup&orderId=${orderId}&total=${totalAmt}` +
-                  `&storeOrdersJson=${so}&visitedJson=${vis}${seq}` as any,
-                );
+                //
+                // 🔴 serverOrderId used to be dropped here — this screen HAS
+                // it (used one button up, for View Invoice) but the hand-built
+                // URL below never included it. Losing it flips isRealOrder
+                // back to false on the tracking screen, and the ETA card +
+                // live map (both rendered for pickup too, not just delivery)
+                // silently fall back to the mock feed for the rest of a real
+                // order — exactly the bug the serverOrderId threading was
+                // built to eliminate. buildTrackingUrl already knows how to
+                // append it; reuse it instead of a third hand-rolled string.
+                router.replace(buildTrackingUrl({
+                  mode: "pickup",
+                  orderId,
+                  serverOrderId,
+                  total: String(totalAmt),
+                  storeOrdersJson: trackingStoreOrdersParam || "[]",
+                  visitedJson: JSON.stringify(updatedVisited),
+                  sequenceJson: trackingSequenceParam || undefined,
+                }) as any);
               } else {
                 router.replace("/(tabs)");
               }

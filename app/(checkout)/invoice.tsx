@@ -30,6 +30,7 @@ import useTheme        from "../../theme/useTheme";
 import { typography }  from "../../theme/typography";
 import { formatInvoiceDate } from "../../data/invoiceData";
 import { fetchInvoice, Invoice } from "../../services/invoiceService";
+import { useAuth } from "../../context/AuthContext";
 
 import InvoiceHeader     from "../../components/invoice/InvoiceHeader";
 import InvoiceMeta       from "../../components/invoice/InvoiceMeta";
@@ -42,11 +43,13 @@ export default function InvoiceScreen() {
   const { colors, isDark } = useTheme();
   const router             = useRouter();
 
-  const { orderId, storeOrderId, storeId } = useLocalSearchParams<{
-    orderId?:      string;
-    storeOrderId?: string;
-    storeId?:      string;
+  const { orderId, storeOrderId, storeId, serverOrderId } = useLocalSearchParams<{
+    orderId?:       string;
+    storeOrderId?:  string;
+    storeId?:       string;
+    serverOrderId?: string;
   }>();
+  const { user } = useAuth();
 
   // ── Fetch invoice from service ────────────────────────────
   const [invoice,  setInvoice]  = useState<Invoice | null>(null);
@@ -59,13 +62,13 @@ export default function InvoiceScreen() {
     setFetchErr(null);
 
     // storeId gives the correct store name regardless of generated order IDs
-    fetchInvoice({ storeId, storeOrderId, orderId })
+    fetchInvoice({ storeId, storeOrderId, orderId, serverOrderId, customerId: user?.phone ?? undefined })
       .then(inv => { if (!cancelled) setInvoice(inv); })
       .catch(err => { if (!cancelled) setFetchErr(err?.message ?? "Failed to load invoice"); })
       .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
-  }, [storeOrderId, orderId]);
+  }, [storeOrderId, orderId, serverOrderId, user?.phone]);
 
   // ── Pre-build share text (only when invoice is loaded) ────
   const shareText = useMemo(() => {
@@ -162,7 +165,7 @@ export default function InvoiceScreen() {
             onPress={() => {
               setLoading(true);
               setFetchErr(null);
-              fetchInvoice({ storeId, storeOrderId, orderId })
+              fetchInvoice({ storeId, storeOrderId, orderId, serverOrderId, customerId: user?.phone ?? undefined })
                 .then(inv => setInvoice(inv))
                 .catch(err => setFetchErr(err?.message ?? "Failed to load invoice"))
                 .finally(() => setLoading(false));

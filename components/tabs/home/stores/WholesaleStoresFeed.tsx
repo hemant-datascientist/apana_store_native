@@ -10,6 +10,7 @@
 // ============================================================
 
 import React, { useMemo } from "react";
+import { openDirections } from "../../../../lib/openDirections";
 import { View, Text, Alert, StyleSheet, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { typography } from "../../../../theme/typography";
@@ -21,7 +22,6 @@ import {
 import { useStoreBucket } from "../../../../hooks/useStoreBucket";
 import { toCardData } from "../../../../services/storeBucketService";
 import { buildHeroStores, sortByDistance, BannerableStore, HeroStore } from "../../../../lib/storeBanner";
-import { getStoreById } from "../../../../data/storeDetailData";
 import WholesaleHeroBanner from "./WholesaleHeroBanner";
 import NearbyHeroBanner    from "./NearbyHeroBanner";
 import StoreListCard       from "./StoreListCard";
@@ -53,11 +53,13 @@ export default function WholesaleStoresFeed() {
   }
 
   function handlePromoPress(promo: WholesalePromo) {
-    Alert.alert(promo.brandName, "Wholesale offer page coming soon.");
+    Alert.alert(promo.brandName, "This is a category banner, not an offer — there is no offer page behind it.");
   }
 
-  function handleDirection(store: { id: string; name: string }) {
-    Alert.alert("Direction", `Getting directions to ${store.name} — coming soon.`);
+  // Real Mappls navigation. openDirections says so honestly when the shop
+  // never set a pin — it does NOT fall back to a city centre.
+  function handleDirection(store: { id: string; name: string; lat?: number; lng?: number }) {
+    void openDirections(store.lat, store.lng, store.name);
   }
 
   function handleStorePress(store: { id: string; name: string }) {

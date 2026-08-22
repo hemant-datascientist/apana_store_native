@@ -65,6 +65,9 @@ export const SERVICE_PROMOS: ServicePromo[] = [
 // ── Service Store Cards ────────────────────────────────────────
 
 export interface ServiceStore {
+  /** Shop pin from the server; absent when it never set one. */
+  lat?: number;
+  lng?: number;
   id:           string;
   name:         string;
   // ASC §16 service-type badge — same tag system as the map / Nearby cards
