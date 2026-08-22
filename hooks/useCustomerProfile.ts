@@ -42,6 +42,45 @@ export interface ProfileState {
   reload: () => Promise<void>;
 }
 
+/**
+ * Write a customer's details WITHOUT the hook.
+ *
+ * 🔴 Registration collected a name and an email, put them in AuthContext, and
+ * never sent them anywhere. `customer_db.customers` kept `name: null,
+ * email: null`, so the moment the app read the SERVER copy — Edit Profile, a
+ * reinstall, a second device — the details a customer had typed at signup were
+ * simply gone. Only the phone survived, because the phone IS the identity.
+ *
+ * Standalone rather than the hook below because the caller is the OTP screen:
+ * it knows the phone from the verification it just completed, while the hook
+ * reads it from an AuthContext that has not re-rendered yet.
+ *
+ * Returns false instead of throwing — a profile write must never be able to
+ * fail a sign-in that has already succeeded. The details stay editable in
+ * Profile either way.
+ */
+export async function saveCustomerProfile(
+  phone: string,
+  patch: { name?: string | null; email?: string | null },
+): Promise<boolean> {
+  if (!IS_LIVE || !phone) return false;
+  // Nothing worth sending — do not spend a round-trip writing two nulls over
+  // whatever is already there.
+  const name = patch.name?.trim() || null;
+  const email = patch.email?.trim() || null;
+  if (!name && !email) return false;
+  try {
+    const res = await fetch(`${BASE_URL}/me`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ customer_id: phone, ...(name ? { name } : {}), ...(email ? { email } : {}) }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 export function useCustomerProfile(): ProfileState {
   const { user } = useAuth();
   const phone = user?.phone ?? "";

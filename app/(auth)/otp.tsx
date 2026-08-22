@@ -6,18 +6,16 @@
 //   → Single OTP step → login() → tabs
 //
 // REGISTER flow (from /create-account):
-//   params: { flow:"register", name, phone, phoneDisplay, email }
-//   → Step 1: Verify phone OTP
-//   → Step 2: Verify email OTP
-//   → login() with full user (name + phone + email) → tabs
+//   params: { flow:"register", name, phone, phoneDisplay, email?, devOtp? }
+//   → ONE step: verify the phone OTP → login() → tabs
+//   Email is optional profile data and is NOT verified — there is no email
+//   provider, so a mandatory email OTP made signup impossible to finish.
 //
-// Backend:
-//   POST /auth/send-otp    { phone|email, app:"customer" }
-//   POST /auth/verify-otp  { method, contact, otp, session_token }
-//   POST /auth/register    { name, phone, email, phone_otp, email_otp }
-//   → { access_token, refresh_token, user }
+// Backend (what actually exists — the endpoints named here before did not):
+//   POST /api/auth/otp/send    { identifier, channel:"sms"|"email" }
+//   POST /api/auth/otp/verify  { identifier, otp, role } → { token, role }
 //
-// Components: AuthHeader, StepIndicator, OtpIcon, OtpContactDisplay,
+// Components: AuthHeader, OtpIcon, OtpContactDisplay,
 //             OtpInputRow, TimerResend, VerifyButton, WrongContactLink
 // ============================================================
 
@@ -32,8 +30,8 @@ import useTheme              from "../../theme/useTheme";
 import { useAuth, AuthUser } from "../../context/AuthContext";
 import { useLocation }       from "../../context/LocationContext";
 import { sendOtp, verifyOtp, toE164 } from "../../services/authService";
+import { saveCustomerProfile } from "../../hooks/useCustomerProfile";
 import AuthHeader          from "../../components/auth/AuthHeader";
-import StepIndicator       from "../../components/otp/StepIndicator";
 import OtpIcon             from "../../components/otp/OtpIcon";
 import OtpContactDisplay   from "../../components/otp/OtpContactDisplay";
 import OtpInputRow         from "../../components/otp/OtpInputRow";
@@ -62,17 +60,17 @@ export default function OtpScreen() {
 
   const isRegister = flow === "register";
 
-  // ── Two-step state (register only) ───────────────────────────
-  const [verifyStep,    setVerifyStep]    = useState<"phone" | "email">("phone");
-  const [phoneVerified, setPhoneVerified] = useState(false);
+  // Registration is ONE step now — the phone, which is the identity. The email
+  // half was removed above; this stays a constant so the display helpers that
+  // branch on it keep reading straightforwardly.
+  const verifyStep = "phone" as const;
 
-  // ── Derive current target contact from flow + step ───────────
-  const currentMethod  = isRegister ? verifyStep     : (method  ?? "phone");
-  const currentContact = isRegister
-    ? (verifyStep === "phone" ? (phone ?? "") : (email ?? ""))
-    : (contact ?? "");
+  // ── Derive the contact being verified ────────────────────────
+  // Register always verifies the phone; login verifies whatever it was given.
+  const currentMethod  = isRegister ? "phone" : (method ?? "phone");
+  const currentContact = isRegister ? (phone ?? "") : (contact ?? "");
   const currentDisplay = isRegister
-    ? (verifyStep === "phone" ? (phoneDisplay ?? phone ?? "") : (email ?? ""))
+    ? (phoneDisplay ?? phone ?? "")
     : (display ?? contact ?? "");
 
   // ── OTP digit state ───────────────────────────────────────────
@@ -111,10 +109,9 @@ export default function OtpScreen() {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [startTimer]);
 
-  // Re-focus first box when step changes in register flow
-  useEffect(() => {
-    if (isRegister) setTimeout(() => inputRefs.current[0]?.focus(), 300);
-  }, [verifyStep, isRegister]);
+  // Existed to re-focus when the flow moved from the phone step to the email
+  // step. There is only one step now, and the mount effect above already
+  // focuses the first box.
 
   // ── Input handlers ────────────────────────────────────────────
   function handleChange(text: string, index: number) {
@@ -146,16 +143,6 @@ export default function OtpScreen() {
     }
   }
 
-  // ── Advance register flow to email step ───────────────────────
-  async function advanceToEmailStep() {
-    const target = (email ?? "").trim();
-    const res = await sendOtp(target, "email");
-    setPhoneVerified(true);
-    setVerifyStep("email");
-    setDigits(res.devOtp ? prefillDigits(res.devOtp) : Array(OTP_LENGTH).fill(""));
-    startTimer();
-  }
-
   // With the mock provider the code comes back in the send response, so a
   // tester never waits for an SMS that is never sent. Absent with a real
   // provider and absent in production.
@@ -171,12 +158,17 @@ export default function OtpScreen() {
     try {
       const otp = digits.join("");
 
-      if (isRegister && verifyStep === "phone") {
-        // Phone step of registration: verify it, then move to the email step.
-        await verifyOtp(toE164(currentContact), otp);
-        await advanceToEmailStep();
-        return;
-      }
+      // 🔴 REGISTRATION USED TO DEMAND A SECOND OTP, SENT TO EMAIL.
+      //
+      // No email provider exists — the OTP module logs to stdout for the mock
+      // provider and has a bare `// TODO V2` for the real one — so that second
+      // step could never be completed by a real person, and signup could never
+      // finish. It also threw away the token that the PHONE verification had
+      // just returned, then took its session from the email step instead.
+      //
+      // The phone is the identity in V1 (orders and addresses key off it), so
+      // verifying it is what actually matters. Email is kept as profile data,
+      // unverified, exactly as the backend models it (customers.email nullable).
 
       // The identifier the SERVER will know this person by. It is the customer
       // id used by orders and saved addresses, so it must be the canonical form
@@ -197,6 +189,21 @@ export default function OtpScreen() {
         avatar_url: null,
         is_new:     isRegister,
       };
+
+      // PERSIST THE DETAILS THEY JUST TYPED.
+      //
+      // Registration collected a name and an email and only ever put them in
+      // AuthContext — local storage on one device. The server row stayed
+      // `name: null, email: null`, so Edit Profile showed empty fields and a
+      // reinstall lost them entirely. The phone survived only because it IS
+      // the identity.
+      //
+      // Not awaited into the sign-in path's success: this must not be able to
+      // fail a login that already worked. It returns false rather than
+      // throwing, and the fields stay editable in Profile.
+      if (isRegister) {
+        void saveCustomerProfile(identifier, { name: name ?? null, email: email ?? null });
+      }
 
       // Refresh tokens are a V2 concern; the access token is the real one now.
       await login(authUser, { access: token, refresh: "" });
@@ -233,10 +240,7 @@ export default function OtpScreen() {
     }
   }
 
-  // ── Header title changes by flow + step ──────────────────────
-  const headerTitle = isRegister
-    ? (verifyStep === "phone" ? "Verify Mobile" : "Verify Email")
-    : "Verify OTP";
+  const headerTitle = isRegister ? "Verify Mobile" : "Verify OTP";
 
   return (
     <KeyboardAvoidingView
@@ -251,10 +255,9 @@ export default function OtpScreen() {
       {/* ── Body ── */}
       <View style={styles.body}>
 
-        {/* Step indicator (register flow only) */}
-        {isRegister && (
-          <StepIndicator step={verifyStep} phoneVerified={phoneVerified} />
-        )}
+        {/* No step indicator: registration is a single verification now. A
+            "1 of 2" chevron promising an email step that cannot be delivered
+            was part of what made signup feel broken. */}
 
         {/* Icon */}
         <OtpIcon method={currentMethod} />

@@ -35,7 +35,16 @@ export const API_BASE_URL =
 
 // ── Auth middleware — pulls JWT from AsyncStorage every request ──
 // Async middleware avoids stale tokens after login/logout.
-const TOKEN_KEY = "apana_auth_token";
+//
+// 🔴 This used to be "apana_auth_token" — a key nothing ever wrote. The real
+// login flow (context/AuthContext.tsx STORAGE_KEYS.access) has always stored
+// the token under "apana_access_token". setAuthToken/clearAuthToken below are
+// dead code (nothing calls them; login/logout write AsyncStorage directly in
+// AuthContext), so this file's own token storage was never exercised either
+// way — getAuthToken() always returned null, and every request through the
+// authMiddleware went out with no Authorization header. reviewService.ts is
+// the one live caller of getAuthToken(); its store-review POST always 401'd.
+const TOKEN_KEY = "apana_access_token";
 
 const authMiddleware: Middleware = {
   async onRequest({ request }) {

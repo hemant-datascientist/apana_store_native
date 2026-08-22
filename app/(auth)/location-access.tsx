@@ -16,8 +16,7 @@
 //     → tap suggestion → UserAddress
 //     → confirmLocation() → /(tabs)
 //
-//   "Skip for now"
-//     → confirmLocation(default) → /(tabs)
+// There is NO skip: every surface behind this screen needs a location.
 //
 // Backend:
 //   PUT /api/customer/active-address  { lat, lng, city, ... }
@@ -32,7 +31,7 @@ import { useRouter }      from "expo-router";
 import useTheme           from "../../theme/useTheme";
 import { typography }     from "../../theme/typography";
 import { useLocation }    from "../../context/LocationContext";
-import { UNSET_ADDRESS, UserAddress } from "../../data/addressData";
+import { UserAddress } from "../../data/addressData";
 import {
   autosuggest, reverseGeocode, PlaceSuggestion,
 } from "../../services/mapplsService";
@@ -41,7 +40,6 @@ import AllowLocationButton   from "../../components/location/AllowLocationButton
 import OrDivider             from "../../components/shared/OrDivider";
 import LocationSearchInput   from "../../components/location/LocationSearchInput";
 import PlaceSuggestionList   from "../../components/location/PlaceSuggestionList";
-import SkipLocationLink      from "../../components/location/SkipLocationLink";
 
 const DEBOUNCE_MS = 350;
 
@@ -131,13 +129,18 @@ export default function LocationAccessScreen() {
     proceed(addr);
   }
 
-  // ── Skip — enter the app with NO location set ────────────────
-  // This used to confirm a bundled Pune address as the customer's real
-  // location. Skipping now means skipping: the header prompts them to set
-  // one, and checkout refuses delivery until they do.
-  function handleSkip() {
-    proceed(UNSET_ADDRESS);
-  }
+  // 🔴 "SKIP FOR NOW" IS GONE, DELIBERATELY.
+  //
+  // It called proceed(UNSET_ADDRESS), which marks location "ready" and enters
+  // the app with no coordinates at all. Every surface behind this screen is
+  // answered by a location: the nearby feed is an H3 ring around a point,
+  // delivery distance and ETA are measured from one, and store discovery
+  // returns literally nothing without one. Skipping produced a home screen of
+  // empty feeds that read as a broken app rather than an unconfigured one.
+  //
+  // There is no honest "later" here — the app cannot show a single relevant
+  // shop until it knows where the customer is. Location is the first question
+  // because it is the one every other answer depends on.
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -185,8 +188,6 @@ export default function LocationAccessScreen() {
             onSelect={handleSelect}
           />
 
-          {/* ── Skip link ── */}
-          <SkipLocationLink onSkip={handleSkip} />
         </ScrollView>
       </SafeAreaView>
     </View>

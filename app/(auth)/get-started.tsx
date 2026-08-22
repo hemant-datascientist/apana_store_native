@@ -29,7 +29,6 @@ const { width: SW } = Dimensions.get("window");
 
 export default function GetStartedScreen() {
   const router          = useRouter();
-  const { skipAsGuest }   = useAuth();
   const { colors }        = useTheme();
   const { locationReady } = useLocation();
 
@@ -42,9 +41,12 @@ export default function GetStartedScreen() {
     setSlideIdx(idx);
   }
 
+  // Skips the ONBOARDING SLIDES, not the account. It used to call
+  // skipAsGuest() and drop straight into the app with no session — which is
+  // how a home screen appeared without anyone logging in, and why Profile had
+  // no name or number to show.
   function handleSkip() {
-    skipAsGuest();
-    router.replace(locationReady ? "/(tabs)" : "/location-access");
+    router.replace("/(auth)/login");
   }
 
   function handleGetStarted() {

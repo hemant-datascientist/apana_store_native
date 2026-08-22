@@ -3,12 +3,12 @@
 //
 // Bottom section of the Get Started screen:
 //   • "Get Started" primary button → navigates to /login
-//   • "Skip, browse as guest" text link → guest mode
+//   • secondary link → the login screen (guest mode removed)
 //   • Terms of Service + Privacy Policy disclaimer
 //
 // Props:
 //   onGetStarted — tapping "Get Started"
-//   onSkip       — tapping "Skip, browse as guest"
+//   onSkip       — go straight to the login screen
 // ============================================================
 
 import React from "react";
@@ -51,14 +51,14 @@ export default function BottomActions({ onGetStarted, onSkip }: BottomActionsPro
         <Ionicons name="arrow-forward" size={18} color={colors.white} />
       </TouchableOpacity>
 
-      {/* ── Secondary: Skip / guest mode ── */}
+      {/* Skips the SLIDES, not the account — guest mode is gone. */}
       <TouchableOpacity style={styles.skipBtn} activeOpacity={0.7} onPress={onSkip}>
         <Text style={[styles.skipText, {
           color:      colors.subText,
           fontFamily: typography.fontFamily.regular,
           fontSize:   typography.size.sm,
         }]}>
-          Skip, browse as guest
+          I already have an account
         </Text>
       </TouchableOpacity>
 

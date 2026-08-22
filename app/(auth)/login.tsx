@@ -13,7 +13,7 @@
 //
 // Components: AuthHeader, WelcomeBlock, MethodToggle, PhoneInput,
 //             EmailInput, InputHint, SendOtpButton, CreateAccountLink,
-//             OrDivider, GuestModeCard, AuthTerms
+//             OrDivider, AuthTerms
 // ============================================================
 
 import React, { useState, useRef } from "react";
@@ -36,7 +36,6 @@ import InputHint            from "../../components/auth/InputHint";
 import SendOtpButton        from "../../components/auth/SendOtpButton";
 import CreateAccountLink    from "../../components/auth/CreateAccountLink";
 import OrDivider            from "../../components/shared/OrDivider";
-import GuestModeCard        from "../../components/auth/GuestModeCard";
 import AuthTerms            from "../../components/auth/AuthTerms";
 
 type Method = "phone" | "email";
@@ -46,7 +45,7 @@ function isValidEmail(v: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); 
 
 export default function LoginScreen() {
   const router          = useRouter();
-  const { skipAsGuest }   = useAuth();
+
   const { colors }        = useTheme();
   const { locationReady } = useLocation();
 
@@ -98,10 +97,11 @@ export default function LoginScreen() {
     }
   }
 
-  function handleSkip() {
-    skipAsGuest();
-    router.replace(locationReady ? "/(tabs)" : "/location-access");
-  }
+  // 🔴 GUEST MODE IS GONE. It entered the app with no account at all, so the
+  // home screen loaded and Profile showed an empty name, no number and no
+  // orders — because there was nobody to show. Everything this app does is
+  // keyed to a phone: orders, addresses, the cart it checks out. A browse-only
+  // mode is a real product option, but it has to be BUILT as one; it was not.
 
   return (
     <KeyboardAvoidingView
@@ -153,7 +153,6 @@ export default function LoginScreen() {
         <OrDivider />
 
         {/* ── Guest mode ── */}
-        <GuestModeCard onPress={handleSkip} />
 
         <AuthTerms action="signing in" />
       </ScrollView>

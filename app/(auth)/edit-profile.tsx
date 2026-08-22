@@ -135,7 +135,7 @@ export default function EditProfileScreen() {
         {/* ── Avatar + camera badge ── */}
         <AvatarSection
           name={name}
-          onCamera={() => Alert.alert("Change Photo", "Photo upload coming soon.")}
+          onCamera={() => Alert.alert("Profile photo", "Apana can't store a profile photo yet, so there is nothing to upload to.")}
         />
 
         {/* ── Editable fields group ── */}

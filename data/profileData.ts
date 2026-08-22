@@ -108,6 +108,10 @@ export const SETTING_GROUPS: SettingGroup[] = [
     items: [
       { key: "coverage",      label: "Store Coverage",    icon: "navigate-circle-outline" },
       { key: "notifications", label: "Notifications",     icon: "notifications-outline"   },
+      // Tapping flips it in place; the badge carries On/Off. Uses the same
+      // badge-on-a-press-row pattern as "coverage" above rather than
+      // introducing a toggle control this list has never had.
+      { key: "sounds",        label: "Sounds",            icon: "volume-high-outline"     },
       { key: "language",      label: "Language",          icon: "language-outline"        },
       { key: "appearance",    label: "Appearance",        icon: "color-palette-outline"   },
       { key: "connect",       label: "Connect to backend", icon: "qr-code-outline"        },

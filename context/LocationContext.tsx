@@ -26,8 +26,31 @@ import { fetchAddresses, ADDRESSES_LIVE } from "../services/addressService";
 import { useAuth } from "./AuthContext";
 
 // ── Storage keys ──────────────────────────────────────────────
-const KEY_ADDRESS  = "@apana_store:active_address";
-const KEY_READY    = "@apana_store:location_ready";
+//
+// 🔴 BUMPED TO v2 TO ABANDON WHAT OLDER BUILDS PERSISTED.
+//
+// Two earlier behaviours wrote state that is now actively wrong, and both
+// survive an app update because they live in AsyncStorage:
+//
+//   1. "Skip for now" confirmed a BUNDLED PUNE ADDRESS as the customer's real
+//      location. A shopkeeper in Jalgaon who once tapped Skip still has Pune
+//      saved, and every screen believes it.
+//   2. A later Skip set location_ready = "true" while storing no coordinates
+//      at all, so the launch gate saw "ready" and let the app in with nothing
+//      to query.
+//
+// Changing the KEY is the fix rather than a migration: there is nothing in the
+// old value worth keeping — it is either a demo city or an empty claim — and a
+// key bump cannot half-succeed the way a field-by-field migration can. Same
+// reasoning as the cart's apana_cart_v3 bump.
+const KEY_ADDRESS  = "@apana_store:active_address_v2";
+const KEY_READY    = "@apana_store:location_ready_v2";
+// Dropped once at hydration so a device upgrading does not carry the dead
+// payload around forever.
+const LEGACY_LOCATION_KEYS = [
+  "@apana_store:active_address",
+  "@apana_store:location_ready",
+];
 
 // ── Context shape ─────────────────────────────────────────────
 interface LocationContextValue {
@@ -135,8 +158,22 @@ export function LocationProvider({ children }: { children: ReactNode }) {
           AsyncStorage.getItem(KEY_ADDRESS),
           AsyncStorage.getItem(KEY_READY),
         ]);
-        if (addrJson)  setSelectedAddressState(JSON.parse(addrJson));
-        if (readyStr === "true") setLocationReadyState(true);
+        // Fire-and-forget: failing to clean up must not delay hydration.
+        AsyncStorage.multiRemove(LEGACY_LOCATION_KEYS).catch(() => {});
+
+        // READY MEANS "WE HAVE COORDINATES", NOT "A FLAG WAS SET".
+        //
+        // The flag alone was the bug: an older Skip wrote ready=true with no
+        // point, so the app entered with nothing it could query and the home
+        // feed looked broken. A location is only usable if it can actually be
+        // used — i.e. it has a finite lat/lng to build an H3 ring around.
+        const addr = addrJson ? (JSON.parse(addrJson) as UserAddress) : null;
+        const hasPoint =
+          addr != null &&
+          typeof addr.lat === "number" && Number.isFinite(addr.lat) &&
+          typeof addr.lng === "number" && Number.isFinite(addr.lng);
+        if (addr) setSelectedAddressState(addr);
+        if (readyStr === "true" && hasPoint) setLocationReadyState(true);
       } catch {
         // AsyncStorage failure — silently fall back to defaults
       } finally {
@@ -152,13 +189,32 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   }
 
   // ── Set address AND mark location as confirmed ────────────────
+  // "Ready" can only ever mean "we have a point to search from".
+  //
+  // This used to mark ready for ANY address handed to it, which is how the old
+  // "Skip for now" — confirmLocation(UNSET_ADDRESS) — left the app believing it
+  // had a location while holding no coordinates. The launch gate then let the
+  // customer into a home screen whose every feed needs a lat/lng.
+  //
+  // Guarded here, at the single writer, rather than at each caller: a caller
+  // that forgets is exactly how the flag and the fact drifted apart before.
   function confirmLocation(addr: UserAddress) {
+    const hasPoint =
+      typeof addr.lat === "number" && Number.isFinite(addr.lat) &&
+      typeof addr.lng === "number" && Number.isFinite(addr.lng);
+
     setSelectedAddressState(addr);
-    setLocationReadyState(true);
-    Promise.all([
-      AsyncStorage.setItem(KEY_ADDRESS, JSON.stringify(addr)),
-      AsyncStorage.setItem(KEY_READY, "true"),
-    ]).catch(() => {});
+    setLocationReadyState(hasPoint);
+
+    const writes: Promise<void>[] = [AsyncStorage.setItem(KEY_ADDRESS, JSON.stringify(addr))];
+    // An address with no point is still worth REMEMBERING (the customer typed
+    // it); it just cannot unlock the app.
+    writes.push(
+      hasPoint
+        ? AsyncStorage.setItem(KEY_READY, "true")
+        : AsyncStorage.removeItem(KEY_READY),
+    );
+    Promise.all(writes).catch(() => {});
   }
 
   // ── Reset (for dev / logout flows) ───────────────────────────

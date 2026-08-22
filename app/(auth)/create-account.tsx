@@ -34,6 +34,7 @@ import PhoneFormField           from "../../components/auth/PhoneFormField";
 import CreateAccountButton      from "../../components/auth/CreateAccountButton";
 import SignInLink               from "../../components/auth/SignInLink";
 import AuthTerms                from "../../components/auth/AuthTerms";
+import { sendOtp, toE164 }      from "../../services/authService";
 
 function isValidPhone(v: string) { return /^[6-9]\d{9}$/.test(v.replace(/\s/g, "")); }
 function isValidEmail(v: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
@@ -59,23 +60,36 @@ export default function CreateAccountScreen() {
   async function handleCreateAccount() {
     if (!canSubmit) return;
     setLoading(true);
+    const e164 = toE164(phone);
     try {
-      // TODO: POST /auth/register { name: name.trim(), email, phone: "+91...", app:"customer" }
-      await new Promise(r => setTimeout(r, 800));
+      // 🔴 THIS SCREEN NEVER SENT THE CODE THE NEXT SCREEN ASKS FOR.
+      //
+      // It slept 800 ms behind a `// TODO: POST /auth/register` and navigated to
+      // the OTP boxes anyway — toward an endpoint that has never existed. The
+      // customer sat in front of six empty boxes waiting for an SMS nobody had
+      // requested, and verify then 401'd because no OTP had ever been generated.
+      // That is the whole "I can't create an account" report: not a signup that
+      // was rejected, a signup that could never begin.
+      const { devOtp } = await sendOtp(e164, "sms");
 
-      // Pass all contacts — OTP screen handles step 1 (phone) then step 2 (email)
       router.push({
         pathname: "/otp",
         params: {
           flow:         "register",
           name:         name.trim(),
-          phone:        `+91${phone.replace(/\s/g, "")}`,
+          phone:        e164,
           phoneDisplay: `+91 ${phone.slice(0, 5)} ${phone.slice(5)}`,
-          email:        email.trim(),
+          // "" would be stored as a value; absence is the honest form for a
+          // field the customer chose not to give.
+          email:        email.trim() || undefined,
+          // The mock provider returns the code in dev, so testing needs no SMS.
+          ...(devOtp ? { devOtp } : {}),
         },
       });
-    } catch {
-      Alert.alert("Error", "Could not send OTP. Please try again.");
+    } catch (e) {
+      // The server's own words are the useful ones — "Too many codes requested.
+      // Try again in 12 min." tells them what to do; "Error" does not.
+      Alert.alert("Could not send code", e instanceof Error ? e.message : "Please try again.");
     } finally {
       setLoading(false);
     }
