@@ -38,6 +38,9 @@ import { CoverageProvider } from "../context/CoverageContext";
 import { AuthProvider }     from "../context/AuthContext";
 import { CartProvider }     from "../context/CartContext";
 import { loadOverride }     from "../lib/backendOverride";
+import { initSound }        from "../lib/sound";
+import ErrorBoundary        from "../components/ui/ErrorBoundary";
+import { ToastProvider }    from "../components/ui/Toast";
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
@@ -51,16 +54,38 @@ export default function RootLayout() {
   // Load a previously scanned backend override (no-op if none) before requests.
   useEffect(() => { loadOverride(); }, []);
 
+  // Read the sound preference once — playSound() reads it in memory so a
+  // scan beep never waits on storage.
+  useEffect(() => { void initSound(); }, []);
+
   // Failsafe font loader guard — doesn't lock app if font loading encounters an issue
   if (!fontsLoaded && !fontError) return null;
 
   return (
+    // ErrorBoundary OUTERMOST — deliberately outside ThemeProvider. A crash
+    // inside the theme itself must still land on a rendered fallback, and
+    // the boundary uses fixed colours precisely so it never depends on the
+    // thing that might have thrown.
+    <ErrorBoundary>
     <ThemeProvider>
       <AuthProvider>
         <LocationProvider>
           <CoverageProvider>
           <CartProvider>
-          <Stack screenOptions={{ headerShown: false }}>
+          {/* Toasts sit above the navigator so one survives a screen
+              change — the rollback message for an action must not vanish
+              because the action navigated somewhere. */}
+          <ToastProvider>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              // A consistent horizontal push for the whole app. expo-router's
+              // default varies by platform and group, so screens pushed from
+              // different stacks animated differently for no reason.
+              animation: "slide_from_right",
+              animationDuration: 220,
+            }}
+          >
             {/* Root redirect guard */}
             <Stack.Screen name="index"      />
             {/* Auth flow — get-started, login, otp, create-account, edit-profile */}
@@ -92,10 +117,12 @@ export default function RootLayout() {
             {/* Connect — scan backend /connect QR to point at a live tunnel */}
             <Stack.Screen name="connect"    />
           </Stack>
+          </ToastProvider>
           </CartProvider>
           </CoverageProvider>
         </LocationProvider>
       </AuthProvider>
     </ThemeProvider>
+    </ErrorBoundary>
   );
 }
