@@ -41,6 +41,7 @@ interface WireOrder {
   payment_status: string;
   fulfillment: string;
   delivery_address: Record<string, unknown> | null;
+  handover_code: string | null;
   items: WireItem[];
   created_at: string;
 }
@@ -119,6 +120,9 @@ function toOrder(w: WireOrder): Order {
     total: rupees(w.total_cents),
     status: STATUS_MAP[w.status] ?? "pending",
     deliveryAddress: addressLine(w.delivery_address),
+    // The server sends this reader's own half only; for a customer read that
+    // is the delivery code. Never the shop's pickup code.
+    handoverCode: w.handover_code ?? undefined,
     paymentMethod:
       w.payment_mode === "cod"
         ? "Cash on Delivery"

@@ -21,6 +21,7 @@ import useTheme           from "../../theme/useTheme";
 import { typography }     from "../../theme/typography";
 import { Order, ACTIVE_STATUSES } from "../../data/orderHistoryData";
 import OrderStatusBadge   from "./OrderStatusBadge";
+import DeliveryCodeCard   from "./DeliveryCodeCard";
 
 interface OrderCardProps {
   order:     Order;
@@ -114,6 +115,14 @@ export default function OrderCard({ order, onTrack, onReorder, onRate }: OrderCa
           </Text>
         </View>
       </View>
+
+      {/* The handover code, only while the goods are actually on their way.
+          A code shown before pickup has nothing to scan against, and one shown
+          after delivery is spent — both invite a customer to hold out a code
+          that does nothing while looking exactly like one that works. */}
+      {order.status === "picked_up" && order.handoverCode ? (
+        <DeliveryCodeCard code={order.handoverCode} />
+      ) : null}
 
       {/* ── Action row ── */}
       <View style={[styles.actionRow, { borderTopColor: colors.border }]}>

@@ -38,6 +38,22 @@ export interface Order {
   status:          OrderStatus;
   deliveryAddress: string;   // one-line summary
   paymentMethod:   string;   // display string
+
+  /**
+   * The DELIVERY code — the customer's half of the handover handshake.
+   *
+   * The rider scans this to complete the delivery, so it is proof the customer
+   * was actually there to receive the goods.
+   *
+   * 🔴 It is deliberately NOT on the tracking endpoint, which takes only an
+   * order id and no identity: a rider could otherwise read it off the API and
+   * mark an order delivered without ever meeting anyone. It arrives only on the
+   * customer's own phone-scoped order read.
+   *
+   * ⚠ Optional — orders placed before the handshake existed have none, and the
+   * mock rows have none either. Absent means 'no code', never an empty QR.
+   */
+  handoverCode?:   string;
 }
 
 // ── Status meta (label + theme key) ──────────────────────────
