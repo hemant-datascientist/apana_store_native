@@ -45,6 +45,10 @@ export interface LiveProductStore {
    *  apply. null = the shop set no threshold, so a deal is unconditional.
    *  Showing a deal price without this is a misleading price. */
   dealUnlockThreshold: number | null;
+  /** Trading right now. A closed shop is still shown — checkout refuses. */
+  isOpen: boolean;
+  /** "Closed · opens 09:00", or null when open. Never a bare flag to render. */
+  closedLabel: string | null;
 }
 
 // §23 — one sellable SKU of a product. `price`/`mrp` are null when the SKU
@@ -161,6 +165,10 @@ interface WireStore {
   city: string;
   asc_code: string | null;
   deal_unlock_threshold_cents?: number | null;
+  /** Is the shop trading right now. Absent on a stale server. */
+  is_open?: boolean;
+  /** "Closed · opens 09:00". Null when open. */
+  closed_label?: string | null;
 }
 interface WireVariant {
   id: string;
@@ -302,6 +310,16 @@ function toLiveProduct(w: WireProduct): LiveProduct {
       // rather than becoming 0, which would read as "no minimum".
       dealUnlockThreshold:
         w.store.deal_unlock_threshold_cents == null ? null : w.store.deal_unlock_threshold_cents / 100,
+      // 🔴 A closed shop is LISTED, not hidden — hiding it teaches the shopper
+      // that Apana has nothing near them, for a reason as ordinary as nine
+      // o'clock. Checkout is what refuses; this is what lets the card say so
+      // before they fill a basket they cannot order.
+      //
+      // ⚠ Defaults to OPEN when the field is absent. A server that predates
+      // this would otherwise make every shop in the country look shut — and
+      // the real gate is at checkout, which cannot be fooled by a stale client.
+      isOpen: w.store.is_open ?? true,
+      closedLabel: w.store.closed_label ?? null,
     },
   };
 }

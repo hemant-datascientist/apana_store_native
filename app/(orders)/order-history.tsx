@@ -20,6 +20,7 @@
 // ============================================================
 
 import React, { useState, useMemo, useCallback } from "react";
+import { useCart, cartRowId } from "../../context/CartContext";
 import {
   View, Text, ScrollView, Alert, StyleSheet, ActivityIndicator,
 } from "react-native";
@@ -40,7 +41,7 @@ import OrderCard        from "../../components/orders/OrderCard";
 import OrderEmptyState  from "../../components/orders/OrderEmptyState";
 import RateStoreSheet   from "../../components/orders/RateStoreSheet";
 import { submitStoreReview } from "../../services/reviewService";
-import { fetchOrderHistory, ORDERS_LIVE } from "../../services/orderHistoryService";
+import { fetchOrderHistory, fetchReorder, reorderLineReason, ORDERS_LIVE } from "../../services/orderHistoryService";
 import { useAuth } from "../../context/AuthContext";
 
 export default function OrderHistoryScreen() {
@@ -56,6 +57,9 @@ export default function OrderHistoryScreen() {
   const [orders,  setOrders]  = useState<Order[]>([]);
   const [loading, setLoading] = useState(ORDERS_LIVE);
   const [error,   setError]   = useState<string | null>(null);
+  // Which order is mid-reorder. A tap on a slow connection must not look dead.
+  const [reordering, setReordering] = useState<string | null>(null);
+  const { addItem } = useCart();
 
   const loadOrders = useCallback(() => {
     if (!ORDERS_LIVE || !customerId) { setOrders([]); setLoading(false); return; }
@@ -104,16 +108,88 @@ export default function OrderHistoryScreen() {
     );
   }
 
-  function handleReorder(order: Order) {
-    Alert.alert(
-      "Reorder",
-      `Add items from ${order.storeName} to your cart?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Reorder", onPress: () =>
-            Alert.alert("Added", "Items added to cart. (Backend integration pending)") },
-      ],
-    );
+  /**
+   * Buy that basket again.
+   *
+   * 🔴 THIS USED TO LIE. It said "Items added to cart. (Backend integration
+   * pending)" and added nothing — the customer went to their cart and found it
+   * exactly as they left it. A false confirmation is worse than a missing
+   * feature, because they stop looking for the thing that would have worked.
+   *
+   * The server reports what is still available at today's prices; the app adds
+   * those lines and NAMES the ones it could not. A basket that comes back one
+   * item short without saying so sends somebody to the counter for something
+   * that was never coming.
+   */
+  async function handleReorder(order: Order) {
+    if (!customerId) return;
+    setReordering(order.id);
+    try {
+      const r = await fetchReorder(order.id, customerId);
+
+      const usable = r.lines.filter((l) => l.available);
+      const missing = r.lines.filter((l) => !l.available);
+
+      if (usable.length === 0) {
+        Alert.alert(
+          "Nothing left to reorder",
+          missing.length > 0
+            ? `${r.seller_name} no longer has any of these:\n\n` +
+                missing
+                  .map((l) => `• ${l.name} — ${reorderLineReason(l) ?? "unavailable"}`)
+                  .join("\n")
+            : "This order has no items to add.",
+        );
+        return;
+      }
+
+      for (const line of usable) {
+        addItem({
+          storeId: r.seller_id,
+          storeName: r.seller_name,
+          storeType: order.storeCategory,
+          storeTypeColor: colors.primary,
+          storeTypeBg: colors.primary + "15",
+          fulfillment: order.mode === "pickup" ? "pickup" : "delivery",
+          item: {
+            id: cartRowId(line.product_id, line.variant_id),
+            productId: line.product_id,
+            variantId: line.variant_id,
+            name: line.name,
+            unit: "",
+            // Paise → rupees, like every other money field crossing this line.
+            price: (line.unit_price_cents ?? 0) / 100,
+            qty: line.qty,
+            maxQty: line.stock_qty ?? undefined,
+            icon: "cube-outline",
+            bg: colors.primary + "15",
+          },
+        });
+      }
+
+      // ⚠ The shop being SHUT is reported separately from stock. Both stop the
+      // order, and the customer's next move is different: wait, or buy
+      // elsewhere.
+      const closedNote = r.store_is_open
+        ? ""
+        : `\n\n${r.seller_name} is ${r.store_closed_reason ?? "closed"} — you can order once it opens.`;
+
+      Alert.alert(
+        missing.length === 0 ? "Added to cart" : "Added what is still available",
+        (missing.length === 0
+          ? `${usable.length} item${usable.length === 1 ? "" : "s"} from ${r.seller_name}.`
+          : `Added ${usable.length}. Not available:\n\n` +
+            missing
+              .map((l) => `• ${l.name} — ${reorderLineReason(l) ?? "unavailable"}`)
+              .join("\n")) + closedNote,
+      );
+    } catch {
+      // Never a silent failure: the customer is standing at an empty cart
+      // wondering whether the tap registered.
+      Alert.alert("Could not reorder", "Please check your connection and try again.");
+    } finally {
+      setReordering(null);
+    }
   }
 
   // Rate store — opens the sheet; submit posts to the review service. The BE

@@ -151,3 +151,69 @@ export async function fetchOrderHistory(
     clearTimeout(timer);
   }
 }
+
+// ============================================================
+// REORDER — what that basket would cost to buy again.
+//
+// A shop that never answers has its order auto-cancelled after two minutes.
+// Retyping the whole basket is that silence landing on the customer, which is
+// why this exists at all.
+//
+// 🔴 THE SERVER REPORTS, IT DOES NOT PLACE. It answers with today's prices and
+// what is still on the shelf; the app puts the available lines in the cart and
+// the customer checks out as normal. Placing it outright would charge whatever
+// the shelf now says and take stock nobody looked at.
+// ============================================================
+
+export interface ReorderLine {
+  product_id: string;
+  variant_id: string | null;
+  name: string;
+  qty: number;
+  unit_price_cents: number | null;
+  available: boolean;
+  reason: "delisted" | "out_of_stock" | "not_enough_stock" | null;
+  stock_qty: number | null;
+}
+
+export interface ReorderOut {
+  seller_id: string;
+  seller_name: string;
+  store_is_open: boolean;
+  store_closed_reason: string | null;
+  lines: ReorderLine[];
+  all_available: boolean;
+}
+
+export async function fetchReorder(
+  orderId: string,
+  customerId: string,
+): Promise<ReorderOut> {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);
+  try {
+    const url = `${API_BASE_URL}/orders/${orderId}/reorder?customer_id=${encodeURIComponent(
+      customerId,
+    )}`;
+    const res = await fetch(url, { signal: ctl.signal });
+    if (!res.ok) throw new Error(`reorder ${res.status}`);
+    return (await res.json()) as ReorderOut;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** What to tell the customer about a line that cannot be bought. */
+export function reorderLineReason(line: ReorderLine): string | null {
+  switch (line.reason) {
+    case "delisted":
+      return "no longer sold";
+    case "out_of_stock":
+      return "out of stock";
+    case "not_enough_stock":
+      // The number matters: "only 2 left" is actionable, "not enough" is not.
+      return line.stock_qty != null ? `only ${line.stock_qty} left` : "not enough stock";
+    default:
+      return null;
+  }
+}
