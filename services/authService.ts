@@ -20,6 +20,9 @@
 // MVP bar: the app must know WHO you are so your orders are yours.
 // ============================================================
 
+import { Platform } from "react-native";
+import * as Location from "expo-location";
+
 import { API_BASE_URL } from "./api/client";
 
 // The client's base is /api/customer, but auth is audience-neutral at /api/auth.
@@ -75,11 +78,57 @@ export interface VerifyResult {
   identifier: string;
 }
 
+/**
+ * Where this person signed up, but ONLY if they have already granted location.
+ *
+ * ══════════════════════════════════════════════════════════════════════════
+ * 🔴 THIS MUST NEVER PROMPT. Sign-in is the worst possible moment to throw a
+ * permission dialog: it interrupts the one flow that has to work, and a refusal
+ * there tends to be permanent. So it asks what permission ALREADY is, and takes
+ * a reading only if the answer is yes — which it often is, because the store
+ * feed asks for location long before anyone signs in.
+ *
+ * ⚠ The COORDINATES go to the server, never a state name. The server resolves
+ * the state through location_db, the same way a seller's pin already is. A
+ * state the client names is a claim; a point the server resolves is derived.
+ *
+ * Why it is worth capturing at all: signup is the only moment a customer is
+ * known to be anywhere. They have no address yet and no order yet, and the
+ * encoded user ID cannot be minted without a state — the format has 28 states
+ * and 8 UTs in exactly 36 slots, with no code left meaning "unknown".
+ *
+ * Absent is fine. Absent is not zero: no reading means no state recorded,
+ * which means no ID yet, not a guessed one.
+ * ══════════════════════════════════════════════════════════════════════════
+ */
+async function signupPointIfAlreadyAllowed(): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const { granted } = await Location.getForegroundPermissionsAsync();
+    if (!granted) return null;
+    const pos = await Location.getLastKnownPositionAsync();
+    if (!pos) return null;
+    return { lat: pos.coords.latitude, lng: pos.coords.longitude };
+  } catch {
+    // Location is best-effort context. It must never be able to fail a login.
+    return null;
+  }
+}
+
+/** What the runtime calls itself. The server stores this verbatim. */
+function signupPlatform(): string {
+  return Platform.OS; // "android" | "ios" | "web"
+}
+
 export async function verifyOtp(identifier: string, otp: string): Promise<VerifyResult> {
+  const point = await signupPointIfAlreadyAllowed();
   const body = await call<{ token?: string }>("/otp/verify", {
     identifier,
     otp,
     role: "customer",
+    // First-touch context. The server records it once, on the row it creates
+    // for a new customer, and later logins never overwrite it.
+    signup_platform: signupPlatform(),
+    ...(point ? { lat: point.lat, lng: point.lng } : {}),
   });
   if (!body.token) throw new Error("Could not sign in. Please try again.");
   return { token: body.token, identifier };

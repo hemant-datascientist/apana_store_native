@@ -1,9 +1,13 @@
 // User ID codec for the Apana ecosystem (customer / seller / partner).
 //
 // Format spec (uppercase base36 throughout):
-//   Customer: C + Platform(1) + State(1) + Date(3) + "-" + Random(8) + "-" + Checksum(1)   [16 chars]
-//   Seller:   S + LegalPlatformCombo(1) + State(1) + Date(3) + "-" + Random(8) + "-" + Checksum(1) [16 chars]
-//   Partner:  P + VehicleCombo(2) + State(1) + Date(3) + "-" + Random(8) + "-" + Checksum(1) [17 chars]
+//   Customer: C + Platform(1) + State(1) + Date(3) + "-" + Random(8) + "-" + Checksum(1)   [17 chars]
+//   Seller:   S + LegalPlatformCombo(1) + State(1) + Date(3) + "-" + Random(8) + "-" + Checksum(1) [17 chars]
+//   Partner:  P + VehicleCombo(2) + State(1) + Date(3) + "-" + Random(8) + "-" + Checksum(1) [18 chars]
+//
+// Lengths corrected 2026-08-30: the totals said 16/16/17 while the components
+// sum to 17/17/18. This encoder was always right; only the comment was wrong.
+// The server mirror asserts the arithmetic in packages/shared/src/userId.check.ts.
 //
 // Frontend usage: encode/decode for preview, validation, debug screens.
 // Production rule: real ID generation MUST happen server-side at signup. Never trust a client-generated ID.
