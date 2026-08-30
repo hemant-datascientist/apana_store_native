@@ -1,12 +1,18 @@
-// Partner (platform × wheels × vehicle × fuel) combo encoding.
-// 4 platform × 3 wheels × 9 vehicle type × 6 fuel = 648 combos → mapped to 2-letter AA-ZZ.
+// Partner (platform x vehicle x fuel) combo encoding.
+// 4 platform x 10 vehicle x 7 fuel = 280 combos -> mapped to 2-letter AA-ZZ.
 //
-// Capacity: 26² = 676. Headroom: ONLY 28 slots (~4%). Adding any new dimension value risks overflow:
-//   +1 fuel  -> 4×3×9×7 = 756 > 676 (overflows)
-//   +1 vehicle -> 4×3×10×6 = 720 > 676 (overflows)
-//   +1 platform -> 5×3×9×6 = 810 > 676 (overflows)
-//   +1 wheels -> 4×4×9×6 = 864 > 676 (overflows)
-// Any of those forces a 3-char partner combo (26³ = 17576) — would be a format-version bump.
+// 🔴 RESTRUCTURED 2026-08-30, while zero partner IDs existed — the only moment
+// it was free. It used to include WHEELS (4x3x9x6 = 648 of 676 slots, 96%
+// full) and therefore could not fit a tenth vehicle:
+//   +1 vehicle -> 4x3x10x6 = 720 > 676 (overflows)
+// Wheels is derivable from the vehicle — a Bike is always two, an Auto three,
+// an SUV four — so it carried nothing the vehicle did not while costing a
+// factor of 3. Dropping it made room for Bicycle, which this app has always
+// offered and the format could never encode, plus a "None" fuel for
+// human-powered vehicles.
+//
+// Capacity now: 280 of 676. Real headroom again — but every value is an index
+// into a PERMANENT identifier, so new ones are appended and none is reordered.
 //
 // Why 2-char (not 3): single char (26) far too small; 3-char wastes IDs while V1 fits comfortably.
 
@@ -25,23 +31,38 @@ export type VehicleType =
   | "MUV"
   | "Hatchback"
   | "Van"
-  | "Truck";
+  | "Truck"
+  // 🔴 Added 2026-08-30. This app has always offered a bicycle and the format
+  // could not encode one, so a bicycle courier could be given no ID at all.
+  | "Bicycle";
 
 // Fuel type. EV/CNG/LPG/Hybrid included for India market reality.
-export type FuelType = "Petrol" | "Diesel" | "EV" | "CNG" | "LPG" | "Hybrid";
+// "None" is for human-powered vehicles. Calling a bicycle petrol to make it
+// encodable would be a fabrication inside a permanent identifier.
+export type FuelType =
+  | "Petrol" | "Diesel" | "EV" | "CNG" | "LPG" | "Hybrid" | "None";
 
 // Stable index orders. NEVER change — every existing partner ID depends on these orderings.
 const PLATFORM_ORDER: Platform[] = ["Android", "iOS", "Windows", "Mac"];
-const WHEELS_ORDER: Wheels[] = ["Two", "Three", "Four"];
+// ⚠ WHEELS IS NO LONGER PART OF THE ID (2026-08-30). It is derivable from the
+// vehicle — a Bike is always two, an Auto three, an SUV four — so it carried
+// nothing the vehicle did not, while costing a factor of 3 in a combo that had
+// reached 648 of 676 slots and could not fit a tenth vehicle.
+//   was: 4 platforms x 3 wheels x 9 vehicles x 6 fuels = 648
+//   now: 4 platforms x 10 vehicles x 7 fuels = 280
+// ⚠ APPEND-ONLY below: an index here is an index into a permanent identifier.
 const VEHICLE_ORDER: VehicleType[] = [
   "Bike", "Scooty", "Auto", "SUV", "Sedan", "MUV", "Hatchback", "Van", "Truck",
+  "Bicycle",
 ];
-const FUEL_ORDER: FuelType[] = ["Petrol", "Diesel", "EV", "CNG", "LPG", "Hybrid"];
+const FUEL_ORDER: FuelType[] = [
+  "Petrol", "Diesel", "EV", "CNG", "LPG", "Hybrid", "None",
+];
 
-// Composite index from 4 dimensions using mixed-radix encoding.
-// idx = ((p * 3 + w) * 9 + v) * 6 + f. Range 0..647.
-function combineIdx(p: number, w: number, v: number, f: number): number {
-  return ((p * 3 + w) * 9 + v) * 6 + f;
+// Composite index from 3 dimensions using mixed-radix encoding.
+// idx = (p * 10 + v) * 7 + f. Range 0..279.
+function combineIdx(p: number, v: number, f: number): number {
+  return (p * 10 + v) * 7 + f;
 }
 
 // Encode partner attributes -> 2-letter combo AA..ZZ.
@@ -49,19 +70,16 @@ function combineIdx(p: number, w: number, v: number, f: number): number {
 // validation of plausibility is the caller's responsibility (signup form constraints).
 export function encodePartnerCombo(
   platform: Platform,
-  wheels: Wheels,
   vehicle: VehicleType,
   fuel: FuelType
 ): string {
   const p = PLATFORM_ORDER.indexOf(platform);
-  const w = WHEELS_ORDER.indexOf(wheels);
   const v = VEHICLE_ORDER.indexOf(vehicle);
   const f = FUEL_ORDER.indexOf(fuel);
   if (p < 0) throw new Error(`Unknown platform: ${platform}`);
-  if (w < 0) throw new Error(`Unknown wheels: ${wheels}`);
   if (v < 0) throw new Error(`Unknown vehicle: ${vehicle}`);
   if (f < 0) throw new Error(`Unknown fuel: ${fuel}`);
-  const idx = combineIdx(p, w, v, f);
+  const idx = combineIdx(p, v, f);
   // Split into base-26 high/low → letters A-Z each.
   const hi = Math.floor(idx / 26);
   const lo = idx % 26;
@@ -71,7 +89,6 @@ export function encodePartnerCombo(
 // Decode 2-letter combo -> partner attributes. Inverse of encodePartnerCombo.
 export function decodePartnerCombo(combo: string): {
   platform: Platform;
-  wheels: Wheels;
   vehicle: VehicleType;
   fuel: FuelType;
 } {
@@ -83,17 +100,14 @@ export function decodePartnerCombo(combo: string): {
     throw new Error(`Invalid partner combo (non-letter): ${combo}`);
   }
   const idx = hi * 26 + lo;
-  if (idx > 647) throw new Error(`Partner combo out of range (>647): ${combo}`);
-  // Reverse mixed-radix: f = idx%6; idx/=6; v = idx%9; idx/=9; w = idx%3; p = idx/3.
-  const f = idx % 6;
-  const r1 = Math.floor(idx / 6);
-  const v = r1 % 9;
-  const r2 = Math.floor(r1 / 9);
-  const w = r2 % 3;
-  const p = Math.floor(r2 / 3);
+  if (idx > 279) throw new Error(`Partner combo out of range (>279): ${combo}`);
+  // Reverse mixed-radix: f = idx%7; idx/=7; v = idx%10; p = idx/10.
+  const f = idx % 7;
+  const r1 = Math.floor(idx / 7);
+  const v = r1 % 10;
+  const p = Math.floor(r1 / 10);
   return {
     platform: PLATFORM_ORDER[p],
-    wheels: WHEELS_ORDER[w],
     vehicle: VEHICLE_ORDER[v],
     fuel: FUEL_ORDER[f],
   };

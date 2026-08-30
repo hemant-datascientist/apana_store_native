@@ -5,6 +5,11 @@
 //   Seller:   S + LegalPlatformCombo(1) + State(1) + Date(3) + "-" + Random(8) + "-" + Checksum(1) [17 chars]
 //   Partner:  P + VehicleCombo(2) + State(1) + Date(3) + "-" + Random(8) + "-" + Checksum(1) [18 chars]
 //
+// 🔴 The partner combo is platform x vehicle x fuel since 2026-08-30 (it was
+// platform x wheels x vehicle x fuel). Wheels is derivable from the vehicle and
+// the old shape could not fit a bicycle. Changed while zero partner IDs
+// existed — see userIdLookups/partner_combo.ts.
+//
 // Lengths corrected 2026-08-30: the totals said 16/16/17 while the components
 // sum to 17/17/18. This encoder was always right; only the comment was wrong.
 // The server mirror asserts the arithmetic in packages/shared/src/userId.check.ts.
@@ -14,7 +19,7 @@
 //
 // Limitations to remember:
 //   - 3-char date overflows around year 2046 (36³ = 46656 caps YYDDD).
-//   - Partner combo is 96% full at 648/676; any new dimension value forces a format-version bump.
+//   - Partner combo now uses 280 of 676. Append new values, never reorder.
 //   - Stable index orders in lookup files MUST NOT be reordered — would invalidate every existing ID.
 
 import {
@@ -38,7 +43,6 @@ import {
   decodeSellerCombo,
 } from "./userIdLookups/seller_combo";
 import {
-  Wheels,
   VehicleType,
   FuelType,
   encodePartnerCombo,
@@ -178,7 +182,6 @@ export interface PartnerInput {
   platform: Platform;
   state: string;
   signupDate: Date;
-  wheels: Wheels;
   vehicle: VehicleType;
   fuel: FuelType;
 }
@@ -215,7 +218,7 @@ export function encodeSellerId(input: SellerInput): string {
 // Partner: P + vehicleCombo(2) + state(1) + date(3) + "-" + random(8) + "-" + checksum(1)
 export function encodePartnerId(input: PartnerInput): string {
   const role = ROLE_TO_CODE.Partner;
-  const combo = encodePartnerCombo(input.platform, input.wheels, input.vehicle, input.fuel);
+  const combo = encodePartnerCombo(input.platform, input.vehicle, input.fuel);
   const st = encodeState(input.state);
   const dt = encodeDate(input.signupDate);
   const rand = generateRandom();
@@ -248,7 +251,6 @@ export type DecodedId =
   | {
       role: "Partner";
       platform: Platform;
-      wheels: Wheels;
       vehicle: VehicleType;
       fuel: FuelType;
       state: string;
@@ -292,10 +294,10 @@ export function decodeId(fullId: string): DecodedId {
   if (role === "Partner") {
     // P + combo(2) + state(1) + date(3) -> head length 7
     if (head.length !== 7) throw new Error(`Partner head length must be 7: ${head}`);
-    const { platform, wheels, vehicle, fuel } = decodePartnerCombo(head.slice(1, 3));
+    const { platform, vehicle, fuel } = decodePartnerCombo(head.slice(1, 3));
     const state = decodeState(head[3]);
     const date = decodeDate(head.slice(4, 7));
-    return { role: "Partner", platform, wheels, vehicle, fuel, state, date, random };
+    return { role: "Partner", platform, vehicle, fuel, state, date, random };
   }
 
   // Unreachable given Role union, but TS needs the throw for exhaustiveness.
@@ -307,4 +309,6 @@ export function decodeId(fullId: string): DecodedId {
 // =========================================================================
 export type { Role, Platform } from "./userIdLookups/shared_codes";
 export type { LegalType } from "./userIdLookups/seller_combo";
+// ⚠ Wheels is still exported by partner_combo (partners may record it) but is
+// NO LONGER part of the ID — see that file's header for the arithmetic.
 export type { Wheels, VehicleType, FuelType } from "./userIdLookups/partner_combo";
