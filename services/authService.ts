@@ -79,37 +79,55 @@ export interface VerifyResult {
 }
 
 /**
- * Where this person signed up, but ONLY if they have already granted location.
+ * Where this person is signing up.
  *
  * ══════════════════════════════════════════════════════════════════════════
- * 🔴 THIS MUST NEVER PROMPT. Sign-in is the worst possible moment to throw a
- * permission dialog: it interrupts the one flow that has to work, and a refusal
- * there tends to be permanent. So it asks what permission ALREADY is, and takes
- * a reading only if the answer is yes — which it often is, because the store
- * feed asks for location long before anyone signs in.
+ * 🔴 A NEW ACCOUNT IS REFUSED WITHOUT ONE. Founder: *"a customer who declines
+ * location — how will we show nearby shops, how will we decide what to show?
+ * So no account created."* Apana is hyperlocal, and the home feed is scoped to
+ * the shopper's cell, so an account with no location opens empty and stays
+ * empty.
+ *
+ * ⚠ THIS REVERSES THE EARLIER RULE IN THIS FILE, which was that sign-in must
+ * never raise a permission dialog. That was right while location was optional
+ * context. It is wrong now: not asking would let the request fail on the
+ * server with the person never learning why. The prompt is skipped entirely
+ * when permission already exists, which is the common case — the store feed
+ * asks long before anyone signs in.
  *
  * ⚠ The COORDINATES go to the server, never a state name. The server resolves
  * the state through location_db, the same way a seller's pin already is. A
  * state the client names is a claim; a point the server resolves is derived.
  *
- * Why it is worth capturing at all: signup is the only moment a customer is
- * known to be anywhere. They have no address yet and no order yet, and the
- * encoded user ID cannot be minted without a state — the format has 28 states
- * and 8 UTs in exactly 36 slots, with no code left meaning "unknown".
- *
- * Absent is fine. Absent is not zero: no reading means no state recorded,
- * which means no ID yet, not a guessed one.
+ * An EXISTING customer signing in again needs none of this — the server only
+ * requires a point when it would be creating the account.
  * ══════════════════════════════════════════════════════════════════════════
  */
-async function signupPointIfAlreadyAllowed(): Promise<{ lat: number; lng: number } | null> {
+async function signupPoint(): Promise<{ lat: number; lng: number } | null> {
   try {
-    const { granted } = await Location.getForegroundPermissionsAsync();
+    // Already granted (common — the store feed asks long before anyone signs
+    // in), so no prompt is raised.
+    let { granted } = await Location.getForegroundPermissionsAsync();
+    // 🔴 ASKS IF NOT. This used to only read an existing grant and never
+    // prompt, on the reasoning that a dialog during sign-in interrupts the one
+    // flow that must work. That reasoning was overtaken: a NEW account is now
+    // refused without a location, because Apana is hyperlocal and an account
+    // with no location opens to an empty app. Not asking would mean the
+    // request fails and the person never learns why.
+    if (!granted) {
+      ({ granted } = await Location.requestForegroundPermissionsAsync());
+    }
     if (!granted) return null;
-    const pos = await Location.getLastKnownPositionAsync();
+    // Last known first — it is instant and usually good enough for a state.
+    // A cold device has none, so fall back to an actual fix.
+    const pos =
+      (await Location.getLastKnownPositionAsync()) ??
+      (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low }));
     if (!pos) return null;
     return { lat: pos.coords.latitude, lng: pos.coords.longitude };
   } catch {
-    // Location is best-effort context. It must never be able to fail a login.
+    // Never throws into the login path. Absent means the server decides, and
+    // for a new account it will refuse with a message that explains why.
     return null;
   }
 }
@@ -120,7 +138,7 @@ function signupPlatform(): string {
 }
 
 export async function verifyOtp(identifier: string, otp: string): Promise<VerifyResult> {
-  const point = await signupPointIfAlreadyAllowed();
+  const point = await signupPoint();
   const body = await call<{ token?: string }>("/otp/verify", {
     identifier,
     otp,
