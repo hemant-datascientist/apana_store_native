@@ -59,7 +59,9 @@ export default function StoreShareSheet({ visible, storeId, storeName, onClose }
               </Text>
 
               <View style={styles.qrBox}>
-                <QRCode value={share.url} size={188} color="#111" backgroundColor="#fff" />
+                {/* The deep link, not a web URL — the previous value pointed
+                    at apana.app, which belongs to an unrelated company. */}
+                <QRCode value={share.deepLink} size={188} color="#111" backgroundColor="#fff" />
               </View>
 
               <Text style={[styles.caption, { color: colors.text }]}>Scan to open on Apana</Text>
