@@ -9,7 +9,7 @@
 
 import React from "react";
 import {
-  View, Text, TouchableOpacity, StyleSheet, Alert,
+  View, Text, TouchableOpacity, StyleSheet,
 } from "react-native";
 import { callPhone } from "../../lib/callPhone";
 import { Ionicons } from "@expo/vector-icons";
@@ -92,13 +92,17 @@ export default function TrackingPartnerCard({ partner, mode }: TrackingPartnerCa
               <Ionicons name="call-outline" size={18} color={colors.success} />
             </TouchableOpacity>
           )}
-          <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: colors.primary + "15", borderColor: colors.primary + "40" }]}
-            onPress={() => Alert.alert("No in-app chat", "Apana has no messaging. Use Call to reach your delivery partner.")}
-            activeOpacity={0.75}
-          >
-            <Ionicons name="chatbubble-ellipses-outline" size={18} color={colors.primary} />
-          </TouchableOpacity>
+          {/* 🔴 THE CHAT BUTTON IS GONE, not reworded. Its only behaviour was
+              an alert saying chat does not exist — a button that exists to
+              announce its own absence, which is exactly what the comment above
+              forbids for the call button beside it.
+
+              ⚠ Its message ("Apana has no messaging") is also no longer true:
+              there IS order chat now, between the customer and the SHOP. There
+              is still none with the rider, and there cannot be until a rider
+              is a party to a thread — so putting the shop's chat on the
+              RIDER's card would answer a question about the rider by messaging
+              somebody else. The shop is reachable from the order itself. */}
         </View>
       </View>
     </View>
