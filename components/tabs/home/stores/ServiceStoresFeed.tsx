@@ -64,7 +64,7 @@ export default function ServiceStoresFeed() {
   );
 
   function handleHeroPress(store: HeroStore) {
-    router.push(`/service-detail?id=${store.id}`);
+    router.push(`/service-store?id=${store.id}`);
   }
 
   function handlePromoPress(promo: ServicePromo) {
@@ -76,7 +76,7 @@ export default function ServiceStoresFeed() {
   // The store detail screen holds the real number (getStoreMeta), so Call takes
   // you where calling actually works instead of faking it here.
   function handleCall(store: ServiceStore) {
-    router.push(`/service-detail?id=${store.id}`);
+    router.push(`/service-store?id=${store.id}`);
   }
 
   // Real Mappls navigation. openDirections says so honestly when the shop
@@ -86,7 +86,7 @@ export default function ServiceStoresFeed() {
   }
 
   function handleViewInfo(store: ServiceStore) {
-    router.push(`/service-detail?id=${store.id}`);
+    router.push(`/service-store?id=${store.id}`);
   }
 
   return (

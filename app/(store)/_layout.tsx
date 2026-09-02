@@ -18,7 +18,6 @@ export default function StoreLayout() {
       <Stack.Screen name="state-detail" />
       <Stack.Screen name="bharat-bazaar" />
       <Stack.Screen name="store-categories" />
-      <Stack.Screen name="service-detail" />
       <Stack.Screen name="store-type" />
       {/* §16.11 ASvC booking + §16.12 AMC dish ordering */}
       <Stack.Screen name="service-stores" />

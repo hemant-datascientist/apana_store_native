@@ -529,37 +529,11 @@ export const MOCK_STORES: Record<string, StoreDetail> = {
     representativeTitle: "Sale Representative",
   },
 
-  // ── Service Stores (Mapped to StoreDetail for consistency) ──
-  sv1: {
-    id:          "sv1",
-    name:        "SAI Electrical Repair Shop",
-    tagline:     "Professional electrical solutions",
-    category:    "Service Provider",
-    icon:        "flash-outline",
-    heroBg:      "#FEF3C7",
-    address:     "Sector 48, Pune",
-    city:        "Pune",
-    state:       "Maharashtra",
-    pincode:     "411048",
-    phone:       "+91 98765 43210",
-    rating:      4.5,
-    reviewCount: 989,
-    isOpen:      true,
-    closesAt:    "9:00 PM",
-    opensAt:     "9:00 AM",
-    isLive:      true,
-    lat:         18.5204,
-    lng:         73.8567,
-    hours: [
-      { day: "Monday",    open: "9:00 AM", close: "9:00 PM" },
-      { day: "Sunday",    open: "10:00 AM", close: "2:00 PM" },
-    ],
-    categories: [],
-    ownerName:  "Sai Kumar",
-    ownerPhoto: "https://randomuser.me/api/portraits/men/1.jpg",
-    ownerMessage: "Professional electrical services for your home and office.",
-    representativeTitle: "Store Owner",
-  },
+  // 🔴 The sv1 service entry is DELETED. It carried an invented address and
+  // the +91 98765 43210 placeholder this app has removed everywhere else, and
+  // its only route — /service-detail — is gone: service cards now open the
+  // live /service-store. Nothing can produce an "sv" id any more.
+
 
   // ── B2C Stores (Brands/Manufacturers) ──
   b1: {
