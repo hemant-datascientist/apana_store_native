@@ -24,14 +24,21 @@ import OrderStatusBadge   from "./OrderStatusBadge";
 import DeliveryCodeCard   from "./DeliveryCodeCard";
 
 interface OrderCardProps {
+  /** Open the conversation with this shop about this order. */
+  onMessage?: (order: Order) => void;
   order:     Order;
   onTrack:   (order: Order) => void;
   onReorder: (order: Order) => void;
   onRate?:   (order: Order) => void;
 }
 
-export default function OrderCard({ order, onTrack, onReorder, onRate }: OrderCardProps) {
+export default function OrderCard({ order, onTrack, onReorder, onRate, onMessage }: OrderCardProps) {
   const { colors } = useTheme();
+  // ⚠ undefined means "never counted" (mock rows, or a reader the server could
+  // not place); 0 means "counted, none waiting". Neither draws a badge, but
+  // only the second is an assertion — so the fallback is 0 for RENDERING, and
+  // nothing anywhere reports it as a fact.
+  const unread = order.unreadMessages ?? 0;
   const isActive    = ACTIVE_STATUSES.includes(order.status);
   const isDelivered = order.status === "delivered";
 
@@ -137,6 +144,40 @@ export default function OrderCard({ order, onTrack, onReorder, onRate }: OrderCa
             {order.deliveryAddress}
           </Text>
         </View>
+
+        {/* Message the shop about THIS order.
+            🔴 On every order, not only live ones. The shop can write at any
+            point — "your paneer is back in stock", "we short-shipped one" —
+            and an unread message the customer cannot reach is the same as no
+            message at all. The badge is what makes it findable; without it a
+            shopkeeper's question sits in a thread nobody opens. */}
+        {onMessage && (
+          <TouchableOpacity
+            style={[styles.cta, {
+              backgroundColor: unread > 0 ? colors.primary : "transparent",
+              borderWidth:     1,
+              borderColor:     colors.primary,
+            }]}
+            activeOpacity={0.8}
+            onPress={() => onMessage(order)}
+            accessibilityLabel={unread > 0 ? `Message shop, ${unread} unread` : "Message shop"}
+          >
+            <Ionicons
+              name={unread > 0 ? "chatbubble-ellipses" : "chatbubble-ellipses-outline"}
+              size={14}
+              color={unread > 0 ? colors.white : colors.primary}
+            />
+            <Text style={[styles.ctaLabel, {
+              color:      unread > 0 ? colors.white : colors.primary,
+              fontFamily: typography.fontFamily.semiBold,
+              fontSize:   typography.size.xs,
+            }]}>
+              {/* The count itself, not a dot: "2" tells the customer there is a
+                  conversation to catch up on, a dot only that something moved. */}
+              {unread > 0 ? `Chat ${unread}` : "Chat"}
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {/* Rate store — delivered orders only (real buyers can review) */}
         {isDelivered && onRate && (

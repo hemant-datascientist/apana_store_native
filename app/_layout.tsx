@@ -110,6 +110,8 @@ export default function RootLayout() {
             <Stack.Screen name="s"          />
             {/* Full-screen store-discovery map — /map (home search-bar map button) */}
             <Stack.Screen name="map"        />
+            {/* Order chat — /order-chat, this customer and one shop about one order */}
+            <Stack.Screen name="order-chat" />
             {/* Info + settings — about-us, help-support, sell-ondc, rate-us, language, notifications */}
             <Stack.Screen name="(info)"     />
             {/* Rides — auto-riders (Apana Partner fleet: personal + order rides) */}

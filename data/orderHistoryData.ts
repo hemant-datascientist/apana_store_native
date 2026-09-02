@@ -54,6 +54,15 @@ export interface Order {
    * mock rows have none either. Absent means 'no code', never an empty QR.
    */
   handoverCode?:   string;
+
+  /**
+   * Messages from the SHOP this customer has not opened.
+   *
+   * ⚠ Optional, and absent is not zero: the mock rows have never been counted
+   * and a badge drawn from that absence would say "nothing waiting" about a
+   * conversation nobody looked at. Only a real number renders a badge.
+   */
+  unreadMessages?: number;
 }
 
 // ── Status meta (label + theme key) ──────────────────────────

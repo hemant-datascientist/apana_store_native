@@ -121,6 +121,17 @@ export default function OrderHistoryScreen() {
    * item short without saying so sends somebody to the counter for something
    * that was never coming.
    */
+  // The shop name and invoice ride along so the chat header can say which
+  // conversation this is before the thread has loaded — a blank header on a
+  // slow connection is how a customer messages the wrong shop.
+  function handleMessage(order: Order) {
+    router.push(
+      `/order-chat?orderId=` + encodeURIComponent(order.id) +
+      `&invoice=` + encodeURIComponent(order.orderNo) +
+      `&store=` + encodeURIComponent(order.storeName) as never,
+    );
+  }
+
   async function handleReorder(order: Order) {
     if (!customerId) return;
     setReordering(order.id);
@@ -292,6 +303,7 @@ export default function OrderHistoryScreen() {
                   onTrack={handleTrack}
                   onReorder={handleReorder}
                   onRate={setRateOrder}
+                  onMessage={handleMessage}
                 />
               ))
             : <OrderEmptyState filter={activeFilter} />

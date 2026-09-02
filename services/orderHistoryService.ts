@@ -42,6 +42,7 @@ interface WireOrder {
   fulfillment: string;
   delivery_address: Record<string, unknown> | null;
   handover_code: string | null;
+  unread_messages: number | null;
   items: WireItem[];
   created_at: string;
 }
@@ -123,6 +124,10 @@ function toOrder(w: WireOrder): Order {
     // The server sends this reader's own half only; for a customer read that
     // is the delivery code. Never the shop's pickup code.
     handoverCode: w.handover_code ?? undefined,
+    // Null means the server did not count (a reader whose side it could not
+    // determine); 0 means it counted and none are waiting. Both leave the
+    // badge off, but only the second is a claim.
+    unreadMessages: w.unread_messages ?? undefined,
     paymentMethod:
       w.payment_mode === "cod"
         ? "Cash on Delivery"
