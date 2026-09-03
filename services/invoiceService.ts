@@ -98,9 +98,15 @@ export async function fetchInvoice(params: FetchInvoiceParams): Promise<Invoice>
     mrp:        rupees(i.unit_price_cents),
     rate:       rupees(i.unit_price_cents),
     amount:     rupees(i.line_total_cents),
-    // 0, and the UI hides the column: no tax rate is stored against any
-    // product, so any split of the total would be arithmetic on a guess.
-    gstPercent: 0,
+    // 🔴 The rate this line was CHARGED at (0090), frozen at sale. A shop
+    // correcting a product's rate next month must not rewrite what this
+    // invoice says was collected.
+    //
+    // ⚠ 0 here means BOTH "zero-rated" and "the shop never declared a rate",
+    // because the column this feeds is a number. The distinction is kept where
+    // it matters — the slab table below excludes undeclared lines rather than
+    // showing them at 0%.
+    gstPercent: i.gst_rate_bp != null ? i.gst_rate_bp / 100 : 0,
   }));
   const isUpi = r.payment_mode !== "cod";
   const total = rupees(r.total_cents);
@@ -145,12 +151,25 @@ export async function fetchInvoice(params: FetchInvoiceParams): Promise<Invoice>
     // saving to claim. 0 rather than an invented discount.
     savedAmount:    0,
     savedPercent:   0,
-    // No tax rate exists against any product. An empty breakup and zeroed
-    // CGST/SGST are the honest rendering; a split would be invented tax.
-    gstBreakup:     [],
-    netTaxableValue: 0,
-    netCGST:        0,
-    netSGST:        0,
+    // 🔴 COMPUTED ON THE SERVER (0090), rendered here. The arithmetic lives
+    // once in @apana/shared; a copy in this app would be a third place for the
+    // customer's copy and the shop's books to disagree about tax.
+    //
+    // ⚠ Empty when the shop may not legally show tax, or has declared no rates
+    // — an empty table, never invented zeros.
+    gstBreakup: (r.gst_slabs ?? []).map((g) => ({
+      gstPercent:   g.rate_bp / 100,
+      taxableValue: rupees(g.taxable_cents),
+      cgst:         rupees(g.cgst_cents),
+      sgst:         rupees(g.sgst_cents),
+      // No cess is charged or recorded anywhere in Apana. 0 is the true
+      // amount, not a placeholder for one that exists and is unknown.
+      csee:         0,
+      netAmt:       rupees(g.net_cents),
+    })),
+    netTaxableValue: (r.gst_slabs ?? []).reduce((a, g) => a + rupees(g.taxable_cents), 0),
+    netCGST:        (r.gst_slabs ?? []).reduce((a, g) => a + rupees(g.cgst_cents), 0),
+    netSGST:        (r.gst_slabs ?? []).reduce((a, g) => a + rupees(g.sgst_cents), 0),
     netCSEE:        0,
     thankYouNote:   "Thank you for shopping with Apana.",
   };
@@ -172,10 +191,29 @@ interface WireReceipt {
      * threshold and issue receipts, where an HSN would imply a tax invoice.
      */
     hsn: string | null;
+    /**
+     * GST rate CHARGED on this line, in basis points (0090). 500 = 5%.
+     *
+     * ⚠ Null means the shop declared no rate — which is NOT the same as 0%.
+     * Such a line is left out of `gst_slabs` rather than summarised as
+     * zero-rated, a status the shop would be asserting.
+     */
+    gst_rate_bp: number | null;
     qty: number;
     unit_price_cents: number;
     line_total_cents: number;
   }>;
+  /**
+   * The per-slab tax summary, already computed by the server. Empty for a shop
+   * that may not show tax or has declared no rates.
+   */
+  gst_slabs?: {
+    rate_bp: number;
+    taxable_cents: number;
+    cgst_cents: number;
+    sgst_cents: number;
+    net_cents: number;
+  }[];
   subtotal_cents: number;
   delivery_fee_cents: number;
   total_cents: number;
