@@ -63,6 +63,16 @@ export default function InvoiceItemsTable({
             <Text style={[styles.itemName, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
               {item.name}
             </Text>
+            {/* The HSN this line was PRINTED with (0086) — both real bills read
+                for gst_invoice_spec.md carry it per line.
+                ⚠ Absent renders NOTHING. Most kiranas are below the GST
+                threshold and issue receipts, where an HSN would imply a tax
+                invoice the shop may not legally produce. */}
+            {item.hsn ? (
+              <Text style={[styles.gstText, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.ss }]}>
+                HSN {item.hsn}
+              </Text>
+            ) : null}
             <View style={[styles.gstBadge, { backgroundColor: colors.primary + "14" }]}>
               <Text style={[styles.gstText, { color: colors.primary, fontFamily: typography.fontFamily.regular, fontSize: typography.size.ss }]}>
                 GST {item.gstPercent}%

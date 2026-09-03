@@ -93,6 +93,7 @@ export async function fetchInvoice(params: FetchInvoiceParams): Promise<Invoice>
   const items = r.items.map((i, n) => ({
     id:         `${n}`,
     name:       i.name,
+    hsn:        i.hsn ?? null,
     qty:        i.qty,
     mrp:        rupees(i.unit_price_cents),
     rate:       rupees(i.unit_price_cents),
@@ -160,7 +161,21 @@ interface WireReceipt {
   placed_at: string;
   store_name: string | null;
   store_city: string | null;
-  items: Array<{ name: string; qty: number; unit_price_cents: number; line_total_cents: number }>;
+  items: Array<{
+    name: string;
+    /**
+     * HSN as PRINTED on this line (0086) — the snapshot, not the product's
+     * current code, so a shop correcting a typo never rewrites an invoice
+     * already issued.
+     *
+     * ⚠ Null is normal and shows nothing: most kiranas are below the GST
+     * threshold and issue receipts, where an HSN would imply a tax invoice.
+     */
+    hsn: string | null;
+    qty: number;
+    unit_price_cents: number;
+    line_total_cents: number;
+  }>;
   subtotal_cents: number;
   delivery_fee_cents: number;
   total_cents: number;

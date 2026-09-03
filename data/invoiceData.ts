@@ -16,6 +16,15 @@ export interface InvoiceItem {
   id:          string;
   name:        string;
   qty:         number;
+  /**
+   * HSN as PRINTED on this line (0086) — the snapshot, never the product's
+   * current code, so a shop correcting a typo cannot rewrite an invoice
+   * already issued.
+   *
+   * ⚠ Optional and null is normal: most kiranas are below the GST threshold
+   * and issue receipts, where an HSN would imply a tax invoice.
+   */
+  hsn?:        string | null;
   mrp:         number;    // maximum retail price per unit
   rate:        number;    // actual selling rate per unit
   amount:      number;    // qty × rate
