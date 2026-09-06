@@ -72,7 +72,25 @@ export function parseConnectPayload(raw: string): string | null {
       return o.apiBase.replace(/\/+$/, "");
     }
   } catch { /* not JSON — fall through */ }
-  if (/^https?:\/\/\S+$/i.test(s)) return s.replace(/\/+$/, "");
+  // 🔴 AN ORIGIN, NEVER A URL WITH A PATH.
+  //
+  // The dev script's terminal QR encodes `http://<host>:8000/connect` — the
+  // page a phone browser should open. Scanned straight into this parser, the
+  // old code returned that whole string as the origin, so every later request
+  // became `http://<host>:8000/connect/api/seller/...` — a 404 that reads as a
+  // broken backend rather than a mis-scanned QR.
+  //
+  // Taking the origin makes both work: scan the terminal QR directly, or open
+  // it in the browser and scan the QR that page renders.
+  if (/^https?:\/\/\S+$/i.test(s)) {
+    try {
+      // `new URL` drops any path, query and hash, and normalises the host.
+      return new URL(s).origin;
+    } catch {
+      // Not parseable as a URL despite matching the shape — trust nothing.
+      return null;
+    }
+  }
   return null;
 }
 
