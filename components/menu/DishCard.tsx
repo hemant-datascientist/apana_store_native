@@ -8,7 +8,7 @@
 // ============================================================
 
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
@@ -87,30 +87,36 @@ function DishCard({ dish, qty, onAdd, onRemove }: DishCardProps) {
         </View>
       </View>
 
-      {/* Stepper — "Add" until there is one in the basket */}
-      {qty === 0 ? (
-        <TouchableOpacity
-          style={[styles.addBtn, { borderColor: colors.primary }]}
-          onPress={() => onAdd(dish)}
-          activeOpacity={0.85}
-        >
-          <Text style={[styles.addText, { color: colors.primary, fontFamily: typography.fontFamily.semiBold }]}>
-            Add
-          </Text>
-        </TouchableOpacity>
-      ) : (
-        <View style={[styles.stepper, { backgroundColor: colors.primary }]}>
-          <TouchableOpacity onPress={() => onRemove(dish)} style={styles.stepBtn} activeOpacity={0.7}>
-            <Ionicons name="remove" size={16} color={colors.white} />
+      <View style={styles.rightCol}>
+        {dish.imageUrl ? (
+          <Image source={{ uri: dish.imageUrl }} style={styles.dishImg} resizeMode="cover" />
+        ) : null}
+
+        {/* Stepper — "Add" until there is one in the basket */}
+        {qty === 0 ? (
+          <TouchableOpacity
+            style={[styles.addBtn, { borderColor: colors.primary, backgroundColor: colors.card }]}
+            onPress={() => onAdd(dish)}
+            activeOpacity={0.85}
+          >
+            <Text style={[styles.addText, { color: colors.primary, fontFamily: typography.fontFamily.semiBold }]}>
+              Add
+            </Text>
           </TouchableOpacity>
-          <Text style={[styles.qty, { color: colors.white, fontFamily: typography.fontFamily.semiBold }]}>
-            {qty}
-          </Text>
-          <TouchableOpacity onPress={() => onAdd(dish)} style={styles.stepBtn} activeOpacity={0.7}>
-            <Ionicons name="add" size={16} color={colors.white} />
-          </TouchableOpacity>
-        </View>
-      )}
+        ) : (
+          <View style={[styles.stepper, { backgroundColor: colors.primary }]}>
+            <TouchableOpacity onPress={() => onRemove(dish)} style={styles.stepBtn} activeOpacity={0.7}>
+              <Ionicons name="remove" size={16} color={colors.white} />
+            </TouchableOpacity>
+            <Text style={[styles.qty, { color: colors.white, fontFamily: typography.fontFamily.semiBold }]}>
+              {qty}
+            </Text>
+            <TouchableOpacity onPress={() => onAdd(dish)} style={styles.stepBtn} activeOpacity={0.7}>
+              <Ionicons name="add" size={16} color={colors.white} />
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
     </View>
   );
 }
@@ -147,6 +153,8 @@ const styles = StyleSheet.create({
   stepper: { flexDirection: "row", alignItems: "center", borderRadius: 10, overflow: "hidden" },
   stepBtn: { paddingHorizontal: 10, paddingVertical: 8 },
   qty: { fontSize: typography.size.sm, minWidth: 18, textAlign: "center" },
+  rightCol: { alignItems: "center", gap: 8, flexShrink: 0 },
+  dishImg: { width: 84, height: 84, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.04)" },
 });
 
 export default React.memo(DishCard);

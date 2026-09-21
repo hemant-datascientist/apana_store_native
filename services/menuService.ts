@@ -28,6 +28,16 @@ const BASE_URL =
 const FETCH_TIMEOUT_MS = 10_000;
 
 export const MENU_IS_LIVE = IS_LIVE;
+export const API_ORIGIN = BASE_URL.replace(/\/api\/customer$/, "");
+
+export function resolveMenuImageUrl(path?: string | null): string | null {
+  if (!path) return null;
+  const trimmed = path.trim();
+  if (!trimmed) return null;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (trimmed.startsWith("/")) return `${API_ORIGIN}${trimmed}`;
+  return `${API_ORIGIN}/${trimmed}`;
+}
 
 // ── FE-facing shapes ──────────────────────────────────────────
 export type Diet = "veg" | "nonveg" | "egg";
@@ -56,6 +66,7 @@ export interface Dish {
   dealPrice: number | null; // rupees — floor, unlocks by the store threshold
   unit: string;
   prepMinutes: number | null;
+  imageUrl: string | null;
   itemCode: string | null;
   classCode: string | null;
   groupCode: string | null;
@@ -133,6 +144,7 @@ interface WireDish {
   deal_price_cents: number | null;
   unit: string;
   prep_minutes: number | null;
+  image_url?: string | null;
   amc_item_code: string | null;
   amc_class_code: string | null;
   amc_group_code: string | null;
@@ -190,6 +202,7 @@ function toDish(w: WireDish): Dish {
     dealPrice: w.deal_price_cents != null ? w.deal_price_cents / 100 : null,
     unit: w.unit,
     prepMinutes: w.prep_minutes,
+    imageUrl: resolveMenuImageUrl(w.image_url),
     itemCode: w.amc_item_code,
     classCode: w.amc_class_code,
     groupCode: w.amc_group_code,
