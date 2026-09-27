@@ -88,12 +88,15 @@ export default function BannerCarousel({ banners, onPress }: BannerCarouselProps
 
             {/* Content */}
             <View style={[styles.content, banner.imageUrl ? { maxWidth: CARD_W * 0.75, zIndex: 10 } : {}]}>
-              {/* Tag pill */}
-              <View style={[styles.tag, { backgroundColor: banner.accent + "30" }]}>
-                <Text style={[styles.tagText, { color: banner.accent, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
-                  {banner.tag}
-                </Text>
-              </View>
+              {/* Tag pill — optional. Most banners now carry none: §19.8,
+                  no pill claims an offer/guarantee the platform doesn't have. */}
+              {banner.tag ? (
+                <View style={[styles.tag, { backgroundColor: banner.accent + "30" }]}>
+                  <Text style={[styles.tagText, { color: banner.accent, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
+                    {banner.tag}
+                  </Text>
+                </View>
+              ) : null}
 
               {/* Title */}
               <Text style={[styles.title, { color: "#fff", fontFamily: typography.fontFamily.bold, fontSize: typography.size.xl }]}>

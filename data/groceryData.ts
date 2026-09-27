@@ -1,15 +1,9 @@
 // ============================================================
 // GROCERY DATA — Apana Store (Customer App)
 //
-// Sub-categories, Regular Items & Seasonal sections for the
-// Grocery category feed.
-// Replace icon+color placeholders with image URIs from backend.
+// Sub-categories for the Grocery category feed's navigation grid.
 // ============================================================
 import { assetImg } from "../lib/assetImg";
-
-
-const TOWER_IP = process.env.EXPO_PUBLIC_TOWER_IP ?? "10.153.78.94";
-const getAssetUrl = (path: string) => `http://${TOWER_IP}:8000/assets/images/apana_store/${path}`;
 
 // ── Sub-categories ────────────────────────────────────────────
 
@@ -40,72 +34,9 @@ export const GROCERY_SUB_CATEGORIES: GrocerySubCategory[] = [
   { key: "pickles",    label: "Pickles, Papad & Chutney", icon: "restaurant-outline", bg: "#FEF9C3", apc: "APC-01-PKGF" },
 ];
 
-// ── Product card ──────────────────────────────────────────────
-
-export interface GroceryProduct {
-  id:     string;
-  name:   string;
-  price:  string;   // display string e.g. "₹20–45/kg"
-  icon:   string;   // Ionicons glyph
-  bg:     string;   // placeholder bg color
-  badge?: string;   // "Fresh" | "Seasonal" | "Offer" etc.
-  imageUrl?: any;
-}
-
-// ── Regular Items ─────────────────────────────────────────────
-
-export const REGULAR_ITEMS: GroceryProduct[] = [
-  { id:"r1",  name:"Potatoes",    price:"₹20–45/kg",        icon:"earth-outline",        bg:"#FEF3C7", badge:"Fresh", imageUrl: assetImg("grocery/vegetables.png") },
-  { id:"r2",  name:"Tomato",      price:"₹25–45/kg",        icon:"radio-button-on",      bg:"#FEE2E2", badge:"Fresh", imageUrl: assetImg("grocery/vegetables.png") },
-  { id:"r3",  name:"Onion",       price:"₹15–40/kg",        icon:"ellipse-outline",      bg:"#FCE7F3", imageUrl: assetImg("grocery/vegetables.png") },
-  { id:"r4",  name:"Cow Milk",    price:"₹50–70/litre",     icon:"water-outline",        bg:"#DBEAFE", badge:"Daily", imageUrl: assetImg("grocery/milky_products.png") },
-  { id:"r5",  name:"Buffalo Milk",price:"₹60–80/litre",     icon:"water-outline",        bg:"#E0F2FE", imageUrl: assetImg("grocery/milky_products.png") },
-  { id:"r6",  name:"Sugar",       price:"₹30–40/kg",        icon:"cube-outline",         bg:"#F3F4F6", imageUrl: assetImg("grocery/dry_fruits.png") },
-  { id:"r7",  name:"Bread",       price:"₹20–50/100g",      icon:"apps-outline",         bg:"#FFEDD5", badge:"Fresh", imageUrl: assetImg("grocery/chocolates.png") },
-  { id:"r8",  name:"Eggs",        price:"₹8–15/piece",      icon:"ellipse",              bg:"#FEF9C3", imageUrl: assetImg("grocery/milky_products.png") },
-  { id:"r9",  name:"Wheat Flour", price:"₹45–90/kg",        icon:"layers-outline",       bg:"#FEF3C7", imageUrl: assetImg("grocery/wheat_pulses.png") },
-  { id:"r10", name:"Tea / Coffee",price:"₹70–100/100g",     icon:"cafe-outline",         bg:"#FEE2E2", imageUrl: assetImg("grocery/drinks.png") },
-  { id:"r11", name:"Biscuits",    price:"₹5–700",           icon:"grid-outline",         bg:"#FCE7F3", imageUrl: assetImg("grocery/chocolates.png") },
-  { id:"r12", name:"Ghee",        price:"₹500–7000/kg",     icon:"beaker-outline",       bg:"#FEF9C3", badge:"Pure", imageUrl: assetImg("grocery/oil.png") },
-];
-
-// ── Seasonal Fruits & Vegetables ──────────────────────────────
-
-export const SEASONAL_ITEMS: GroceryProduct[] = [
-  { id:"s1",  name:"Mango",       price:"₹200–450/kg",      icon:"nutrition-outline",    bg:"#FEF3C7", badge:"Season", imageUrl: assetImg("grocery/fruits.png") },
-  { id:"s2",  name:"Kothimbir",   price:"₹10–30/kg",        icon:"leaf-outline",         bg:"#DCFCE7", badge:"Fresh",  imageUrl: assetImg("grocery/vegetables.png") },
-  { id:"s3",  name:"Lemons",      price:"₹15–40/kg",        icon:"radio-button-on",      bg:"#FEFCE8", imageUrl: assetImg("grocery/vegetables.png") },
-  { id:"s4",  name:"Figs",        price:"₹50–70/kg",        icon:"ellipse-outline",      bg:"#FEE2E2", badge:"Season", imageUrl: assetImg("grocery/fruits.png") },
-  { id:"s5",  name:"Mosambi",     price:"₹60–180/kg",       icon:"nutrition-outline",    bg:"#FEF9C3", imageUrl: assetImg("grocery/fruits.png") },
-  { id:"s6",  name:"Guava",       price:"₹30–40/kg",        icon:"earth-outline",        bg:"#DCFCE7", badge:"Fresh",  imageUrl: assetImg("grocery/fruits.png") },
-  { id:"s7",  name:"Ber",         price:"₹50–70/kg",        icon:"ellipse",              bg:"#FEE2E2", imageUrl: assetImg("grocery/fruits.png") },
-  { id:"s8",  name:"Kiwi",        price:"₹120–200/kg",      icon:"earth-outline",        bg:"#D1FAE5", badge:"Exotic", imageUrl: assetImg("grocery/fruits.png") },
-  { id:"s9",  name:"Banana",      price:"₹30–60/dozen",     icon:"nutrition-outline",    bg:"#FEF3C7", imageUrl: assetImg("grocery/fruits.png") },
-];
-
-// ── Grocery sections config ───────────────────────────────────
-
-export interface GrocerySection {
-  key:      string;
-  title:    string;
-  icon:     string;
-  iconColor:string;
-  products: GroceryProduct[];
-}
-
-export const GROCERY_SECTIONS: GrocerySection[] = [
-  {
-    key:       "regular",
-    title:     "Regular Items",
-    icon:      "basket-outline",
-    iconColor: "#026451",
-    products:  REGULAR_ITEMS,
-  },
-  {
-    key:       "seasonal",
-    title:     "Seasonal Fruits & Vegetables",
-    icon:      "leaf-outline",
-    iconColor: "#15803D",
-    products:  SEASONAL_ITEMS,
-  },
-];
+// REGULAR_ITEMS / SEASONAL_ITEMS / GROCERY_SECTIONS were removed (2026-09) —
+// hardcoded per-kg price RANGES ("Potatoes ₹20-45/kg") that GroceryFeed never
+// rendered. A static price nobody's shop actually charges is exactly the
+// phantom-data class §19.8 forbids, and dead code is still a landmine —
+// whoever wired it up next would have shipped invented prices as if real.
+// Real grocery prices come from CategoryLiveProducts (real seller listings).

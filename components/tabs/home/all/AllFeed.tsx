@@ -4,8 +4,19 @@
 // Multi-section home feed. Product LISTS are real seller inventory only
 // (CategoryLiveProducts); the mock product rails (Daily Essentials, Flash
 // Deals, New Arrivals, Trending) were removed. The non-product sections —
-// promo banners, seasonal CATEGORY tiles, the Discover row, brand-funded
-// promos, and popular stores — stay to keep the layout intact.
+// promo banners, seasonal CATEGORY tiles, the Discover row — stay to keep
+// the layout intact.
+//
+// BrandDealsSection was removed (2026-09): its data (data/brandPromoData.ts)
+// invents SPECIFIC named sellers ("Sharma General Store", "Gupta Medical
+// Store") and claims real FMCG brands (Nestlé, HUL, Mondelez, Tata Consumer,
+// Britannia, Reckitt) are funding co-op discounts through Apana — no such
+// partnership exists with any of them. That's a materially different problem
+// from a placeholder price: it names real trademark holders as commercial
+// partners. §19.8 — no real brand-funded promo backend exists, so this shows
+// nothing rather than something invented. brandPromoData.ts itself is left
+// in place — Cart's discount engine (lib/discount.ts) still imports
+// getActiveBrandPromo() from it for real cart-line pricing.
 // ============================================================
 
 import React from "react";
@@ -13,18 +24,13 @@ import { View } from "react-native";
 
 import BannerCarousel          from "../BannerCarousel";
 import SeasonalCategorySection from "./SeasonalCategorySection";
-import BrandDealsSection       from "./BrandDealsSection";
 import HomeDiscoverRow         from "../HomeDiscoverRow";
 import CategoryLiveProducts    from "../live/CategoryLiveProducts";
 
-import { BANNERS }          from "../../../../data/homeData";
-import { SEASONS }          from "../../../../data/allFeedData";
-import { getActiveBrandDeals } from "../../../../data/brandPromoData";
+import { BANNERS } from "../../../../data/homeData";
+import { SEASONS } from "../../../../data/allFeedData";
 
 export default function AllFeed() {
-  // Brand-funded promos live now (empty → the section renders nothing).
-  const brandDeals = getActiveBrandDeals();
-
   return (
     <View>
 
@@ -41,9 +47,6 @@ export default function AllFeed() {
 
       {/* ── 4. Real seller inventory (replaces the mock product rails) ── */}
       <CategoryLiveProducts categoryKey="all" title="Fresh from local shops" icon="storefront-outline" />
-
-      {/* ── 5. Brand Deals — brand-FUNDED co-op; seller kept whole (empty → hidden) ── */}
-      <BrandDealsSection deals={brandDeals} />
 
       {/* Real nearby stores live in the Stores discovery mode (NearbyStoresFeed);
           the old mock "Popular Stores" rail was removed (§19.8 — no phantom shops). */}

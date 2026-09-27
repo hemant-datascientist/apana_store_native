@@ -69,7 +69,12 @@ export interface Banner {
   id:       string;
   title:    string;
   subtitle: string;
-  tag:      string;   // pill label (e.g. "New Arrivals")
+  // Optional — §19.8: a pill claiming a specific offer ("Up to 20% Off",
+  // "Free Delivery") asserts a platform-wide guarantee nothing backs. The
+  // only real discount is a seller's own stop-loss deal, set per shop, never
+  // category-wide. Only set this for a tagline that's true by construction
+  // (e.g. "Discover Local"), never a number or a promise.
+  tag?:     string;
   bg:       string;   // card background color
   accent:   string;   // title / tag accent color
   icon:     string;   // Ionicons glyph for decorative element
@@ -91,7 +96,6 @@ export const BANNERS: Banner[] = [
     id:       "b2",
     title:    "Fresh Grocery",
     subtitle: "Farm-fresh vegetables, dairy & daily essentials delivered fast.",
-    tag:      "Up to 20% Off",
     bg:       "#15803D",
     accent:   "#BBF7D0",
     icon:     "basket-outline",
@@ -101,7 +105,6 @@ export const BANNERS: Banner[] = [
     id:       "b3",
     title:    "Fashion Week",
     subtitle: "Ethnic wear, western outfits & accessories from local boutiques.",
-    tag:      "New Arrivals",
     bg:       "#9333EA",
     accent:   "#F3E8FF",
     icon:     "shirt-outline",
@@ -109,9 +112,11 @@ export const BANNERS: Banner[] = [
   },
   {
     id:       "b4",
-    title:    "Pune Specials",
-    subtitle: "Shrewsbury biscuits, Chitale Bhakharwadi & more local favourites.",
-    tag:      "Only on Apana",
+    // Named products removed from the subtitle — this banner has no per-city
+    // real inventory check behind it, so naming specific items claims they're
+    // in stock nearby when nobody has verified that.
+    title:    "Local Favourites",
+    subtitle: "Specialities from shops around you, not found on any chain app.",
     bg:       "#C2410C",
     accent:   "#FED7AA",
     icon:     "heart-outline",
@@ -119,30 +124,10 @@ export const BANNERS: Banner[] = [
   },
 ];
 
-// ── Trending ──────────────────────────────────────────────────
-export interface TrendingItem {
-  id:       string;
-  name:     string;
-  category: string;
-  area:     string;
-  icon:     string;   // Ionicons glyph
-  color:    string;   // card image bg color
-  badge:    string;   // "Open" | "Popular" | "New"
-  badgeBg:  string;
-  badgeColor: string;
-}
-
-export const TRENDING_ITEMS: TrendingItem[] = [
-  { id: "t1", name: "Metro Wholesale Mall",    category: "Wholesale",      area: "Wakad",       icon: "business-outline",     color: "#DBEAFE", badge: "Open",    badgeBg: "#DCFCE7", badgeColor: "#15803D" },
-  { id: "t2", name: "Shrewsbury Biscuits",     category: "Bakery",         area: "Pune City",   icon: "cafe-outline",         color: "#FEF3C7", badge: "Popular", badgeBg: "#FFEDD5", badgeColor: "#C2410C" },
-  { id: "t3", name: "Chitale Bhakharwadi",     category: "Snacks",         area: "Deccan",      icon: "fast-food-outline",    color: "#FFEDD5", badge: "Popular", badgeBg: "#FFEDD5", badgeColor: "#C2410C" },
-  { id: "t4", name: "Meridian Ice Cream",      category: "Ice Cream",      area: "FC Road",     icon: "ice-cream-outline",    color: "#FCE7F3", badge: "Open",    badgeBg: "#DCFCE7", badgeColor: "#15803D" },
-  { id: "t5", name: "Puneri Pagadi",           category: "Fashion",        area: "Laxmi Road",  icon: "shirt-outline",        color: "#EDE9FE", badge: "Open",    badgeBg: "#DCFCE7", badgeColor: "#15803D" },
-  { id: "t6", name: "Maharashtrian Naths",     category: "Jewellery",      area: "Kasba Peth",  icon: "diamond-outline",      color: "#FEF3C7", badge: "Popular", badgeBg: "#FFEDD5", badgeColor: "#C2410C" },
-  { id: "t7", name: "Osha Chappals",           category: "Footwear",       area: "MG Road",     icon: "walk-outline",         color: "#DCFCE7", badge: "Open",    badgeBg: "#DCFCE7", badgeColor: "#15803D" },
-  { id: "t8", name: "Kolhapuri Chappals",      category: "Footwear",       area: "Kolhapur",    icon: "walk-outline",         color: "#FFEDD5", badge: "Popular", badgeBg: "#FFEDD5", badgeColor: "#C2410C" },
-  { id: "t9", name: "Kala Khatta Soda",        category: "Beverages",      area: "Camp",        icon: "wine-outline",         color: "#EDE9FE", badge: "New",     badgeBg: "#DBEAFE", badgeColor: "#1D4ED8" },
-  { id: "t10",name: "Run Maika",               category: "Traditional",    area: "Peth Area",   icon: "restaurant-outline",   color: "#FCE7F3", badge: "Open",    badgeBg: "#DCFCE7", badgeColor: "#15803D" },
-  { id: "t11",name: "Puran Poli Corner",       category: "Food",           area: "Sadashiv",    icon: "restaurant-outline",   color: "#FEF3C7", badge: "Popular", badgeBg: "#FFEDD5", badgeColor: "#C2410C" },
-  { id: "t12",name: "Pittho Sweet House",      category: "Sweets",         area: "Narayan Peth",icon: "gift-outline",         color: "#FCE7F3", badge: "Open",    badgeBg: "#DCFCE7", badgeColor: "#15803D" },
-];
+// TRENDING_ITEMS was removed (2026-09) — 12 invented shops (real chain names
+// like "Metro Wholesale Mall" mixed with invented ones, fake "Open"/"Popular"
+// badges) that nothing ever rendered. Dead phantom data is still phantom
+// data: it was a landmine for the next screen that imports it expecting real
+// trending shops. §19.8 — real trending would need an actual popularity
+// signal (order volume, follows); none exists yet, so there is no
+// replacement until one does.
