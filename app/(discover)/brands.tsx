@@ -1,15 +1,21 @@
 // ============================================================
 // BRANDS SCREEN — Apana Store
 //
-// Lets customers browse and search all brands available in
-// their city. Tapping a brand → product listing (future screen).
+// A curated list of brand-name search shortcuts. Tapping a brand routes
+// into the real search index (/search-results?q=<name>) — the same screen
+// Seasonal Picks and every other discovery tile already uses.
+//
+// 🔴 This screen used to claim "N brands available in your city" and render
+// invented productCount/storeCount/isVerified/isPremium against 20 real
+// trademark holders (Nike, Samsung, Amul…), with taps going nowhere. None
+// of that is knowable without a real per-brand backend, so none of it is
+// shown now — this is a shortcut into search, not a stock claim (§19.8).
 //
 // Layout (top → bottom):
-//   Header           — blue header + back + brand count
-//   SearchBar        — live search filtering brand names
+//   Header           — blue header + back
+//   SearchBar        — live filter over the shortcut names
 //   CategoryFilter   — filter by brand category
-//   Results count    — "X brands" label
-//   2-column grid    — BrandCard × N
+//   2-column grid    — BrandCard × N, each → real search
 // ============================================================
 
 import React, { useState, useMemo } from "react";
@@ -23,7 +29,7 @@ import { useRouter } from "expo-router";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 
-import { BRANDS, BrandCategory } from "../../data/brandsData";
+import { BRANDS, Brand, BrandCategory } from "../../data/brandsData";
 
 import BrandsSearchBar       from "../../components/brands/BrandsSearchBar";
 import BrandsCategoryFilter  from "../../components/brands/BrandsCategoryFilter";
@@ -49,6 +55,13 @@ export default function BrandsScreen() {
     });
   }, [query, activeCategory]);
 
+  // Real search, same destination every other discovery shortcut on the app
+  // routes into — nothing here claims a brand has stock, only that it's
+  // worth searching for.
+  function handleBrandPress(brand: Brand) {
+    router.push(`/search-results?q=${encodeURIComponent(brand.name)}` as never);
+  }
+
   // ── Pair brands for 2-column layout ──────────────────────
   // FlatList with numColumns handles this natively but requires
   // a key extractor that handles odd-count arrays.
@@ -72,7 +85,7 @@ export default function BrandsScreen() {
               Brands
             </Text>
             <Text style={[styles.headerSub, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-              {BRANDS.length} brands available in your city
+              Tap a brand to search for it near you
             </Text>
           </View>
 
@@ -122,8 +135,10 @@ export default function BrandsScreen() {
               const right = filteredBrands[rowIdx * 2 + 1];
               return (
                 <View key={rowIdx} style={styles.gridRow}>
-                  <BrandCard brand={left} />
-                  {right ? <BrandCard brand={right} /> : <View style={styles.gridPlaceholder} />}
+                  <BrandCard brand={left} onPress={() => handleBrandPress(left)} />
+                  {right
+                    ? <BrandCard brand={right} onPress={() => handleBrandPress(right)} />
+                    : <View style={styles.gridPlaceholder} />}
                 </View>
               );
             })}
