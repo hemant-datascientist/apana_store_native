@@ -2,20 +2,20 @@
 // FASHION FEED — Apana Store (Home, Products > Fashion)
 //
 // Complete fashion category screen:
-//   BannerCarousel  (fashion-specific promos)
 //   FashionGenderTabs (Men | Women | Boy | Girl)
 //   FashionSubCategoryGrid (sub-categories per gender)
+//
+// Banners/promo carousel removed 2026-09 — parked until there's a real
+// user base to justify one; see apana_doc/architecture/home_banners_promo_deferred.md.
 //
 // Accent color: #660033 (fashion maroon)
 // ============================================================
 
 import React, { useState } from "react";
-import { View, Alert, StyleSheet } from "react-native";
-import BannerCarousel         from "../BannerCarousel";
+import { View, StyleSheet } from "react-native";
 import FashionGenderTabs      from "./FashionGenderTabs";
 import FashionSubCategoryGrid from "./FashionSubCategoryGrid";
 import CategoryLiveProducts   from "../live/CategoryLiveProducts";
-import { CATEGORY_FEEDS }     from "../../../../data/categoryFeedData";
 import {
   FASHION_GENDERS,
   FashionGender,
@@ -30,12 +30,6 @@ export default function FashionFeed() {
 
   return (
     <View style={styles.root}>
-
-      {/* Fashion promo banners */}
-      <BannerCarousel
-        banners={CATEGORY_FEEDS.fashion.banners}
-        onPress={b => Alert.alert(b.title, b.subtitle)}
-      />
 
       {/* Gender / age selector tabs */}
       <FashionGenderTabs

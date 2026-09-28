@@ -1,13 +1,14 @@
 // ============================================================
 // SPORTS FEED — Apana Store (Home, Products > Sports)
+//
+// Banners/promo carousel removed 2026-09 — parked until there's a real
+// user base to justify one; see apana_doc/architecture/home_banners_promo_deferred.md.
 // ============================================================
 
 import React from "react";
-import { View, Alert } from "react-native";
-import BannerCarousel    from "../BannerCarousel";
+import { View } from "react-native";
 import CategoryLiveProducts from "../live/CategoryLiveProducts";
 import CategorySubGrid, { SubCat } from "../shared/CategorySubGrid";
-import { CATEGORY_FEEDS } from "../../../../data/categoryFeedData";
 import { assetImg } from "../../../../lib/assetImg";
 
 const ACCENT = "#B45309";
@@ -30,10 +31,6 @@ const SUB_CATS: SubCat[] = [
 export default function SportsFeed() {
   return (
     <View>
-      <BannerCarousel
-        banners={CATEGORY_FEEDS.sports.banners}
-        onPress={b => Alert.alert(b.title, b.subtitle)}
-      />
       <CategorySubGrid subCats={SUB_CATS} accent={ACCENT} apc="APC-25-SPRT" />
       <CategoryLiveProducts categoryKey="sports" accentColor={ACCENT} />
     </View>

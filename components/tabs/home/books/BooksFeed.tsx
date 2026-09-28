@@ -1,13 +1,14 @@
 // ============================================================
 // BOOKS FEED — Apana Store (Home, Products > Books)
+//
+// Banners/promo carousel removed 2026-09 — parked until there's a real
+// user base to justify one; see apana_doc/architecture/home_banners_promo_deferred.md.
 // ============================================================
 
 import React from "react";
-import { View, Alert } from "react-native";
-import BannerCarousel    from "../BannerCarousel";
+import { View } from "react-native";
 import CategoryLiveProducts from "../live/CategoryLiveProducts";
 import CategorySubGrid, { SubCat } from "../shared/CategorySubGrid";
-import { CATEGORY_FEEDS } from "../../../../data/categoryFeedData";
 import { assetImg } from "../../../../lib/assetImg";
 
 const ACCENT = "#933A00";
@@ -30,10 +31,6 @@ const SUB_CATS: SubCat[] = [
 export default function BooksFeed() {
   return (
     <View>
-      <BannerCarousel
-        banners={CATEGORY_FEEDS.books.banners}
-        onPress={b => Alert.alert(b.title, b.subtitle)}
-      />
       <CategorySubGrid subCats={SUB_CATS} accent={ACCENT} apc="APC-21-BOOK" />
       <CategoryLiveProducts categoryKey="books" accentColor={ACCENT} />
     </View>

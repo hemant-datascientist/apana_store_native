@@ -2,22 +2,22 @@
 // GROCERY FEED — Apana Store (Home, Products > Grocery)
 //
 // Grocery category screen:
-//   BannerCarousel (grocery-specific promos)
 //   GroceryCategoryGrid (12 APC-aligned grocery sub-categories)
 //   CategoryLiveProducts (real seller grocery inventory)
+//
+// Banners/promo carousel removed 2026-09 — parked until there's a real
+// user base to justify one; see apana_doc/architecture/home_banners_promo_deferred.md.
 // ============================================================
 
 import React from "react";
-import { View, Alert, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import BannerCarousel   from "../BannerCarousel";
 import GroceryCategoryGrid from "./GroceryCategoryGrid";
 import CategoryLiveProducts from "../live/CategoryLiveProducts";
 import {
   GROCERY_SUB_CATEGORIES,
   GrocerySubCategory,
 } from "../../../../data/groceryData";
-import { CATEGORY_FEEDS } from "../../../../data/categoryFeedData";
 
 export default function GroceryFeed() {
   const router = useRouter();
@@ -30,12 +30,6 @@ export default function GroceryFeed() {
 
   return (
     <View style={styles.root}>
-
-      {/* Grocery promo banners */}
-      <BannerCarousel
-        banners={CATEGORY_FEEDS.grocery.banners}
-        onPress={b => Alert.alert(b.title, b.subtitle)}
-      />
 
       {/* Sub-category grid (Vegetables, Fruits, Dairy …) */}
       <GroceryCategoryGrid

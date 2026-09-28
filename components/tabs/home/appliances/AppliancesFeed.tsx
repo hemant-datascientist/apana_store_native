@@ -1,19 +1,19 @@
 // ============================================================
 // APPLIANCES FEED — Apana Store (Home, Products > Appliances)
 //
-// Layout: promo banner → "Home Appliances" section grid
-//         → stores near you.
+// Layout: "Home Appliances" section grid → stores near you.
 // Sub-cats: TV, Refrigerator, Air Conditioner, Mixer Grinder,
 //           Speakers, Microwave, Fan & Cooler, Air Fryers,
 //           Chimney, Iron Presser, Vacuum Cleaner, Washing Machine
+//
+// Banners/promo carousel removed 2026-09 — parked until there's a real
+// user base to justify one; see apana_doc/architecture/home_banners_promo_deferred.md.
 // ============================================================
 
 import React from "react";
-import { View, Alert } from "react-native";
-import BannerCarousel    from "../BannerCarousel";
+import { View } from "react-native";
 import CategoryLiveProducts from "../live/CategoryLiveProducts";
 import CategorySubGrid, { SubCat } from "../shared/CategorySubGrid";
-import { CATEGORY_FEEDS } from "../../../../data/categoryFeedData";
 import { assetImg } from "../../../../lib/assetImg";
 
 const ACCENT = "#2C5282";
@@ -36,10 +36,6 @@ const APPLIANCE_CATS: SubCat[] = [
 export default function AppliancesFeed() {
   return (
     <View>
-      <BannerCarousel
-        banners={CATEGORY_FEEDS.appliances.banners}
-        onPress={b => Alert.alert(b.title, b.subtitle)}
-      />
       <CategorySubGrid
         title="Home Appliances"
         subCats={APPLIANCE_CATS}

@@ -4,8 +4,7 @@
 // Multi-section home feed. Product LISTS are real seller inventory only
 // (CategoryLiveProducts); the mock product rails (Daily Essentials, Flash
 // Deals, New Arrivals, Trending) were removed. The non-product sections —
-// promo banners, seasonal CATEGORY tiles, the Discover row — stay to keep
-// the layout intact.
+// seasonal CATEGORY tiles, the Discover row — stay to keep the layout intact.
 //
 // BrandDealsSection was removed (2026-09): its data (data/brandPromoData.ts)
 // invents SPECIFIC named sellers ("Sharma General Store", "Gupta Medical
@@ -17,35 +16,33 @@
 // nothing rather than something invented. brandPromoData.ts itself is left
 // in place — Cart's discount engine (lib/discount.ts) still imports
 // getActiveBrandPromo() from it for real cart-line pricing.
+//
+// Banners/promo carousel removed 2026-09 — parked until there's a real
+// user base to justify one; see apana_doc/architecture/home_banners_promo_deferred.md.
 // ============================================================
 
 import React from "react";
 import { View } from "react-native";
 
-import BannerCarousel          from "../BannerCarousel";
 import SeasonalCategorySection from "./SeasonalCategorySection";
 import HomeDiscoverRow         from "../HomeDiscoverRow";
 import CategoryLiveProducts    from "../live/CategoryLiveProducts";
 
-import { BANNERS } from "../../../../data/homeData";
 import { SEASONS } from "../../../../data/allFeedData";
 
 export default function AllFeed() {
   return (
     <View>
 
-      {/* ── 1. Promo banners ── */}
-      <BannerCarousel banners={BANNERS} onPress={() => {}} />
-
-      {/* ── 2. Seasonal Picks — category tiles, arrow-browsed ── */}
+      {/* ── 1. Seasonal Picks — category tiles, arrow-browsed ── */}
       <SeasonalCategorySection seasons={SEASONS} />
 
-      {/* ── 3. Discover — Offer Zone · Brands · New Launches ── */}
+      {/* ── 2. Discover — Offer Zone · Brands · New Launches ── */}
       <View style={{ paddingVertical: 14 }}>
         <HomeDiscoverRow />
       </View>
 
-      {/* ── 4. Real seller inventory (replaces the mock product rails) ── */}
+      {/* ── 3. Real seller inventory (replaces the mock product rails) ── */}
       <CategoryLiveProducts categoryKey="all" title="Fresh from local shops" icon="storefront-outline" />
 
       {/* Real nearby stores live in the Stores discovery mode (NearbyStoresFeed);

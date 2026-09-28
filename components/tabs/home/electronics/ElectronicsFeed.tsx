@@ -1,21 +1,21 @@
 // ============================================================
 // ELECTRONICS FEED — Apana Store (Home, Products > Electronics)
 //
-// Layout: promo banner → "Computer Electronics" section grid
-//         → stores near you.
+// Layout: "Computer Electronics" section grid → stores near you.
 // Sub-cats: Laptops, Desktops, Printer, DSLR Camera's,
 //           Headphones, Webcam, Monitors, Pendrive,
 //           RAM, CPU, GPU, WiFi & Routers,
 //           Keyboard & Mouse, Hard Disks & SSD,
 //           Games & Software's, Skins & Mousepad
+//
+// Banners/promo carousel removed 2026-09 — parked until there's a real
+// user base to justify one; see apana_doc/architecture/home_banners_promo_deferred.md.
 // ============================================================
 
 import React from "react";
-import { View, Alert } from "react-native";
-import BannerCarousel    from "../BannerCarousel";
+import { View } from "react-native";
 import CategoryLiveProducts from "../live/CategoryLiveProducts";
 import CategorySubGrid, { SubCat } from "../shared/CategorySubGrid";
-import { CATEGORY_FEEDS } from "../../../../data/categoryFeedData";
 import { assetImg } from "../../../../lib/assetImg";
 
 const ACCENT = "#5F75B1";
@@ -42,10 +42,6 @@ const COMPUTER_CATS: SubCat[] = [
 export default function ElectronicsFeed() {
   return (
     <View>
-      <BannerCarousel
-        banners={CATEGORY_FEEDS.electronics.banners}
-        onPress={b => Alert.alert(b.title, b.subtitle)}
-      />
       <CategorySubGrid
         title="Computer Electronics"
         subCats={COMPUTER_CATS}
