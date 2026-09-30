@@ -39,6 +39,7 @@ import {
 import StateView from "../../components/ui/StateView";
 import { openDirections } from "../../lib/openDirections";
 import { goBackOr } from "../../lib/goBack";
+import { getStoreGallery, StorePhoto } from "../../data/storeGallery";
 import { useStoreCatalog }     from "../../hooks/useStoreCatalog";
 import { useFollow }           from "../../hooks/useFollow";
 import { useStoreMute }        from "../../hooks/useNotificationPrefs";
@@ -128,6 +129,20 @@ export default function StoreDetailScreen() {
   const openStatus = live.meta
     ? (realStoreRef ? { isOpen: realStoreRef.isOpen, label: realStoreRef.closedLabel } : null)
     : { isOpen: sample?.isOpen ?? true, label: null as string | null };
+
+  // The shop's OWN photos when it's real (cover + gallery, migration 0052) —
+  // never the bundled demo's sample gallery for a real shop, and never a real
+  // shop's photos mixed with the demo's (§19.8). A real shop that hasn't
+  // uploaded anything shows the honest colour-medallion fallback, not a
+  // borrowed image.
+  const photos: StorePhoto[] = live.meta
+    ? [
+        ...(live.meta.coverUrl ? [{ src: { uri: live.meta.coverUrl }, label: "Cover", kind: "cover" as const }] : []),
+        ...live.meta.gallery
+          .filter((url) => url !== live.meta!.coverUrl)
+          .map((url, i) => ({ src: { uri: url }, label: `Photo ${i + 1}`, kind: "exterior" as const })),
+      ]
+    : getStoreGallery(store.id);
 
   const [productSearch, setProductSearch] = useState("");
   const [showShare, setShowShare] = useState(false);
@@ -261,7 +276,7 @@ export default function StoreDetailScreen() {
         </View>
 
         {/* ── Hero banner ── */}
-        <StoreHeroBanner store={store} />
+        <StoreHeroBanner store={store} photos={photos} />
 
         {/* ── Store name, address, status ── */}
         <StoreInfoHeader store={store} openStatus={openStatus} />

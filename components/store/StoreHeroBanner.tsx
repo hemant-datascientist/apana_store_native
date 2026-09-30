@@ -19,7 +19,7 @@ import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { Ionicons }   from "@expo/vector-icons";
 import { typography } from "../../theme/typography";
 import { StoreDetail } from "../../data/storeDetailData";
-import { getStoreGallery } from "../../data/storeGallery";
+import { StorePhoto } from "../../data/storeGallery";
 import StoreCoverCarousel from "./StoreCoverCarousel";
 
 const { width: SW } = Dimensions.get("window");
@@ -27,12 +27,13 @@ const HERO_H        = 220;
 
 interface StoreHeroBannerProps {
   store: StoreDetail;
+  /** Resolved by the caller — real seller-uploaded photos when the store is
+   *  real, the bundled demo's sample gallery when it's the demo (§19.8: no
+   *  photo mixing between the two). */
+  photos: StorePhoto[];
 }
 
-export default function StoreHeroBanner({ store }: StoreHeroBannerProps) {
-  // All of the store's photos — cover + front/exterior/interior/surrounding
-  // (the Nearby banner shows the cover; here the customer can swipe them all).
-  const photos = getStoreGallery(store.id);
+export default function StoreHeroBanner({ store, photos }: StoreHeroBannerProps) {
   const hasPhotos = photos.length > 0;
 
   return (

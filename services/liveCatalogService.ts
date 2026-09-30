@@ -479,6 +479,12 @@ export interface StoreMeta {
   isLive: boolean;
   rating: number;
   reviewCount: number;
+  /** The shop's OWN photos (seller-uploaded, migration 0052) — resolved,
+   *  absolute URLs. Empty when the seller hasn't uploaded any; never a
+   *  stand-in image (§19.8). */
+  logoUrl: string | null;
+  coverUrl: string | null;
+  gallery: string[];
 }
 interface WireStoreMeta {
   id: string;
@@ -498,6 +504,9 @@ interface WireStoreMeta {
   is_live: boolean;
   rating: number;
   review_count: number;
+  logo_url: string | null;
+  cover_url: string | null;
+  gallery: string[] | null;
 }
 
 // null when the id isn't an approved store (404) or in mock mode — the caller
@@ -526,6 +535,9 @@ export async function fetchStoreMeta(storeId: string): Promise<StoreMeta | null>
       isLive: w.is_live,
       rating: w.rating,
       reviewCount: w.review_count,
+      logoUrl: resolveImage(w.logo_url ?? undefined),
+      coverUrl: resolveImage(w.cover_url ?? undefined),
+      gallery: (w.gallery ?? []).map(resolveImage).filter((u): u is string => u != null),
     };
   } catch {
     return null;
