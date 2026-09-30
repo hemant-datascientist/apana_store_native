@@ -21,6 +21,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { goBackOr } from "../../lib/goBack";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 
@@ -51,7 +52,7 @@ export default function LanguageScreen() {
   // Backend: PUT /user/preferences { language: selected }
   function handleApply() {
     if (selected === DEFAULT_LANGUAGE_CODE) {
-      router.back();
+      goBackOr();
       return;
     }
     // It said "Language Updated — app language set to X". Nothing was set:
@@ -61,7 +62,7 @@ export default function LanguageScreen() {
     Alert.alert(
       "Only English for now",
       `Apana is not translated into ${currentLang.nativeName} yet, so nothing changed. We have not saved this choice.`,
-      [{ text: "OK", onPress: () => router.back() }],
+      [{ text: "OK", onPress: () => goBackOr() }],
     );
   }
 
@@ -72,7 +73,7 @@ export default function LanguageScreen() {
       {/* ── Header ── */}
       <SafeAreaView style={[styles.header, { backgroundColor: colors.primary }]} edges={["top"]}>
         <View style={styles.headerRow}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => goBackOr()} activeOpacity={0.7}>
             <Ionicons name="arrow-back" size={20} color="#fff" />
           </TouchableOpacity>
           <View style={styles.headerCenter}>

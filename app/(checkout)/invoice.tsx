@@ -25,6 +25,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons }     from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { goBackOr } from "../../lib/goBack";
 
 import useTheme        from "../../theme/useTheme";
 import { typography }  from "../../theme/typography";
@@ -106,7 +107,7 @@ export default function InvoiceScreen() {
         <View style={styles.headerRow}>
           <TouchableOpacity
             style={[styles.iconBtn, { backgroundColor: colors.background }]}
-            onPress={() => router.back()}
+            onPress={() => goBackOr()}
             activeOpacity={0.75}
           >
             <Ionicons name="arrow-back" size={20} color={colors.text} />

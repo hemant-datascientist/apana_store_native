@@ -28,6 +28,7 @@ import { SafeAreaView }      from "react-native-safe-area-context";
 import { Ionicons }          from "@expo/vector-icons";
 import * as Haptics          from "expo-haptics";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { goBackOr } from "../../lib/goBack";
 
 import useTheme              from "../../theme/useTheme";
 import { typography }        from "../../theme/typography";
@@ -212,7 +213,7 @@ export default function CheckoutPaymentScreen() {
         <View style={styles.headerRow}>
           <TouchableOpacity
             style={[styles.backBtn, { backgroundColor: colors.background }]}
-            onPress={() => router.back()}
+            onPress={() => goBackOr()}
             activeOpacity={0.7}
           >
             <Ionicons name="arrow-back" size={20} color={colors.text} />

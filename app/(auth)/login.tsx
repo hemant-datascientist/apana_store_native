@@ -23,6 +23,7 @@ import {
   TextInput,
 } from "react-native";
 import { useRouter }        from "expo-router";
+import { goBackOr }         from "../../lib/goBack";
 import useTheme             from "../../theme/useTheme";
 import { useAuth }          from "../../context/AuthContext";
 import { sendOtp, toE164 }  from "../../services/authService";
@@ -111,7 +112,7 @@ export default function LoginScreen() {
       <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
 
       {/* ── Header ── */}
-      <AuthHeader title="Sign In" onBack={() => router.back()} />
+      <AuthHeader title="Sign In" onBack={() => goBackOr("/(auth)/login")} />
 
       <ScrollView
         contentContainerStyle={styles.scroll}

@@ -25,9 +25,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import * as Location from "expo-location";
 
+import { goBackOr } from "../../lib/goBack";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import MapplsWebView, { MapplsWebViewHandle } from "../../components/map/MapplsWebView";
@@ -42,7 +42,6 @@ const PIN_ZOOM = 17;
 
 export default function PinAddressScreen() {
   const { colors, isDark } = useTheme();
-  const router = useRouter();
   const { user } = useAuth();
   const { reloadAddresses } = useLocation();
   const customerId = user?.phone ?? "";
@@ -117,7 +116,7 @@ export default function PinAddressScreen() {
       // too, but the checkout picker reads the same context — without this the
       // customer can reach checkout and not see the address they just saved.
       await reloadAddresses();
-      router.back();
+      goBackOr("/(account)/address-book");
     } catch (err) {
       // The server refuses a pin it cannot resolve rather than saving a
       // half-address. Show its reason verbatim — "move the pin slightly and try
@@ -126,12 +125,12 @@ export default function PinAddressScreen() {
     } finally {
       setSaving(false);
     }
-  }, [customerId, center, door, label, router]);
+  }, [customerId, center, door, label]);
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => goBackOr("/(account)/address-book")} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.text }]}>Set delivery location</Text>

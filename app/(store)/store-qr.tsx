@@ -23,6 +23,7 @@ import { Ionicons }                          from "@expo/vector-icons";
 import { SafeAreaView }                      from "react-native-safe-area-context";
 import { useRouter }                         from "expo-router";
 import * as Haptics                          from "expo-haptics";
+import { goBackOr }                          from "../../lib/goBack";
 import { typography }                        from "../../theme/typography";
 import { parseStoreId }                      from "../../lib/storeShare";
 
@@ -99,7 +100,7 @@ export default function StoreQRScreen() {
             Allow Camera
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => goBackOr()}>
           <Text style={[styles.goBack, { fontFamily: typography.fontFamily.regular }]}>
             Go back
           </Text>
@@ -165,7 +166,7 @@ export default function StoreQRScreen() {
       {/* ── Top bar ── */}
       <SafeAreaView style={styles.topBar} edges={["top"]}>
         <View style={styles.topRow}>
-          <TouchableOpacity style={styles.topBtn} onPress={() => router.back()} activeOpacity={0.75}>
+          <TouchableOpacity style={styles.topBtn} onPress={() => goBackOr()} activeOpacity={0.75}>
             <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
 

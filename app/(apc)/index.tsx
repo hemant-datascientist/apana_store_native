@@ -17,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
+import { goBackOr } from "../../lib/goBack";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { getTreeRoots, searchTree, type ApcTreeNode } from "../../services/apc";
@@ -58,7 +59,7 @@ export default function ApcBrowserScreen() {
       {/* ── Header ── */}
       <SafeAreaView style={[styles.header, { backgroundColor: ACCENT }]} edges={["top"]}>
         <View style={styles.headerRow}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => goBackOr()} activeOpacity={0.7}>
             <Ionicons name="arrow-back" size={20} color="#fff" />
           </TouchableOpacity>
           <View style={styles.headerCenter}>

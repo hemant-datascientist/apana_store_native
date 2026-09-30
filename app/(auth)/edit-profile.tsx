@@ -20,6 +20,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useRouter }    from "expo-router";
+import { goBackOr }     from "../../lib/goBack";
 import useTheme         from "../../theme/useTheme";
 import { useCustomerProfile } from "../../hooks/useCustomerProfile";
 import { typography }   from "../../theme/typography";
@@ -72,7 +73,7 @@ export default function EditProfileScreen() {
         return;
       }
       Alert.alert("Saved", "Your profile has been updated.", [
-        { text: "OK", onPress: () => router.back() },
+        { text: "OK", onPress: () => goBackOr() },
       ]);
     } catch {
       Alert.alert("Error", "Could not save changes. Please try again.");
@@ -85,10 +86,10 @@ export default function EditProfileScreen() {
     if (dirty) {
       Alert.alert("Discard Changes?", "You have unsaved changes.", [
         { text: "Keep Editing", style: "cancel" },
-        { text: "Discard",      style: "destructive", onPress: () => router.back() },
+        { text: "Discard",      style: "destructive", onPress: () => goBackOr() },
       ]);
     } else {
-      router.back();
+      goBackOr();
     }
   }
 

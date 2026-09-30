@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import { SafeAreaView }      from "react-native-safe-area-context";
 import { Ionicons }          from "@expo/vector-icons";
-import { useRouter }         from "expo-router";
+import { goBackOr }          from "../../lib/goBack";
 
 import useTheme              from "../../theme/useTheme";
 import { typography }        from "../../theme/typography";
@@ -31,7 +31,6 @@ import WalletForm                    from "../../components/payment/WalletForm";
 
 export default function AddPaymentScreen() {
   const { colors, isDark } = useTheme();
-  const router             = useRouter();
 
   const [activeTab, setActiveTab] = useState<PaymentTab>("upi");
 
@@ -41,7 +40,7 @@ export default function AddPaymentScreen() {
   async function handleAdd(label: string, detail: string) {
     // TODO: swap stub for real API call
     await addPaymentMethod({ type: activeTab, label, detail });
-    router.back();
+    goBackOr("/(account)/payment-methods");
   }
 
   // ── Render active form ────────────────────────────────────
@@ -63,7 +62,7 @@ export default function AddPaymentScreen() {
         <View style={styles.headerRow}>
           <TouchableOpacity
             style={[styles.backBtn, { backgroundColor: colors.background }]}
-            onPress={() => router.back()}
+            onPress={() => goBackOr("/(account)/payment-methods")}
             activeOpacity={0.75}
           >
             <Ionicons name="arrow-back" size={20} color={colors.text} />

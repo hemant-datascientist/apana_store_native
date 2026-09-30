@@ -25,6 +25,7 @@ import {
   StyleSheet, StatusBar, Alert, TextInput,
 } from "react-native";
 import { useRouter }            from "expo-router";
+import { goBackOr }             from "../../lib/goBack";
 import useTheme                 from "../../theme/useTheme";
 import AuthHeader               from "../../components/auth/AuthHeader";
 import SignupWelcome            from "../../components/auth/SignupWelcome";
@@ -103,7 +104,7 @@ export default function CreateAccountScreen() {
       <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
 
       {/* ── Header ── */}
-      <AuthHeader title="Create Account" onBack={() => router.back()} />
+      <AuthHeader title="Create Account" onBack={() => goBackOr("/(auth)/login")} />
 
       <ScrollView
         contentContainerStyle={styles.scroll}

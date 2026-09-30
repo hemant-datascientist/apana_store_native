@@ -38,6 +38,7 @@ import {
 } from "../../data/storeDetailData";
 import StateView from "../../components/ui/StateView";
 import { openDirections } from "../../lib/openDirections";
+import { goBackOr } from "../../lib/goBack";
 import { useStoreCatalog }     from "../../hooks/useStoreCatalog";
 import { useFollow }           from "../../hooks/useFollow";
 import { useStoreMute }        from "../../hooks/useNotificationPrefs";
@@ -205,7 +206,7 @@ export default function StoreDetailScreen() {
         <View style={[styles.headerBar, { paddingTop: Math.max(insets.top, 16), backgroundColor: store.heroBg }]}>
           <TouchableOpacity
             style={[styles.backBtn, { backgroundColor: "rgba(0,0,0,0.35)" }]}
-            onPress={() => router.back()}
+            onPress={() => goBackOr()}
             activeOpacity={0.8}
           >
             <Ionicons name="arrow-back" size={20} color="#fff" />

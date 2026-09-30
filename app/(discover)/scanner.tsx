@@ -32,6 +32,7 @@ import { typography } from "../../theme/typography";
 import useTheme from "../../theme/useTheme";
 import { parseStoreId } from "../../lib/storeShare";
 import { playSound } from "../../lib/sound";
+import { goBackOr } from "../../lib/goBack";
 
 // ── Scan zone dimensions ──────────────────────────────────────
 const { width: SW, height: SH } = Dimensions.get("window");
@@ -130,7 +131,7 @@ export default function ScannerScreen() {
         <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
         <SafeAreaView style={styles.permSafe}>
 
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => goBackOr()}>
             <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
 
@@ -175,7 +176,7 @@ export default function ScannerScreen() {
               </>
             )}
 
-            <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
+            <TouchableOpacity onPress={() => goBackOr()} activeOpacity={0.7}>
               <Text style={[styles.permSkip, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs, color: "rgba(255,255,255,0.45)" }]}>
                 Go back
               </Text>
@@ -269,7 +270,7 @@ export default function ScannerScreen() {
           {/* Back */}
           <TouchableOpacity
             style={styles.topBtn}
-            onPress={() => router.back()}
+            onPress={() => goBackOr()}
             activeOpacity={0.75}
           >
             <Ionicons name="arrow-back" size={22} color="#fff" />
@@ -358,7 +359,7 @@ export default function ScannerScreen() {
                 activeOpacity={0.85}
                 onPress={() => {
                   // Navigate to product search with scanned value
-                  router.back();
+                  goBackOr();
                 }}
               >
                 <Ionicons name="search-outline" size={16} color="#fff" />

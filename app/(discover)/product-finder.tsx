@@ -22,6 +22,7 @@ import {
 import { SafeAreaView }  from "react-native-safe-area-context";
 import { Ionicons }      from "@expo/vector-icons";
 import { useRouter }     from "expo-router";
+import { goBackOr }      from "../../lib/goBack";
 import useTheme          from "../../theme/useTheme";
 import { typography }    from "../../theme/typography";
 
@@ -49,7 +50,7 @@ export default function ProductFinderScreen() {
 
       {/* ── Header ── */}
       <SafeAreaView style={styles.header} edges={["top"]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn} activeOpacity={0.75}>
+        <TouchableOpacity onPress={() => goBackOr()} style={styles.headerBtn} activeOpacity={0.75}>
           <Ionicons name="arrow-back" size={22} color="#fff" />
         </TouchableOpacity>
 

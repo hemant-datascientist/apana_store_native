@@ -24,6 +24,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons }     from "@expo/vector-icons";
 import { useRouter }    from "expo-router";
+import { goBackOr }     from "../../lib/goBack";
 import useTheme         from "../../theme/useTheme";
 import { typography }   from "../../theme/typography";
 import {
@@ -87,7 +88,7 @@ export default function HelpSupportScreen() {
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.backBtn}
-          onPress={() => router.back()}
+          onPress={() => goBackOr()}
           activeOpacity={0.7}
         >
           <Ionicons name="arrow-back" size={22} color={colors.text} />

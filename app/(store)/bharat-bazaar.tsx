@@ -21,6 +21,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { goBackOr } from "../../lib/goBack";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 
@@ -123,7 +124,7 @@ export default function BharatBazaarScreen() {
       <SafeAreaView style={[styles.navbar, { backgroundColor: colors.card, borderBottomColor: colors.border }]} edges={["top"]}>
         <View style={styles.navContent}>
           {/* Back button */}
-          <TouchableOpacity style={styles.navBackBtn} onPress={() => router.back()}>
+          <TouchableOpacity style={styles.navBackBtn} onPress={() => goBackOr()}>
             <Ionicons name="chevron-back" size={24} color={colors.text} />
           </TouchableOpacity>
 

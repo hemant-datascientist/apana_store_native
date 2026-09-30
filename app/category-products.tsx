@@ -17,6 +17,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { goBackOr } from "../lib/goBack";
 import useTheme from "../theme/useTheme";
 import { typography } from "../theme/typography";
 import { cartRowId, useCart } from "../context/CartContext";
@@ -142,7 +143,7 @@ export default function CategoryProducts() {
       <StatusBar barStyle="light-content" backgroundColor={ACCENT} />
       <SafeAreaView style={[styles.header, { backgroundColor: ACCENT }]} edges={["top"]}>
         <View style={styles.headerRow}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => goBackOr()} activeOpacity={0.7}>
             <Ionicons name="arrow-back" size={20} color="#fff" />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>

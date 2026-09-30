@@ -114,9 +114,9 @@ export default function OrderChatScreen() {
     }
   };
 
-  // ⚠ router.back() does nothing when there is no history — expo-router only
-  // logs it. This screen is reachable from a notification tap, which can make
-  // it the first route in the stack.
+  // ⚠ A bare "go back" call does nothing when there is no history — expo-router
+  // only logs it. This screen is reachable from a notification tap, which can
+  // make it the first route in the stack.
   const goBack = () =>
     router.canGoBack() ? router.back() : router.replace("/(orders)/order-history");
 

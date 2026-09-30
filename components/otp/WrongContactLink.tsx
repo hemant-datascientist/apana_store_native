@@ -7,7 +7,7 @@
 //
 // Props:
 //   method  — "phone" | "email" (affects the copy)
-//   onPress — router.back()
+//   onPress — goBackOr(), passed in by the caller
 // ============================================================
 
 import React from "react";

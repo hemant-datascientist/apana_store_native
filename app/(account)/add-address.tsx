@@ -5,7 +5,7 @@
 //        /add-address?mode=edit&id=addr1 → pre-filled form
 //
 // On submit the new/updated address is passed back to
-// address-book via router.back() + expo-router params
+// address-book via goBackOr() + expo-router params
 // (address-book reads `newAddressJson` from local search params
 //  after navigating back). No backend required — local state only.
 //
@@ -27,7 +27,8 @@ import {
 } from "react-native";
 import { SafeAreaView }  from "react-native-safe-area-context";
 import { Ionicons }      from "@expo/vector-icons";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
+import { goBackOr } from "../../lib/goBack";
 import useTheme         from "../../theme/useTheme";
 import { typography }    from "../../theme/typography";
 import { useLocation }   from "../../context/LocationContext";
@@ -85,7 +86,6 @@ function Field({
 }
 
 export default function AddAddressScreen() {
-  const router       = useRouter();
   const { colors }   = useTheme();
 
   const { mode = "add", id } = useLocalSearchParams<{
@@ -150,7 +150,7 @@ export default function AddAddressScreen() {
       if (existing) await updateAddress(customerId, existing.id, payload);
       else          await createAddress(customerId, payload);
       await reloadAddresses();
-      router.back();
+      goBackOr("/(account)/address-book");
     } catch (e) {
       // Stay on the form with the typed values intact — going back on a failed
       // save is how a customer ends up believing an address exists.
@@ -169,7 +169,7 @@ export default function AddAddressScreen() {
 
       {/* ── Header ── */}
       <SafeAreaView style={styles.header} edges={["top"]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn} activeOpacity={0.75}>
+        <TouchableOpacity onPress={() => goBackOr("/(account)/address-book")} style={styles.headerBtn} activeOpacity={0.75}>
           <Ionicons name="arrow-back" size={22} color="#fff" />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { fontFamily: typography.fontFamily.semiBold }]}>

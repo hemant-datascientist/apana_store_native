@@ -8,9 +8,9 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
+import { goBackOr } from "../../lib/goBack";
 
 interface ScreenHeaderProps {
   title: string;
@@ -20,11 +20,10 @@ interface ScreenHeaderProps {
 
 export default function ScreenHeader({ title, subtitle, right }: ScreenHeaderProps) {
   const { colors } = useTheme();
-  const router = useRouter();
 
   return (
     <View style={[styles.header, { borderBottomColor: colors.border }]}>
-      <TouchableOpacity style={styles.side} onPress={() => router.back()} activeOpacity={0.7}>
+      <TouchableOpacity style={styles.side} onPress={() => goBackOr()} activeOpacity={0.7}>
         <Ionicons name="arrow-back" size={22} color={colors.text} />
       </TouchableOpacity>
 

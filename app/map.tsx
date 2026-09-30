@@ -20,6 +20,7 @@ import {
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { goBackOr } from "../lib/goBack";
 import useTheme from "../theme/useTheme";
 import { useLocation } from "../context/LocationContext";
 import { useCoverage, COVERAGE_K } from "../context/CoverageContext";
@@ -173,7 +174,7 @@ export default function MapScreen() {
 
       {/* ── Navy header ── */}
       <SafeAreaView style={[styles.header, { backgroundColor: NAVY }]} edges={["top"]}>
-        <MapScreenHeader onBack={() => router.back()} onHelp={() => Alert.alert("Map", "Tap a pin to see the store. Use Find Products to locate an item nearby.")} />
+        <MapScreenHeader onBack={() => goBackOr()} onHelp={() => Alert.alert("Map", "Tap a pin to see the store. Use Find Products to locate an item nearby.")} />
         <MapLocationBar
           label={locationLabel}
           storesLive={liveStats.stats?.totalLive ?? null}

@@ -22,6 +22,7 @@ import {
   View, ScrollView, StyleSheet, StatusBar, Alert, Text,
 } from "react-native";
 import { useRouter }         from "expo-router";
+import { goBackOr }          from "../../lib/goBack";
 import useTheme              from "../../theme/useTheme";
 import { typography }        from "../../theme/typography";
 import { NOTIF_TOGGLES, MOCK_NOTIFICATIONS, NotifItem } from "../../data/notificationsData";
@@ -97,7 +98,7 @@ export default function NotificationsScreen() {
       {/* ── Header with unread count badge ── */}
       <AuthHeader
         title="Notifications"
-        onBack={() => router.back()}
+        onBack={() => goBackOr()}
         rightSlot={unreadBadge}
       />
 

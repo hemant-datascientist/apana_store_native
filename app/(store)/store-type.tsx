@@ -13,6 +13,7 @@ import { View, Text, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { goBackOr } from "../../lib/goBack";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { useAscType } from "../../hooks/useAscBrowser";
@@ -26,7 +27,7 @@ export default function StoreTypeScreen() {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "bottom"]}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.back} onPress={() => router.back()} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.back} onPress={() => goBackOr()} activeOpacity={0.7}>
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </TouchableOpacity>
         <Text

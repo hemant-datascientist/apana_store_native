@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { goBackOr } from "../lib/goBack";
 import useTheme from "../theme/useTheme";
 import { typography } from "../theme/typography";
 import {
@@ -34,7 +35,7 @@ export default function ConnectScreen() {
     await setOverrideOrigin(origin);
     setCurrent(origin);
     Alert.alert("Connected", `App will use:\n${origin}`, [
-      { text: "OK", onPress: () => router.back() },
+      { text: "OK", onPress: () => goBackOr() },
     ]);
   }
 
@@ -47,7 +48,7 @@ export default function ConnectScreen() {
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={["top"]}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+        <TouchableOpacity onPress={() => goBackOr()} hitSlop={12}>
           <Ionicons name="close" size={26} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>

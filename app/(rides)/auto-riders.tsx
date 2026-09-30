@@ -22,6 +22,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
+import { goBackOr } from "../../lib/goBack";
 import { typography } from "../../theme/typography";
 import { useLocation } from "../../context/LocationContext";
 import { DEFAULT_LAT, DEFAULT_LNG } from "../../config/mapplsConfig";
@@ -92,7 +93,7 @@ export default function AutoRidersScreen() {
 
       {/* ── Header ── */}
       <SafeAreaView style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]} edges={["top"]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+        <TouchableOpacity onPress={() => goBackOr()} style={styles.headerBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg }]}>

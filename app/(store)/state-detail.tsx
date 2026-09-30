@@ -19,6 +19,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons }     from "@expo/vector-icons";
+import { goBackOr } from "../../lib/goBack";
 import useTheme         from "../../theme/useTheme";
 import { typography }   from "../../theme/typography";
 import HomeSearchBar    from "../../components/tabs/home/HomeSearchBar";
@@ -226,7 +227,7 @@ export default function StateDetailScreen() {
 
         {/* Row 1: Back + State name + Stores live */}
         <View style={styles.headerRow}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => goBackOr()}>
             <Ionicons name="chevron-back" size={22} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.locationBtn} activeOpacity={0.75}>

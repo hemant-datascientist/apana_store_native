@@ -29,6 +29,7 @@ import {
 import { SafeAreaView }      from "react-native-safe-area-context";
 import { Ionicons }          from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { goBackOr } from "../../lib/goBack";
 import useTheme             from "../../theme/useTheme";
 import { typography }        from "../../theme/typography";
 import { useFollowedStores } from "../../hooks/useFollow";
@@ -173,7 +174,7 @@ export default function FavouriteScreen() {
               title="Not following any stores yet"
               sub="Tap the heart on any storefront to follow it and see it here."
               cta="Explore Stores"
-              onCta={() => router.back()}
+              onCta={() => goBackOr()}
             />
           );
         }
@@ -200,7 +201,7 @@ export default function FavouriteScreen() {
             title="No favourite products yet"
             sub="Tap the heart on any product to save it here for quick access."
             cta="Browse Products"
-            onCta={() => router.back()}
+            onCta={() => goBackOr()}
           />
         );
     }
@@ -213,7 +214,7 @@ export default function FavouriteScreen() {
       {/* ── Header ── */}
       <SafeAreaView style={styles.header} edges={["top"]}>
         <View style={styles.titleRow}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn} activeOpacity={0.75}>
+          <TouchableOpacity onPress={() => goBackOr()} style={styles.headerBtn} activeOpacity={0.75}>
             <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { fontFamily: typography.fontFamily.semiBold }]}>

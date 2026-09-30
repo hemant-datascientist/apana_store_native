@@ -31,6 +31,7 @@ import {
 import { SafeAreaView }  from "react-native-safe-area-context";
 import { Ionicons }      from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
+import { goBackOr } from "../../lib/goBack";
 import useTheme         from "../../theme/useTheme";
 import { typography }    from "../../theme/typography";
 import { useLocation }   from "../../context/LocationContext";
@@ -55,7 +56,7 @@ export default function AddressBookScreen() {
 
   function handleSelect(addr: UserAddress) {
     setSelectedAddress(addr);
-    router.back();
+    goBackOr();
   }
 
   function handleDelete(addr: UserAddress) {
@@ -89,7 +90,7 @@ export default function AddressBookScreen() {
       {/* ── Header ── */}
       <SafeAreaView style={styles.header} edges={["top"]}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => goBackOr()}
           style={styles.headerBtn}
           activeOpacity={0.75}
         >

@@ -30,6 +30,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { goBackOr } from "../../lib/goBack";
 
 import useTheme       from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
@@ -192,7 +193,7 @@ export default function SearchResultsScreen() {
           <SearchResultsHeader
             query={query}
             onChangeQuery={setQuery}
-            onBack={() => router.back()}
+            onBack={() => goBackOr()}
           />
           <SearchResultsTabs
             activeTab={tab}

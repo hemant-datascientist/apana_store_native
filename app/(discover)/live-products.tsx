@@ -18,6 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { goBackOr } from "../../lib/goBack";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import LiveProductCard from "../../components/live-products/LiveProductCard";
@@ -55,7 +56,7 @@ export default function LiveProductsScreen() {
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "bottom"]}>
       {/* ── Header ── */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.back} onPress={() => router.back()} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.back} onPress={() => goBackOr()} activeOpacity={0.7}>
           <Ionicons name="arrow-back" size={22} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.headerText}>

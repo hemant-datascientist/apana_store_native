@@ -16,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { goBackOr } from "../../lib/goBack";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { getTreeNode, nodeApcCode, type ApcNodeContext } from "../../services/apc";
@@ -59,7 +60,7 @@ export default function ApcNodeScreen() {
 
       <SafeAreaView style={[styles.header, { backgroundColor: ACCENT }]} edges={["top"]}>
         <View style={styles.headerRow}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => goBackOr()} activeOpacity={0.7}>
             <Ionicons name="arrow-back" size={20} color="#fff" />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.md }]} numberOfLines={1}>

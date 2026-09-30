@@ -26,6 +26,7 @@ import {
   NativeSyntheticEvent, TextInputKeyPressEventData,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { goBackOr }          from "../../lib/goBack";
 import useTheme              from "../../theme/useTheme";
 import { useAuth, AuthUser } from "../../context/AuthContext";
 import { useLocation }       from "../../context/LocationContext";
@@ -250,7 +251,7 @@ export default function OtpScreen() {
       <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
 
       {/* ── Header ── */}
-      <AuthHeader title={headerTitle} onBack={() => router.back()} />
+      <AuthHeader title={headerTitle} onBack={() => goBackOr("/(auth)/login")} />
 
       {/* ── Body ── */}
       <View style={styles.body}>
@@ -298,7 +299,7 @@ export default function OtpScreen() {
         {/* Wrong number/email link */}
         <WrongContactLink
           method={currentMethod}
-          onPress={() => router.back()}
+          onPress={() => goBackOr("/(auth)/login")}
         />
       </View>
     </KeyboardAvoidingView>
