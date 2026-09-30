@@ -61,10 +61,10 @@ export default function StoreDetailScreen() {
   // sample data when the id isn't a real approved store (dev / offline / mock).
   const live = useStoreCatalog(id);
 
-  // Real meta + real APC categories overlay the mock CHROME (hero colour and
-  // hours still await BE fields — clearly generic, never presented as this
-  // shop's real opening times). Substance — name, city, rating, PHONE and the
-  // product categories — is real when the store resolves.
+  // Real meta + real APC categories overlay the mock CHROME (hero colour
+  // stays generic — never presented as this shop's own branding). Substance
+  // — name, city, rating, PHONE, address and the product categories — is
+  // real when the store resolves.
   //
   // The phone matters more than the rest: StoreContactCard DIALS it. Left on
   // the bundled sample it would ring a number this shop never gave out, and on
@@ -114,6 +114,19 @@ export default function StoreDetailScreen() {
         categories: live.categories,
       }
     : base;
+
+  // Open/closed status (§27 storeOpen) rides on the product store ref, not
+  // the store-meta endpoint — that's the only place the backend exposes it
+  // today (GET /customer/catalog/stores/:id/products, already fetched by
+  // useStoreCatalog above). A real store with zero listed products has no
+  // signal to read this from — the status is then simply ABSENT rather than
+  // a guessed "Open Now", the same §19.8 rule applied to a status instead of
+  // a number. Only the bundled demo (no live.meta) falls back to its own
+  // mock isOpen — it's a sample, not a real shop's promise.
+  const realStoreRef = live.products[0]?.store ?? null;
+  const openStatus = live.meta
+    ? (realStoreRef ? { isOpen: realStoreRef.isOpen, label: realStoreRef.closedLabel } : null)
+    : { isOpen: sample?.isOpen ?? true, label: null as string | null };
 
   const [productSearch, setProductSearch] = useState("");
   const [showShare, setShowShare] = useState(false);
@@ -250,7 +263,7 @@ export default function StoreDetailScreen() {
         <StoreHeroBanner store={store} />
 
         {/* ── Store name, address, status ── */}
-        <StoreInfoHeader store={store} />
+        <StoreInfoHeader store={store} openStatus={openStatus} />
 
         {/* ── Action tiles ── */}
         <StoreActionButtons
@@ -276,8 +289,12 @@ export default function StoreDetailScreen() {
           onViewAll={() => router.push(`/store-categories?id=${store.id}`)}
         />
 
-        {/* ── Opening hours ── */}
-        <StoreHoursCard hours={store.hours} />
+        {/* ── Opening hours — the bundled demo's generic weekly table ONLY.
+            A real store's weekly hours aren't exposed by any endpoint this
+            screen calls yet; showing them would put the demo's Mon-Sun 8-9
+            schedule on a shop that never gave one. The real per-moment status
+            (open/closed + "opens at") is in StoreInfoHeader above instead. ── */}
+        {!live.meta && <StoreHoursCard hours={store.hours} />}
 
         {/* ── Contact info ── */}
         <StoreContactCard store={store} />

@@ -11,17 +11,25 @@ import useTheme       from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { StoreDetail } from "../../data/storeDetailData";
 
-interface StoreInfoHeaderProps {
-  store: StoreDetail;
+interface OpenStatus {
+  isOpen: boolean;
+  label:  string | null; // e.g. "Closed · opens 09:00" — server-computed, null when open
 }
 
-export default function StoreInfoHeader({ store }: StoreInfoHeaderProps) {
+interface StoreInfoHeaderProps {
+  store: StoreDetail;
+  /** null = no real signal for this shop (no products yet) — the status row
+   *  is omitted rather than guessed (§19.8). */
+  openStatus: OpenStatus | null;
+}
+
+export default function StoreInfoHeader({ store, openStatus }: StoreInfoHeaderProps) {
   const { colors } = useTheme();
 
-  const statusColor = store.isOpen ? colors.success : colors.danger;
-  const statusText  = store.isOpen
-    ? `Open Now  ·  Closes at ${store.closesAt}`
-    : `Closed  ·  Opens at ${store.opensAt}`;
+  const statusColor = openStatus?.isOpen ? colors.success : colors.danger;
+  const statusText  = openStatus
+    ? (openStatus.isOpen ? "Open now" : (openStatus.label ?? "Closed"))
+    : null;
 
   return (
     <View style={styles.wrap}>
@@ -55,17 +63,19 @@ export default function StoreInfoHeader({ store }: StoreInfoHeaderProps) {
         </Text>
       </View>
 
-      {/* Open/Closed status */}
-      <View style={styles.statusRow}>
-        <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-        <Text style={[styles.statusText, {
-          color:      statusColor,
-          fontFamily: typography.fontFamily.semiBold,
-          fontSize:   typography.size.sm,
-        }]}>
-          {statusText}
-        </Text>
-      </View>
+      {/* Open/Closed status — omitted entirely when there's no real signal */}
+      {statusText && (
+        <View style={styles.statusRow}>
+          <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+          <Text style={[styles.statusText, {
+            color:      statusColor,
+            fontFamily: typography.fontFamily.semiBold,
+            fontSize:   typography.size.sm,
+          }]}>
+            {statusText}
+          </Text>
+        </View>
+      )}
     </View>
   );
 }

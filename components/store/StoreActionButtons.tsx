@@ -32,12 +32,25 @@ export default function StoreActionButtons({
     else    Alert.alert("Unavailable", "Cannot open phone dialler.");
   }
 
-  async function handleWebsite() {
-    if (!store.website) { Alert.alert("No website", "This store has no website listed."); return; }
-    const ok = await Linking.canOpenURL(store.website);
-    if (ok) Linking.openURL(store.website);
-    else    Alert.alert("Unavailable", "Cannot open website.");
+  // Ride mode isn't real: no booking endpoint, no customer flow, taskBridge
+  // hardcodes every task as a delivery. Rather than hide the button (which
+  // silently drops ride-mode's presence from the product) or wire it to a
+  // dead-end (which was the earlier defect — an Alert that read as broken),
+  // it stays visible with a SOON badge and says plainly what's missing —
+  // same pattern as the Stock Lens tiles.
+  function handleBookRide() {
+    Alert.alert(
+      "Ride booking — coming soon",
+      "Apana doesn't have a ride system yet. This button will book a ride to this shop once one exists.",
+    );
+    onBookRide();
   }
+
+  // 🔴 "Website" REMOVED (kept as history here, not restored). No seller
+  // schema field for a website exists — every store inherited the SAME
+  // "https://apanastore.in" mock value, so this button opened Apana's own
+  // marketing site for every real shop that never gave one. Restore only
+  // once sellers can actually set a real website URL.
 
   const actions = [
     {
@@ -45,31 +58,24 @@ export default function StoreActionButtons({
       label:     "Directions",
       icon:      "navigate-outline",
       primary:   false,
+      soon:      false,
       onPress:   onDirections,
     },
-    // 🔴 "Book Ride" REMOVED — there is no ride system.
-    //
-    // It opened an Alert saying ride booking was "coming soon". Ride mode is
-    // documented as not real: there is no booking endpoint, the customer app
-    // has only a browse screen, and taskBridge hardcodes every task as a
-    // delivery. A button that has never been able to work is worse than no
-    // button — a customer taps it expecting a ride to this shop.
-    //
-    // Restore it the day a booking endpoint exists; the handler and prop are
-    // kept so that is a one-line change.
+    {
+      key:       "ride",
+      label:     "Book Ride",
+      icon:      "car-outline",
+      primary:   false,
+      soon:      true,
+      onPress:   handleBookRide,
+    },
     {
       key:       "call",
       label:     "Call",
       icon:      "call-outline",
       primary:   false,
+      soon:      false,
       onPress:   handleCall,
-    },
-    {
-      key:       "website",
-      label:     "Website",
-      icon:      "globe-outline",
-      primary:   false,
-      onPress:   handleWebsite,
     },
   ];
 
@@ -87,13 +93,18 @@ export default function StoreActionButtons({
           activeOpacity={0.8}
           onPress={action.onPress}
         >
+          {action.soon && (
+            <View style={[styles.soonBadge, { backgroundColor: colors.warning }]}>
+              <Text style={[styles.soonText, { fontFamily: typography.fontFamily.bold }]}>SOON</Text>
+            </View>
+          )}
           <Ionicons
             name={action.icon as any}
             size={22}
-            color={action.primary ? colors.white : colors.primary}
+            color={action.primary ? colors.white : (action.soon ? colors.subText : colors.primary)}
           />
           <Text style={[styles.label, {
-            color:      action.primary ? colors.white : colors.text,
+            color:      action.primary ? colors.white : (action.soon ? colors.subText : colors.text),
             fontFamily: typography.fontFamily.semiBold,
             fontSize:   typography.size.xs,
           }]}>
@@ -119,6 +130,21 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius:   14,
     borderWidth:    1,
+    position:       "relative",
   },
   label: { textAlign: "center" },
+
+  soonBadge: {
+    position:          "absolute",
+    top:               6,
+    right:             6,
+    paddingHorizontal: 5,
+    paddingVertical:   1,
+    borderRadius:      6,
+  },
+  soonText: {
+    color:    "#fff",
+    fontSize: 8,
+    letterSpacing: 0.3,
+  },
 });
