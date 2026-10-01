@@ -5,19 +5,28 @@
 // category. When a shop hasn't added anything here yet, it shows an honest
 // empty line instead of mock fillers (§19.8) — the section header stays so
 // the layout is unchanged.
+//
+// Card is ApcGridCard — the same real image + ADD/stepper/Options card the
+// category-products drill-down already uses, wired to the one CartContext
+// (addItem/updateQty/removeItem) the same way category-products.tsx does.
+// This used to render the display-only LiveProductCard, so Home's "Available
+// now" rails had no add-to-cart path at all.
 // ============================================================
 
 import React from "react";
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, StyleSheet, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import useTheme from "../../../../theme/useTheme";
 import { typography } from "../../../../theme/typography";
-import LiveProductCard from "../../../live-products/LiveProductCard";
+import ApcGridCard from "../../../category/ApcGridCard";
 import { useLiveProducts } from "../../../../hooks/useLiveProducts";
 import { productsForCategory } from "../../../../lib/categoryLiveMatch";
+import { useCart, cartRowId } from "../../../../context/CartContext";
+import { storeTint } from "../../../../lib/storeTint";
+import type { LiveProduct } from "../../../../services/liveCatalogService";
 
-const CARD_WIDTH = 150;
+const CARD_WIDTH = 160;
 
 interface CategoryLiveProductsProps {
   categoryKey: string;
@@ -35,8 +44,30 @@ export default function CategoryLiveProducts({
   const { colors } = useTheme();
   const router = useRouter();
   const { products, loading } = useLiveProducts();
+  const { addItem, updateQty, removeItem, getItemQty } = useCart();
   const accent = accentColor ?? colors.primary;
   const matched = productsForCategory(products, categoryKey);
+
+  // Same add/decrement shape as app/category-products.tsx — one listing (no
+  // variant picker) adds straight in; a variant listing routes to detail.
+  function addProduct(p: LiveProduct) {
+    const tint = storeTint(p.store.id);
+    addItem({
+      storeId: p.store.id, storeName: p.store.name, storeType: p.store.type,
+      storeTypeColor: tint.color, storeTypeBg: tint.bg, fulfillment: "pickup",
+      item: {
+        id: cartRowId(p.id, null), productId: p.id, variantId: null,
+        maxQty: p.stockQty, image: p.image, name: p.name, unit: p.unit,
+        price: p.price, qty: 1, icon: "pricetag-outline", bg: tint.bg,
+        floorPrice: p.dealPrice ?? undefined,
+      },
+    });
+  }
+  function decProduct(p: LiveProduct) {
+    const qty = getItemQty(p.store.id, p.id);
+    if (qty <= 1) removeItem(p.store.id, p.id);
+    else updateQty(p.store.id, p.id, -1);
+  }
 
   return (
     <View style={styles.wrap}>
@@ -70,13 +101,16 @@ export default function CategoryLiveProducts({
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.rail}
           renderItem={({ item }) => (
-            <TouchableOpacity
-              style={{ width: CARD_WIDTH }}
-              activeOpacity={0.85}
-              onPress={() => router.push(`/live-product-detail?id=${item.id}`)}
-            >
-              <LiveProductCard product={item} />
-            </TouchableOpacity>
+            <View style={{ width: CARD_WIDTH }}>
+              <ApcGridCard
+                product={item}
+                qty={getItemQty(item.store.id, item.id)}
+                onOpen={() => router.push(`/live-product-detail?id=${item.id}` as never)}
+                onAdd={() => addProduct(item)}
+                onInc={() => updateQty(item.store.id, item.id, 1)}
+                onDec={() => decProduct(item)}
+              />
+            </View>
           )}
         />
       )}

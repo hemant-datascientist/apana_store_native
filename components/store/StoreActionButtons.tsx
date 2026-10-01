@@ -18,10 +18,13 @@ interface StoreActionButtonsProps {
   store:         StoreDetail;
   onDirections:  () => void;
   onBookRide:    () => void;
+  /** https://<origin>/s/<id> — undefined until EXPO_PUBLIC_STORE_WEB_URL is
+   *  set, or for the bundled demo store (see store-detail.tsx). */
+  webUrl?:       string;
 }
 
 export default function StoreActionButtons({
-  store, onDirections, onBookRide,
+  store, onDirections, onBookRide, webUrl,
 }: StoreActionButtonsProps) {
   const { colors } = useTheme();
 
@@ -46,11 +49,23 @@ export default function StoreActionButtons({
     onBookRide();
   }
 
-  // 🔴 "Website" REMOVED (kept as history here, not restored). No seller
-  // schema field for a website exists — every store inherited the SAME
-  // "https://apanastore.in" mock value, so this button opened Apana's own
-  // marketing site for every real shop that never gave one. Restore only
-  // once sellers can actually set a real website URL.
+  // "Website" opens the real per-seller page once one exists. webUrl is
+  // undefined until EXPO_PUBLIC_STORE_WEB_URL is configured — until then this
+  // stays visible with a SOON badge, same as Book Ride, instead of vanishing
+  // (the earlier defect: opening a mock "https://apanastore.in" for every
+  // shop that never gave one).
+  async function handleWebsite() {
+    if (!webUrl) {
+      Alert.alert(
+        "Website — coming soon",
+        "This shop's page on the web isn't live yet. This button will open it once it is.",
+      );
+      return;
+    }
+    const ok = await Linking.canOpenURL(webUrl);
+    if (ok) Linking.openURL(webUrl);
+    else    Alert.alert("Unavailable", "Cannot open this link.");
+  }
 
   const actions = [
     {
@@ -76,6 +91,14 @@ export default function StoreActionButtons({
       primary:   false,
       soon:      false,
       onPress:   handleCall,
+    },
+    {
+      key:       "website",
+      label:     "Website",
+      icon:      "globe-outline",
+      primary:   false,
+      soon:      !webUrl,
+      onPress:   handleWebsite,
     },
   ];
 

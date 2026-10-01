@@ -16,13 +16,13 @@ interface CartPriceBreakdownProps {
   bulkSavings?:  number; // stop-loss floor savings unlocked across stores
   brandSavings?: number; // brand-funded markdowns (brand pays, seller kept whole)
   deliveryTotal: number;
-  discountAmt:   number;
-  appliedPromo:  string | null;
+  discountAmt?:  number;  // promo code — removed from the cart screen (never backend-validated)
+  appliedPromo?: string | null;
   total:         number;
 }
 
 export default function CartPriceBreakdown({
-  subtotal, bulkSavings = 0, brandSavings = 0, deliveryTotal, discountAmt, appliedPromo, total,
+  subtotal, bulkSavings = 0, brandSavings = 0, deliveryTotal, discountAmt = 0, appliedPromo = null, total,
 }: CartPriceBreakdownProps) {
   const { colors } = useTheme();
   const totalSaved = bulkSavings + brandSavings + discountAmt;

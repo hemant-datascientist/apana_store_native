@@ -25,13 +25,14 @@ import { buildStoreShare } from "../../lib/storeShare";
 interface Props {
   visible: boolean;
   storeId: string;
+  storeHandle: string;
   storeName: string;
   onClose: () => void;
 }
 
-export default function StoreShareSheet({ visible, storeId, storeName, onClose }: Props) {
+export default function StoreShareSheet({ visible, storeId, storeHandle, storeName, onClose }: Props) {
   const { colors } = useTheme();
-  const share = buildStoreShare(storeId, storeName);
+  const share = buildStoreShare(storeId, storeHandle, storeName);
 
   async function handleWhatsApp() {
     const text = encodeURIComponent(share.message);

@@ -30,7 +30,12 @@ export function buildTabs(detail: ProductDetail): TabDef[] {
   const { product, enrichment, stores } = detail;
   const tabs: TabDef[] = [];
 
-  // 1 · Details — core identity fields.
+  // 1 · Availability — every stocking store. FIRST and the default-open tab
+  // (DetailTabs defaults to index 0): "where can I actually buy this" is the
+  // question a customer opens this page to answer, ahead of brand/GTIN detail.
+  tabs.push({ key: "availability", label: "Availability", icon: "storefront-outline", kind: "stores", stores });
+
+  // 2 · Details — core identity fields.
   const details: KVRow[] = [];
   push(details, "Brand", product.brand);
   push(details, "GTIN", enrichment?.gtin ?? null);
@@ -43,9 +48,6 @@ export function buildTabs(detail: ProductDetail): TabDef[] {
   if (details.length > 0) {
     tabs.push({ key: "details", label: "Details", icon: "document-text-outline", kind: "kv", rows: details });
   }
-
-  // 2 · Availability — every stocking store.
-  tabs.push({ key: "availability", label: "Availability", icon: "storefront-outline", kind: "stores", stores });
 
   // 3 · MRP.
   const mrp = enrichment?.mrp ?? product.mrp ?? null;

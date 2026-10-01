@@ -174,6 +174,26 @@ export async function getFamilies(classCode: string): Promise<ApcFamily[]> {
   ).items;
 }
 
+// ── APC varieties (§27 variety tier) — the leaf under a family ─────
+export interface ApcVariety {
+  code: string;
+  family_code: string;
+  class_code: string;
+  variety_name: string;
+  name_hi: string | null;
+  origin: string | null;
+  season: string | null;
+  attributes: Record<string, unknown>;
+  image_url: string | null;
+  numeric_code: string | null;
+}
+
+export async function getVarieties(familyCode: string): Promise<ApcVariety[]> {
+  return (
+    await getJson<{ items: ApcVariety[] }>(`/families/${encodeURIComponent(familyCode)}/varieties`)
+  ).items;
+}
+
 // Family tile art -> absolute URL (BE serves these relative, same as nodeImage).
 export function familyImage(url: string | null | undefined): string | null {
   if (!url) return null;

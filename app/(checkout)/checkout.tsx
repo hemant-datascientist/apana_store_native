@@ -10,15 +10,13 @@
 //   Mode banner            — coloured strip showing current mode
 //   Delivery Address Card  — only shown for delivery/ride modes
 //   Order Summary          — per-store collapsible rows (filtered)
-//   Promo Code             — coupon entry; validatePromoCode() stub
 //   Delivery Notes         — optional note to the partner/store
 //   Payment Method Card    — selected method + change modal
-//   Price Breakdown        — subtotal, delivery, discount, total
+//   Price Breakdown        — subtotal, delivery, total
 //   Place Order CTA        — sticky bottom bar
 //
 // Backend:
 //   POST /api/orders → PlaceOrderResponse
-//   POST /api/promo/validate → PromoValidateResponse
 //   (see services/checkoutService.ts for typed interfaces + stubs)
 // ============================================================
 
@@ -43,13 +41,11 @@ import { useCart } from "../../context/CartContext";
 import { useLocation } from "../../context/LocationContext";
 import { UserAddress } from "../../data/addressData";
 import { CHECKOUT_STEPS } from "../../data/checkoutData";
-import { validatePromoCode } from "../../services/checkoutService";
 
 import CheckoutAddressCard    from "../../components/checkout/CheckoutAddressCard";
 import CheckoutAddressPicker  from "../../components/checkout/CheckoutAddressPicker";
 import CheckoutStoreRow       from "../../components/checkout/CheckoutStoreRow";
 import CheckoutPriceBreakdown from "../../components/checkout/CheckoutPriceBreakdown";
-import CheckoutPromoInput     from "../../components/checkout/CheckoutPromoInput";
 
 export default function CheckoutScreen() {
   const { colors, isDark } = useTheme();
@@ -91,12 +87,6 @@ export default function CheckoutScreen() {
 
   const [note, setNote] = useState("");
 
-  // ── Promo code state ──────────────────────────────────────
-  const [promoStatus,   setPromoStatus]   = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [promoMessage,  setPromoMessage]  = useState("");
-  const [promoDiscount, setPromoDiscount] = useState(0);
-  const [appliedPromo,  setAppliedPromo]  = useState<string | null>(null);
-
   // ── Validation error shown before navigating to Payment ─────
   const [orderError, setOrderError] = useState<string | null>(null);
 
@@ -108,45 +98,13 @@ export default function CheckoutScreen() {
     return {
       subtotal:      sub,
       deliveryTotal: del,
-      total:         Math.max(0, sub + del - promoDiscount),
+      total:         sub + del,
       totalItems:    items,
     };
-  }, [cart, promoDiscount]);
+  }, [cart]);
 
   // ── Progress: "checkout" step is active ──────────────────
   const ACTIVE_STEP = "checkout";
-
-  // ── Apply promo code — delegates to service stub ─────────
-  // validatePromoCode() → POST /api/promo/validate
-  async function handleApplyPromo(code: string) {
-    setPromoStatus("loading");
-    setPromoMessage("");
-    try {
-      const result = await validatePromoCode({ code, subtotal, mode });
-      if (result.valid) {
-        setPromoStatus("success");
-        setPromoDiscount(result.discountAmt);
-        setAppliedPromo(code.toUpperCase());
-        setPromoMessage(result.message);
-      } else {
-        setPromoStatus("error");
-        setPromoDiscount(0);
-        setAppliedPromo(null);
-        setPromoMessage(result.message);
-      }
-    } catch {
-      setPromoStatus("error");
-      setPromoMessage("Could not validate promo. Try again.");
-    }
-  }
-
-  // ── Clear applied promo ───────────────────────────────────
-  function handleClearPromo() {
-    setPromoStatus("idle");
-    setPromoMessage("");
-    setPromoDiscount(0);
-    setAppliedPromo(null);
-  }
 
   // ── Validate → navigate to Payment screen ────────────────────
   // Payment + order placement happens on the next screen (checkout-payment).
@@ -168,8 +126,6 @@ export default function CheckoutScreen() {
     const params = new URLSearchParams({
       mode,
       addressId:  needsAddress ? (selectedAddress?.id ?? "") : "",
-      promoCode:  appliedPromo ?? "",
-      discount:   String(promoDiscount),
       note:       encodeURIComponent(note.trim()),
       total:      String(total),
     });
@@ -318,15 +274,6 @@ export default function CheckoutScreen() {
           ))}
         </View>
 
-        {/* ── Promo code — validatePromoCode() from checkoutService ── */}
-        <CheckoutPromoInput
-          onApply={handleApplyPromo}
-          onClear={handleClearPromo}
-          status={promoStatus}
-          message={promoMessage}
-          discountAmt={promoDiscount}
-        />
-
         {/* ── Delivery / pickup note ── */}
         <View style={[styles.noteCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.noteTitleRow}>
@@ -362,12 +309,10 @@ export default function CheckoutScreen() {
           </Text>
         </View>
 
-        {/* ── Price breakdown — total reflects promo discount ── */}
+        {/* ── Price breakdown ── */}
         <CheckoutPriceBreakdown
           subtotal={subtotal}
           deliveryTotal={deliveryTotal}
-          discountAmt={promoDiscount}
-          appliedPromo={appliedPromo}
           total={total}
         />
 

@@ -265,9 +265,21 @@ interface WireReviews {
   items: WireReview[];
 }
 
+// A bare "assets/<section>/<item>.webp" ref (no leading slash) is the
+// loose-catalog master-seed path (image_path in modules/loose-catalog/data/
+// looseSeed/*.json, e.g. "assets/fruits/apple.webp") — only loose listings
+// ever store that shape (normalizeImageRef never produces it for packaged
+// uploads). Those files live under modules/loose-catalog/data/looseSeed/,
+// served at /loose-media/<ref>, NOT under the generic /assets/* tree (that
+// serves apana_backend/assets/, a different directory). Hitting /assets/
+// for these 404s every time — the mirror of the fix the seller app already
+// has in services/api/client.ts (looseMediaUrl / resolveLooseImages).
+const LOOSE_SEED_PATH_RE = /^assets\//i;
+
 function resolveImage(u: string | undefined): string | null {
   if (!u) return null;
   if (/^https?:\/\//i.test(u)) return u;
+  if (LOOSE_SEED_PATH_RE.test(u)) return `${API_ORIGIN}/loose-media/${u}`;
   return `${API_ORIGIN}${u.startsWith("/") ? "" : "/"}${u}`;
 }
 
@@ -457,6 +469,9 @@ export async function fetchApcProducts(
 // ── One store's header meta (name, category, city, rating, live) ──
 export interface StoreMeta {
   id: string;
+  /** Public slug ("roy-general-store") — the Website button opens
+   *  <backend>/@<handle>, never the raw id. */
+  handle: string;
   name: string;
   /** The shop's real number, for the store screen's call button. */
   phone: string;
@@ -488,6 +503,7 @@ export interface StoreMeta {
 }
 interface WireStoreMeta {
   id: string;
+  handle: string;
   name: string;
   phone: string;
   type: string;
@@ -519,6 +535,7 @@ export async function fetchStoreMeta(storeId: string): Promise<StoreMeta | null>
     );
     return {
       id: w.id,
+      handle: w.handle,
       name: w.name,
       phone: w.phone,
       type: w.type,

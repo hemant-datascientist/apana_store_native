@@ -22,14 +22,13 @@ import useTheme from "../../theme/useTheme";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import {
-  PROMO_CODES, DELIVERY_FEE, FulfillmentMode, storeSubtotal,
+  DELIVERY_FEE, FulfillmentMode, storeSubtotal,
 } from "../../data/cartData";
 import { resolveStoreDiscount, storeCharged } from "../../lib/discount";
 import LoginPromptModal   from "../../components/auth/LoginPromptModal";
 import CartHeader         from "../../components/cart/CartHeader";
 import CartEmptyState     from "../../components/cart/CartEmptyState";
 import CartStoreCard      from "../../components/cart/CartStoreCard";
-import CartPromoCard      from "../../components/cart/CartPromoCard";
 import CartPriceBreakdown from "../../components/cart/CartPriceBreakdown";
 import CartTrustInfo      from "../../components/cart/CartTrustInfo";
 import CartCheckoutBar, { FulfillmentGroup } from "../../components/cart/CartCheckoutBar";
@@ -43,26 +42,20 @@ export default function CartScreen() {
   const { cart, hydrated, updateQty, removeItem, setFulfillment, clearCart } = useCart();
 
   // ── Local-only UI state ───────────────────────────────────
-  const [promoInput,      setPromoInput]      = useState("");
-  const [appliedPromo,    setAppliedPromo]    = useState<string | null>(null);
-  const [promoError,      setPromoError]      = useState("");
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   // ── Derived totals ────────────────────────────────────────
   // subtotal = everyday prices. Two saving buckets, labelled separately:
   //   bulkSavings  = stop-loss floors (seller-funded, basket-unlocked)
   //   brandSavings = brand-funded markdowns (brand pays, seller kept whole)
-  // chargedSubtotal = subtotal − both. Promo applies on the charged amount
-  // (don't discount money already saved).
+  // chargedSubtotal = subtotal − both.
   const subtotal        = cart.reduce((s, st) => s + storeSubtotal(st), 0);
   const discs           = useMemo(() => cart.map(resolveStoreDiscount), [cart]);
   const bulkSavings     = discs.reduce((s, d) => s + d.savings, 0);
   const brandSavings    = discs.reduce((s, d) => s + d.brandSavings, 0);
   const chargedSubtotal = subtotal - bulkSavings - brandSavings;
   const deliveryTotal   = cart.reduce((s, st) => s + DELIVERY_FEE[st.fulfillment], 0);
-  const promoData       = appliedPromo ? PROMO_CODES[appliedPromo] : null;
-  const discountAmt     = promoData ? Math.round(chargedSubtotal * promoData.discount) : 0;
-  const total           = chargedSubtotal + deliveryTotal - discountAmt;
+  const total           = chargedSubtotal + deliveryTotal;
   const totalItems      = cart.reduce((s, st) => s + st.items.reduce((si, i) => si + i.qty, 0), 0);
 
   // ── Fulfillment groups for the per-mode checkout bar ──────
@@ -103,32 +96,8 @@ export default function CartScreen() {
   function handleClearCart() {
     Alert.alert("Clear Cart", "Remove all items from cart?", [
       { text: "Cancel", style: "cancel" },
-      { text: "Clear", style: "destructive", onPress: () => {
-        clearCart();
-        setAppliedPromo(null);
-        setPromoInput("");
-      }},
+      { text: "Clear", style: "destructive", onPress: clearCart },
     ]);
-  }
-
-  // ── Promo code ────────────────────────────────────────────
-  function applyPromo() {
-    const code = promoInput.trim().toUpperCase();
-    if (!code) { setPromoError("Enter a promo code."); return; }
-    if (PROMO_CODES[code]) {
-      setAppliedPromo(code);
-      setPromoError("");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } else {
-      setPromoError("Invalid promo code.");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    }
-  }
-
-  function removePromo() {
-    setAppliedPromo(null);
-    setPromoInput("");
-    setPromoError("");
   }
 
   // ── Checkout: passes mode — checkout reads from CartContext ─
@@ -185,24 +154,11 @@ export default function CartScreen() {
           />
         ))}
 
-        <CartPromoCard
-          promoInput={promoInput}
-          onInputChange={t => { setPromoInput(t); setPromoError(""); }}
-          appliedPromo={appliedPromo}
-          promoError={promoError}
-          discountAmt={discountAmt}
-          promoLabel={promoData?.label ?? ""}
-          onApply={applyPromo}
-          onRemove={removePromo}
-        />
-
         <CartPriceBreakdown
           subtotal={subtotal}
           bulkSavings={bulkSavings}
           brandSavings={brandSavings}
           deliveryTotal={deliveryTotal}
-          discountAmt={discountAmt}
-          appliedPromo={appliedPromo}
           total={total}
         />
 

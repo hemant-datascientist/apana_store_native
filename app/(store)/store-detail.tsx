@@ -40,6 +40,7 @@ import StateView from "../../components/ui/StateView";
 import { openDirections } from "../../lib/openDirections";
 import { goBackOr } from "../../lib/goBack";
 import { getStoreGallery, StorePhoto } from "../../data/storeGallery";
+import { storeWebUrl } from "../../lib/storeShare";
 import { useStoreCatalog }     from "../../hooks/useStoreCatalog";
 import { useFollow }           from "../../hooks/useFollow";
 import { useStoreMute }        from "../../hooks/useNotificationPrefs";
@@ -143,6 +144,10 @@ export default function StoreDetailScreen() {
           .map((url, i) => ({ src: { uri: url }, label: `Photo ${i + 1}`, kind: "exterior" as const })),
       ]
     : getStoreGallery(store.id);
+
+  // Real shop's public page — "/@<handle>", not the raw id. Same real-vs-demo
+  // gate as photos above; the bundled demo has no seller row to point at.
+  const webUrl = live.meta ? storeWebUrl(live.meta.handle) : undefined;
 
   const [productSearch, setProductSearch] = useState("");
   const [showShare, setShowShare] = useState(false);
@@ -286,6 +291,7 @@ export default function StoreDetailScreen() {
           store={store}
           onDirections={handleDirections}
           onBookRide={handleBookRide}
+          webUrl={webUrl}
         />
 
         {/* ── Product search bar ── */}
@@ -320,6 +326,7 @@ export default function StoreDetailScreen() {
       <StoreShareSheet
         visible={showShare}
         storeId={store.id}
+        storeHandle={live.meta?.handle ?? store.id}
         storeName={store.name}
         onClose={() => setShowShare(false)}
       />

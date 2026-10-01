@@ -14,13 +14,13 @@ import { typography } from "../../theme/typography";
 interface CheckoutPriceBreakdownProps {
   subtotal:      number;
   deliveryTotal: number;
-  discountAmt:   number;
-  appliedPromo:  string | null;
+  discountAmt?:  number;  // promo code — removed from Review (never backend-validated)
+  appliedPromo?: string | null;
   total:         number;
 }
 
 export default function CheckoutPriceBreakdown({
-  subtotal, deliveryTotal, discountAmt, appliedPromo, total,
+  subtotal, deliveryTotal, discountAmt = 0, appliedPromo = null, total,
 }: CheckoutPriceBreakdownProps) {
   const { colors } = useTheme();
 

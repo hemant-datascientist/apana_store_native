@@ -13,7 +13,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../../theme/useTheme";
 import { typography } from "../../../theme/typography";
-import { getClasses, getFamilies } from "../../../services/apc";
+import { getClasses, getFamilies, getVarieties } from "../../../services/apc";
 
 interface Props {
   classCode: string | null;
@@ -31,7 +31,11 @@ export default function DetailClassification({ classCode, familyCode, varietyCod
   const { colors } = useTheme();
   const [className, setClassName] = useState<string | null>(null);
   const [classEmoji, setClassEmoji] = useState<string | null>(null);
+  const [classNumeric, setClassNumeric] = useState<string | null>(null);
   const [familyName, setFamilyName] = useState<string | null>(null);
+  const [familyNumeric, setFamilyNumeric] = useState<string | null>(null);
+  const [varietyName, setVarietyName] = useState<string | null>(null);
+  const [varietyNumeric, setVarietyNumeric] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -42,23 +46,44 @@ export default function DetailClassification({ classCode, familyCode, varietyCod
         const c = cs.find((x) => x.code === classCode);
         setClassName(c?.name ?? null);
         setClassEmoji(c?.icon_emoji ?? null);
+        setClassNumeric(c?.numeric_code ?? null);
       })
       .catch(() => {});
     if (familyCode) {
       getFamilies(classCode)
-        .then((fs) => { if (alive) setFamilyName(fs.find((f) => f.code === familyCode)?.name ?? null); })
+        .then((fs) => {
+          if (!alive) return;
+          const f = fs.find((x) => x.code === familyCode);
+          setFamilyName(f?.name ?? null);
+          setFamilyNumeric(f?.numeric_code ?? null);
+        })
+        .catch(() => {});
+    }
+    if (varietyCode && familyCode) {
+      getVarieties(familyCode)
+        .then((vs) => {
+          if (!alive) return;
+          const v = vs.find((x) => x.code === varietyCode);
+          setVarietyName(v?.variety_name ?? null);
+          setVarietyNumeric(v?.numeric_code ?? null);
+        })
         .catch(() => {});
     }
     return () => { alive = false; };
-  }, [classCode, familyCode]);
+  }, [classCode, familyCode, varietyCode]);
 
   if (!classCode) return null;
 
-  const rows: { label: string; name: string; code: string }[] = [
-    { label: "Class", name: className ?? tailLabel(classCode), code: classCode },
+  // Frozen 5-digit numeric code — the backend has carried this on every
+  // class/family/variety row all along (it's what gets printed small on a
+  // tag/label); this screen just never read it.
+  const numeric = (n: string | null) => n ? `#${n.replace(/^APC-/, "")}` : null;
+
+  const rows: { label: string; name: string; code: string; num: string | null }[] = [
+    { label: "Class", name: className ?? tailLabel(classCode), code: classCode, num: numeric(classNumeric) },
   ];
-  if (familyCode) rows.push({ label: "Family", name: familyName ?? tailLabel(familyCode), code: familyCode });
-  if (varietyCode) rows.push({ label: "Type", name: tailLabel(varietyCode), code: varietyCode });
+  if (familyCode) rows.push({ label: "Family", name: familyName ?? tailLabel(familyCode), code: familyCode, num: numeric(familyNumeric) });
+  if (varietyCode) rows.push({ label: "Type", name: varietyName ?? tailLabel(varietyCode), code: varietyCode, num: numeric(varietyNumeric) });
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -75,12 +100,22 @@ export default function DetailClassification({ classCode, familyCode, varietyCod
           key={r.code}
           style={[styles.row, i < rows.length - 1 && { borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth }]}
         >
-          <Text style={[styles.rLabel, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>{r.label}</Text>
-          <View style={styles.rRight}>
+          {/* Line 1: label left, name right — the two codes never share this
+              line, so a long family/variety name has room to breathe. */}
+          <View style={styles.rTop}>
+            <Text style={[styles.rLabel, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>{r.label}</Text>
             <Text style={[styles.rName, { color: colors.text, fontFamily: typography.fontFamily.semiBold }]} numberOfLines={1}>{r.name}</Text>
+          </View>
+          {/* Line 2: both codes, left-aligned under the label. */}
+          <View style={styles.rCodes}>
             <View style={[styles.codePill, { backgroundColor: colors.background, borderColor: colors.border }]}>
               <Text style={[styles.code, { color: colors.primary, fontFamily: typography.fontFamily.medium }]}>{r.code}</Text>
             </View>
+            {r.num ? (
+              <View style={[styles.codePill, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                <Text style={[styles.code, { color: colors.primary, fontFamily: typography.fontFamily.medium }]}>{r.num}</Text>
+              </View>
+            ) : null}
           </View>
         </View>
       ))}
@@ -93,10 +128,11 @@ const styles = StyleSheet.create({
   head: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 10 },
   title: { fontSize: typography.size.sm, flex: 1 },
   emoji: { fontSize: typography.size.md },
-  row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, paddingVertical: 10 },
+  row: { paddingVertical: 10, gap: 6 },
+  rTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
   rLabel: { fontSize: typography.size.xs },
-  rRight: { flexDirection: "row", alignItems: "center", gap: 8, flexShrink: 1 },
-  rName: { fontSize: typography.size.xs, flexShrink: 1 },
+  rName: { fontSize: typography.size.sm, flexShrink: 1, textAlign: "right" },
+  rCodes: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 6, flexWrap: "wrap" },
   codePill: { borderWidth: 1, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
   code: { fontSize: typography.size.ss, letterSpacing: 0.3 },
 });
