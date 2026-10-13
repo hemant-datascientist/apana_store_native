@@ -32,6 +32,8 @@ import React, {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { revokeToken } from "../services/authService";
 import { isSessionUsable } from "../lib/session";
+import { currentPushToken } from "../lib/push";
+import { pushTokenRequest } from "../hooks/usePush";
 
 // ── Types ─────────────────────────────────────────────────────
 export interface AuthUser {
@@ -107,6 +109,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // clearing only local storage would leave it valid until it expired.
     // Best-effort: being offline must never prevent signing out locally.
     const token = await AsyncStorage.getItem(STORAGE_KEYS.access);
+    // This phone stops ringing for this customer — while the token can still
+    // prove who is asking.
+    const pushToken = await currentPushToken();
+    if (pushToken) await pushTokenRequest("DELETE", pushToken).catch(() => {});
     if (token) await revokeToken(token);
 
     setUser(null);

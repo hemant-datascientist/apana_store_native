@@ -15,6 +15,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import type { NotifItem, NotifType } from "../data/notificationsData";
 import { playSound } from "../lib/sound";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+// The server identifies the customer from the sign-in token; ?customer_id= is
+// honoured only off production (for the smokes).
+async function authHeaders(): Promise<Record<string, string>> {
+  const t = await AsyncStorage.getItem("apana_access_token");
+  return t ? { Authorization: `Bearer ${t}` } : {};
+}
 
 const API_MODE = process.env.EXPO_PUBLIC_API_MODE ?? "mock";
 const TOWER_IP = process.env.EXPO_PUBLIC_TOWER_IP ?? "10.153.78.94";
@@ -91,7 +99,7 @@ export function useCustomerNotifications(): CustomerNotificationsState {
       return;
     }
     try {
-      const res = await fetch(`${BASE_URL}/notifications?${q}`);
+      const res = await fetch(`${BASE_URL}/notifications?${q}`, { headers: await authHeaders() });
       if (!res.ok) throw new Error(String(res.status));
       const body = (await res.json()) as { items: Wire[]; unread: number };
       setItems(
@@ -149,7 +157,7 @@ export function useCustomerNotifications(): CustomerNotificationsState {
     if (prevUnread.current !== null) {
       prevUnread.current = Math.max(0, prevUnread.current - 1);
     }
-    try { await fetch(`${BASE_URL}/notifications/${id}/read?${q}`, { method: "POST" }); }
+    try { await fetch(`${BASE_URL}/notifications/${id}/read?${q}`, { method: "POST", headers: await authHeaders() }); }
     catch { void reload(); }
   }, [q, reload]);
 
@@ -157,7 +165,7 @@ export function useCustomerNotifications(): CustomerNotificationsState {
     setItems((prev) => prev.map((n) => ({ ...n, read: true })));
     setUnread(0);
     if (prevUnread.current !== null) prevUnread.current = 0;
-    try { await fetch(`${BASE_URL}/notifications/read-all?${q}`, { method: "POST" }); }
+    try { await fetch(`${BASE_URL}/notifications/read-all?${q}`, { method: "POST", headers: await authHeaders() }); }
     catch { void reload(); }
   }, [q, reload]);
 

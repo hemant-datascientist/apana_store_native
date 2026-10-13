@@ -10,8 +10,11 @@
 
 import { Tabs } from "expo-router";
 import BottomNavBar from "../../components/shared/BottomNavBar";
+import usePush from "../../hooks/usePush";
 
 export default function TabsLayout() {
+  // Ring this phone for order updates even when the app is closed.
+  usePush();
   return (
     <Tabs
       tabBar={(props) => <BottomNavBar {...props} />}
