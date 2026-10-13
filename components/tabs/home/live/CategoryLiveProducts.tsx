@@ -24,7 +24,7 @@ import { useLiveProducts } from "../../../../hooks/useLiveProducts";
 import { productsForCategory } from "../../../../lib/categoryLiveMatch";
 import { useCart, cartRowId } from "../../../../context/CartContext";
 import { storeTint } from "../../../../lib/storeTint";
-import type { LiveProduct } from "../../../../services/liveCatalogService";
+import { orderCeiling, type LiveProduct } from "../../../../services/liveCatalogService";
 
 const CARD_WIDTH = 160;
 
@@ -57,7 +57,7 @@ export default function CategoryLiveProducts({
       storeTypeColor: tint.color, storeTypeBg: tint.bg, fulfillment: "pickup",
       item: {
         id: cartRowId(p.id, null), productId: p.id, variantId: null,
-        maxQty: p.stockQty, image: p.image, name: p.name, unit: p.unit,
+        maxQty: orderCeiling(p), image: p.image, name: p.name, unit: p.unit,
         price: p.price, qty: 1, icon: "pricetag-outline", bg: tint.bg,
         floorPrice: p.dealPrice ?? undefined,
       },

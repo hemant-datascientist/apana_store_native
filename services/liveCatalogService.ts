@@ -75,6 +75,8 @@ export interface LiveProduct {
   dealPrice: number | null;
   unit: string;
   stockQty: number;
+  /** The shop's cap on one order (rationing a scarce item); null = none. */
+  maxPerOrder: number | null;
   isVeg: boolean | null;
   image: string | null; // absolute URL, resolved (first image)
   images: string[]; // all images, resolved
@@ -191,6 +193,7 @@ interface WireProduct {
   deal_price_cents: number | null;
   unit: string;
   stock_qty: number;
+  max_per_order?: number | null;
   is_veg: boolean | null;
   images: string[];
   category: string | null;
@@ -294,6 +297,7 @@ function toLiveProduct(w: WireProduct): LiveProduct {
     dealPrice: w.deal_price_cents != null ? w.deal_price_cents / 100 : null,
     unit: w.unit,
     stockQty: w.stock_qty,
+    maxPerOrder: w.max_per_order ?? null,
     isVeg: w.is_veg,
     image: images[0] ?? null,
     images,
@@ -616,4 +620,10 @@ export async function submitProductReview(
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error((data as { message?: string }).message ?? `review failed (${res.status})`);
   return { rating: (data as { rating: number }).rating, reviewCount: (data as { review_count: number }).review_count };
+}
+
+/** Most one order may take: the shelf, or the shop's ration if lower. The
+ *  cart stepper stops here, so the customer is stopped before checkout. */
+export function orderCeiling(p: { stockQty: number; maxPerOrder: number | null }): number {
+  return p.maxPerOrder != null ? Math.min(p.stockQty, p.maxPerOrder) : p.stockQty;
 }

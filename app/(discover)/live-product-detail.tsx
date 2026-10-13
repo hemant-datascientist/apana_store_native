@@ -164,7 +164,8 @@ export default function LiveProductDetailScreen() {
         productId: p.id,
         variantId: chosen?.id ?? null,
         variantLabel: chosen != null ? Object.values(chosen.axes).join(" / ") : null,
-        maxQty: shownStock,
+        // The shop's ration, when lower than the shelf (sizes included).
+        maxQty: p.maxPerOrder != null ? Math.min(shownStock, p.maxPerOrder) : shownStock,
         image: p.image,
         name: p.name,
         unit: p.unit,

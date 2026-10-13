@@ -38,11 +38,12 @@ import { MOCK_PAYMENT_METHODS, PaymentMethod } from "../../data/paymentData";
 import { useCart }           from "../../context/CartContext";
 import { useAuth }           from "../../context/AuthContext";
 import {
-  placeOrder, PlaceOrderRequest, StoreOrderInput, StoreOrderResult,
+  placeOrder, PlaceOrderRequest, StoreOrderInput, StoreOrderResult, StockShortError,
 } from "../../services/checkoutService";
 import { payForOrder } from "../../services/paymentsService";
 
 import CheckoutPaymentSelector from "../../components/checkout/CheckoutPaymentSelector";
+import { offerStockShort } from "../../lib/stockShort";
 
 // ── Payment-method gating by fulfillment mode ────────────────
 // COD is allowed ONLY for delivery (delivery partner collects cash
@@ -62,7 +63,7 @@ const ACTIVE_STEP = "payment";
 export default function CheckoutPaymentScreen() {
   const { colors, isDark } = useTheme();
   const router             = useRouter();
-  const { cart: fullCart, clearCart } = useCart();
+  const { cart: fullCart, clearCart, limitItem } = useCart();
   const { user } = useAuth();
 
   // ── Route params passed from checkout (Review) screen ────────
@@ -198,6 +199,15 @@ export default function CheckoutPaymentScreen() {
         `/order-tracking?mode=${mode}&orderId=${res.orderId}&serverOrderId=${res.serverOrderId}&total=${total}&storeOrdersJson=${storeOrdersJson}`,
       );
     } catch (err: any) {
+      if (err instanceof StockShortError) {
+        // Name it the way the cart does, so the shopper knows which line moved.
+        const line = fullCart.flatMap((s) => s.items)
+          .find((i) => i.productId === err.productId && (i.variantId ?? null) === err.variantId);
+        const name = line ? (line.variantLabel ? `${line.name} (${line.variantLabel})` : line.name) : "An item";
+        setPayError(null);
+        offerStockShort(err, name, user?.phone ?? "", limitItem, setPayError);
+        return;
+      }
       setPayError(err?.message ?? "Something went wrong. Please try again.");
     } finally {
       setPlacing(false);

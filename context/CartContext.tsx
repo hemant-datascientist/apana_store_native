@@ -20,6 +20,7 @@ import {
   INITIAL_CART, CartStore, CartItem, FulfillmentMode,
 } from "../data/cartData";
 import { isLooseItem } from "../lib/measure";
+import { limitCartLine } from "../lib/cartLimit";
 
 // 🔴 BUMPED v2 → v3 to abandon carts written by an older build.
 //
@@ -58,6 +59,9 @@ interface CartContextValue {
   hydrated:       boolean;
   updateQty:      (storeId: string, itemId: string, delta: number) => void;
   removeItem:     (storeId: string, itemId: string) => void;
+  /** Checkout said only `available` are left: lower that line to it (and cap
+   *  the stepper there), or drop it at 0. */
+  limitItem:      (productId: string, variantId: string | null, available: number) => void;
   setFulfillment: (storeId: string, mode: FulfillmentMode) => void;
   clearCart:      () => void;
   // Adds one item to the cart (from Product Detail / store pages)
@@ -162,6 +166,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     );
   }
 
+  function limitItem(productId: string, variantId: string | null, available: number) {
+    setCart(prev => limitCartLine(prev, productId, variantId, available));
+  }
+
   function setFulfillment(storeId: string, mode: FulfillmentMode) {
     setCart(prev => prev.map(s => s.id === storeId ? { ...s, fulfillment: mode } : s));
   }
@@ -210,7 +218,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <CartContext.Provider value={{
-      cart, hydrated, updateQty, removeItem, setFulfillment,
+      cart, hydrated, updateQty, removeItem, limitItem, setFulfillment,
       clearCart, addItem, getItemQty,
     }}>
       {children}

@@ -53,6 +53,7 @@ const DISPLAY: Record<string, { type: NotifType; icon: string; color: string; bg
   order_delivered: { type: "delivery", icon: "home-outline",             color: "#22C55E", bg: "#DCFCE7" },
   order_rejected:  { type: "order",    icon: "close-circle-outline",     color: "#EF4444", bg: "#FEE2E2" },
   order_cancelled: { type: "order",    icon: "close-circle-outline",     color: "#EF4444", bg: "#FEE2E2" },
+  back_in_stock:   { type: "store",    icon: "pricetag-outline",         color: "#22C55E", bg: "#DCFCE7" },
 };
 
 function relative(iso: string): string {

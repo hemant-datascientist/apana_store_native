@@ -149,6 +149,19 @@ interface WireOrder {
   items: WireOrderItem[];
 }
 
+/** Checkout refused because a line wants more than the shelf holds. Carries
+ *  what IS left, so the screen can offer to take that instead of a dead end. */
+export class StockShortError extends Error {
+  constructor(
+    message: string,
+    public productId: string,
+    public variantId: string | null,
+    public available: number,
+  ) {
+    super(message);
+  }
+}
+
 export async function placeOrder(
   req: PlaceOrderRequest,
 ): Promise<PlaceOrderResponse> {
@@ -209,8 +222,14 @@ export async function placeOrder(
       // have 3, need 4" tells the customer exactly what to change.
       let message = `Order failed (${res.status})`;
       try {
-        const err = JSON.parse(text) as { message?: string; error?: string };
+        const err = JSON.parse(text) as {
+          message?: string; error?: string;
+          details?: { product_id: string; variant_id: string | null; available: number };
+        };
         message = err.message ?? err.error ?? message;
+        if (err.error === "insufficient_stock" && err.details) {
+          throw new StockShortError(message, err.details.product_id, err.details.variant_id, err.details.available);
+        }
       } catch {
         // non-JSON body — keep the status message
       }

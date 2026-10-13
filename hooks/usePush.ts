@@ -1,6 +1,6 @@
 // Registers this phone for push once a customer is signed in (mounted from the
-// tabs layout). A guest has no token, so nothing is registered. A tap on an
-// order update opens that order's tracking screen.
+// tabs layout). A guest has no token, so nothing is registered. A tap opens
+// the order's tracking screen, or the product for a back-in-stock alert.
 import { useEffect } from "react";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -28,7 +28,11 @@ export default function usePush(): void {
         (token) => pushTokenRequest("POST", token),
         (data) => {
           const orderId = typeof data.order_id === "string" ? data.order_id : null;
-          router.push(orderId ? { pathname: "/order-tracking", params: { serverOrderId: orderId } } : "/(info)/notifications");
+          const productId = typeof data.product_id === "string" ? data.product_id : null;
+          if (orderId) router.push({ pathname: "/order-tracking", params: { serverOrderId: orderId } });
+          // "Back in stock" opens the product, where it can be added again.
+          else if (productId) router.push({ pathname: "/live-product-detail", params: { id: productId } });
+          else router.push("/(info)/notifications");
         },
       ),
     [router],
