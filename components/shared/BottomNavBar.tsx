@@ -40,10 +40,12 @@ const LABEL_SIZE = 11;   // label font size
 const TABS: {
   label: string;
   icon:  keyof typeof Ionicons.glyphMap | "bharat";
+  /** Parked feature — the tab opens a "coming soon" screen. */
+  soon?: boolean;
 }[] = [
   { label: "Home",     icon: "home"   },
   { label: "Category", icon: "grid"   },
-  { label: "Bharat",   icon: "bharat" },
+  { label: "Bharat",   icon: "bharat", soon: true },
   { label: "Cart",     icon: "bag"    },
   { label: "Profile",  icon: "person" },
 ];
@@ -81,6 +83,11 @@ export default function BottomNavBar({
             activeOpacity={0.75}
           >
             {/* Icon */}
+            {tab.soon ? (
+              <View style={[styles.soonBadge, { backgroundColor: colors.warning }]}>
+                <Text style={[styles.soonText, { color: colors.white }]}>SOON</Text>
+              </View>
+            ) : null}
             {tab.icon === "bharat" ? (
               <IndiaMapIcon size={ICON_SIZE} color={color} />
             ) : (
@@ -140,5 +147,21 @@ const styles = StyleSheet.create({
     fontSize:      LABEL_SIZE,
     textAlign:     "center",
     letterSpacing: 0.1,
+  },
+  // Small pill over a parked tab's icon (Bharat). Absolute, so the tab row
+  // keeps its alignment.
+  soonBadge: {
+    position:          "absolute",
+    top:               4,
+    right:             "14%",
+    borderRadius:      6,
+    paddingHorizontal: 4,
+    paddingVertical:   1,
+    zIndex:            1,
+  },
+  soonText: {
+    fontFamily:    typography.fontFamily.bold,
+    fontSize:      typography.size.ss - 2,
+    letterSpacing: 0.5,
   },
 });

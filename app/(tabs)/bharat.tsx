@@ -1,72 +1,41 @@
 // ============================================================
-// BHARAT SCREEN — Apana Store (Customer App)
+// BHARAT SCREEN — Apana Store (Customer App) — COMING SOON
 //
-// All 28 states + 8 UTs shown as state silhouettes grouped by
-// region. Tapping a state will eventually open a regional store
-// discovery view.
+// Parked on purpose (founder, 2026-10-15): Bharat will become the place to
+// discover GI-tagged products from every state of India, once there is a team
+// to curate them. Until then the launch focus is Home, Category, Cart and
+// Profile — so this tab says plainly that it is coming, instead of showing a
+// state grid whose stores and counts mostly aren't there yet.
 //
-// Layout:
-//   Header  — "Bharat" title + state count badge
-//   MapCard — composite India SVG coloured by region + legend
-//   ScrollView — RegionSection per region group
-//
-// Data: data/bharatData.ts  (REGION_GROUPS)
-// SVG:  react-native-svg via StateSvg
+// The full state browser is kept for that day: components/tabs/bharat/*,
+// app/(store)/state-detail.tsx, data/bharatData.ts, hooks/useStateLiveCounts.
+// Restoring it = bring back the previous version of this file from git
+// (before 2026-10-15).
 // ============================================================
 
 import React, { useState } from "react";
-import {
-  View, Text, ScrollView, StyleSheet, Alert, StatusBar, Dimensions, TouchableOpacity,
-} from "react-native";
+import { View, Text, StyleSheet, StatusBar, Dimensions, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
-import { REGION_GROUPS, StateInfo } from "../../data/bharatData";
-import RegionSection from "../../components/tabs/bharat/RegionSection";
-import IndiaMapSvg   from "../../components/tabs/bharat/IndiaMapSvg";
-import MenuDrawer    from "../../components/tabs/home/MenuDrawer";
+import IndiaMapSvg from "../../components/tabs/bharat/IndiaMapSvg";
+import MenuDrawer from "../../components/tabs/home/MenuDrawer";
 import { handleMenuSelect } from "../../lib/menuNav";
-import { useStateLiveCounts } from "../../hooks/useStateLiveCounts";
-
-// Total state + UT count for the badge
-const TOTAL_STATES = REGION_GROUPS.reduce((acc, g) => acc + g.states.length, 0);
 
 const { width: SW } = Dimensions.get("window");
-// Map renders at 60 % of screen width, centred inside the card
-const MAP_WIDTH = Math.round(SW * 0.60);
+const MAP_WIDTH = Math.round(SW * 0.55);
 
 export default function BharatScreen() {
   const { colors, isDark } = useTheme();
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Per-state live counts for the card badges. Mock mode → undefined
-  // (cards keep bundled numbers); live mode → real map (loading = null,
-  // cards show "…" + grey dot).
-  const stateLive = useStateLiveCounts();
-  const stateCounts = stateLive.isLive ? stateLive.counts : undefined;
-
-  function handleStatePress(state: StateInfo) {
-    router.push({
-      pathname: "/state-detail",
-      params: { 
-        stateKey: state.key, 
-        name: state.name,
-        storesLive: state.storesLive.toString()
-      }
-    } as any);
-  }
-
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <StatusBar
-        barStyle={isDark ? "light-content" : "dark-content"}
-        backgroundColor={colors.card}
-      />
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.card} />
 
-      {/* ── Menu drawer (Modal — doesn't affect layout) ── */}
       <MenuDrawer
         visible={drawerOpen}
         onClose={() => setDrawerOpen(false)}
@@ -76,8 +45,6 @@ export default function BharatScreen() {
       {/* ── Header ── */}
       <SafeAreaView style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]} edges={["top"]}>
         <View style={styles.headerContent}>
-
-          {/* Left: hamburger menu — opens the shared MenuDrawer */}
           <TouchableOpacity
             style={[styles.headerIcon, { backgroundColor: colors.primary + "18" }]}
             onPress={() => setDrawerOpen(true)}
@@ -87,97 +54,40 @@ export default function BharatScreen() {
           >
             <Ionicons name="menu-outline" size={22} color={colors.primary} />
           </TouchableOpacity>
-
-          {/* Center: title + subtitle */}
-          <View style={styles.headerText}>
-            <Text style={[styles.headerTitle, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg }]}>
-              Bharat
-            </Text>
-            <Text style={[styles.headerSub, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-              Explore stores across India
-            </Text>
-          </View>
-
-          {/* Right: state count badge */}
-          <View style={[styles.countBadge, { backgroundColor: colors.primary }]}>
-            <Text style={[styles.countText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.xs }]}>
-              {TOTAL_STATES}
-            </Text>
-            <Text style={[styles.countLabel, { fontFamily: typography.fontFamily.regular, fontSize: 9 }]}>
-              States
-            </Text>
-          </View>
-
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Bharat</Text>
+          <View style={styles.headerIcon} />
         </View>
       </SafeAreaView>
 
-      {/* ── Region list ── */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-      >
-        {/* ── India map card ── */}
+      <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
         <View style={[styles.mapCard, { backgroundColor: colors.primary }]}>
-
-          {/* Card header */}
-          <View style={styles.mapCardHeader}>
-            <Text style={[styles.mapCardTitle, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-              India — All States
-            </Text>
-            <View style={styles.mapStatRow}>
-              <View style={styles.mapStat}>
-                <Text style={[styles.mapStatNum, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-                  {TOTAL_STATES}
-                </Text>
-                <Text style={[styles.mapStatLbl, { fontFamily: typography.fontFamily.regular, fontSize: 9.5 }]}>
-                  States & UTs
-                </Text>
-              </View>
-              <View style={styles.mapStatDivider} />
-              <View style={styles.mapStat}>
-                <Text style={[styles.mapStatNum, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-                  {REGION_GROUPS.length}
-                </Text>
-                <Text style={[styles.mapStatLbl, { fontFamily: typography.fontFamily.regular, fontSize: 9.5 }]}>
-                  Regions
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Map is now the button to navigate to Bharat Bazaar */}
-          <TouchableOpacity
-            activeOpacity={0.92}
-            onPress={() => router.push("/(store)/bharat-bazaar")}
-            style={styles.mapTouchable}
-          >
-            <IndiaMapSvg mapWidth={MAP_WIDTH} />
-          </TouchableOpacity>
-
-          <View style={{ height: 4 }} />
+          <IndiaMapSvg mapWidth={MAP_WIDTH} />
         </View>
 
-        {/* Section intro */}
-        <View style={[styles.intro, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Ionicons name="location-outline" size={15} color={colors.primary} />
-          <Text style={[styles.introText, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-            Tap any state to discover live stores, trending products, and local deals near you.
-          </Text>
+        <View style={[styles.soonPill, { backgroundColor: colors.primary + "18" }]}>
+          <Text style={[styles.soonText, { color: colors.primary }]}>COMING SOON</Text>
         </View>
 
-        {/* Region groups */}
-        {REGION_GROUPS.map(group => (
-          <RegionSection
-            key={group.key}
-            group={group}
-            primary={colors.primary}
-            liveCounts={stateCounts}
-            onPress={handleStatePress}
-          />
-        ))}
+        <Text style={[styles.title, { color: colors.text }]}>
+          The best of every state, in one place
+        </Text>
+        <Text style={[styles.copy, { color: colors.subText }]}>
+          Bharat will bring you GI-tagged products — the crafts, foods and textiles each state of India
+          is known for — straight from the people who make them.
+        </Text>
+        <Text style={[styles.copy, { color: colors.subText }]}>
+          For now, we are starting with the shops near you.
+        </Text>
 
-        {/* Bottom padding */}
-        <View style={{ height: 24 }} />
+        <TouchableOpacity
+          style={[styles.cta, { backgroundColor: colors.primary }]}
+          onPress={() => router.navigate("/(tabs)")}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+        >
+          <Ionicons name="storefront-outline" size={18} color={colors.white} />
+          <Text style={[styles.ctaText, { color: colors.white }]}>Shop near you</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -185,108 +95,22 @@ export default function BharatScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-
-  // Header
-  header: {
-    borderBottomWidth: 1,
-  },
+  header: { borderBottomWidth: 1 },
   headerContent: {
-    flexDirection:     "row",
-    alignItems:        "center",
-    paddingHorizontal: 16,
-    paddingVertical:   12,
-    gap:               12,
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingHorizontal: 16, paddingVertical: 10,
   },
-  headerIcon: {
-    width:          40,
-    height:         40,
-    borderRadius:   12,
-    alignItems:     "center",
-    justifyContent: "center",
+  headerIcon: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  headerTitle: { fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg },
+  body: { padding: 20, alignItems: "center", gap: 14, paddingBottom: 120 },
+  mapCard: { borderRadius: 20, paddingVertical: 20, width: "100%", alignItems: "center" },
+  soonPill: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4, marginTop: 6 },
+  soonText: { fontFamily: typography.fontFamily.bold, fontSize: typography.size.xs, letterSpacing: 1 },
+  title: { fontFamily: typography.fontFamily.bold, fontSize: typography.size.xl, textAlign: "center" },
+  copy: { fontFamily: typography.fontFamily.regular, fontSize: typography.size.sm, textAlign: "center", lineHeight: 21 },
+  cta: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    borderRadius: 14, paddingHorizontal: 22, paddingVertical: 13, marginTop: 8,
   },
-  headerText: {
-    flex: 1,
-  },
-  headerTitle: {
-    marginBottom: 1,
-  },
-  headerSub: {
-    lineHeight: 15,
-  },
-  countBadge: {
-    width:          44,
-    height:         44,
-    borderRadius:   12,
-    alignItems:     "center",
-    justifyContent: "center",
-  },
-  countText:  { color: "#fff" },
-  countLabel: { color: "rgba(255,255,255,0.80)" },
-
-  // Map card
-  mapCard: {
-    marginHorizontal: 16,
-    marginTop:        14,
-    borderRadius:     16,
-    paddingHorizontal: 16,
-    paddingTop:        16,
-    paddingBottom:     12,
-    alignItems:       "center",
-    gap:              14,
-  },
-  mapCardHeader: {
-    width:          "100%",
-    flexDirection:  "row",
-    alignItems:     "center",
-    justifyContent: "space-between",
-  },
-  mapCardTitle: {
-    color: "#fff",
-  },
-  mapStatRow: {
-    flexDirection: "row",
-    alignItems:    "center",
-    gap:            10,
-  },
-  mapStat: {
-    alignItems: "center",
-  },
-  mapStatNum: {
-    color: "#fff",
-  },
-  mapStatLbl: {
-    color: "rgba(255,255,255,0.70)",
-  },
-  mapStatDivider: {
-    width:           1,
-    height:          24,
-    backgroundColor: "rgba(255,255,255,0.25)",
-  },
-
-  // Intro
-  intro: {
-    flexDirection:     "row",
-    alignItems:        "flex-start",
-    gap:               8,
-    marginHorizontal:  16,
-    marginTop:         14,
-    marginBottom:      20,
-    padding:           12,
-    borderRadius:      10,
-    borderWidth:       1,
-  },
-  introText: {
-    flex:       1,
-    lineHeight: 18,
-  },
-  mapTouchable: {
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  // Content
-  content: {
-    paddingTop: 0,
-  },
+  ctaText: { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.md },
 });
