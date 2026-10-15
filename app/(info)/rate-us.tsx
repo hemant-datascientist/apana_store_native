@@ -13,7 +13,10 @@
 //   Submit button   — disabled until at least 1 star selected
 //
 // Layout (after submission):
-//   RateThankYou    — emoji + message + Play Store CTA
+//   RateThankYou    — emoji + message (Play Store CTA only once a listing exists)
+//
+// Backend: POST /customer/me/app-rating (stored — migration 0112). The
+// thank-you appears only after the server confirms.
 // ============================================================
 
 import React, { useState } from "react";
@@ -32,6 +35,8 @@ import { typography } from "../../theme/typography";
 import RateStars    from "../../components/rate/RateStars";
 import RateTagChips from "../../components/rate/RateTagChips";
 import RateThankYou from "../../components/rate/RateThankYou";
+import { useAuth } from "../../context/AuthContext";
+import { submitAppRating } from "../../services/appRatingService";
 
 const ACCENT = "#F59E0B";
 
@@ -54,6 +59,9 @@ export default function RateUsScreen() {
   const [tags,      setTags]      = useState<string[]>([]);
   const [feedback,  setFeedback]  = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [sending,   setSending]   = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   const meta = RATING_LABEL[rating];
 
@@ -65,9 +73,21 @@ export default function RateUsScreen() {
 
   // ── Submit rating ─────────────────────────────────────────
   // Backend: POST /user/rating { rating, tags, feedback }
-  function handleSubmit() {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setSubmitted(true);
+  // Stored on the server (POST /customer/me/app-rating); the thank-you is shown
+  // only once it has actually landed.
+  async function handleSubmit() {
+    if (sending) return;
+    setSending(true);
+    setSendError(null);
+    try {
+      await submitAppRating({ rating, tags, feedback, phone: user?.phone ?? null });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setSubmitted(true);
+    } catch (err) {
+      setSendError(err instanceof Error ? err.message : "Could not send your rating.");
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -180,14 +200,17 @@ export default function RateUsScreen() {
                 { backgroundColor: rating > 0 ? ACCENT : colors.border },
               ]}
               onPress={handleSubmit}
-              disabled={rating === 0}
+              disabled={rating === 0 || sending}
               activeOpacity={0.85}
             >
               <Ionicons name="star" size={17} color="#fff" />
               <Text style={[styles.submitText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.md }]}>
-                {rating === 0 ? "Select a rating first" : `Submit ${rating}-Star Rating`}
+                {rating === 0 ? "Select a rating first" : sending ? "Sending…" : `Submit ${rating}-Star Rating`}
               </Text>
             </TouchableOpacity>
+            {sendError ? (
+              <Text style={[styles.errorText, { color: colors.danger }]}>{sendError}</Text>
+            ) : null}
           </SafeAreaView>
         </>
       )}
@@ -278,6 +301,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop:        12,
   },
+  errorText: { textAlign: "center", marginTop: 8, fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs },
   submitBtn: {
     flexDirection:  "row",
     alignItems:     "center",

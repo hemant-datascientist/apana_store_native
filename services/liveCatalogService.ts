@@ -627,3 +627,21 @@ export async function submitProductReview(
 export function orderCeiling(p: { stockQty: number; maxPerOrder: number | null }): number {
   return p.maxPerOrder != null ? Math.min(p.stockQty, p.maxPerOrder) : p.stockQty;
 }
+
+// ── Brands stocked near the customer ──────────────────────────
+// GET {BASE}/catalog/brands?lat=&lng= — grouped from what nearby shops actually
+// have on the shelf. Replaces the bundled list of famous brands with no shop
+// behind them.
+export interface NearbyBrand {
+  name: string;
+  productCount: number;
+  shopCount: number;
+}
+
+export async function fetchNearbyBrands(lat: number, lng: number): Promise<NearbyBrand[]> {
+  if (!IS_LIVE) return []; // mock: no real inventory to group
+  const body = await fetchJson<{ items: { brand: string; product_count: number; shop_count: number }[] }>(
+    `${BASE_URL}/catalog/brands?lat=${lat}&lng=${lng}`,
+  );
+  return (body.items ?? []).map((b) => ({ name: b.brand, productCount: b.product_count, shopCount: b.shop_count }));
+}

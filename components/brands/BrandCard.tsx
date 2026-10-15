@@ -1,27 +1,28 @@
 // ============================================================
 // BRAND CARD — Apana Store
 //
-// Square card for the 2-column brand grid. A search shortcut, not a stock
-// claim — no product/store counts, no "Verified" badge, no premium crown
-// (none of that is knowable without a real per-brand backend, and
-// inventing it was the defect this card used to carry).
+// Square card for the 2-column brand grid. Every number on it is real: how many
+// products of this brand, in how many nearby shops, from GET /catalog/brands.
+// No "Verified" badge or premium crown — nothing knows those.
 //
 // Layout (top → bottom):
-//   Colored circle with brand initial (large)
+//   Circle with the brand's initial
 //   Brand name (bold)
-//   Category chip
+//   "N products · M shops"
 // ============================================================
 
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
-import { Brand } from "../../data/brandsData";
+import type { NearbyBrand } from "../../services/liveCatalogService";
 
 interface BrandCardProps {
-  brand:   Brand;
+  brand:   NearbyBrand;
   onPress: () => void;
 }
+
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 export default function BrandCard({ brand, onPress }: BrandCardProps) {
   const { colors } = useTheme();
@@ -31,54 +32,44 @@ export default function BrandCard({ brand, onPress }: BrandCardProps) {
       style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
       onPress={onPress}
       activeOpacity={0.82}
+      accessibilityRole="button"
+      accessibilityLabel={`${brand.name}, ${plural(brand.productCount, "product")} in ${plural(brand.shopCount, "shop")}`}
     >
-      {/* Brand initial circle */}
-      <View style={[styles.circle, { backgroundColor: brand.color }]}>
-        <Text style={[styles.initial, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.xxl }]}>
-          {brand.initial}
+      <View style={[styles.circle, { backgroundColor: colors.primary + "18" }]}>
+        <Text style={[styles.initial, { color: colors.primary }]}>
+          {brand.name.trim().charAt(0).toUpperCase()}
         </Text>
       </View>
 
-      {/* Brand name */}
-      <Text style={[styles.name, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]} numberOfLines={1}>
+      <Text style={[styles.name, { color: colors.text }]} numberOfLines={2}>
         {brand.name}
       </Text>
 
-      {/* Category chip */}
-      <View style={[styles.categoryChip, { backgroundColor: brand.color + "18" }]}>
-        <Text style={[styles.categoryText, { color: brand.color, fontFamily: typography.fontFamily.medium, fontSize: typography.size.ss }]}>
-          {brand.category.charAt(0).toUpperCase() + brand.category.slice(1)}
-        </Text>
-      </View>
+      <Text style={[styles.meta, { color: colors.subText }]} numberOfLines={1}>
+        {plural(brand.productCount, "product")} · {plural(brand.shopCount, "shop")}
+      </Text>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    flex:          1,
-    borderRadius:  16,
-    borderWidth:   1,
-    padding:       14,
-    alignItems:    "center",
-    gap:           8,
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    alignItems: "center",
+    gap: 8,
   },
-
   circle: {
-    width:          64,
-    height:         64,
-    borderRadius:   32,
-    alignItems:     "center",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
     justifyContent: "center",
   },
-  initial: { color: "#fff" },
-
-  name: { textAlign: "center" },
-
-  categoryChip: {
-    paddingHorizontal: 10,
-    paddingVertical:   3,
-    borderRadius:      20,
-  },
-  categoryText: {},
+  initial: { fontFamily: typography.fontFamily.bold, fontSize: typography.size.xxl },
+  name: { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm, textAlign: "center" },
+  meta: { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs, textAlign: "center" },
 });

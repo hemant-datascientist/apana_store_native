@@ -8,6 +8,9 @@
 
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Linking } from "react-native";
+
+/** Apana's own Play Store page — null until the app is listed. */
+const PLAY_STORE_URL: string | null = null;
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import useTheme from "../../theme/useTheme";
@@ -30,7 +33,9 @@ export default function RateThankYou({ rating }: RateThankYouProps) {
   const { colors } = useTheme();
   const router     = useRouter();
   const meta       = RATING_META[rating] ?? RATING_META[3];
-  const showStoreLink = rating >= 4;
+  // No Play Store listing yet — the button opened the generic store homepage.
+  // Set PLAY_STORE_URL once the listing exists and the CTA comes back.
+  const showStoreLink = PLAY_STORE_URL != null && (rating >= 4);
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -61,7 +66,7 @@ export default function RateThankYou({ rating }: RateThankYouProps) {
       {showStoreLink && (
         <TouchableOpacity
           style={[styles.storeBtn, { backgroundColor: "#22C55E" }]}
-          onPress={() => Linking.openURL("https://play.google.com/store")}
+          onPress={() => PLAY_STORE_URL && Linking.openURL(PLAY_STORE_URL)}
           activeOpacity={0.85}
         >
           <Ionicons name="logo-google-playstore" size={18} color="#fff" />

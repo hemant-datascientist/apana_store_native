@@ -25,6 +25,9 @@ export interface SubCat {
   icon:  string;   // Ionicons glyph
   bg:    string;   // placeholder background color
   apc?:  string;   // APC class this tile opens (overrides the grid's `apc`)
+  /** A screen this tile opens instead — e.g. "/menu-stores" for restaurant-type
+   *  tiles, which are dishes from menu shops, not products in a class. */
+  route?: string;
   imageUrl?: any;
 }
 
@@ -50,6 +53,10 @@ export default function CategorySubGrid({ title, subCats, accent, apc }: Categor
 
   function handlePress(cat: SubCat) {
     setActive(cat.key);
+    if (cat.route) {
+      router.push(cat.route as never);
+      return;
+    }
     // Per-tile APC class wins; else the grid's default. Opens the §27 browser.
     const code = cat.apc ?? apc;
     if (code) {

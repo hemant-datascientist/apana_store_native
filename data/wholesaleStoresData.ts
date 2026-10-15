@@ -1,8 +1,8 @@
 // ============================================================
 // WHOLESALE STORES DATA — Apana Store (Customer App)
 //
-// Mock data for the Stores → Wholesale tab feed.
-// Replace with GET /stores/wholesale?lat=&lng= when ready.
+// Stores → Wholesale tab: category banners (below). The store list itself is
+// live (useStoreBucket("wholesale")); WholesaleStore is its card type.
 // ============================================================
 
 // ── Promotional Banners ────────────────────────────────────────
@@ -21,42 +21,47 @@ export interface WholesalePromo {
   badges:      string[]; // partner/feature logos as text labels
 }
 
+// 🔴 CATEGORY BANNERS ONLY (2026-10-15). These were METRO, LOTS and BJs —
+// real companies that are not on Apana — with offers nobody made ("Upto 40%
+// Off", "20 More Prizes", "Extra 15% for Members"). A customer could walk into
+// a real store expecting them. Now: what the Wholesale tab is for, no brand,
+// no offer. `brandName` is the banner's headline word.
 export const WHOLESALE_PROMOS: WholesalePromo[] = [
   {
     id:          "wp1",
-    brandName:   "METRO",
-    tagline:     "Hal Na!",
-    promoTitle:  "SHOP & WIN",
-    promoSub:    "20 More Prizes",
+    brandName:   "WHOLESALE",
+    tagline:     "Buy in bulk, near you",
+    promoTitle:  "FOR YOUR SHOP",
+    promoSub:    "Restock from local wholesalers",
     bgLeft:      "#003087",
     bgRight:     "#E8380D",
     textColor:   "#fff",
     accentColor: "#FFD700",
-    badges:      ["EPAY", "KT", "BUY LESS"],
+    badges:      ["Bulk", "Local"],
   },
   {
     id:          "wp2",
-    brandName:   "LOTS",
-    tagline:     "Wholesale Solutions",
-    promoTitle:  "BULK SAVINGS",
-    promoSub:    "Upto 40% Off on Staples",
+    brandName:   "STAPLES",
+    tagline:     "By the bag",
+    promoTitle:  "BULK STAPLES",
+    promoSub:    "Rice, atta, oil, sugar",
     bgLeft:      "#145A32",
     bgRight:     "#F39C12",
     textColor:   "#fff",
     accentColor: "#ABEBC6",
-    badges:      ["GST Ready", "B2B", "FSSAI"],
+    badges:      ["Bulk", "Kirana"],
   },
   {
     id:          "wp3",
-    brandName:   "BJs",
-    tagline:     "Wholesale Club",
-    promoTitle:  "MEMBER DEAL",
-    promoSub:    "Extra 15% for Members",
+    brandName:   "BY THE BOX",
+    tagline:     "Packaged goods in cases",
+    promoTitle:  "CASE PACKS",
+    promoSub:    "Biscuits, soaps, drinks",
     bgLeft:      "#1A237E",
     bgRight:     "#C62828",
     textColor:   "#fff",
     accentColor: "#90CAF9",
-    badges:      ["Members Only", "Bulk", "Delivery"],
+    badges:      ["Box", "Bulk"],
   },
 ];
 

@@ -15,23 +15,23 @@ const ACCENT = "#374151";
 
 const SUB_CATS: SubCat[] = [
   { key: "paints",     label: "Paints",           icon: "color-fill-outline",      bg: "#FEE2E2", imageUrl: assetImg("category/products/home_hw_paints.webp") },
-  { key: "electrical", label: "Electrical",       icon: "flash-outline",           bg: "#FEF3C7", imageUrl: assetImg("category/products/home_hw_electrical.webp") },
-  { key: "plumbing",   label: "Plumbing",         icon: "water-outline",           bg: "#DBEAFE", imageUrl: assetImg("category/products/home_hw_plumbing.webp") },
+  { key: "electrical", label: "Electrical", apc: "APC-15-ELEC",       icon: "flash-outline",           bg: "#FEF3C7", imageUrl: assetImg("category/products/home_hw_electrical.webp") },
+  { key: "plumbing",   label: "Plumbing", apc: "APC-19-SANI",         icon: "water-outline",           bg: "#DBEAFE", imageUrl: assetImg("category/products/home_hw_plumbing.webp") },
   { key: "powertools", label: "Power Tools",      icon: "construct-outline",       bg: "#F3F4F6", imageUrl: assetImg("category/products/home_hw_powertools.webp") },
   { key: "handtools",  label: "Hand Tools",       icon: "hammer-outline",          bg: "#FFEDD5", imageUrl: assetImg("category/products/home_hw_handtools.webp") },
   { key: "safety",     label: "Safety Gear",      icon: "shield-outline",          bg: "#DCFCE7", imageUrl: assetImg("category/products/home_hw_safety.webp") },
   { key: "building",   label: "Cement & Building",icon: "layers-outline",          bg: "#EDE9FE", imageUrl: assetImg("category/products/home_hw_building.webp") },
-  { key: "tiles",      label: "Tiles & Flooring", icon: "grid-outline",            bg: "#FEF3C7", imageUrl: assetImg("category/products/home_hw_tiles.webp") },
+  { key: "tiles",      label: "Tiles & Flooring", apc: "APC-19-SANI", icon: "grid-outline",            bg: "#FEF3C7", imageUrl: assetImg("category/products/home_hw_tiles.webp") },
   { key: "glass",      label: "Glass & Aluminium",icon: "square-outline",          bg: "#E0F2FE", imageUrl: assetImg("category/products/home_hw_glass.webp") },
-  { key: "sanitary",   label: "Sanitary Ware",    icon: "water-outline",           bg: "#DCFCE7", imageUrl: assetImg("category/products/home_hw_sanitary.webp") },
+  { key: "sanitary",   label: "Sanitary Ware", apc: "APC-19-SANI",    icon: "water-outline",           bg: "#DCFCE7", imageUrl: assetImg("category/products/home_hw_sanitary.webp") },
   { key: "adhesives",  label: "Adhesives",        icon: "link-outline",            bg: "#FCE7F3", imageUrl: assetImg("category/products/home_hw_adhesives.webp") },
-  { key: "gardening",  label: "Gardening Tools",  icon: "leaf-outline",            bg: "#ECFDF5", imageUrl: assetImg("category/products/home_hw_gardening.webp") },
+  { key: "gardening",  label: "Gardening Tools", apc: "APC-27-PLANT",  icon: "leaf-outline",            bg: "#ECFDF5", imageUrl: assetImg("category/products/home_hw_gardening.webp") },
 ];
 
 export default function HardwareFeed() {
   return (
     <View>
-      <CategorySubGrid subCats={SUB_CATS} accent={ACCENT} />
+      <CategorySubGrid subCats={SUB_CATS} accent={ACCENT} apc="APC-20-TOOL" />
       <CategoryLiveProducts categoryKey="hardware" accentColor={ACCENT} />
     </View>
   );

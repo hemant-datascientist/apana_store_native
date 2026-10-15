@@ -31,7 +31,7 @@ const SUB_CATS: SubCat[] = [
 export default function FurnitureFeed() {
   return (
     <View>
-      <CategorySubGrid subCats={SUB_CATS} accent={ACCENT} />
+      <CategorySubGrid subCats={SUB_CATS} accent={ACCENT} apc="APC-16-HFUR" />
       <CategoryLiveProducts categoryKey="furniture" accentColor={ACCENT} />
     </View>
   );
