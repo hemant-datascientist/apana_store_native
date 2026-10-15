@@ -14,7 +14,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
-import { CartStore, DELIVERY_FEE } from "../../data/cartData";
+import { CartStore } from "../../data/cartData";
 import { FULFILLMENT_DISPLAY, ETA_CONFIG } from "../../data/checkoutData";
 import { useDeliveryEta } from "../../hooks/useDeliveryEta";
 
@@ -26,16 +26,17 @@ interface CheckoutStoreRowProps {
    *  per row instead of in a loop over a list whose length changes. */
   dropLat?: number | null;
   dropLng?: number | null;
+  /** ₹, from the server; null/undefined = not priced yet. */
+  deliveryFee?: number | null;
 }
 
-export default function CheckoutStoreRow({ store, dropLat, dropLng }: CheckoutStoreRowProps) {
+export default function CheckoutStoreRow({ store, dropLat, dropLng, deliveryFee }: CheckoutStoreRowProps) {
   const eta = useDeliveryEta(store.id, dropLat, dropLng);
   const { colors }       = useTheme();
   const [expanded, setExpanded] = useState(false);
 
   // ── Subtotal for this store ──────────────────────────────
   const subtotal      = store.items.reduce((s, i) => s + i.price * i.qty, 0);
-  const deliveryFee   = DELIVERY_FEE[store.fulfillment];
   const totalItems    = store.items.reduce((s, i) => s + i.qty, 0);
   const fulfillCfg    = FULFILLMENT_DISPLAY[store.fulfillment];
   // A ROUTED window when one could be computed, otherwise the label alone.
@@ -111,7 +112,7 @@ export default function CheckoutStoreRow({ store, dropLat, dropLng }: CheckoutSt
         </Text>
 
         {/* Delivery fee */}
-        {deliveryFee > 0 ? (
+        {deliveryFee == null ? null : deliveryFee > 0 ? (
           <Text style={[styles.fee, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
             +₹{deliveryFee} delivery
           </Text>

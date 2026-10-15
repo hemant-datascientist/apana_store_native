@@ -89,12 +89,8 @@ export const PROMO_CODES: Record<string, { label: string; discount: number }> = 
   SAVE20:   { label: "20% off on orders > ₹300", discount: 0.20 },
 };
 
-// Delivery fee per fulfillment mode
-export const DELIVERY_FEE: Record<FulfillmentMode, number> = {
-  pickup:   0,
-  delivery: 25,
-  ride:     35,
-};
+// Delivery fee is NOT a constant here: the server prices it by the hexagons
+// the rider covers (backend orders/fees.ts) — see hooks/useCartFees.
 
 // ── Fulfillment display config (used by cart + checkout) ──────
 export const FULFILLMENT_CONFIG: Record<FulfillmentMode, {

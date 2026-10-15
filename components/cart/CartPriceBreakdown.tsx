@@ -15,14 +15,16 @@ interface CartPriceBreakdownProps {
   subtotal:      number;
   bulkSavings?:  number; // stop-loss floor savings unlocked across stores
   brandSavings?: number; // brand-funded markdowns (brand pays, seller kept whole)
-  deliveryTotal: number;
+  /** null = not priced yet (no delivery pin) — shown as "—", never guessed. */
+  deliveryTotal: number | null;
+  platformFee:   number;     // ₹5 per shop order, from the server
   discountAmt?:  number;  // promo code — removed from the cart screen (never backend-validated)
   appliedPromo?: string | null;
-  total:         number;
+  total:         number | null;
 }
 
 export default function CartPriceBreakdown({
-  subtotal, bulkSavings = 0, brandSavings = 0, deliveryTotal, discountAmt = 0, appliedPromo = null, total,
+  subtotal, bulkSavings = 0, brandSavings = 0, deliveryTotal, platformFee, discountAmt = 0, appliedPromo = null, total,
 }: CartPriceBreakdownProps) {
   const { colors } = useTheme();
   const totalSaved = bulkSavings + brandSavings + discountAmt;
@@ -55,10 +57,11 @@ export default function CartPriceBreakdown({
       )}
       <PriceRow
         label="Delivery Charges"
-        value={deliveryTotal === 0 ? "FREE" : `₹${deliveryTotal}`}
+        value={deliveryTotal == null ? "—" : deliveryTotal === 0 ? "FREE" : `₹${deliveryTotal}`}
         labelColor={colors.text}
         valueColor={deliveryTotal === 0 ? "#16A34A" : colors.subText}
       />
+      <PriceRow label="Platform Fee" value={`₹${platformFee}`} labelColor={colors.text} valueColor={colors.subText} />
       {discountAmt > 0 && appliedPromo && (
         <PriceRow
           label={`Promo (${appliedPromo})`}
@@ -76,7 +79,7 @@ export default function CartPriceBreakdown({
           Total Payable
         </Text>
         <Text style={[styles.totalValue, { color: colors.primary, fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg }]}>
-          ₹{total}
+          {total == null ? "—" : `₹${total}`}
         </Text>
       </View>
 

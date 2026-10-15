@@ -32,7 +32,7 @@ import { goBackOr } from "../../lib/goBack";
 
 import useTheme              from "../../theme/useTheme";
 import { typography }        from "../../theme/typography";
-import { FulfillmentMode, FULFILLMENT_CONFIG, DELIVERY_FEE } from "../../data/cartData";
+import { FulfillmentMode, FULFILLMENT_CONFIG } from "../../data/cartData";
 import { CHECKOUT_STEPS }    from "../../data/checkoutData";
 import { MOCK_PAYMENT_METHODS, PaymentMethod } from "../../data/paymentData";
 import { useCart }           from "../../context/CartContext";

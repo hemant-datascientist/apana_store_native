@@ -13,14 +13,16 @@ import { typography } from "../../theme/typography";
 
 interface CheckoutPriceBreakdownProps {
   subtotal:      number;
-  deliveryTotal: number;
+  /** null = not priced yet (no delivery pin) — shown as "—", never guessed. */
+  deliveryTotal: number | null;
+  platformFee:   number;     // ₹5 per shop order, from the server
   discountAmt?:  number;  // promo code — removed from Review (never backend-validated)
   appliedPromo?: string | null;
-  total:         number;
+  total:         number | null;
 }
 
 export default function CheckoutPriceBreakdown({
-  subtotal, deliveryTotal, discountAmt = 0, appliedPromo = null, total,
+  subtotal, deliveryTotal, platformFee, discountAmt = 0, appliedPromo = null, total,
 }: CheckoutPriceBreakdownProps) {
   const { colors } = useTheme();
 
@@ -49,17 +51,17 @@ export default function CheckoutPriceBreakdown({
 
         <PriceRow
           label="Delivery Charges"
-          value={deliveryTotal === 0 ? "FREE" : `₹${deliveryTotal}`}
+          value={deliveryTotal == null ? "—" : deliveryTotal === 0 ? "FREE" : `₹${deliveryTotal}`}
           textColor={colors.text}
           valueColor={deliveryTotal === 0 ? "#16A34A" : colors.subText}
         />
 
-        {/* Platform convenience fee */}
+        {/* ₹5 per shop order — Apana's fee, charged to the customer */}
         <PriceRow
           label="Platform Fee"
-          value="FREE"
+          value={`₹${platformFee}`}
           textColor={colors.text}
-          valueColor="#16A34A"
+          valueColor={colors.subText}
         />
 
         {/* Promo discount — only if applied */}
@@ -81,7 +83,7 @@ export default function CheckoutPriceBreakdown({
           Total Payable
         </Text>
         <Text style={[styles.totalValue, { color: colors.primary, fontFamily: typography.fontFamily.bold, fontSize: typography.size.xl }]}>
-          ₹{total}
+          {total == null ? "—" : `₹${total}`}
         </Text>
       </View>
 

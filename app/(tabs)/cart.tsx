@@ -21,9 +21,9 @@ import { useRouter } from "expo-router";
 import useTheme from "../../theme/useTheme";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
-import {
-  DELIVERY_FEE, FulfillmentMode, storeSubtotal,
-} from "../../data/cartData";
+import { FulfillmentMode, storeSubtotal } from "../../data/cartData";
+import { useLocation } from "../../context/LocationContext";
+import { useCartFees } from "../../hooks/useCartFees";
 import { resolveStoreDiscount, storeCharged } from "../../lib/discount";
 import LoginPromptModal   from "../../components/auth/LoginPromptModal";
 import CartHeader         from "../../components/cart/CartHeader";
@@ -54,27 +54,34 @@ export default function CartScreen() {
   const bulkSavings     = discs.reduce((s, d) => s + d.savings, 0);
   const brandSavings    = discs.reduce((s, d) => s + d.brandSavings, 0);
   const chargedSubtotal = subtotal - bulkSavings - brandSavings;
-  const deliveryTotal   = cart.reduce((s, st) => s + DELIVERY_FEE[st.fulfillment], 0);
-  const total           = chargedSubtotal + deliveryTotal;
+  // Fees come from the server (the same rule checkout charges with), priced to
+  // the delivery address the header shows. Unknown until priced → "—".
+  const { selectedAddress } = useLocation();
+  const dropPin = selectedAddress.lat != null && selectedAddress.lng != null
+    ? { lat: selectedAddress.lat, lng: selectedAddress.lng } : null;
+  const fees            = useCartFees(cart, dropPin);
+  const deliveryTotal   = fees.deliveryTotal;
+  const total           = deliveryTotal == null ? null : chargedSubtotal + deliveryTotal + fees.platformTotal;
   const totalItems      = cart.reduce((s, st) => s + st.items.reduce((si, i) => si + i.qty, 0), 0);
 
   // ── Fulfillment groups for the per-mode checkout bar ──────
   const fulfillmentGroups = useMemo<FulfillmentGroup[]>(() => {
     const map = new Map<FulfillmentMode, FulfillmentGroup>();
     cart.forEach(store => {
-      const sub      = storeCharged(store) + DELIVERY_FEE[store.fulfillment];
+      const f        = fees.feeOf(store.id);
+      const sub      = f && f.delivery != null ? storeCharged(store) + f.delivery + f.platform : null;
       const items    = store.items.reduce((s, i) => s + i.qty, 0);
       const existing = map.get(store.fulfillment);
       if (existing) {
         existing.storeCount++;
         existing.itemCount += items;
-        existing.total     += sub;
+        existing.total      = existing.total == null || sub == null ? null : existing.total + sub;
       } else {
         map.set(store.fulfillment, { mode: store.fulfillment, storeCount: 1, itemCount: items, total: sub });
       }
     });
     return Array.from(map.values());
-  }, [cart]);
+  }, [cart, fees]);
 
   // ── Dynamic spacer ────────────────────────────────────────
   const barHeight = useMemo(
@@ -159,6 +166,7 @@ export default function CartScreen() {
           bulkSavings={bulkSavings}
           brandSavings={brandSavings}
           deliveryTotal={deliveryTotal}
+          platformFee={fees.platformTotal}
           total={total}
         />
 

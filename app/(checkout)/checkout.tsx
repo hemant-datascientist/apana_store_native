@@ -33,10 +33,9 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 
-import {
-  DELIVERY_FEE, FulfillmentMode, FULFILLMENT_CONFIG,
-  CartStore,
-} from "../../data/cartData";
+import { FulfillmentMode, FULFILLMENT_CONFIG, CartStore } from "../../data/cartData";
+import { storeCharged } from "../../lib/discount";
+import { useCartFees } from "../../hooks/useCartFees";
 import { useCart } from "../../context/CartContext";
 import { useLocation } from "../../context/LocationContext";
 import { UserAddress } from "../../data/addressData";
@@ -91,17 +90,18 @@ export default function CheckoutScreen() {
   const [orderError, setOrderError] = useState<string | null>(null);
 
   // ── Derived totals ────────────────────────────────────────
-  const { subtotal, deliveryTotal, total, totalItems } = useMemo(() => {
-    const sub   = cart.reduce((s, st) => s + st.items.reduce((si, i) => si + i.price * i.qty, 0), 0);
-    const del   = cart.reduce((s, st) => s + DELIVERY_FEE[st.fulfillment], 0);
-    const items = cart.reduce((s, st) => s + st.items.reduce((si, i) => si + i.qty, 0), 0);
-    return {
-      subtotal:      sub,
-      deliveryTotal: del,
-      total:         sub + del,
-      totalItems:    items,
-    };
-  }, [cart]);
+  // Fees priced by the server to THIS address — the same function checkout
+  // charges with, so what is shown here is what the order will carry.
+  const dropPin = selectedAddress?.lat != null && selectedAddress?.lng != null
+    ? { lat: selectedAddress.lat, lng: selectedAddress.lng } : null;
+  const fees = useCartFees(cart, needsAddress ? dropPin : null);
+  const { subtotal, totalItems } = useMemo(() => ({
+    // Charged prices (deal floors applied), as the server will charge them.
+    subtotal:   cart.reduce((s, st) => s + storeCharged(st), 0),
+    totalItems: cart.reduce((s, st) => s + st.items.reduce((si, i) => si + i.qty, 0), 0),
+  }), [cart]);
+  const deliveryTotal = fees.deliveryTotal;
+  const total = deliveryTotal == null ? null : subtotal + deliveryTotal + fees.platformTotal;
 
   // ── Progress: "checkout" step is active ──────────────────
   const ACTIVE_STEP = "checkout";
@@ -119,6 +119,14 @@ export default function CheckoutScreen() {
         addresses.length === 0
           ? "Add a delivery address before placing this order."
           : "Please select a delivery address.",
+      );
+      return;
+    }
+    if (total == null) {
+      setOrderError(
+        fees.ready
+          ? "We can't price delivery to this address. Check it has a map pin, or choose pickup."
+          : "Working out the delivery fee…",
       );
       return;
     }
@@ -270,6 +278,7 @@ export default function CheckoutScreen() {
               store={store}
               dropLat={selectedAddress?.lat ?? null}
               dropLng={selectedAddress?.lng ?? null}
+              deliveryFee={fees.feeOf(store.id)?.delivery ?? null}
             />
           ))}
         </View>
@@ -313,6 +322,7 @@ export default function CheckoutScreen() {
         <CheckoutPriceBreakdown
           subtotal={subtotal}
           deliveryTotal={deliveryTotal}
+          platformFee={fees.platformTotal}
           total={total}
         />
 
@@ -349,7 +359,7 @@ export default function CheckoutScreen() {
         <View style={styles.ctaContent}>
           <View>
             <Text style={[styles.ctaTotal, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg }]}>
-              ₹{total}
+              {total == null ? "—" : `₹${total}`}
             </Text>
             <Text style={[styles.ctaSub, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
               {modeCfg.label} · {cart.length} store{cart.length > 1 ? "s" : ""}

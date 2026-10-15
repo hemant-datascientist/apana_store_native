@@ -23,7 +23,7 @@ export interface FulfillmentGroup {
   mode:       FulfillmentMode;
   storeCount: number;
   itemCount:  number;
-  total:      number;
+  total:      number | null; // null while a delivery fee is still unpriced
 }
 
 interface CartCheckoutBarProps {
@@ -73,7 +73,7 @@ export default function CartCheckoutBar({ groups, onCheckout }: CartCheckoutBarP
               {/* Right: total + arrow */}
               <View style={styles.btnRight}>
                 <Text style={[styles.btnTotal, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.md }]}>
-                  ₹{group.total}
+                  {group.total == null ? "—" : `₹${group.total}`}
                 </Text>
                 <Ionicons name="arrow-forward-circle" size={22} color="#fff" />
               </View>

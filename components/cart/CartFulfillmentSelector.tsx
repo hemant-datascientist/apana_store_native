@@ -18,7 +18,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
-import { FulfillmentMode, FULFILLMENT_CONFIG, DELIVERY_FEE } from "../../data/cartData";
+import { FulfillmentMode, FULFILLMENT_CONFIG } from "../../data/cartData";
 
 interface CartFulfillmentSelectorProps {
   storeId:    string;
@@ -78,16 +78,7 @@ export default function CartFulfillmentSelector({ storeId, fulfillment, onSelect
             }]}>
               {cfg.label}
             </Text>
-            {/* Show fee for non-free, non-soon modes */}
-            {!soon && DELIVERY_FEE[mode] > 0 && (
-              <Text style={[styles.fee, {
-                color:      active ? cfg.color : colors.subText,
-                fontFamily: typography.fontFamily.regular,
-                fontSize:   9.5,
-              }]}>
-                +₹{DELIVERY_FEE[mode]}
-              </Text>
-            )}
+            {/* No fee badge: delivery is priced by distance (server), shown in Price Details. */}
           </TouchableOpacity>
         );
       })}
@@ -131,5 +122,4 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   label: {},
-  fee:   {},
 });

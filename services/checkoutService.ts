@@ -291,3 +291,37 @@ export async function validatePromoCode(
     ? { valid: true,  discountAmt: discount, message: `₹${discount} off applied!` }
     : { valid: false, discountAmt: 0,        message: "Invalid or expired promo code" };
 }
+
+// ── Order fees (POST /cart/resolve) ─────────────────────────
+// The SAME server function checkout charges with (backend orders/fees.ts):
+// ₹5 platform fee per shop order + a delivery fee by the hexagons the rider
+// covers. The cart used to show a flat ₹25 that checkout never charged.
+export interface StoreFees {
+  /** ₹; null = can't be priced yet (no delivery pin, or the shop has none). */
+  delivery: number | null;
+  /** ₹ */
+  platform: number;
+}
+
+export async function fetchStoreFees(
+  productIds: string[],
+  mode: FulfillmentMode,
+  pin: { lat: number; lng: number } | null,
+): Promise<StoreFees> {
+  if (!IS_LIVE) throw new Error("Fees need a live connection.");
+  const res = await fetch(`${BASE_URL}/cart/resolve`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      items: productIds.map((product_id) => ({ product_id, qty: 1 })),
+      fulfillment: FULFILLMENT[mode],
+      ...(pin ? { lat: pin.lat, lng: pin.lng } : {}),
+    }),
+  });
+  if (!res.ok) throw new Error(`Could not price this order (${res.status})`);
+  const body = (await res.json()) as { delivery_fee_cents: number | null; platform_fee_cents: number };
+  return {
+    delivery: body.delivery_fee_cents == null ? null : body.delivery_fee_cents / 100,
+    platform: body.platform_fee_cents / 100,
+  };
+}
