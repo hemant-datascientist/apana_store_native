@@ -105,9 +105,9 @@ export default function RootLayout() {
             {/* APC browser — §27 cross-retail category taxonomy (index + node) */}
             <Stack.Screen name="(apc)"      />
             {/* APC deep-link entry — /apc/<code> from registry "Shop on Apana" */}
-            <Stack.Screen name="apc"        />
+            <Stack.Screen name="apc/[code]" />
             {/* Store short-link entry — /s/<id> from a shared store link or QR (§30) */}
-            <Stack.Screen name="s"          />
+            <Stack.Screen name="s/[id]"     />
             {/* Full-screen store-discovery map — /map (home search-bar map button) */}
             <Stack.Screen name="map"        />
             {/* Order chat — /order-chat, this customer and one shop about one order */}
