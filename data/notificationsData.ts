@@ -69,6 +69,7 @@ export interface NotifItem {
   body:  string;
   time:  string;   // Human-readable relative time
   read:  boolean;
+  target?: import("../lib/notifTarget").NotifTarget; // where a tap goes
 }
 
 // ── Mock notification feed ────────────────────────────────────

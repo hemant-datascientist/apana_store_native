@@ -14,6 +14,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import type { NotifItem, NotifType } from "../data/notificationsData";
+import { notifTarget } from "../lib/notifTarget";
 import { playSound } from "../lib/sound";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -39,6 +40,7 @@ interface Wire {
   type: string;
   title: string;
   body: string;
+  data?: Record<string, unknown> | null;
   read: boolean;
   created_at: string;
 }
@@ -117,6 +119,7 @@ export function useCustomerNotifications(): CustomerNotificationsState {
             body: n.body,
             time: relative(n.created_at),
             read: n.read,
+            target: notifTarget(n.type, n.data),
           };
         }),
       );

@@ -19,6 +19,7 @@ import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, StatusBar, Switch,
 } from "react-native";
+import { Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons }     from "@expo/vector-icons";
 import { useRouter }    from "expo-router";
@@ -52,6 +53,10 @@ export default function NotificationsScreen() {
   // the moment the screen reopened.
   function handleTap(id: string) {
     void markRead(id);
+    const target = items.find((n) => n.id === id)?.target;
+    if (!target) return;
+    if (target.kind === "route") router.push(target.path as never);
+    else Linking.openURL(target.url).catch(() => {});
   }
 
   // ── Mark all as read ──────────────────────────────────────
