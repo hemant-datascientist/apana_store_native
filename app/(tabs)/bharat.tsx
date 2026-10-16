@@ -23,6 +23,7 @@ import { typography } from "../../theme/typography";
 import IndiaMapSvg from "../../components/tabs/bharat/IndiaMapSvg";
 import RegionSection from "../../components/tabs/bharat/RegionSection";
 import { REGION_GROUPS } from "../../data/bharatData";
+import { useStateLiveCounts } from "../../hooks/useStateLiveCounts";
 import MenuDrawer from "../../components/tabs/home/MenuDrawer";
 import { handleMenuSelect } from "../../lib/menuNav";
 
@@ -33,6 +34,10 @@ export default function BharatScreen() {
   const { colors, isDark } = useTheme();
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // Real live-store counts per state (seller_db, polled 60s). Mock mode →
+  // undefined, and the cards then show no number at all.
+  const stateLive = useStateLiveCounts();
+  const stateCounts = stateLive.isLive ? stateLive.counts : undefined;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -94,10 +99,10 @@ export default function BharatScreen() {
         </View>
 
         {/* A preview of what Bharat will cover: every state and UT, by region.
-            Shapes and names only — no store counts, nothing to tap yet. */}
+            Real live-store counts per state; nothing to tap yet. */}
         <Text style={[styles.previewTitle, { color: colors.text }]}>Every state, coming to Bharat</Text>
         {REGION_GROUPS.map((g) => (
-          <RegionSection key={g.key} group={g} primary={colors.primary} preview />
+          <RegionSection key={g.key} group={g} primary={colors.primary} liveCounts={stateCounts} preview />
         ))}
       </ScrollView>
     </View>

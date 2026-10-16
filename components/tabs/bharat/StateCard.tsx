@@ -23,8 +23,8 @@ interface StateCardProps {
   // (green dot when > 0, red when 0). §19.8 — never claims unknowns.
   liveCount?: number | null;
   onPress?: (state: StateInfo) => void;
-  // Coming-soon preview: shape + name only. No count (the bundled numbers are
-  // samples) and no tap (there is nothing behind a state yet).
+  // Coming-soon preview: no tap (nothing is behind a state yet). The count shows
+  // only when it is REAL (liveCount given) — never the bundled sample numbers.
   preview?: boolean;
 }
 
@@ -64,7 +64,7 @@ export default function StateCard({ state, primary, liveCount, onPress, preview 
       </Text>
 
       {/* Stores Live Count */}
-      {!preview && <View style={styles.liveRow}>
+      {!(preview && liveCount === undefined) && <View style={styles.liveRow}>
         <View style={[styles.liveDot, { backgroundColor: dotColor }]} />
         <Text style={[styles.liveCount, { color: colors.primary, fontFamily: typography.fontFamily.semiBold }]}>
           {shown == null ? "…" : formatCount(shown)} Live
