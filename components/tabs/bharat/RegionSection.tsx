@@ -20,12 +20,13 @@ interface RegionSectionProps {
   // mode (cards use bundled numbers); null = live mode still loading.
   liveCounts?: Record<string, number> | null;
   onPress?: (state: StateInfo) => void;
+  preview?: boolean; // coming-soon: names + shapes only (see StateCard)
 }
 
 // Same normalisation as the service — bharat names → response keys.
 const norm = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-export default function RegionSection({ group, primary, liveCounts, onPress }: RegionSectionProps) {
+export default function RegionSection({ group, primary, liveCounts, onPress, preview }: RegionSectionProps) {
   const { colors } = useTheme();
 
   // undefined → mock passthrough · null → loading · map → count (absent = 0)
@@ -67,6 +68,7 @@ export default function RegionSection({ group, primary, liveCounts, onPress }: R
             primary={primary}
             liveCount={liveFor(state)}
             onPress={onPress}
+            preview={preview}
           />
         ))}
         {/* Right padding sentinel */}

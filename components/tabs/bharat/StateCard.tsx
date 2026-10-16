@@ -23,6 +23,9 @@ interface StateCardProps {
   // (green dot when > 0, red when 0). §19.8 — never claims unknowns.
   liveCount?: number | null;
   onPress?: (state: StateInfo) => void;
+  // Coming-soon preview: shape + name only. No count (the bundled numbers are
+  // samples) and no tap (there is nothing behind a state yet).
+  preview?: boolean;
 }
 
 const BOX_SIZE = 76;   // outer rounded square
@@ -32,7 +35,7 @@ const DOT_LIVE    = "#22C55E";
 const DOT_NONE    = "#EF4444";
 const DOT_LOADING = "#9CA3AF";
 
-export default function StateCard({ state, primary, liveCount, onPress }: StateCardProps) {
+export default function StateCard({ state, primary, liveCount, onPress, preview }: StateCardProps) {
   const { colors } = useTheme();
   const bgTint     = primary + "12";   // ~7% opacity
   const borderTint = primary + "28";
@@ -41,7 +44,7 @@ export default function StateCard({ state, primary, liveCount, onPress }: StateC
   const dotColor = shown == null ? DOT_LOADING : shown > 0 ? DOT_LIVE : DOT_NONE;
 
   return (
-    <TouchableOpacity style={styles.wrap} onPress={() => onPress?.(state)} activeOpacity={0.72}>
+    <TouchableOpacity style={styles.wrap} onPress={() => onPress?.(state)} activeOpacity={0.72} disabled={preview}>
 
       {/* Silhouette box */}
       <View style={[styles.box, { backgroundColor: bgTint, borderColor: borderTint }]}>
@@ -61,12 +64,12 @@ export default function StateCard({ state, primary, liveCount, onPress }: StateC
       </Text>
 
       {/* Stores Live Count */}
-      <View style={styles.liveRow}>
+      {!preview && <View style={styles.liveRow}>
         <View style={[styles.liveDot, { backgroundColor: dotColor }]} />
         <Text style={[styles.liveCount, { color: colors.primary, fontFamily: typography.fontFamily.semiBold }]}>
           {shown == null ? "…" : formatCount(shown)} Live
         </Text>
-      </View>
+      </View>}
 
     </TouchableOpacity>
   );

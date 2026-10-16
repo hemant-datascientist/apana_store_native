@@ -21,6 +21,8 @@ import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import IndiaMapSvg from "../../components/tabs/bharat/IndiaMapSvg";
+import RegionSection from "../../components/tabs/bharat/RegionSection";
+import { REGION_GROUPS } from "../../data/bharatData";
 import MenuDrawer from "../../components/tabs/home/MenuDrawer";
 import { handleMenuSelect } from "../../lib/menuNav";
 
@@ -59,7 +61,8 @@ export default function BharatScreen() {
         </View>
       </SafeAreaView>
 
-      <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <View style={styles.body}>
         <View style={[styles.mapCard, { backgroundColor: colors.primary }]}>
           <IndiaMapSvg mapWidth={MAP_WIDTH} />
         </View>
@@ -88,6 +91,14 @@ export default function BharatScreen() {
           <Ionicons name="storefront-outline" size={18} color={colors.white} />
           <Text style={[styles.ctaText, { color: colors.white }]}>Shop near you</Text>
         </TouchableOpacity>
+        </View>
+
+        {/* A preview of what Bharat will cover: every state and UT, by region.
+            Shapes and names only — no store counts, nothing to tap yet. */}
+        <Text style={[styles.previewTitle, { color: colors.text }]}>Every state, coming to Bharat</Text>
+        {REGION_GROUPS.map((g) => (
+          <RegionSection key={g.key} group={g} primary={colors.primary} preview />
+        ))}
       </ScrollView>
     </View>
   );
@@ -102,7 +113,12 @@ const styles = StyleSheet.create({
   },
   headerIcon: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   headerTitle: { fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg },
-  body: { padding: 20, alignItems: "center", gap: 14, paddingBottom: 120 },
+  scroll: { paddingBottom: 120 },
+  body: { padding: 20, alignItems: "center", gap: 14 },
+  previewTitle: {
+    fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg,
+    paddingHorizontal: 16, marginTop: 8, marginBottom: 12,
+  },
   mapCard: { borderRadius: 20, paddingVertical: 20, width: "100%", alignItems: "center" },
   soonPill: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4, marginTop: 6 },
   soonText: { fontFamily: typography.fontFamily.bold, fontSize: typography.size.xs, letterSpacing: 1 },
