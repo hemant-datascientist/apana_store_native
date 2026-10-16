@@ -15,6 +15,7 @@
 // ============================================================
 
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import { fetchStoreThreshold } from "../services/checkoutService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   INITIAL_CART, CartStore, CartItem, FulfillmentMode,
@@ -132,6 +133,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       });
     return () => { alive = false; };
   }, []);
+
+  // Once per launch, after the saved cart is back: refresh each shop's deal
+  // threshold from the server. Carts saved before addItem carried it had none,
+  // so deal prices never showed; a shop may also have changed its deal since.
+  // A failed fetch leaves that shop as it was — never invents a threshold.
+  useEffect(() => {
+    if (!hydrated) return;
+    let alive = true;
+    for (const st of cart) {
+      const ids = st.items.map((i) => i.productId).filter((x): x is string => !!x);
+      if (ids.length === 0) continue;
+      fetchStoreThreshold(ids)
+        .then((t) => {
+          if (!alive) return;
+          setCart((prev) => prev.map((s) => (s.id === st.id ? { ...s, unlockThreshold: t ?? undefined } : s)));
+        })
+        .catch(() => {});
+    }
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
 
   // Persist after every change, but never before hydration finishes — an early
   // write would overwrite the stored cart with the empty initial state.

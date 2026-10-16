@@ -325,3 +325,19 @@ export async function fetchStoreFees(
     platform: body.platform_fee_cents / 100,
   };
 }
+
+/** The shop's current basket-deal threshold (₹; null = no deal), from the same
+ *  /cart/resolve the server prices with. Used to refresh carts saved before
+ *  the cart carried a threshold. */
+export async function fetchStoreThreshold(productIds: string[]): Promise<number | null> {
+  if (!IS_LIVE) throw new Error("Needs a live connection.");
+  const res = await fetch(`${BASE_URL}/cart/resolve`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ items: productIds.map((product_id) => ({ product_id, qty: 1 })) }),
+  });
+  if (!res.ok) throw new Error(`resolve ${res.status}`);
+  const body = (await res.json()) as { sellers: { threshold_cents: number | null }[] };
+  const t = body.sellers[0]?.threshold_cents ?? null;
+  return t == null ? null : t / 100;
+}
