@@ -645,3 +645,30 @@ export async function fetchNearbyBrands(lat: number, lng: number): Promise<Nearb
   );
   return (body.items ?? []).map((b) => ({ name: b.brand, productCount: b.product_count, shopCount: b.shop_count }));
 }
+
+// ── Admin-managed banners / promotions (GET /api/customer/content) ─────────
+// Only what an admin published for this area; an empty list shows nothing —
+// never the old bundled BANNERS (§19.8).
+export interface LiveBanner {
+  id: string;
+  kind: "banner" | "promotion";
+  title: string;
+  body: string | null;
+  image: string | null;
+  link: string | null;
+  sponsored: boolean;
+}
+
+export async function fetchLiveBanners(state: string | null, city: string | null): Promise<LiveBanner[]> {
+  if (!IS_LIVE) return [];
+  const qs = new URLSearchParams();
+  if (state) qs.set("state", state);
+  if (city) qs.set("city", city);
+  const body = await fetchJson<{ items: { id: string; kind: "banner" | "promotion"; title: string; body: string | null; image_url: string | null; link: string | null; sponsored: boolean }[] }>(
+    `${BASE_URL}/content?${qs.toString()}`,
+  );
+  return (body.items ?? []).map((i) => ({
+    id: i.id, kind: i.kind, title: i.title, body: i.body,
+    image: resolveImage(i.image_url ?? undefined), link: i.link, sponsored: i.sponsored,
+  }));
+}

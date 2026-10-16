@@ -37,6 +37,7 @@ import CategoryScroll      from "../../components/tabs/home/CategoryScroll";
 import StoreDiscoveryTabs, { StoreTab }    from "../../components/tabs/home/StoreDiscoveryTabs";
 import StoreFilterBar,     { StoreFilters } from "../../components/tabs/home/StoreFilterBar";
 import MenuDrawer                          from "../../components/tabs/home/MenuDrawer";
+import LiveBanners                         from "../../components/tabs/home/LiveBanners";
 import { handleMenuSelect }                from "../../lib/menuNav";
 
 // ── Product category feeds ───────────────────────────────────
@@ -213,6 +214,8 @@ export default function HomeScreen() {
         )}
 
         {/* ── Products feed — one component per category ── */}
+        {/* Admin-published banners for this area (renders nothing if none). */}
+        {mode === "products" && <LiveBanners />}
         {mode === "products" && renderCategoryFeed()}
 
         {/* ── Store feeds ── */}
