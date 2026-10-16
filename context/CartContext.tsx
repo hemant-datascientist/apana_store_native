@@ -52,6 +52,10 @@ interface AddItemPayload {
   storeTypeBg:    string;
   fulfillment:    FulfillmentMode;
   item:           CartItem;
+  // The shop's basket-deal threshold (₹). Without it the discount engine sees
+  // "no deal" and deal prices never show. undefined = caller doesn't know it
+  // (keeps whatever the cart already has); null = the shop has no deal.
+  unlockThreshold?: number | null;
 }
 
 interface CartContextValue {
@@ -181,14 +185,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // ── Add item from Product Detail screen ────────────────────
   // If the store already exists in cart, appends/increments item.
   // If new store, creates a new CartStore entry.
-  function addItem({ storeId, storeName, storeType, storeTypeColor, storeTypeBg, fulfillment, item }: AddItemPayload) {
+  function addItem({ storeId, storeName, storeType, storeTypeColor, storeTypeBg, fulfillment, item, unlockThreshold }: AddItemPayload) {
     setCart(prev => {
       const storeIdx = prev.findIndex(s => s.id === storeId);
       const ceiling = item.maxQty != null && item.maxQty > 0 ? item.maxQty : Infinity;
 
       if (storeIdx === -1) {
         // New store — create entry with this item
-        return [...prev, { id: storeId, name: storeName, type: storeType, typeColor: storeTypeColor, typeBg: storeTypeBg, fulfillment, items: [{ ...item, qty: Math.min(ceiling, 1) }] }];
+        return [...prev, { id: storeId, name: storeName, type: storeType, typeColor: storeTypeColor, typeBg: storeTypeBg, fulfillment, unlockThreshold: unlockThreshold ?? undefined, items: [{ ...item, qty: Math.min(ceiling, 1) }] }];
       }
 
       // Existing store — increment if item already in cart, else append
@@ -205,7 +209,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               : i,
           );
 
-      return prev.map(s => s.id === storeId ? { ...s, items: newItems } : s);
+      // A fresh threshold from the live listing replaces a stale one.
+      return prev.map(s => s.id === storeId
+        ? { ...s, items: newItems, ...(unlockThreshold !== undefined ? { unlockThreshold: unlockThreshold ?? undefined } : {}) }
+        : s);
     });
   }
 

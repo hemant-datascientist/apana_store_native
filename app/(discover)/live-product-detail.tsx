@@ -159,6 +159,7 @@ export default function LiveProductDetailScreen() {
       // Real fulfilment selection happens in the cart; pickup is the only mode
       // that needs no address, so it is the honest default.
       fulfillment: "pickup",
+      unlockThreshold: p.store.dealUnlockThreshold,
       item: {
         id: rowId,
         productId: p.id,

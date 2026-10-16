@@ -21,6 +21,7 @@ export function useLiveProductCart() {
       addItem({
         storeId: p.store.id, storeName: p.store.name, storeType: p.store.type,
         storeTypeColor: tint.color, storeTypeBg: tint.bg, fulfillment: "pickup",
+        unlockThreshold: p.store.dealUnlockThreshold,
         item: {
           id: cartRowId(p.id, null), productId: p.id, variantId: null,
           maxQty: orderCeiling(p), image: p.image, name: p.name, unit: p.unit,
