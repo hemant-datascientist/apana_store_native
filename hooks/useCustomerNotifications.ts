@@ -54,6 +54,7 @@ const DISPLAY: Record<string, { type: NotifType; icon: string; color: string; bg
   order_rejected:  { type: "order",    icon: "close-circle-outline",     color: "#EF4444", bg: "#FEE2E2" },
   order_cancelled: { type: "order",    icon: "close-circle-outline",     color: "#EF4444", bg: "#FEE2E2" },
   back_in_stock:   { type: "store",    icon: "pricetag-outline",         color: "#22C55E", bg: "#DCFCE7" },
+  broadcast:       { type: "system",   icon: "megaphone-outline",        color: "#0F4C81", bg: "#DBEAFE" },
 };
 
 function relative(iso: string): string {

@@ -31,6 +31,7 @@ import {
   NotifItem,
 } from "../../data/notificationsData";
 import { useCustomerNotifications } from "../../hooks/useCustomerNotifications";
+import { useEmailConsent } from "../../hooks/useEmailConsent";
 
 export default function NotificationsScreen() {
   const { colors, isDark } = useTheme();
@@ -39,6 +40,7 @@ export default function NotificationsScreen() {
   // REAL order events (§13 Phase 2 dispatch). This was seeded with
   // MOCK_NOTIFICATIONS — a bundled feed shown to every customer.
   const { items, markRead, markAllRead } = useCustomerNotifications();
+  const { optedIn: emailOptIn, loaded: emailLoaded, setOptedIn: setEmailOptIn } = useEmailConsent();
   const { storeUpdates, setStoreUpdates } = useStoreUpdatesPref();
 
   const unread  = useMemo(() => items.filter(n => !n.read),  [items]);
@@ -114,6 +116,28 @@ export default function NotificationsScreen() {
         <Switch
           value={storeUpdates}
           onValueChange={setStoreUpdates}
+          trackColor={{ true: colors.primary, false: colors.border }}
+          thumbColor="#fff"
+        />
+      </View>
+
+      {/* ── Marketing email opt-in (off until turned on; one-click unsubscribe in every email) ── */}
+      <View style={[styles.prefRow, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <View style={[styles.prefIcon, { backgroundColor: colors.primary + "14" }]}>
+          <Ionicons name="mail-outline" size={18} color={colors.primary} />
+        </View>
+        <View style={styles.prefText}>
+          <Text style={[styles.prefTitle, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
+            Offers by email
+          </Text>
+          <Text style={[styles.prefSub, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+            Apana offers & updates to the email on your profile
+          </Text>
+        </View>
+        <Switch
+          value={emailOptIn}
+          onValueChange={setEmailOptIn}
+          disabled={!emailLoaded}
           trackColor={{ true: colors.primary, false: colors.border }}
           thumbColor="#fff"
         />
