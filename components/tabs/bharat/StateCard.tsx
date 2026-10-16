@@ -23,8 +23,8 @@ interface StateCardProps {
   // (green dot when > 0, red when 0). §19.8 — never claims unknowns.
   liveCount?: number | null;
   onPress?: (state: StateInfo) => void;
-  // Coming-soon preview: no tap (nothing is behind a state yet). The count shows
-  // only when it is REAL (liveCount given) — never the bundled sample numbers.
+  // Coming-soon preview: the count shows only when it is REAL (liveCount
+  // given) — never the bundled sample numbers.
   preview?: boolean;
 }
 
@@ -44,7 +44,7 @@ export default function StateCard({ state, primary, liveCount, onPress, preview 
   const dotColor = shown == null ? DOT_LOADING : shown > 0 ? DOT_LIVE : DOT_NONE;
 
   return (
-    <TouchableOpacity style={styles.wrap} onPress={() => onPress?.(state)} activeOpacity={0.72} disabled={preview}>
+    <TouchableOpacity style={styles.wrap} onPress={() => onPress?.(state)} activeOpacity={0.72} disabled={!onPress}>
 
       {/* Silhouette box */}
       <View style={[styles.box, { backgroundColor: bgTint, borderColor: borderTint }]}>

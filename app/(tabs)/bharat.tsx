@@ -22,7 +22,7 @@ import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import IndiaMapSvg from "../../components/tabs/bharat/IndiaMapSvg";
 import RegionSection from "../../components/tabs/bharat/RegionSection";
-import { REGION_GROUPS } from "../../data/bharatData";
+import { REGION_GROUPS, type StateInfo } from "../../data/bharatData";
 import { useStateLiveCounts } from "../../hooks/useStateLiveCounts";
 import MenuDrawer from "../../components/tabs/home/MenuDrawer";
 import { handleMenuSelect } from "../../lib/menuNav";
@@ -38,6 +38,15 @@ export default function BharatScreen() {
   // undefined, and the cards then show no number at all.
   const stateLive = useStateLiveCounts();
   const stateCounts = stateLive.isLive ? stateLive.counts : undefined;
+
+  // Opens the state page as before parking. storesLive "0": that param is only
+  // the mock-mode fallback, and the bundled sample number must never show.
+  function openState(state: StateInfo) {
+    router.push({
+      pathname: "/state-detail",
+      params: { stateKey: state.key, name: state.name, storesLive: "0" },
+    } as never);
+  }
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -99,10 +108,10 @@ export default function BharatScreen() {
         </View>
 
         {/* A preview of what Bharat will cover: every state and UT, by region.
-            Real live-store counts per state; nothing to tap yet. */}
+            Real live-store counts per state; tap opens the state page. */}
         <Text style={[styles.previewTitle, { color: colors.text }]}>Every state, coming to Bharat</Text>
         {REGION_GROUPS.map((g) => (
-          <RegionSection key={g.key} group={g} primary={colors.primary} liveCounts={stateCounts} preview />
+          <RegionSection key={g.key} group={g} primary={colors.primary} liveCounts={stateCounts} onPress={openState} preview />
         ))}
       </ScrollView>
     </View>
