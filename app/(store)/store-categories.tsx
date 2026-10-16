@@ -22,7 +22,7 @@
 
 import React, { useMemo, useState } from "react";
 import {
-  View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView, Image,
+  View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -35,6 +35,8 @@ import type { LiveProduct } from "../../services/liveCatalogService";
 import StateView from "../../components/ui/StateView";
 import { SkeletonList } from "../../components/ui/Skeleton";
 import StoreProductSearch from "../../components/store/StoreProductSearch";
+import ApcGridCard from "../../components/category/ApcGridCard";
+import { useLiveProductCart } from "../../hooks/useLiveProductCart";
 
 export default function StoreCategoriesScreen() {
   const { colors } = useTheme();
@@ -42,6 +44,7 @@ export default function StoreCategoriesScreen() {
   const { id, cat, q } = useLocalSearchParams<{ id?: string; cat?: string; q?: string }>();
 
   const live = useStoreCatalog(id);
+  const cartOps = useLiveProductCart();
 
   const [searchQuery, setSearchQuery] = useState(q ?? "");
   const [selectedCategory, setSelectedCategory] = useState<string>(cat ?? "all");
@@ -93,44 +96,20 @@ export default function StoreCategoriesScreen() {
     );
   }
 
-  const renderProduct = ({ item }: { item: LiveProduct }) => {
-    const price = item.dealPrice ?? item.price;
-    const struck = item.dealPrice != null ? item.price : item.mrp;
-    const outOfStock = item.stockQty <= 0;
-
-    return (
-      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={[styles.imageWrap, { backgroundColor: heroColor + "12" }]}>
-          {/* Guarded — an empty string makes <Image> warn and render nothing. */}
-          {item.image ? (
-            <Image source={{ uri: item.image }} style={styles.image} resizeMode="contain" />
-          ) : (
-            <Ionicons name="cube-outline" size={30} color={heroColor} />
-          )}
-        </View>
-
-        <View style={styles.info}>
-          <Text numberOfLines={2} style={[styles.name, { color: colors.text }]}>{item.name}</Text>
-          {item.brand ? (
-            <Text numberOfLines={1} style={[styles.brand, { color: colors.subText }]}>{item.brand}</Text>
-          ) : null}
-
-          <View style={styles.priceRow}>
-            <Text style={[styles.price, { color: heroColor }]}>₹{price}</Text>
-            {/* Only when it is genuinely higher — a struck-through price equal
-                to the real one is a fake discount. */}
-            {struck != null && struck > price && (
-              <Text style={[styles.struck, { color: colors.subText }]}>₹{struck}</Text>
-            )}
-          </View>
-
-          <Text style={[styles.unit, { color: colors.subText }]}>
-            {outOfStock ? "Out of stock" : `${item.unit}`}
-          </Text>
-        </View>
-      </View>
-    );
-  };
+  // Same card + add/stepper as the category screens, so a shop's own page can
+  // put items in the cart (it used to show prices with no way to buy).
+  const renderProduct = ({ item }: { item: LiveProduct }) => (
+    <View style={styles.cell}>
+      <ApcGridCard
+        product={item}
+        qty={cartOps.qtyOf(item)}
+        onOpen={() => router.push(`/live-product-detail?id=${item.id}` as never)}
+        onAdd={() => cartOps.add(item)}
+        onInc={() => cartOps.inc(item)}
+        onDec={() => cartOps.dec(item)}
+      />
+    </View>
+  );
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top", "bottom"]}>
@@ -215,14 +194,5 @@ const styles = StyleSheet.create({
   tabText: { fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs },
   listContent: { padding: 12, paddingBottom: 32 },
   columnWrapper: { gap: 12 },
-  card: { flex: 1, borderWidth: 1, borderRadius: 14, marginBottom: 12, overflow: "hidden" },
-  imageWrap: { height: 110, alignItems: "center", justifyContent: "center" },
-  image: { width: "100%", height: "100%" },
-  info: { padding: 10, gap: 2 },
-  name: { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm },
-  brand: { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs },
-  priceRow: { flexDirection: "row", alignItems: "baseline", gap: 6, marginTop: 2 },
-  price: { fontFamily: typography.fontFamily.bold, fontSize: typography.size.md },
-  struck: { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs, textDecorationLine: "line-through" },
-  unit: { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs },
+  cell: { flex: 1, maxWidth: "50%", marginBottom: 12 },
 });
