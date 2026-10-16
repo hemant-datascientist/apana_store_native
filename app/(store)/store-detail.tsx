@@ -9,6 +9,7 @@
 //   StoreHoursCard       — weekly opening hours, today highlighted
 //   StoreContactCard     — address + phone + report issue link
 //   StoreProductCategories — filterable category rows with product count
+import LiveBanners from "../../components/tabs/home/LiveBanners";
 //
 // Navigation:
 //   router.push("/store-detail?id=s1")
@@ -285,6 +286,9 @@ export default function StoreDetailScreen() {
 
         {/* ── Store name, address, status ── */}
         <StoreInfoHeader store={store} openStatus={openStatus} />
+
+        {/* ── Admin banners aimed at this shop / its store type ── */}
+        <LiveBanners placement="store" storeId={store.id} />
 
         {/* ── Action tiles ── */}
         <StoreActionButtons

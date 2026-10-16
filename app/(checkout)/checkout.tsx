@@ -45,6 +45,7 @@ import CheckoutAddressCard    from "../../components/checkout/CheckoutAddressCar
 import CheckoutAddressPicker  from "../../components/checkout/CheckoutAddressPicker";
 import CheckoutStoreRow       from "../../components/checkout/CheckoutStoreRow";
 import CheckoutPriceBreakdown from "../../components/checkout/CheckoutPriceBreakdown";
+import LiveBanners from "../../components/tabs/home/LiveBanners";
 
 export default function CheckoutScreen() {
   const { colors, isDark } = useTheme();
@@ -204,6 +205,8 @@ export default function CheckoutScreen() {
 
       {/* ── Scrollable content ── */}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+
+        <LiveBanners placement="checkout" />
 
         {/* ── Error banner — dangerLight/danger tokens flip with theme ── */}
         {!!orderError && (

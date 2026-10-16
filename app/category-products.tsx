@@ -17,6 +17,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import LiveBanners from "../components/tabs/home/LiveBanners";
 import { goBackOr } from "../lib/goBack";
 import useTheme from "../theme/useTheme";
 import { typography } from "../theme/typography";
@@ -175,6 +176,8 @@ export default function CategoryProducts() {
           <Text style={[styles.note, { color: colors.subText, fontFamily: typography.fontFamily.medium }]}>No {title || "products"} near you yet.</Text>
         </View>
       ) : (
+        <>
+        <LiveBanners placement="category" category={code} />
         <View style={styles.bodyRow}>
           <ApcFamilyRail families={families} totalCount={products.length} selected={family} onSelect={setFamily} images={familyImages} />
           <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
@@ -210,6 +213,7 @@ export default function CategoryProducts() {
             )}
           </ScrollView>
         </View>
+        </>
       )}
 
       {/* View-cart bar */}

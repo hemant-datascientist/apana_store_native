@@ -15,6 +15,8 @@
 //   anything else (mock)            → empty (there is no bundled mock for
 //     real seller inventory; the whole point is that it is real).
 // ============================================================
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 const API_MODE = process.env.EXPO_PUBLIC_API_MODE ?? "mock";
 const TOWER_IP = process.env.EXPO_PUBLIC_TOWER_IP ?? "10.153.78.94";
@@ -659,16 +661,58 @@ export interface LiveBanner {
   sponsored: boolean;
 }
 
-export async function fetchLiveBanners(state: string | null, city: string | null): Promise<LiveBanner[]> {
+export type BannerPlacement = "home" | "category" | "store" | "checkout";
+
+export interface BannerQuery {
+  state: string | null;
+  city: string | null;
+  placement: BannerPlacement;
+  category?: string | null; // APC class code on a category page
+  storeId?: string | null;  // the shop whose page is open
+}
+
+// The token is optional: signed in, it unlocks new/returning and follower
+// targeting; signed out, only banners aimed at everyone come back.
+async function bannerHeaders(): Promise<Record<string, string>> {
+  const token = await AsyncStorage.getItem("apana_access_token").catch(() => null);
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export async function fetchLiveBanners(q: BannerQuery): Promise<LiveBanner[]> {
   if (!IS_LIVE) return [];
-  const qs = new URLSearchParams();
-  if (state) qs.set("state", state);
-  if (city) qs.set("city", city);
-  const body = await fetchJson<{ items: { id: string; kind: "banner" | "promotion"; title: string; body: string | null; image_url: string | null; link: string | null; sponsored: boolean }[] }>(
-    `${BASE_URL}/content?${qs.toString()}`,
-  );
+  const qs = new URLSearchParams({ placement: q.placement });
+  if (q.state) qs.set("state", q.state);
+  if (q.city) qs.set("city", q.city);
+  if (q.category) qs.set("category", q.category);
+  if (q.storeId) qs.set("store_id", q.storeId);
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), FETCH_TIMEOUT_MS);
+  let body: { items: { id: string; kind: "banner" | "promotion"; title: string; body: string | null; image_url: string | null; link: string | null; sponsored: boolean }[] };
+  try {
+    const res = await fetch(`${BASE_URL}/content?${qs.toString()}`, { signal: ctl.signal, headers: await bannerHeaders() });
+    if (!res.ok) throw new Error(`content ${res.status}`);
+    body = await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
   return (body.items ?? []).map((i) => ({
     id: i.id, kind: i.kind, title: i.title, body: i.body,
     image: resolveImage(i.image_url ?? undefined), link: i.link, sponsored: i.sponsored,
   }));
+}
+
+// Views count once per banner per app session; taps every time. Fire and
+// forget: a lost count must never get in the way of the screen.
+const viewedBanners = new Set<string>();
+export function recordBannerEvent(id: string, type: "view" | "click"): void {
+  if (!IS_LIVE) return;
+  if (type === "view") {
+    if (viewedBanners.has(id)) return;
+    viewedBanners.add(id);
+  }
+  fetch(`${BASE_URL}/content/${encodeURIComponent(id)}/event`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type }),
+  }).catch(() => {});
 }

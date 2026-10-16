@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter }    from "expo-router";
+import LiveBanners from "../../components/tabs/home/LiveBanners";
 import useTheme from "../../theme/useTheme";
 import {
   STORES_LIVE_COUNT,
@@ -157,6 +158,7 @@ export default function CategoryScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
+          <LiveBanners placement="category" />
           <ApcBrowseBanner />
           {groups.length === 0 ? (
             <View style={styles.state}>

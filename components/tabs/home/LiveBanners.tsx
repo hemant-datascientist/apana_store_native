@@ -1,10 +1,11 @@
 // ============================================================
 // LIVE BANNERS — Apana Store (Customer App)
 //
-// The Home banner carousel, fed by what admin publishes in the admin panel
-// (Content → Customer app) for the customer's state/city. Nothing published
-// = nothing rendered: the bundled sample BANNERS are never shown (§19.8).
-// A tap opens the banner's link — an in-app route or an https page.
+// The banner carousel, fed by what admin publishes in the admin panel
+// (Content → Customer app) for this screen (placement) and the customer's
+// state/city. Nothing published = nothing rendered: the bundled sample
+// BANNERS are never shown (§19.8). A tap opens the banner's link — an in-app
+// route or an https page. Shown banners count a view; taps count a click.
 // ============================================================
 
 import React, { useEffect, useState } from "react";
@@ -12,11 +13,19 @@ import { Linking } from "react-native";
 import { useRouter } from "expo-router";
 import useTheme from "../../../theme/useTheme";
 import { useLocation } from "../../../context/LocationContext";
-import { fetchLiveBanners, type LiveBanner } from "../../../services/liveCatalogService";
+import {
+  fetchLiveBanners, recordBannerEvent, type BannerPlacement, type LiveBanner,
+} from "../../../services/liveCatalogService";
 import type { Banner } from "../../../data/homeData";
 import BannerCarousel from "./BannerCarousel";
 
-export default function LiveBanners() {
+interface Props {
+  placement?: BannerPlacement;
+  category?: string | null;
+  storeId?: string | null;
+}
+
+export default function LiveBanners({ placement = "home", category = null, storeId = null }: Props) {
   const { colors } = useTheme();
   const router = useRouter();
   const { selectedAddress, deviceCity } = useLocation();
@@ -27,9 +36,15 @@ export default function LiveBanners() {
   useEffect(() => {
     let alive = true;
     // A failed fetch just shows no banners — banners are never worth an error.
-    fetchLiveBanners(state, city).then((b) => { if (alive) setItems(b); }).catch(() => {});
+    fetchLiveBanners({ state, city, placement, category, storeId })
+      .then((b) => {
+        if (!alive) return;
+        setItems(b);
+        b.forEach((i) => recordBannerEvent(i.id, "view"));
+      })
+      .catch(() => {});
     return () => { alive = false; };
-  }, [state, city]);
+  }, [state, city, placement, category, storeId]);
 
   if (items.length === 0) return null;
 
@@ -45,6 +60,7 @@ export default function LiveBanners() {
   }));
 
   function open(b: Banner) {
+    recordBannerEvent(b.id, "click");
     const link = items.find((i) => i.id === b.id)?.link;
     if (!link) return;
     if (link.startsWith("/")) router.push(link as never);
