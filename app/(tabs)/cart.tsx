@@ -14,11 +14,12 @@
 // ============================================================
 
 import React, { useState, useMemo } from "react";
-import { View, ScrollView, StyleSheet, Alert, StatusBar } from "react-native";
+import { View, Text, ScrollView, StyleSheet, Alert, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import useTheme from "../../theme/useTheme";
+import { typography } from "../../theme/typography";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { FulfillmentMode, storeSubtotal } from "../../data/cartData";
@@ -170,6 +171,15 @@ export default function CartScreen() {
           platformFee={fees.platformTotal}
           total={total}
         />
+
+        {fees.deliveryNote ? (
+          <Text style={{
+            marginHorizontal: 16, marginTop: 6, color: colors.subText,
+            fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs,
+          }}>
+            {fees.deliveryNote}
+          </Text>
+        ) : null}
 
         <CartTrustInfo />
 

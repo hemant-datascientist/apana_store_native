@@ -303,6 +303,8 @@ export interface StoreFees {
   platform: number;
   /** Why delivery is refused right now (no rider near the shop, another city); null = fine. */
   block?: string | null;
+  /** Why delivery costs more than usual right now (rider pay boost / busy); null = normal. */
+  note?: string | null;
 }
 
 /**
@@ -328,12 +330,14 @@ export async function fetchBasketFees(
   });
   if (!res.ok) throw new Error(`Could not price this order (${res.status})`);
   const body = (await res.json()) as {
+    delivery_note?: string | null;
     sellers: { seller_id: string; delivery_fee_cents: number | null; platform_fee_cents: number; delivery_block?: { message: string } | null }[];
   };
   return Object.fromEntries(body.sellers.map((s) => [s.seller_id, {
     delivery: s.delivery_fee_cents == null ? null : s.delivery_fee_cents / 100,
     platform: s.platform_fee_cents / 100,
     block: s.delivery_block?.message ?? null,
+    note: body.delivery_note ?? null,
   }]));
 }
 

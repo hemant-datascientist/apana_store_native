@@ -90,6 +90,26 @@ export async function submitStoreReview(
   });
 }
 
+/**
+ * Rate the rider who delivered this order, 1–5★ (one per order). Returns
+ * false when it was already rated — that is a finished state, not an error.
+ * Riders whose recent average drops below 3.5★ are switched offline.
+ */
+export async function submitRiderRating(orderId: string, stars: number, comment?: string): Promise<boolean> {
+  if (!IS_LIVE) return true;
+  const token = await getAuthToken();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/orders/${orderId}/rate-rider`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ stars, comment }),
+  });
+  if (res.status === 409) return false;
+  if (!res.ok) throw new Error(`rate rider ${res.status}`);
+  return true;
+}
+
 export async function fetchStoreReviews(
   storeId: string,
   limit = 20,

@@ -19,6 +19,8 @@ const STAR_COUNT = 5;
 const STAR_LABELS = ["", "Poor", "Fair", "Good", "Very good", "Excellent"];
 
 interface RateStoreSheetProps {
+  /** Under the title; defaults to the store wording. */
+  subtitle?:  string;
   visible:    boolean;
   storeName:  string;
   submitting: boolean;
@@ -27,7 +29,7 @@ interface RateStoreSheetProps {
 }
 
 export default function RateStoreSheet({
-  visible, storeName, submitting, onClose, onSubmit,
+  visible, storeName, submitting, onClose, onSubmit, subtitle,
 }: RateStoreSheetProps) {
   const { colors } = useTheme();
   const [rating,  setRating]  = useState(0);
@@ -54,7 +56,7 @@ export default function RateStoreSheet({
             Rate {storeName}
           </Text>
           <Text style={[styles.sub, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-            How was your order? Only buyers can rate.
+            {subtitle ?? "How was your order? Only buyers can rate."}
           </Text>
 
           {/* Stars */}

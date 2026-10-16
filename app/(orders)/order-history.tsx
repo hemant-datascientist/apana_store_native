@@ -41,7 +41,7 @@ import OrderFilterTabs  from "../../components/orders/OrderFilterTabs";
 import OrderCard        from "../../components/orders/OrderCard";
 import OrderEmptyState  from "../../components/orders/OrderEmptyState";
 import RateStoreSheet   from "../../components/orders/RateStoreSheet";
-import { submitStoreReview } from "../../services/reviewService";
+import { submitStoreReview, submitRiderRating } from "../../services/reviewService";
 import { fetchOrderHistory, fetchReorder, reorderLineReason, ORDERS_LIVE } from "../../services/orderHistoryService";
 import { useAuth } from "../../context/AuthContext";
 
@@ -80,6 +80,8 @@ export default function OrderHistoryScreen() {
   // Refetch on focus: coming back from checkout, the new order is on the server.
   useFocusEffect(loadOrders);
   const [rateOrder, setRateOrder]       = useState<Order | null>(null);
+  // After the shop is rated, a delivered order's rider is rated too.
+  const [rateRider, setRateRider]       = useState<Order | null>(null);
   const [rating,    setRating]          = useState(false);
 
   // ── Filter orders by tab ──────────────────────────────────────
@@ -212,8 +214,24 @@ export default function OrderHistoryScreen() {
     setRating(true);
     try {
       await submitStoreReview(rateOrder.storeId, stars, comment || undefined, rateOrder.id);
+      const done = rateOrder;
       setRateOrder(null);
-      Alert.alert("Thanks!", "Your rating helps other shoppers.");
+      if (done.mode === "delivery") setRateRider(done);
+      else Alert.alert("Thanks!", "Your rating helps other shoppers.");
+    } catch {
+      Alert.alert("Couldn't submit", "Please try again in a moment.");
+    } finally {
+      setRating(false);
+    }
+  }
+
+  async function handleSubmitRiderRating(stars: number, comment: string) {
+    if (!rateRider) return;
+    setRating(true);
+    try {
+      await submitRiderRating(rateRider.id, stars, comment || undefined);
+      setRateRider(null);
+      Alert.alert("Thanks!", "Your ratings help other shoppers and riders.");
     } catch {
       Alert.alert("Couldn't submit", "Please try again in a moment.");
     } finally {
@@ -313,6 +331,14 @@ export default function OrderHistoryScreen() {
       </ScrollView>
 
       {/* Rate-store bottom sheet */}
+      <RateStoreSheet
+        visible={rateRider !== null}
+        storeName="your delivery partner"
+        subtitle="How was the delivery? Riders below 3.5★ are paused."
+        submitting={rating}
+        onClose={() => setRateRider(null)}
+        onSubmit={handleSubmitRiderRating}
+      />
       <RateStoreSheet
         visible={rateOrder !== null}
         storeName={rateOrder?.storeName ?? ""}
