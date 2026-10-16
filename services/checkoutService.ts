@@ -305,11 +305,17 @@ export interface StoreFees {
   block?: string | null;
 }
 
-export async function fetchStoreFees(
+/**
+ * Fees for every shop in one fulfillment group at once — one checkout is one
+ * basket, delivered by ONE rider on ONE trip, so the server splits a single
+ * trip fee across the shops. Pricing shops one by one would show each a full
+ * solo fee and disagree with what checkout charges. Keyed by seller id.
+ */
+export async function fetchBasketFees(
   productIds: string[],
   mode: FulfillmentMode,
   pin: { lat: number; lng: number } | null,
-): Promise<StoreFees> {
+): Promise<Record<string, StoreFees>> {
   if (!IS_LIVE) throw new Error("Fees need a live connection.");
   const res = await fetch(`${BASE_URL}/cart/resolve`, {
     method: "POST",
@@ -322,15 +328,13 @@ export async function fetchStoreFees(
   });
   if (!res.ok) throw new Error(`Could not price this order (${res.status})`);
   const body = (await res.json()) as {
-    delivery_fee_cents: number | null;
-    platform_fee_cents: number;
-    sellers?: { delivery_block?: { message: string } | null }[];
+    sellers: { seller_id: string; delivery_fee_cents: number | null; platform_fee_cents: number; delivery_block?: { message: string } | null }[];
   };
-  return {
-    delivery: body.delivery_fee_cents == null ? null : body.delivery_fee_cents / 100,
-    platform: body.platform_fee_cents / 100,
-    block: body.sellers?.[0]?.delivery_block?.message ?? null,
-  };
+  return Object.fromEntries(body.sellers.map((s) => [s.seller_id, {
+    delivery: s.delivery_fee_cents == null ? null : s.delivery_fee_cents / 100,
+    platform: s.platform_fee_cents / 100,
+    block: s.delivery_block?.message ?? null,
+  }]));
 }
 
 /** The shop's current basket-deal threshold (₹; null = no deal), from the same

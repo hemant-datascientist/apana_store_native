@@ -1,15 +1,16 @@
 // ============================================================
 // useCartFees — per-store fees from the server, never a local constant.
 //
-// One request per store (each shop is its own order, so each pays its own
-// ₹5 and its own delivery fee). `ready` stays false until every store has
-// answered; a failed or unpriceable store reports delivery = null, which the
-// screens show as "—" rather than a guessed number (§19.8).
+// One request per fulfillment group: one checkout is one basket, and a
+// delivery basket is ONE rider on ONE trip — the server splits a single trip
+// fee across its shops (each shop still pays its own ₹5). `ready` stays false
+// until every group has answered; a failed or unpriceable store reports
+// delivery = null, shown as "—" rather than a guessed number (§19.8).
 // ============================================================
 
 import { useEffect, useMemo, useState } from "react";
 import type { CartStore } from "../data/cartData";
-import { fetchStoreFees, type StoreFees } from "../services/checkoutService";
+import { fetchBasketFees, type StoreFees } from "../services/checkoutService";
 
 type Pin = { lat: number; lng: number } | null;
 
@@ -26,19 +27,23 @@ export function useCartFees(stores: CartStore[], pin: Pin) {
   useEffect(() => {
     let live = true;
     setReady(false);
+    const groups = new Map<CartStore["fulfillment"], CartStore[]>();
+    for (const s of stores) groups.set(s.fulfillment, [...(groups.get(s.fulfillment) ?? []), s]);
+    const unpriced = (list: CartStore[]) =>
+      Object.fromEntries(list.map((s) => [s.id, { delivery: null, platform: 0 } as StoreFees]));
     Promise.all(
-      stores.map(async (s) => {
-        const ids = s.items.map((i) => i.productId).filter((x): x is string => !!x);
-        if (ids.length === 0) return [s.id, { delivery: null, platform: 0 }] as const;
+      [...groups.entries()].map(async ([mode, list]) => {
+        const ids = list.flatMap((s) => s.items.map((i) => i.productId)).filter((x): x is string => !!x);
+        if (ids.length === 0) return unpriced(list);
         try {
-          return [s.id, await fetchStoreFees(ids, s.fulfillment, pin)] as const;
+          return { ...unpriced(list), ...(await fetchBasketFees(ids, mode, pin)) };
         } catch {
-          return [s.id, { delivery: null, platform: 0 }] as const;
+          return unpriced(list);
         }
       }),
-    ).then((rows) => {
+    ).then((parts) => {
       if (!live) return;
-      setFees(Object.fromEntries(rows));
+      setFees(Object.assign({}, ...parts));
       setReady(true);
     });
     return () => { live = false; };
