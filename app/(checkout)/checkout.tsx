@@ -123,6 +123,12 @@ export default function CheckoutScreen() {
       );
       return;
     }
+    // The server already said no rider can deliver from this shop right now.
+    const blocked = cart.map((s) => (s.fulfillment !== "pickup" ? fees.feeOf(s.id)?.block : null)).find(Boolean);
+    if (blocked) {
+      setOrderError(blocked);
+      return;
+    }
     if (total == null) {
       setOrderError(
         fees.ready

@@ -8,7 +8,7 @@
 // ============================================================
 
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
@@ -23,10 +23,12 @@ interface CartStoreCardProps {
   onUpdateQty:     (storeId: string, itemId: string, delta: number) => void;
   onRemoveItem:    (storeId: string, itemId: string) => void;
   onSetFulfillment:(storeId: string, mode: FulfillmentMode) => void;
+  /** Server's reason delivery is refused for this shop right now; null = fine. */
+  deliveryBlock?:  string | null;
 }
 
 export default function CartStoreCard({
-  store, onUpdateQty, onRemoveItem, onSetFulfillment,
+  store, onUpdateQty, onRemoveItem, onSetFulfillment, deliveryBlock,
 }: CartStoreCardProps) {
   const { colors } = useTheme();
   const subtotal   = storeSubtotal(store);
@@ -77,6 +79,21 @@ export default function CartStoreCard({
         onSelect={onSetFulfillment}
       />
 
+      {/* ── Delivery not possible right now (no rider near the shop) ── */}
+      {deliveryBlock && store.fulfillment !== "pickup" ? (
+        <View style={[styles.block, { backgroundColor: colors.warningLight, borderColor: colors.warning }]}>
+          <Ionicons name="bicycle-outline" size={16} color={colors.warning} />
+          <Text style={[styles.blockText, { color: colors.text, fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
+            {deliveryBlock}
+          </Text>
+          <TouchableOpacity onPress={() => onSetFulfillment(store.id, "pickup")} activeOpacity={0.8}>
+            <Text style={{ color: colors.primary, fontFamily: typography.fontFamily.bold, fontSize: typography.size.xs }}>
+              Pickup
+            </Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
       {/* ── Stop-loss discount nudge / unlocked savings ── */}
       <CartDiscountBar disc={disc} />
 
@@ -98,6 +115,12 @@ export default function CartStoreCard({
 }
 
 const styles = StyleSheet.create({
+  block: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    marginHorizontal: 12, marginBottom: 8, padding: 10,
+    borderRadius: 10, borderWidth: 1,
+  },
+  blockText: { flex: 1 },
   card: {
     borderRadius: 14,
     borderWidth:  1,

@@ -158,6 +158,7 @@ export default function CartScreen() {
             onUpdateQty={handleUpdateQty}
             onRemoveItem={handleRemoveItem}
             onSetFulfillment={setFulfillment}
+            deliveryBlock={fees.feeOf(store.id)?.block ?? null}
           />
         ))}
 

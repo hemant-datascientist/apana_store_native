@@ -301,6 +301,8 @@ export interface StoreFees {
   delivery: number | null;
   /** ₹ */
   platform: number;
+  /** Why delivery is refused right now (no rider near the shop, another city); null = fine. */
+  block?: string | null;
 }
 
 export async function fetchStoreFees(
@@ -319,10 +321,15 @@ export async function fetchStoreFees(
     }),
   });
   if (!res.ok) throw new Error(`Could not price this order (${res.status})`);
-  const body = (await res.json()) as { delivery_fee_cents: number | null; platform_fee_cents: number };
+  const body = (await res.json()) as {
+    delivery_fee_cents: number | null;
+    platform_fee_cents: number;
+    sellers?: { delivery_block?: { message: string } | null }[];
+  };
   return {
     delivery: body.delivery_fee_cents == null ? null : body.delivery_fee_cents / 100,
     platform: body.platform_fee_cents / 100,
+    block: body.sellers?.[0]?.delivery_block?.message ?? null,
   };
 }
 
