@@ -413,7 +413,10 @@ export async function fetchLiveProducts(
   near?: { lat: number; lng: number } | null,
 ): Promise<LiveProduct[]> {
   if (!IS_LIVE) return []; // mock: no real inventory to show
-  const params = new URLSearchParams({ limit: String(limit) });
+  // view=card: only the fields toLiveProduct reads — ~1/3 of the bytes on a
+  // weak link. The backend's cardView.check.ts fails if this mapper starts
+  // reading a field the card omits.
+  const params = new URLSearchParams({ limit: String(limit), view: "card" });
   if (q.trim()) params.set("q", q.trim());
   if (near) {
     params.set("lat", String(near.lat));
@@ -427,7 +430,7 @@ export async function fetchLiveProducts(
 export async function fetchStoreProducts(storeId: string, limit = 50): Promise<LiveProduct[]> {
   if (!IS_LIVE) return [];
   const body = await fetchJson<WireList>(
-    `${BASE_URL}/catalog/stores/${encodeURIComponent(storeId)}/products?limit=${limit}`,
+    `${BASE_URL}/catalog/stores/${encodeURIComponent(storeId)}/products?limit=${limit}&view=card`,
   );
   return body.items.map(toLiveProduct);
 }
@@ -458,7 +461,7 @@ export async function fetchApcProducts(
   opts: { family?: string; limit?: number; near?: { lat: number; lng: number } | null } = {},
 ): Promise<ApcProductsResult> {
   if (!IS_LIVE) return { products: [], families: [], total: 0 };
-  const params = new URLSearchParams({ apc_class: apcClass, limit: String(opts.limit ?? 100) });
+  const params = new URLSearchParams({ apc_class: apcClass, limit: String(opts.limit ?? 100), view: "card" });
   if (opts.family) params.set("apc_family", opts.family);
   if (opts.near) {
     params.set("lat", String(opts.near.lat));
