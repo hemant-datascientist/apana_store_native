@@ -16,8 +16,21 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_BASE_URL, getAuthToken } from "../services/api/client";
 
 const KEY = "apana_followed_stores";
+const DETAILS_KEY = "apana_followed_store_details";
+
+/** A followed shop as the SERVER describes it (GET /stores/following/mine). */
+export interface FollowedStore {
+  id: string;
+  name: string;
+  city: string | null;
+  categoryLabel: string;
+  logoUrl: string | null;
+}
 
 let followed = new Set<string>();
+// Shop rows from the server. A followed id with no row yet (just followed,
+// offline) is not rendered — never filled in from bundled demo data (§19.8).
+let details = new Map<string, FollowedStore>();
 let version = 0;
 let loaded = false;
 const listeners = new Set<() => void>();
@@ -32,10 +45,10 @@ async function hydrate(): Promise<void> {
   loaded = true;
   try {
     const raw = await AsyncStorage.getItem(KEY);
-    if (raw) {
-      followed = new Set(JSON.parse(raw) as string[]);
-      emit();
-    }
+    if (raw) followed = new Set(JSON.parse(raw) as string[]);
+    const rawDetails = await AsyncStorage.getItem(DETAILS_KEY);
+    if (rawDetails) details = new Map((JSON.parse(rawDetails) as FollowedStore[]).map((d) => [d.id, d]));
+    if (raw || rawDetails) emit();
   } catch {
     // ignore — an empty follow set is a valid state (no phantom follows)
   }
@@ -45,6 +58,7 @@ void hydrate();
 async function persist(): Promise<void> {
   try {
     await AsyncStorage.setItem(KEY, JSON.stringify([...followed]));
+    await AsyncStorage.setItem(DETAILS_KEY, JSON.stringify([...details.values()]));
   } catch {
     // non-fatal; in-memory state is still correct for this session
   }
@@ -71,6 +85,11 @@ export function followCount(): number {
 
 export function followedIds(): string[] {
   return [...followed];
+}
+
+/** Followed shops the server has described, newest follow first. */
+export function followedStores(): FollowedStore[] {
+  return [...followed].map((id) => details.get(id)).filter((d): d is FollowedStore => Boolean(d));
 }
 
 /**
@@ -109,6 +128,8 @@ export async function toggleFollow(id: string): Promise<boolean> {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error(String(res.status));
+    // A new follow has no shop row yet — fetch it so the lists can show it.
+    if (next) void syncFollowsFromServer();
     return next;
   } catch {
     // 3. put it back. The heart returning to its old state IS the signal;
@@ -137,8 +158,14 @@ export async function syncFollowsFromServer(): Promise<void> {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return;
-    const body = (await res.json()) as { items?: { seller_id: string }[] };
-    followed = new Set((body.items ?? []).map((i) => i.seller_id));
+    const body = (await res.json()) as {
+      items?: { seller_id: string; name: string; city: string | null; category_label: string; logo_url: string | null }[];
+    };
+    const items = body.items ?? [];
+    followed = new Set(items.map((i) => i.seller_id));
+    details = new Map(items.map((i) => [i.seller_id, {
+      id: i.seller_id, name: i.name, city: i.city, categoryLabel: i.category_label, logoUrl: i.logo_url,
+    }]));
     emit();
     void persist();
   } catch {

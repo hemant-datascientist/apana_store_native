@@ -34,7 +34,7 @@ import useTheme             from "../../theme/useTheme";
 import { typography }        from "../../theme/typography";
 import { useFollowedStores } from "../../hooks/useFollow";
 import { toggleFollow }      from "../../lib/followStore";
-import { StoreDetail }       from "../../data/storeDetailData";
+import { FollowedStore }     from "../../lib/followStore";
 
 // Deliberate dark-navy chrome — header is a brand surface
 const BRAND_BLUE  = "#0F4C81";
@@ -72,7 +72,7 @@ function Initials({ name, bg }: { name: string; bg: string }) {
 }
 
 // ── Store card (followed store) ───────────────────────────────
-function StoreCard({ store, onOpen }: { store: StoreDetail; onOpen: () => void }) {
+function StoreCard({ store, onOpen }: { store: FollowedStore; onOpen: () => void }) {
   const { colors } = useTheme();
 
   // Heart = unfollow (real action on the §30 follow store, not a stub).
@@ -90,7 +90,7 @@ function StoreCard({ store, onOpen }: { store: StoreDetail; onOpen: () => void }
       onPress={onOpen}
     >
       <View style={[styles.storeIconWrap, { backgroundColor: BRAND_BLUE + "15" }]}>
-        <Ionicons name={store.icon as any} size={24} color={BRAND_BLUE} />
+        <Ionicons name="storefront-outline" size={24} color={BRAND_BLUE} />
       </View>
 
       <View style={styles.cardBody}>
@@ -98,23 +98,8 @@ function StoreCard({ store, onOpen }: { store: StoreDetail; onOpen: () => void }
           {store.name}
         </Text>
         <Text style={[styles.cardSub, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
-          {store.category} · {store.city}
+          {[store.categoryLabel, store.city].filter(Boolean).join(" · ")}
         </Text>
-        <View style={styles.metaRow}>
-          <Ionicons name="star" size={11} color={colors.warning} />
-          <Text style={[styles.metaText, { fontFamily: typography.fontFamily.medium, color: colors.subText }]}>
-            {store.rating.toFixed(1)}
-          </Text>
-          {/* Status pill uses success/border tokens so both light & dark modes read cleanly */}
-          <View style={[styles.openBadge, { backgroundColor: store.isOpen ? colors.successLight : colors.border }]}>
-            <Text style={[styles.openText, {
-              fontFamily: typography.fontFamily.semiBold,
-              color: store.isOpen ? colors.success : colors.subText,
-            }]}>
-              {store.isOpen ? "Open" : "Closed"}
-            </Text>
-          </View>
-        </View>
       </View>
 
       <TouchableOpacity
@@ -369,21 +354,9 @@ const styles = StyleSheet.create({
   },
   cardName: { fontSize: 14 }, // color inline from theme
   cardSub:  { fontSize: 12 }, // color inline from theme
-  metaRow:  { flexDirection: "row", alignItems: "center", gap: 5, flexWrap: "wrap", marginTop: 2 },
-  metaText: { fontSize: 11.5 }, // color inline from theme
   metaDot:  { fontSize: 11 },   // color inline from theme
 
   // Badges
-  badge: {
-    paddingHorizontal: 7, paddingVertical: 2,
-    borderRadius: 6,
-  },
-  badgeText: { fontSize: 10 },
-  openBadge: {
-    paddingHorizontal: 7, paddingVertical: 2,
-    borderRadius: 6, marginLeft: 4,
-  },
-  openText: { fontSize: 10 },
   availBadge: {
     paddingHorizontal: 7, paddingVertical: 2,
     borderRadius: 6, marginLeft: 2,

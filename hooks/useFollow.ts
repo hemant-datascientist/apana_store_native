@@ -6,10 +6,12 @@
 // into it (one heart, one list). Favourite keeps products/riders/delivery.
 // ============================================================
 
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 
-import { subscribe, getVersion, isFollowing, toggleFollow, followedIds } from "../lib/followStore";
-import { MOCK_STORES, StoreDetail } from "../data/storeDetailData";
+import {
+  subscribe, getVersion, isFollowing, toggleFollow, followedIds,
+  followedStores, syncFollowsFromServer, FollowedStore,
+} from "../lib/followStore";
 
 export interface UseFollow {
   following: boolean;
@@ -30,12 +32,17 @@ export function useFollowedIds(): string[] {
   return followedIds();
 }
 
-// Followed ids resolved to KNOWN stores only — ids from scanned external QRs
-// we have no data for are skipped (§19.8 no phantom data). Swap MOCK_STORES
-// for GET /customer/following when the BE lands.
-export function useFollowedStores(): StoreDetail[] {
-  const ids = useFollowedIds();
-  return ids
-    .map((id) => MOCK_STORES[id])
-    .filter((s): s is StoreDetail => Boolean(s));
+// 🔴 This used to resolve ids through MOCK_STORES — so every REAL shop a
+// customer followed was silently dropped and only bundled demo shops ever
+// appeared under "Stores You Follow". Now the rows come from the server
+// (GET /customer/stores/following/mine); an id without a row is skipped,
+// never filled in from demo data (§19.8).
+export function useFollowedStores(): FollowedStore[] {
+  useSyncExternalStore(subscribe, getVersion, getVersion);
+  useEffect(() => {
+    // On every mount of a list screen: pulls follows made on another phone or
+    // before a reinstall, plus the shop rows the lists render. One small GET.
+    void syncFollowsFromServer();
+  }, []);
+  return followedStores();
 }

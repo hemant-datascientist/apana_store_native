@@ -3,8 +3,10 @@
 //
 // Profile section: horizontal scroll of the stores the customer follows
 // (§30 — the single store relationship; replaced the old separate
-// "favourite stores" list). Cards: icon + name + city + rating + Open
-// badge. Empty state nudges toward following a store — never phantom rows.
+// "favourite stores" list). Cards: icon + name + city + store type, from the
+// server's follow list. No rating or Open badge: that endpoint carries
+// neither, and the demo store's values would be invented (§19.8). Empty state
+// nudges toward following a store — never phantom rows.
 // ============================================================
 
 import React from "react";
@@ -12,14 +14,14 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { StoreDetail } from "../../../data/storeDetailData";
+import { FollowedStore } from "../../../lib/followStore";
 import useTheme from "../../../theme/useTheme";
 import { typography } from "../../../theme/typography";
 
 interface FavouriteStoresProps {
-  stores:    StoreDetail[];
+  stores:    FollowedStore[];
   onViewAll: () => void;
-  onPress:   (store: StoreDetail) => void;
+  onPress:   (store: FollowedStore) => void;
 }
 
 export default function FavouriteStores({ stores, onViewAll, onPress }: FavouriteStoresProps) {
@@ -67,7 +69,7 @@ export default function FavouriteStores({ stores, onViewAll, onPress }: Favourit
             >
               {/* Icon circle */}
               <View style={[styles.iconCircle, { backgroundColor: colors.primary + "15" }]}>
-                <Ionicons name={store.icon as any} size={22} color={colors.primary} />
+                <Ionicons name="storefront-outline" size={22} color={colors.primary} />
               </View>
 
               {/* Store info */}
@@ -81,29 +83,14 @@ export default function FavouriteStores({ stores, onViewAll, onPress }: Favourit
                 numberOfLines={1}
                 style={[styles.storeArea, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}
               >
-                {store.city}
+                {store.city ?? ""}
               </Text>
-
-              {/* Footer: rating + open badge */}
-              <View style={styles.footer}>
-                <View style={styles.ratingRow}>
-                  <Ionicons name="star" size={10} color="#F59E0B" />
-                  <Text style={[styles.rating, { color: colors.subText, fontFamily: typography.fontFamily.medium, fontSize: 10 }]}>
-                    {store.rating.toFixed(1)}
-                  </Text>
-                </View>
-                <View style={[
-                  styles.badge,
-                  { backgroundColor: store.isOpen ? "#DCFCE7" : "#F3F4F6" },
-                ]}>
-                  <Text style={[
-                    styles.badgeText,
-                    { color: store.isOpen ? "#15803D" : "#6B7280", fontFamily: typography.fontFamily.semiBold },
-                  ]}>
-                    {store.isOpen ? "Open" : "Closed"}
-                  </Text>
-                </View>
-              </View>
+              <Text
+                numberOfLines={1}
+                style={[styles.storeArea, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.ss }]}
+              >
+                {store.categoryLabel}
+              </Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -168,25 +155,5 @@ const styles = StyleSheet.create({
   },
   storeArea: {
     lineHeight: 16,
-  },
-  footer: {
-    flexDirection:  "row",
-    alignItems:     "center",
-    justifyContent: "space-between",
-    marginTop:      4,
-  },
-  ratingRow: {
-    flexDirection: "row",
-    alignItems:    "center",
-    gap:           2,
-  },
-  rating: {},
-  badge: {
-    paddingHorizontal: 6,
-    paddingVertical:   2,
-    borderRadius:      6,
-  },
-  badgeText: {
-    fontSize: 10,
   },
 });
