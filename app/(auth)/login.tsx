@@ -38,6 +38,7 @@ import SendOtpButton        from "../../components/auth/SendOtpButton";
 import CreateAccountLink    from "../../components/auth/CreateAccountLink";
 import OrDivider            from "../../components/shared/OrDivider";
 import AuthTerms            from "../../components/auth/AuthTerms";
+import BackendScanLink      from "../../components/auth/BackendScanLink";
 
 type Method = "phone" | "email";
 
@@ -54,6 +55,9 @@ export default function LoginScreen() {
   const [phone,   setPhone]   = useState("");
   const [email,   setEmail]   = useState("");
   const [loading, setLoading] = useState(false);
+  // True only when the last send never reached the server (network error or
+  // timeout) — not for a refusal the server itself sent back.
+  const [unreachable, setUnreachable] = useState(false);
 
   const phoneRef = useRef<TextInput>(null);
   const emailRef = useRef<TextInput>(null);
@@ -74,6 +78,7 @@ export default function LoginScreen() {
   async function handleSendOtp() {
     if (!isValid) return;
     setLoading(true);
+    setUnreachable(false);
     try {
       const contact = isPhone ? toE164(phone) : email.trim();
       const res = await sendOtp(contact, isPhone ? "sms" : "email");
@@ -90,6 +95,9 @@ export default function LoginScreen() {
         },
       });
     } catch (e) {
+      // fetch throws TypeError("Network request failed") when nothing answers,
+      // and the timeout aborts; a server refusal arrives as a plain Error.
+      setUnreachable(e instanceof TypeError || (e as Error)?.name === "AbortError");
       // STAY on this screen. Pushing to the code boxes after a failed send
       // leaves someone waiting for a code that does not exist.
       Alert.alert("Could not send code", e instanceof Error ? e.message : "Please try again.");
@@ -147,6 +155,9 @@ export default function LoginScreen() {
 
         {/* ── Primary CTA ── */}
         <SendOtpButton isValid={isValid} loading={loading} onPress={handleSendOtp} />
+
+        {/* Reachable BEFORE sign-in — the only other connect entry is Profile. */}
+        <BackendScanLink unreachable={unreachable} />
 
         {/* ── Create Account shortcut ── */}
         <CreateAccountLink onPress={() => router.push("/create-account")} />

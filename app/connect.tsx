@@ -10,7 +10,7 @@ import React, { useRef, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { goBackOr } from "../lib/goBack";
 import useTheme from "../theme/useTheme";
@@ -26,6 +26,10 @@ export default function ConnectScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [current, setCurrent] = useState(effectiveOrigin());
   const handled = useRef(false);
+  // Opened from Sign In (BackendScanLink): closing must go back THERE, never to
+  // the default fallback — the tabs a signed-out person cannot open.
+  const { from } = useLocalSearchParams<{ from?: string }>();
+  const close = () => (from === "login" ? goBackOr("/(auth)/login") : goBackOr());
 
   async function onScan(data: string) {
     if (handled.current) return;
@@ -35,7 +39,7 @@ export default function ConnectScreen() {
     await setOverrideOrigin(origin);
     setCurrent(origin);
     Alert.alert("Connected", `App will use:\n${origin}`, [
-      { text: "OK", onPress: () => goBackOr() },
+      { text: "OK", onPress: close },
     ]);
   }
 
@@ -48,7 +52,7 @@ export default function ConnectScreen() {
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={["top"]}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => goBackOr()} hitSlop={12}>
+        <TouchableOpacity onPress={close} hitSlop={12}>
           <Ionicons name="close" size={26} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>
