@@ -65,7 +65,7 @@ export default function StoreHoursCard({ hours }: StoreHoursCardProps) {
               fontFamily: isToday ? typography.fontFamily.semiBold : typography.fontFamily.regular,
               fontSize:   typography.size.sm,
             }]}>
-              {row.open}  –  {row.close}
+              {row.close ? `${row.open}  –  ${row.close}` : row.open}
             </Text>
           </View>
         );

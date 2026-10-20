@@ -43,6 +43,7 @@ import { goBackOr } from "../../lib/goBack";
 import { getStoreGallery, StorePhoto } from "../../data/storeGallery";
 import { storeWebUrl } from "../../lib/storeShare";
 import { useStoreCatalog }     from "../../hooks/useStoreCatalog";
+import { weeklyHours }         from "../../lib/storeHours";
 import { useFollow }           from "../../hooks/useFollow";
 import { useStoreMute }        from "../../hooks/useNotificationPrefs";
 import StoreShareSheet         from "../../components/store/StoreShareSheet";
@@ -149,6 +150,8 @@ export default function StoreDetailScreen() {
   // Real shop's public page — "/@<handle>", not the raw id. Same real-vs-demo
   // gate as photos above; the bundled demo has no seller row to point at.
   const webUrl = live.meta ? storeWebUrl(live.meta.handle) : undefined;
+
+  const realHours = live.meta ? weeklyHours(live.meta.businessHours) : null;
 
   const [productSearch, setProductSearch] = useState("");
   const [showShare, setShowShare] = useState(false);
@@ -315,12 +318,12 @@ export default function StoreDetailScreen() {
           onViewAll={() => router.push(`/store-categories?id=${store.id}`)}
         />
 
-        {/* ── Opening hours — the bundled demo's generic weekly table ONLY.
-            A real store's weekly hours aren't exposed by any endpoint this
-            screen calls yet; showing them would put the demo's Mon-Sun 8-9
-            schedule on a shop that never gave one. The real per-moment status
-            (open/closed + "opens at") is in StoreInfoHeader above instead. ── */}
-        {!live.meta && <StoreHoursCard hours={store.hours} />}
+        {/* ── Opening hours — the shop's OWN weekly hours. A real shop that
+            never set any shows no table (it is open whenever it is online);
+            the demo's Mon-Sun 8-9 schedule is only ever shown for the demo. ── */}
+        {live.meta
+          ? (realHours && <StoreHoursCard hours={realHours} />)
+          : <StoreHoursCard hours={store.hours} />}
 
         {/* ── Contact info ── */}
         <StoreContactCard store={store} />

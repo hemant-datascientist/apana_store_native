@@ -15,6 +15,7 @@
 //   anything else (mock)            → empty (there is no bundled mock for
 //     real seller inventory; the whole point is that it is real).
 // ============================================================
+import type { BusinessHours } from "../lib/storeHours";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
@@ -509,6 +510,8 @@ export interface StoreMeta {
   logoUrl: string | null;
   coverUrl: string | null;
   gallery: string[];
+  /** Weekly hours as the shop set them; null = never set (open when online). */
+  businessHours: BusinessHours | null;
 }
 interface WireStoreMeta {
   id: string;
@@ -532,6 +535,7 @@ interface WireStoreMeta {
   logo_url: string | null;
   cover_url: string | null;
   gallery: string[] | null;
+  business_hours?: BusinessHours | null;
 }
 
 // null when the id isn't an approved store (404) or in mock mode — the caller
@@ -564,6 +568,7 @@ export async function fetchStoreMeta(storeId: string): Promise<StoreMeta | null>
       logoUrl: resolveImage(w.logo_url ?? undefined),
       coverUrl: resolveImage(w.cover_url ?? undefined),
       gallery: (w.gallery ?? []).map(resolveImage).filter((u): u is string => u != null),
+      businessHours: w.business_hours ?? null,
     };
   } catch {
     return null;
