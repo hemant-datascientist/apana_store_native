@@ -16,7 +16,8 @@ interface MapSearchRowProps {
   value:        string;
   onChangeText: (t: string) => void;
   mode:         MapMode;
-  onMenu:       () => void;
+  /** Optional: the map has no filters, and a button answering "none yet" is noise. */
+  onMenu?:      () => void;
   onScan:       () => void;
   onCart:       () => void;
   onFocus?:     () => void;
@@ -28,9 +29,11 @@ export default function MapSearchRow({ value, onChangeText, mode, onMenu, onScan
 
   return (
     <View style={styles.row}>
-      <TouchableOpacity onPress={onMenu} style={styles.sideBtn} activeOpacity={0.8}>
-        <Ionicons name="list-outline" size={20} color="#0F4C81" />
-      </TouchableOpacity>
+      {onMenu && (
+        <TouchableOpacity onPress={onMenu} style={styles.sideBtn} activeOpacity={0.8}>
+          <Ionicons name="list-outline" size={20} color={colors.primary} />
+        </TouchableOpacity>
+      )}
 
       <View style={[styles.pill, { backgroundColor: colors.card }]}>
         <Ionicons name="search-outline" size={17} color={colors.subText} />
@@ -52,12 +55,12 @@ export default function MapSearchRow({ value, onChangeText, mode, onMenu, onScan
         )}
         <View style={[styles.divider, { backgroundColor: colors.border }]} />
         <TouchableOpacity onPress={onScan} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Ionicons name="scan-outline" size={17} color="#0F4C81" />
+          <Ionicons name="scan-outline" size={17} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity onPress={onCart} style={styles.sideBtn} activeOpacity={0.8}>
-        <Ionicons name="bag-outline" size={20} color="#0F4C81" />
+        <Ionicons name="bag-outline" size={20} color={colors.primary} />
       </TouchableOpacity>
     </View>
   );

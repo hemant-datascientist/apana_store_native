@@ -15,8 +15,11 @@ interface MapControlRailProps {
   onZoomIn:   () => void;
   onZoomOut:  () => void;
   onLocate:   () => void;
-  onLayers:   () => void;
-  onNavigate: () => void;
+  // Optional: there is one Mappls layer, and "navigate" only re-centred like
+  // Locate — a button that answers "not available" or repeats its neighbour is
+  // noise. Each renders only when a caller has something real to do with it.
+  onLayers?:   () => void;
+  onNavigate?: () => void;
 }
 
 export default function MapControlRail({ onZoomIn, onZoomOut, onLocate, onLayers, onNavigate }: MapControlRailProps) {
@@ -40,8 +43,8 @@ export default function MapControlRail({ onZoomIn, onZoomOut, onLocate, onLayers
       </View>
 
       {btn("locate", onLocate, "locate")}
-      {btn("layers-outline", onLayers, "layers")}
-      {btn("navigate", onNavigate, "navigate")}
+      {onLayers && btn("layers-outline", onLayers, "layers")}
+      {onNavigate && btn("navigate", onNavigate, "navigate")}
     </View>
   );
 }

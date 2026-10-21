@@ -17,7 +17,8 @@ import { typography } from "../../../theme/typography";
 
 interface AvatarSectionProps {
   name:     string;
-  onCamera: () => void;
+  /** Optional: no photo storage exists for customers, so no badge until one does. */
+  onCamera?: () => void;
 }
 
 // ── Derive up to 2 initials from display name ─────────────────
@@ -49,8 +50,8 @@ export default function AvatarSection({ name, onCamera }: AvatarSectionProps) {
           </Text>
         </View>
 
-        {/* Camera badge — triggers photo picker */}
-        <TouchableOpacity
+        {/* Camera badge — only when a photo can actually be uploaded */}
+        {onCamera && <TouchableOpacity
           style={[styles.cameraBadge, {
             backgroundColor: colors.text,
             borderColor:     colors.white,
@@ -59,17 +60,17 @@ export default function AvatarSection({ name, onCamera }: AvatarSectionProps) {
           onPress={onCamera}
         >
           <Ionicons name="camera" size={14} color={colors.white} />
-        </TouchableOpacity>
+        </TouchableOpacity>}
       </View>
 
       {/* ── Hint text ── */}
-      <Text style={[styles.hint, {
+      {onCamera && <Text style={[styles.hint, {
         color:      colors.subText,
         fontFamily: typography.fontFamily.regular,
         fontSize:   typography.size.xs,
       }]}>
         Tap camera to change photo
-      </Text>
+      </Text>}
     </View>
   );
 }

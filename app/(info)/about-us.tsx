@@ -11,7 +11,7 @@
 import React from "react";
 import {
   View, Text, TouchableOpacity, ScrollView,
-  StyleSheet, StatusBar, Linking, Alert,
+  StyleSheet, StatusBar,
 } from "react-native";
 import { SafeAreaView }  from "react-native-safe-area-context";
 import { Ionicons }      from "@expo/vector-icons";
@@ -24,13 +24,6 @@ const BRAND_BLUE = "#0F4C81";
 const CARD_BLUE  = "#1A5E9A";
 
 // ── Social link row items ──────────────────────────────────────
-const SOCIALS = [
-  { key: "twitter",   icon: "logo-twitter",   color: "#1DA1F2", label: "Twitter"   },
-  { key: "facebook",  icon: "logo-facebook",  color: "#1877F2", label: "Facebook"  },
-  { key: "youtube",   icon: "logo-youtube",   color: "#FF0000", label: "YouTube"   },
-  { key: "instagram", icon: "logo-instagram", color: "#E1306C", label: "Instagram" },
-  { key: "linkedin",  icon: "logo-linkedin",  color: "#0A66C2", label: "LinkedIn"  },
-];
 
 export default function AboutUsScreen() {
   const router = useRouter();
@@ -91,50 +84,10 @@ export default function AboutUsScreen() {
             <View style={styles.storyImgInner}>
               <Ionicons name="people" size={64} color="rgba(255,255,255,0.25)" />
             </View>
-
-            {/* CTA overlay strip */}
-            <TouchableOpacity
-              style={styles.storyOverlay}
-              activeOpacity={0.85}
-              onPress={() => Alert.alert("Our Journey", "There is no longer story to read yet — what's on this screen is all of it.")}
-            >
-              <Text style={[styles.storyOverlayText, { fontFamily: typography.fontFamily.semiBold }]}>
-                Read our full journey
-              </Text>
-              <Ionicons name="arrow-forward" size={14} color="#fff" />
-            </TouchableOpacity>
           </View>
         </View>
 
-        {/* ── Connect ── */}
-        <Text style={[styles.sectionTitle, { fontFamily: typography.fontFamily.bold, color: colors.text }]}>
-          Connect
-        </Text>
-
-        <View style={styles.connectRow}>
-          {/* Website pill */}
-          <TouchableOpacity
-            style={styles.websiteBtn}
-            activeOpacity={0.82}
-            onPress={() => Alert.alert("Website", "Apana has no public website yet. The app is the only place we exist.")}
-          >
-            <Text style={[styles.websiteBtnText, { fontFamily: typography.fontFamily.semiBold }]}>
-              Website
-            </Text>
-          </TouchableOpacity>
-
-          {/* Social icons */}
-          {SOCIALS.map(s => (
-            <TouchableOpacity
-              key={s.key}
-              style={[styles.socialBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-              activeOpacity={0.8}
-              onPress={() => Alert.alert(s.label, `There is no ${s.label} page yet.`)}
-            >
-              <Ionicons name={s.icon as any} size={22} color={s.color} />
-            </TouchableOpacity>
-          ))}
-        </View>
+        {/* Connect (website + social) removed: none of those pages exist yet. */}
 
         {/* ── Version footer ── */}
         <Text style={[styles.version, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}>
@@ -237,51 +190,8 @@ const styles = StyleSheet.create({
     flex:           1,
     width:          "100%",
   },
-  storyOverlay: {
-    position:         "absolute",
-    bottom:           0,
-    left:             0,
-    right:            0,
-    backgroundColor:  "rgba(0,0,0,0.42)",
-    paddingHorizontal: 16,
-    paddingVertical:   12,
-    flexDirection:    "row",
-    alignItems:       "center",
-    gap:              6,
-  },
-  storyOverlayText: {
-    color:    "#fff",
-    fontSize: 13,
-    flex:     1,
-  },
 
   // ── Connect ─────────────────────────────────────────────────
-  connectRow: {
-    flexDirection: "row",
-    alignItems:    "center",
-    gap:           10,
-    flexWrap:      "wrap",
-    marginTop:     -4,
-  },
-  websiteBtn: {
-    backgroundColor:   BRAND_BLUE,
-    borderRadius:      20,
-    paddingHorizontal: 18,
-    paddingVertical:   9,
-  },
-  websiteBtnText: {
-    color:    "#fff",
-    fontSize: 13,
-  },
-  socialBtn: {
-    width:          42,
-    height:         42,
-    borderRadius:   21,
-    borderWidth:    1,
-    // backgroundColor + borderColor set inline from theme
-    alignItems:     "center",
-    justifyContent: "center",
-  },
 
   // ── Footer ──────────────────────────────────────────────────
   version: {
