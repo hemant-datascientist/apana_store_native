@@ -14,6 +14,8 @@
 // for, standing in for Razorpay's servers rather than for the shopper.
 // ============================================================
 
+import { getAuthToken } from "./api/client";
+
 const API_MODE = process.env.EXPO_PUBLIC_API_MODE ?? "mock";
 const TOWER_IP = process.env.EXPO_PUBLIC_TOWER_IP ?? "10.153.78.94";
 export const PAYMENTS_LIVE = API_MODE === "local" || API_MODE === "prod";
@@ -40,9 +42,17 @@ async function post<T>(path: string, body: unknown, headers: Record<string, stri
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);
   try {
+    // 🔴 The server ties a payment to the signed-in customer (and refuses one
+    // that is not theirs). Without the token, confirming a payment was refused
+    // with 401 — every prepaid order would have stayed unpaid.
+    const token = await getAuthToken();
     const res = await fetch(`${BASE_URL}${path}`, {
       method: "POST",
-      headers: { "content-type": "application/json", ...headers },
+      headers: {
+        "content-type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...headers,
+      },
       body: JSON.stringify(body),
       signal: ctl.signal,
     });
