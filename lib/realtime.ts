@@ -29,12 +29,37 @@ let pingTimer: ReturnType<typeof setInterval> | null = null;
 const MAX_RETRY_MS = 30_000;
 const PING_MS = 25_000; // keeps tunnels and proxies from closing an idle socket
 
+// The login token never goes in the socket URL (URLs end up in tunnel and proxy
+// logs). It is traded, as a normal header, for a one-use ticket that dies in 30 s.
+async function fetchTicket(origin: string, token: string): Promise<string | null> {
+  try {
+    const r = await fetch(`${origin}/api/ws/ticket`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+    if (!r.ok) return null;
+    const body = (await r.json()) as { ticket?: string };
+    return typeof body.ticket === "string" ? body.ticket : null;
+  } catch {
+    return null; // offline: the reconnect loop tries again
+  }
+}
+
+let connecting = false;
 async function connect(): Promise<void> {
-  if (ws || listeners.size === 0) return;
-  const token = await getAuthToken();
-  const origin = effectiveOrigin();
-  if (!token || !origin) return; // signed out or no backend: nothing to do
-  const url = `${origin.replace(/^http/, "ws")}/api/ws?token=${encodeURIComponent(token)}`;
+  if (ws || connecting || listeners.size === 0) return;
+  connecting = true;
+  try {
+    const token = await getAuthToken();
+    const origin = effectiveOrigin();
+    if (!token || !origin) return; // signed out or no backend: nothing to do
+    const ticket = await fetchTicket(origin, token);
+    if (!ticket) { scheduleReconnect(); return; }
+    if (ws || listeners.size === 0) return; // another call won, or everyone left, while we waited
+    open(`${origin.replace(/^http/, "ws")}/api/ws?ticket=${encodeURIComponent(ticket)}`);
+  } finally {
+    connecting = false;
+  }
+}
+
+function open(url: string): void {
   const sock = new WebSocket(url);
   ws = sock;
   sock.onopen = () => {
