@@ -67,3 +67,5 @@ yarn-error.*
 *.tsbuildinfo
 
 # @end expo-cli
+# Firebase app config: download from Firebase project apana-d9c3d, never commit
+google-services.json
