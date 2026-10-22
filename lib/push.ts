@@ -1,5 +1,5 @@
 // ============================================================
-// PUSH — ring this phone when the server has news (FCM).
+// PUSH — ring this phone when the server has news (Expo push → FCM).
 //
 // The inbox the app polls only works while the app is open. A new order at a
 // shop whose app is in the background was silent until the 2-minute accept
@@ -8,12 +8,14 @@
 // Kept PARALLEL in all three apps (like lib/sound.ts); only the API call and
 // the tap destination differ, and those are passed in.
 //
-// ⚠ NATIVE: needs expo-notifications in a dev/release build plus the app's
-// google-services.json from Firebase. Without them every step below is a
-// no-op — the inbox still works, nothing crashes.
+// ⚠ NATIVE: needs expo-notifications in a dev/release build, the app's
+// google-services.json from Firebase (Expo delivers through FCM on Android),
+// and an EAS projectId in app.json (`eas init`). Without them every step below
+// is a no-op — the inbox still works, nothing crashes.
 // ============================================================
 
 import { Platform } from "react-native";
+import Constants from "expo-constants";
 
 // Lazy: a top-level import crashes
 // Expo Go, and on web it touches localStorage during server render.
@@ -31,9 +33,17 @@ const CHANNEL_ID = "orders";
 
 let handlerSet = false;
 
+/** The Expo push token for this install. Throws without an EAS projectId. */
+async function expoToken(N: typeof import("expo-notifications")): Promise<string> {
+  const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
+  if (!projectId) throw new Error("no EAS projectId in app.json — run `eas init`");
+  return (await N.getExpoPushTokenAsync({ projectId })).data;
+}
+
 /**
- * Asks permission, registers this phone's FCM token with `send`, re-sends it
- * if FCM rotates it, and routes a tap to `onOpen`. Returns a cleanup.
+ * Asks permission, registers this phone's Expo push token with `send`, re-sends
+ * it if FCM rotates the device token under it, and routes a tap to `onOpen`.
+ * Returns a cleanup.
  */
 export function startPush(
   send: (token: string) => Promise<unknown>,
@@ -66,17 +76,17 @@ export function startPush(
       const current = await N.getPermissionsAsync();
       const granted = current.granted || (await N.requestPermissionsAsync()).granted;
       if (!granted) return;
-      // The raw FCM token (not an Expo token): the server talks to FCM itself.
-      const { data } = await N.getDevicePushTokenAsync();
-      await send(String(data));
+      // An Expo token (PUSH_PROVIDER=expo on the server sends via exp.host).
+      await send(await expoToken(N));
     } catch (err) {
-      // No google-services.json, no Play services, or offline — the inbox
+      // No google-services.json, no projectId, no Play services, or offline — the inbox
       // still works. Logged, never thrown into a screen.
       console.warn("[push] not registered:", (err as Error).message);
     }
   })();
 
-  subs.push(N.addPushTokenListener(({ data }) => { void send(String(data)).catch(() => {}); }));
+  // Fires with the new DEVICE token; the Expo token is derived from it, so re-ask.
+  subs.push(N.addPushTokenListener(() => { void expoToken(N).then(send).catch(() => {}); }));
   subs.push(N.addNotificationResponseReceivedListener((r) => {
     onOpen((r.notification.request.content.data ?? {}) as Record<string, unknown>);
   }));
@@ -86,7 +96,7 @@ export function startPush(
 /** This phone's current token, for sign-out. null when push never registered. */
 export async function currentPushToken(): Promise<string | null> {
   try {
-    return Notifications ? String((await Notifications.getDevicePushTokenAsync()).data) : null;
+    return Notifications ? await expoToken(Notifications) : null;
   } catch {
     return null;
   }
