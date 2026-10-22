@@ -16,6 +16,7 @@ import { useAuth } from "../context/AuthContext";
 import type { NotifItem, NotifType } from "../data/notificationsData";
 import { notifTarget } from "../lib/notifTarget";
 import { playSound } from "../lib/sound";
+import { subscribeLive } from "../lib/realtime";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // The server identifies the customer from the sign-in token; ?customer_id= is
@@ -148,7 +149,9 @@ export function useCustomerNotifications(): CustomerNotificationsState {
   useEffect(() => {
     void reload();
     const id = setInterval(() => void reload(), POLL_MS);
-    return () => clearInterval(id);
+    // Live: an order status change means a new inbox row — fetch it now.
+    const stopLive = subscribeLive((m) => { if (m.type.startsWith("order.")) void reload(); });
+    return () => { clearInterval(id); stopLive(); };
   }, [reload]);
 
   // Both handlers move prevUnread in step with the optimistic drop, because

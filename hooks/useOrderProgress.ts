@@ -23,6 +23,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchOrderTracking } from "../services/trackingService";
+import { subscribeLive } from "../lib/realtime";
 
 const POLL_MS = 8_000;
 
@@ -97,9 +98,13 @@ export function useOrderProgress(orderId: string | undefined): OrderProgress {
 
     void poll();
     const id = setInterval(() => void poll(), POLL_MS);
+    // Live: the shop accepting, packing or the rider collecting this order
+    // refreshes the status at once; the timed check is the fallback.
+    const stopLive = subscribeLive((m) => { if (m.order_id === orderId) void poll(); });
     return () => {
       cancelled = true;
       clearInterval(id);
+      stopLive();
     };
   }, [orderId]);
 
