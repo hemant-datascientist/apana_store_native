@@ -118,7 +118,8 @@ export default function LiveProductDetailScreen() {
     const tint = storeTint(o.seller_id);
     addItem({
       storeId: o.seller_id,
-      storeName: o.name,
+      // Was o.name — the cart grouped apples under a shop called "Apple (Seb)".
+      storeName: o.seller_name || "Shop",
       storeType: "Loose",
       storeTypeColor: tint.color,
       storeTypeBg: tint.bg,

@@ -96,6 +96,8 @@ export interface LiveProduct {
   prepMinutes: number | null;
   // §28 schema key + free-form descriptive fields the category defined.
   kind: string | null;
+  /** Loose (weight/volume/piece): must be added through the amount picker. */
+  isLoose: boolean;
   attributes: Record<string, unknown>;
   // Empty when the listing does not sell as SKUs.
   variants: ProductVariant[];
@@ -208,6 +210,7 @@ interface WireProduct {
   review_count?: number;
   prep_minutes?: number | null;
   kind: string | null;
+  sale_mode?: "packaged" | "loose";
   attributes: Record<string, unknown>;
   variants: WireVariant[];
   store: WireStore;
@@ -313,6 +316,9 @@ function toLiveProduct(w: WireProduct): LiveProduct {
     reviewCount: w.review_count ?? 0,
     prepMinutes: w.prep_minutes ?? null,
     kind: w.kind ?? null,
+    // Sold by weight/volume/piece: price and amount live in the measure, so a
+    // one-tap ADD (qty 1 at the card price) would bill something different.
+    isLoose: w.sale_mode === "loose",
     attributes: w.attributes ?? {},
     // Only SKUs the shop can actually sell reach the picker — a paused
     // variant is not a choice, and offering it is a phantom option (§19.8).

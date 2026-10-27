@@ -11,6 +11,7 @@
 // ============================================================
 
 import { useEffect, useState } from "react";
+import { useLocation } from "../context/LocationContext";
 import {
   fetchOfferings, type Offering, type OfferingsFilter,
 } from "../services/offeringsService";
@@ -27,6 +28,13 @@ interface Args {
 export function useOfferings({ varietyCode, familyCode, classCode, excludeProductId }: Args) {
   const [offerings, setOfferings] = useState<Offering[]>([]);
   const [loading, setLoading] = useState(false);
+  // Same "near me" as the home feed: a shop the feed would not show must not
+  // be offered here either. Rounded so GPS jitter does not refetch.
+  const { selectedAddress, deviceCoords } = useLocation();
+  const lat = deviceCoords?.lat ?? selectedAddress.lat ?? null;
+  const lng = deviceCoords?.lng ?? selectedAddress.lng ?? null;
+  const latK = lat != null ? lat.toFixed(3) : "";
+  const lngK = lng != null ? lng.toFixed(3) : "";
 
   useEffect(() => {
     const filter: OfferingsFilter | null =
@@ -38,14 +46,14 @@ export function useOfferings({ varietyCode, familyCode, classCode, excludeProduc
 
     let cancelled = false;
     setLoading(true);
-    fetchOfferings(filter)
+    fetchOfferings(latK && lngK ? { ...filter, lat: latK, lng: lngK } : filter)
       .then((list) => {
         if (cancelled) return;
         setOfferings(list.filter((o) => o.is_active && o.id !== excludeProductId));
       })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [varietyCode, familyCode, classCode, excludeProductId]);
+  }, [varietyCode, familyCode, classCode, excludeProductId, latK, lngK]);
 
   return { offerings, loading };
 }

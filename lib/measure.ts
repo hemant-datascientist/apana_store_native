@@ -56,6 +56,21 @@ function pluralise(word: string): string {
   return `${word}s`;
 }
 
+/**
+ * A loose cart line's price and label, DERIVED from its amount. Both used to be
+ * frozen when the line was added, so changing the amount in the cart kept the
+ * old figure — the cart showed one total and checkout billed another.
+ */
+export function withLooseTotals<T extends CartItem>(item: T): T {
+  if (!isLooseItem(item)) return item;
+  const kind = item.measureKind as MeasureKind;
+  return {
+    ...item,
+    price: measureLineTotalCents(kind, item.qty, item.pricePerMeasureCents) / 100,
+    variantLabel: formatMeasure(kind, item.qty, item.unit),
+  };
+}
+
 // "₹40/kg" — the rate as a shopper reads it. Stored per 100 g, so ×10 for a kg;
 // a per-100 g figure on a price tag would be unreadable in an Indian shop.
 export function formatRate(kind: MeasureKind, pricePerMeasureCents: number | null | undefined, unit?: string | null): string {
@@ -122,6 +137,9 @@ if ((import.meta as { main?: boolean }).main) {
   eq(formatMeasure("piece", 6, "dozen"), "6 pieces", "a part dozen reads in pieces");
   eq(measureLineTotalCents("piece", 144, 600), 86400, "12 dozen x Rs72 = Rs864");
   eq(dozenAwareStep(1, "dozen"), 12, "dozen steps a dozen");
+  const apple = withLooseTotals({ measureKind: "piece", qty: 144, unit: "dozen", pricePerMeasureCents: 600, price: 72 } as unknown as CartItem);
+  eq(apple.price, 864, "a 12-dozen cart line is priced Rs864, not the stale Rs72");
+  eq(apple.variantLabel, "12 dozen", "and labelled from its amount");
   eq(dozenAwareStep(6, "dozen"), 6, "a seller's half-dozen step is kept");
   eq(formatRate("volume", 300), "₹30/L", "per-100ml rate reads per litre");
 

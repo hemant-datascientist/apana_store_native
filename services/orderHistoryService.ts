@@ -184,6 +184,14 @@ export interface ReorderLine {
   available: boolean;
   reason: "delisted" | "out_of_stock" | "not_enough_stock" | null;
   stock_qty: number | null;
+  /** Loose lines only: qty is an amount (g/ml/pieces) priced by this rate. */
+  measure?: {
+    kind: "weight" | "volume" | "piece";
+    unit: string;
+    price_per_measure_cents: number | null;
+    min_measure: number | null;
+    step_measure: number | null;
+  } | null;
 }
 
 export interface ReorderOut {

@@ -181,13 +181,20 @@ export default function OrderHistoryScreen() {
             productId: line.product_id,
             variantId: line.variant_id,
             name: line.name,
-            unit: "",
-            // Paise → rupees, like every other money field crossing this line.
+            unit: line.measure?.unit ?? "",
+            // Paise → rupees. A loose line's price is re-derived from its
+            // amount by the cart (withLooseTotals), never this per-unit figure.
             price: (line.unit_price_cents ?? 0) / 100,
             qty: line.qty,
             maxQty: line.stock_qty ?? undefined,
-            icon: "cube-outline",
+            icon: line.measure ? "leaf-outline" : "cube-outline",
             bg: colors.primary + "15",
+            ...(line.measure ? {
+              measureKind: line.measure.kind,
+              pricePerMeasureCents: line.measure.price_per_measure_cents,
+              minMeasure: line.measure.min_measure,
+              stepMeasure: line.measure.step_measure,
+            } : {}),
           },
         });
       }

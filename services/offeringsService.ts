@@ -30,6 +30,7 @@ export type MeasureKind = "count" | "weight" | "volume" | "piece";
 export interface Offering {
   id: string;
   seller_id: string;
+  seller_name?: string;
   sale_mode: "packaged" | "loose";
   is_branded: boolean;
   // The trust signal when branded. null = the seller's own reputation carries it.
@@ -56,10 +57,11 @@ export interface OfferingsOut {
   offerings: Offering[];
 }
 
+type Near = { lat?: string; lng?: string };
 export type OfferingsFilter =
-  | { variety: string }
-  | { family: string }
-  | { class: string };
+  | ({ variety: string } & Near)
+  | ({ family: string } & Near)
+  | ({ class: string } & Near);
 
 export async function fetchOfferings(filter: OfferingsFilter): Promise<Offering[]> {
   if (!OFFERINGS_LIVE) return [];

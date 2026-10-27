@@ -110,9 +110,12 @@ export default function ApcGridCard({ product, qty, onOpen, onAdd, onInc, onDec 
           <View style={[styles.addBtn, { borderColor: colors.border }]}>
             <Text style={[styles.oosText, { color: colors.subText, fontFamily: typography.fontFamily.semiBold }]}>Out of stock</Text>
           </View>
-        ) : hasVariants ? (
+        ) : hasVariants || product.isLoose ? (
+          // 🔴 Loose goods go through the amount picker. A one-tap ADD put
+          // "12 × ₹72" in the cart while the server read 12 as 12 PIECES and
+          // billed ₹72 — the cart and the bill disagreed.
           <TouchableOpacity activeOpacity={0.85} onPress={onOpen} style={[styles.addBtn, { borderColor: colors.primary }]}>
-            <Text style={[styles.addText, { color: colors.primary, fontFamily: typography.fontFamily.bold }]}>Options</Text>
+            <Text style={[styles.addText, { color: colors.primary, fontFamily: typography.fontFamily.bold }]}>{product.isLoose ? "Choose" : "Options"}</Text>
           </TouchableOpacity>
         ) : qty > 0 ? (
           <View style={[styles.stepper, { borderColor: colors.primary, backgroundColor: colors.primary }]}>

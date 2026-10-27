@@ -20,7 +20,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   INITIAL_CART, CartStore, CartItem, FulfillmentMode,
 } from "../data/cartData";
-import { isLooseItem } from "../lib/measure";
+import { isLooseItem, withLooseTotals } from "../lib/measure";
 import { limitCartLine } from "../lib/cartLimit";
 
 // 🔴 BUMPED v2 → v3 to abandon carts written by an older build.
@@ -87,7 +87,8 @@ export function cartRowId(productId: string, variantId?: string | null): string 
 // Strip rows a restored cart cannot actually order. Kept as free functions so
 // the hydration path below reads as one line.
 function keepOrderableRows(store: CartStore): CartStore {
-  return { ...store, items: (store.items ?? []).filter((i) => Boolean(i?.productId)) };
+  // withLooseTotals heals carts saved before loose prices were derived.
+  return { ...store, items: (store.items ?? []).filter((i) => Boolean(i?.productId)).map(withLooseTotals) };
 }
 function hasItems(store: CartStore): boolean {
   // A store whose every row was dropped should not linger as an empty header.
@@ -179,7 +180,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const loose = isLooseItem(item);
         const step = loose ? Math.max(1, item.stepMeasure ?? 1) : 1;
         const floor = loose ? Math.max(step, item.minMeasure ?? step) : 1;
-        return { ...item, qty: Math.min(ceiling, Math.max(floor, item.qty + delta * step)) };
+        return withLooseTotals({ ...item, qty: Math.min(ceiling, Math.max(floor, item.qty + delta * step)) });
       }),
     }));
   }
@@ -193,7 +194,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }
 
   function limitItem(productId: string, variantId: string | null, available: number) {
-    setCart(prev => limitCartLine(prev, productId, variantId, available));
+    setCart(prev => limitCartLine(prev, productId, variantId, available)
+      .map((s) => ({ ...s, items: s.items.map(withLooseTotals) })));
   }
 
   function setFulfillment(storeId: string, mode: FulfillmentMode) {
@@ -211,23 +213,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCart(prev => {
       const storeIdx = prev.findIndex(s => s.id === storeId);
       const ceiling = item.maxQty != null && item.maxQty > 0 ? item.maxQty : Infinity;
+      // 🔴 Honour the qty the caller passed. It was forced to 1: a loose line
+      // picked as "12 dozen" became one apple, and a reorder of 3 soaps became
+      // 1. One-tap ADD buttons pass qty 1, so they are unchanged.
+      const adding = Math.max(1, Math.floor(item.qty || 1));
 
       if (storeIdx === -1) {
         // New store — create entry with this item
-        return [...prev, { id: storeId, name: storeName, type: storeType, typeColor: storeTypeColor, typeBg: storeTypeBg, fulfillment, unlockThreshold: unlockThreshold ?? undefined, items: [{ ...item, qty: Math.min(ceiling, 1) }] }];
+        return [...prev, { id: storeId, name: storeName, type: storeType, typeColor: storeTypeColor, typeBg: storeTypeBg, fulfillment, unlockThreshold: unlockThreshold ?? undefined, items: [withLooseTotals({ ...item, qty: Math.min(ceiling, adding) })] }];
       }
 
       // Existing store — increment if item already in cart, else append
       const store    = prev[storeIdx];
       const itemIdx  = store.items.findIndex(i => i.id === item.id);
       const newItems = itemIdx === -1
-        ? [...store.items, { ...item, qty: Math.min(ceiling, 1) }]
+        ? [...store.items, withLooseTotals({ ...item, qty: Math.min(ceiling, adding) })]
         // Re-adding refreshes price/stock from the live listing: the shelf may
         // have moved since this row was first added, and billing yesterday's
         // price is a promise the shop did not make.
         : store.items.map(i =>
             i.id === item.id
-              ? { ...i, ...item, qty: Math.min(ceiling, i.qty + 1) }
+              ? withLooseTotals({ ...i, ...item, qty: Math.min(ceiling, i.qty + adding) })
               : i,
           );
 
