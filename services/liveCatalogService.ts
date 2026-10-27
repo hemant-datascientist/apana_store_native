@@ -282,7 +282,7 @@ interface WireReviews {
 // has in services/api/client.ts (looseMediaUrl / resolveLooseImages).
 const LOOSE_SEED_PATH_RE = /^assets\//i;
 
-function resolveImage(u: string | undefined): string | null {
+export function resolveImage(u: string | undefined): string | null {
   if (!u) return null;
   if (/^https?:\/\//i.test(u)) return u;
   if (LOOSE_SEED_PATH_RE.test(u)) return `${API_ORIGIN}/loose-media/${u}`;

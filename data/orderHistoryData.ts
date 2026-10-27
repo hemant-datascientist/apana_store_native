@@ -55,6 +55,12 @@ export interface Order {
    */
   handoverCode?:   string;
 
+  /** Self-pickup whose goods are packed: show the code AT THE COUNTER now. */
+  readyToCollect?: boolean;
+
+  /** ISO; when the shop's 2-minute accept window closes. Shown while pending. */
+  acceptDeadline?: string;
+
   /**
    * Messages from the SHOP this customer has not opened.
    *

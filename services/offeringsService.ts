@@ -12,6 +12,8 @@
 // returns an empty list rather than invented rows (§19.8).
 // ============================================================
 
+import { resolveImage } from "./liveCatalogService";
+
 const API_MODE = process.env.EXPO_PUBLIC_API_MODE ?? "mock";
 const TOWER_IP = process.env.EXPO_PUBLIC_TOWER_IP ?? "10.153.78.94";
 export const OFFERINGS_LIVE = API_MODE === "local" || API_MODE === "prod";
@@ -68,7 +70,13 @@ export async function fetchOfferings(filter: OfferingsFilter): Promise<Offering[
     const res = await fetch(`${BASE_URL}/catalog/offerings?${qs}`, { signal: ctrl.signal });
     if (!res.ok) return [];
     const body = (await res.json()) as OfferingsOut;
-    return body.offerings ?? [];
+    // 🔴 Loose rows carry a bare seed path ("assets/fruits/apple.webp"); used
+    // raw it hit the wrong origin path and every loose photo — here and on the
+    // cart line made from it — was blank. Same resolver the catalog uses.
+    return (body.offerings ?? []).map((o) => ({
+      ...o,
+      images: (o.images ?? []).map(resolveImage).filter((u): u is string => u != null),
+    }));
   } catch {
     // Unreachable backend shows "no other offerings", never a fabricated one.
     return [];

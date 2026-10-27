@@ -17,7 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../../theme/useTheme";
 import { typography } from "../../../theme/typography";
 import {
-  formatMeasure, formatRate, measureLineTotalCents, measurePresets, type MeasureKind,
+  formatMeasure, formatRate, measureLineTotalCents, measurePresets, dozenAwareStep, type MeasureKind,
 } from "../../../lib/measure";
 
 interface Props {
@@ -39,7 +39,7 @@ export default function WeightPicker({
 }: Props) {
   const { colors } = useTheme();
 
-  const step = Math.max(1, stepMeasure ?? 1);
+  const step = dozenAwareStep(stepMeasure, unit);
   const min = Math.max(step, minMeasure ?? step);
   const [amount, setAmount] = useState(min);
 
@@ -47,7 +47,7 @@ export default function WeightPicker({
   // amount is meaningless for this one (500 g of atta ≠ 500 of anything else).
   React.useEffect(() => { if (visible) setAmount(min); }, [visible, min]);
 
-  const presets = measurePresets(measureKind, { min, step, max: stock });
+  const presets = measurePresets(measureKind, { min, step, max: stock, unit });
   const total = measureLineTotalCents(measureKind, amount, pricePerMeasureCents);
   const atCeiling = amount + step > stock;
 

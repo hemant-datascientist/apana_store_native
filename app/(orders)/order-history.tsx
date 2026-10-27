@@ -79,6 +79,17 @@ export default function OrderHistoryScreen() {
 
   // Refetch on focus: coming back from checkout, the new order is on the server.
   useFocusEffect(loadOrders);
+
+  // While the screen is open, follow the shop: accepted, ready to collect,
+  // expired. Silent — no spinner, and a failed poll keeps what is on screen
+  // rather than blanking it (the focus load above owns the error state).
+  useFocusEffect(useCallback(() => {
+    if (!ORDERS_LIVE || !customerId) return;
+    const t = setInterval(() => {
+      fetchOrderHistory(customerId).then(setOrders).catch(() => {});
+    }, 15_000);
+    return () => clearInterval(t);
+  }, [customerId]));
   const [rateOrder, setRateOrder]       = useState<Order | null>(null);
   // After the shop is rated, a delivered order's rider is rated too.
   const [rateRider, setRateRider]       = useState<Order | null>(null);

@@ -25,9 +25,11 @@ import { typography } from "../../theme/typography";
 
 interface Props {
   code: string;
+  /** Self-pickup: the SHOP scans it at the counter, not a rider at the door. */
+  pickup?: boolean;
 }
 
-export default function DeliveryCodeCard({ code }: Props) {
+export default function DeliveryCodeCard({ code, pickup }: Props) {
   const { colors } = useTheme();
 
   return (
@@ -51,7 +53,7 @@ export default function DeliveryCodeCard({ code }: Props) {
             color: colors.text,
           }}
         >
-          Show this on delivery
+          {pickup ? "Ready — show this at the shop" : "Show this on delivery"}
         </Text>
         <Text
           style={{
@@ -61,7 +63,7 @@ export default function DeliveryCodeCard({ code }: Props) {
             marginTop: 2,
           }}
         >
-          Your delivery partner scans it to complete the order.
+          {pickup ? "The shop scans it to hand over your order." : "Your delivery partner scans it to complete the order."}
         </Text>
 
         {/* The code in text too: a camera that will not focus in a dark

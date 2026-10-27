@@ -38,6 +38,12 @@ export function formatMeasure(kind: MeasureKind, amount: number, unit?: string |
   if (kind === "weight") return amount >= 1000 ? `${+(amount / 1000).toFixed(2)} kg` : `${amount} g`;
   if (kind === "volume") return amount >= 1000 ? `${+(amount / 1000).toFixed(2)} L` : `${amount} ml`;
   if (kind === "piece") {
+    // 🔴 A "dozen" listing is stored in PIECES. Printing the piece count with
+    // the word "dozen" told a shopper 12 apples were "12 dozens".
+    if (unit === "dozen") {
+      if (amount % 12 === 0) return `${amount / 12} dozen`;
+      return `${amount} ${amount === 1 ? "piece" : "pieces"}`;
+    }
     const word = unit && unit !== "piece" ? unit : "piece";
     return `${amount} ${amount === 1 ? word : pluralise(word)}`;
   }
@@ -56,6 +62,8 @@ export function formatRate(kind: MeasureKind, pricePerMeasureCents: number | nul
   const c = pricePerMeasureCents ?? 0;
   if (kind === "weight") return `₹${Math.round(c * 10) / 100}/kg`;
   if (kind === "volume") return `₹${Math.round(c * 10) / 100}/L`;
+  // Stored per PIECE; a dozen listing is quoted per dozen (×12).
+  if (unit === "dozen") return `₹${Math.round(c * 12) / 100}/dozen`;
   const word = unit && unit !== "piece" ? unit : "piece";
   return `₹${Math.round(c) / 100}/${word}`;
 }
@@ -66,12 +74,20 @@ export function formatRate(kind: MeasureKind, pricePerMeasureCents: number | nul
 const WEIGHT_PRESETS = [250, 500, 1000, 2000];
 const VOLUME_PRESETS = [200, 500, 1000, 2000];
 const PIECE_PRESETS = [1, 2, 5, 10];
+const DOZEN_PRESETS = [12, 24, 60, 120]; // 1, 2, 5, 10 dozen, in pieces
+
+/** A dozen listing with no step of its own moves a whole dozen at a time. */
+export function dozenAwareStep(step: number | null | undefined, unit?: string | null): number {
+  const s = Math.max(1, step ?? 1);
+  return unit === "dozen" && s === 1 ? 12 : s;
+}
 
 export function measurePresets(
   kind: MeasureKind,
-  opts: { min?: number | null; step?: number | null; max?: number | null },
+  opts: { min?: number | null; step?: number | null; max?: number | null; unit?: string | null },
 ): number[] {
-  const base = kind === "weight" ? WEIGHT_PRESETS : kind === "volume" ? VOLUME_PRESETS : PIECE_PRESETS;
+  const base = kind === "weight" ? WEIGHT_PRESETS : kind === "volume" ? VOLUME_PRESETS
+    : opts.unit === "dozen" ? DOZEN_PRESETS : PIECE_PRESETS;
   const min = opts.min ?? 1;
   const step = opts.step ?? 1;
   const max = opts.max ?? Infinity;
@@ -99,6 +115,14 @@ if ((import.meta as { main?: boolean }).main) {
   eq(formatMeasure("piece", 6, "bunch"), "6 bunches", "sibilant plural");
 
   eq(formatRate("weight", 400), "₹40/kg", "per-100g rate reads per kg");
+  // The apple bug: ₹72/dozen stored as ₹6/piece, 12 pieces shown as "12 dozens".
+  eq(formatRate("piece", 600, "dozen"), "₹72/dozen", "dozen rate reads per dozen");
+  eq(formatMeasure("piece", 12, "dozen"), "1 dozen", "12 pieces is ONE dozen");
+  eq(formatMeasure("piece", 144, "dozen"), "12 dozen", "144 pieces is 12 dozen");
+  eq(formatMeasure("piece", 6, "dozen"), "6 pieces", "a part dozen reads in pieces");
+  eq(measureLineTotalCents("piece", 144, 600), 86400, "12 dozen x Rs72 = Rs864");
+  eq(dozenAwareStep(1, "dozen"), 12, "dozen steps a dozen");
+  eq(dozenAwareStep(6, "dozen"), 6, "a seller's half-dozen step is kept");
   eq(formatRate("volume", 300), "₹30/L", "per-100ml rate reads per litre");
 
   // Presets must never offer something the counter would refuse.

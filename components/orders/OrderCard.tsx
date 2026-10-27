@@ -22,6 +22,7 @@ import { typography }     from "../../theme/typography";
 import { Order, ACTIVE_STATUSES } from "../../data/orderHistoryData";
 import OrderStatusBadge   from "./OrderStatusBadge";
 import DeliveryCodeCard   from "./DeliveryCodeCard";
+import AcceptCountdown    from "./AcceptCountdown";
 
 interface OrderCardProps {
   /** Open the conversation with this shop about this order. */
@@ -127,8 +128,12 @@ export default function OrderCard({ order, onTrack, onReorder, onRate, onMessage
           A code shown before pickup has nothing to scan against, and one shown
           after delivery is spent — both invite a customer to hold out a code
           that does nothing while looking exactly like one that works. */}
-      {order.status === "picked_up" && order.handoverCode ? (
-        <DeliveryCodeCard code={order.handoverCode} />
+      {(order.status === "picked_up" || order.readyToCollect) && order.handoverCode ? (
+        <DeliveryCodeCard code={order.handoverCode} pickup={order.readyToCollect} />
+      ) : null}
+
+      {order.status === "pending" && order.acceptDeadline ? (
+        <AcceptCountdown deadline={order.acceptDeadline} />
       ) : null}
 
       {/* ── Action row ── */}

@@ -29,7 +29,9 @@ if (Platform.OS !== "web") {
 }
 
 /** Must match the channel the server names (modules/notifications/src/push.ts). */
-const CHANNEL_ID = "orders";
+// "orders_ring", not "orders": Android freezes a channel's sound when it is
+// first created, so the silent old channel could never be given a ring.
+const CHANNEL_ID = "orders_ring";
 
 let handlerSet = false;
 
@@ -70,8 +72,13 @@ export function startPush(
         await N.setNotificationChannelAsync(CHANNEL_ID, {
           name: "Orders",
           importance: N.AndroidImportance.MAX,
-          sound: "default",
+          // Bundled by the expo-notifications plugin (app.json "sounds").
+          sound: "order_ring.wav",
+          vibrationPattern: [0, 400, 250, 400, 250, 400],
+          lockscreenVisibility: N.AndroidNotificationVisibility.PUBLIC,
         });
+        // The old silent channel; left behind it shows as a dead toggle in Settings.
+        await N.deleteNotificationChannelAsync("orders").catch(() => {});
       }
       const current = await N.getPermissionsAsync();
       const granted = current.granted || (await N.requestPermissionsAsync()).granted;
