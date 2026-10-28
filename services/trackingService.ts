@@ -47,6 +47,7 @@ export interface OrderTracking {
   partner: TrackPoint | null;
   trail: TrackPoint[];
   destination: { lat: number; lng: number } | null;
+  shop?: { lat: number; lng: number; name: string | null } | null;
 }
 
 interface WireTracking {
@@ -60,6 +61,7 @@ interface WireTracking {
   partner: TrackPoint | null;
   trail: TrackPoint[];
   destination: { lat: number; lng: number } | null;
+  shop?: { lat: number; lng: number; name: string | null } | null;
 }
 
 // null in mock mode (no real partner) or on error — the caller decides how to
@@ -85,6 +87,7 @@ export async function fetchOrderTracking(orderId: string): Promise<OrderTracking
       partner: w.partner,
       trail: w.trail ?? [],
       destination: w.destination,
+      shop: w.shop ?? null,
     };
   } catch {
     return null;

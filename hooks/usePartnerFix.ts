@@ -65,7 +65,10 @@ export function usePartnerFix(orderId: string | undefined): PartnerFix | null {
             lng: t.partner.lng,
             speedMps: motion.speedMps,
             bearingDeg: motion.bearingDeg,
-            ts: Date.now(),
+            // 🔴 When the RIDER sent it, not when this phone received it.
+            // Date.now() made a fix from hours ago draw as live; the marker's
+            // own staleness check needs the real age to say "last known".
+            ts: Number.isFinite(Date.parse(t.partner.ts)) ? Date.parse(t.partner.ts) : Date.now(),
           });
         }
       } else {

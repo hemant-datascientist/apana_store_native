@@ -299,6 +299,9 @@ export default function OrderTrackingScreen() {
           partnerColor={partner.avatarColor}
           fix={partnerFix}
           customerLocation={isRealOrder ? (progress.destination ?? undefined) : MOCK_CUSTOMER_LOCATION}
+          shopLocation={isRealOrder ? (progress.shop ?? undefined) : undefined}
+          live={isRealOrder}
+          status={isRealOrder ? progress.status : null}
         />
 
         {/* ── Pickup-only: reorderable store list ── */}

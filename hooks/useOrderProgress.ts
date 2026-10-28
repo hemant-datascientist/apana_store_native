@@ -53,6 +53,8 @@ export interface OrderProgress {
    * marker rather than one in the wrong place.
    */
   destination: { lat: number; lng: number } | null;
+  /** The shop's pin — where a pickup customer goes and the rider collects. */
+  shop: { lat: number; lng: number; name: string | null } | null;
 }
 
 // Order status → the delivery timeline's step key.
@@ -77,6 +79,7 @@ export function useOrderProgress(orderId: string | undefined): OrderProgress {
     stepKey: null,
     eta: null,
     destination: null,
+    shop: null,
   });
 
   useEffect(() => {
@@ -95,6 +98,7 @@ export function useOrderProgress(orderId: string | undefined): OrderProgress {
           stepKey: STEP_FOR_STATUS[t.status] ?? null,
           eta: t.eta,
           destination: t.destination,
+          shop: t.shop ?? null,
         });
       }
     };

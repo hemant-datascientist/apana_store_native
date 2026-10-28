@@ -25,7 +25,7 @@
 //   customerLocation— lat/lng of the delivery destination (optional)
 // ============================================================
 
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { Ionicons }    from "@expo/vector-icons";
 import useTheme        from "../../theme/useTheme";
@@ -62,11 +62,21 @@ interface TrackingMapProps {
   // Static fallbacks when no live fix is available.
   partnerLocation?:  { lat: number; lng: number };
   customerLocation?: { lat: number; lng: number };
+  /** The shop's pin. A pickup customer walks here; the rider collects here. */
+  shopLocation?:     { lat: number; lng: number; name?: string | null };
+  /**
+   * A REAL order: no demo coordinates anywhere. The rider marker drew at a
+   * hardcoded Pune point when no fix had arrived, and the map centred halfway
+   * between Pune and the customer — a Jalgaon customer saw neither.
+   */
+  live?:             boolean;
+  /** Real order status, so the route goes rider→shop before pickup, rider→you after. */
+  status?:           string | null;
 }
 
 export default function TrackingMapPlaceholder({
   mode, etaMinutes, partnerInitials, partnerColor,
-  fix, partnerLocation, customerLocation,
+  fix, partnerLocation, customerLocation, shopLocation, live = false, status,
 }: TrackingMapProps) {
   const { colors, isDark } = useTheme();
   const cfg                = TRACKING_MODE_CONFIG[mode];
@@ -76,70 +86,94 @@ export default function TrackingMapPlaceholder({
   const marker = usePartnerMarker(fix ?? null);
   const isStale = marker?.mode === "stale";
 
-  const pLat = marker?.lat ?? partnerLocation?.lat ?? DEFAULT_PARTNER_LAT;
-  const pLng = marker?.lng ?? partnerLocation?.lng ?? DEFAULT_PARTNER_LNG;
-  // No fallback. An order whose address has no pin has no destination to draw,
-  // and the marker + route line are omitted rather than pointed at a default.
-  const cLat = customerLocation?.lat ?? null;
-  const cLng = customerLocation?.lng ?? null;
-  const hasDrop = cLat != null && cLng != null;
+  // Rider: a real smoothed fix, or (demo only) the sample start point. A real
+  // order with no fix yet has NO rider marker — there is nobody to show.
+  const rider = marker
+    ? { lat: marker.lat, lng: marker.lng }
+    : live ? null
+    : { lat: partnerLocation?.lat ?? DEFAULT_PARTNER_LAT, lng: partnerLocation?.lng ?? DEFAULT_PARTNER_LNG };
+  // No fallback for the drop: an address without a pin draws nothing.
+  const drop = mode !== "pickup" && customerLocation ? customerLocation : null;
+  const shop = shopLocation ?? null;
 
-  // ── Map centre — stable midpoint from the START fix, not the live
-  // marker, so the map doesn't chase the rider every frame. ────────
-  const startPLat = partnerLocation?.lat ?? DEFAULT_PARTNER_LAT;
-  const startPLng = partnerLocation?.lng ?? DEFAULT_PARTNER_LNG;
-  // Centre between the two when there is a drop; on the partner alone when
-  // there is not.
-  const centerLat = hasDrop ? (startPLat + cLat) / 2 : startPLat;
-  const centerLng = hasDrop ? (startPLng + cLng) / 2 : startPLng;
+  // Where the map looks: the rider when moving, else the shop, else the drop.
+  const focus = rider ?? shop ?? drop;
 
-  // ── Markers ───────────────────────────────────────────────
-  const markers: MapMarker[] = [
-    {
+  const markers: MapMarker[] = [];
+  if (shop) {
+    markers.push({ id: "shop", lat: shop.lat, lng: shop.lng, title: shop.name || "Shop", icon: "store", isOpen: mode === "pickup" });
+  }
+  if (rider) {
+    markers.push({
       id:       "partner",
-      lat:      pLat,
-      lng:      pLng,
+      lat:      rider.lat,
+      lng:      rider.lng,
       title:    mode === "ride" ? "Your Driver" : "Delivery Partner",
-      subtitle: isStale || etaMinutes == null
-        ? `${partnerInitials} · locating…`
+      subtitle: isStale ? `${partnerInitials} · last known position`
+        : etaMinutes == null ? partnerInitials
         : `${partnerInitials} · ETA ~${etaMinutes} min`,
       icon:     "partner",
       isLive:   !isStale,
       isOpen:   true,
-    },
-  ];
-  if (hasDrop) {
-    markers.push({
-      id:       "customer",
-      lat:      cLat,
-      lng:      cLng,
-      title:    mode === "pickup" ? "Store" : "Your Location",
-      icon:     "customer",
-      isOpen:   true,
     });
   }
+  if (drop) {
+    markers.push({ id: "customer", lat: drop.lat, lng: drop.lng, title: "Your Location", icon: "customer", isOpen: !rider });
+  }
+
+  // Before pickup the rider is heading to the SHOP; after, to you.
+  const leg = !rider ? null
+    : status === "ready" && shop ? shop
+    : drop;
+  const routeLine = rider && leg ? [rider, { lat: leg.lat, lng: leg.lng }] : undefined;
+
+  // The WebView applies `center` only on mount. Follow the real position as it
+  // moves, and re-centre once data arrives after a cold mount.
+  const focusKey = focus ? `${focus.lat.toFixed(4)},${focus.lng.toFixed(4)}` : "";
+  useEffect(() => {
+    if (focus) mapRef.current?.panTo(focus.lat, focus.lng);
+  }, [focusKey]);
+  useEffect(() => { mapRef.current?.setMarkers(markers); }, [JSON.stringify(markers)]);
+  useEffect(() => { if (routeLine) mapRef.current?.drawRoute(routeLine); }, [JSON.stringify(routeLine ?? null)]);
+
+  // What the bubble may honestly say. A pickup has no rider and no ETA.
+  const bubble = mode === "pickup" ? null
+    : !rider ? (live ? "No rider yet" : "Locating…")
+    : isStale ? "Last known position"
+    : etaMinutes == null ? "On the way" : `~${etaMinutes} min`;
 
   return (
     <View style={[styles.wrap, { borderColor: colors.border }]}>
 
-      {/* ── Real Mappls map ── */}
-      <MapplsWebView
-        ref={mapRef}
-        height={MAP_H}
-        center={{ lat: centerLat, lng: centerLng }}
-        zoom={14}
-        markers={markers}
-        routeLine={hasDrop ? [{ lat: pLat, lng: pLng }, { lat: cLat, lng: cLng }] : undefined}
-        isDark={isDark}
-      />
+      {/* ── Real Mappls map — mounted once something real can be shown ── */}
+      {focus ? (
+        <MapplsWebView
+          ref={mapRef}
+          height={MAP_H}
+          center={{ lat: focus.lat, lng: focus.lng }}
+          zoom={14}
+          markers={markers}
+          routeLine={routeLine}
+          isDark={isDark}
+        />
+      ) : (
+        <View style={{ height: MAP_H, alignItems: "center", justifyContent: "center" }}>
+          <Ionicons name="map-outline" size={28} color={colors.subText} />
+          <Text style={{ color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs, marginTop: 6 }}>
+            Loading the map…
+          </Text>
+        </View>
+      )}
 
       {/* ── ETA overlay ── */}
-      <View style={[styles.etaBubble, { backgroundColor: isStale ? colors.subText : cfg.color }]}>
-        <Ionicons name={isStale ? "navigate-outline" : (cfg.icon as keyof typeof Ionicons.glyphMap)} size={13} color="#fff" />
-        <Text style={[styles.etaText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.xs }]}>
-          {isStale || etaMinutes == null ? "Locating…" : `~${etaMinutes} min`}
-        </Text>
-      </View>
+      {bubble && (
+        <View style={[styles.etaBubble, { backgroundColor: isStale || !rider ? colors.subText : cfg.color }]}>
+          <Ionicons name={isStale || !rider ? "navigate-outline" : (cfg.icon as keyof typeof Ionicons.glyphMap)} size={13} color="#fff" />
+          <Text style={[styles.etaText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.xs }]}>
+            {bubble}
+          </Text>
+        </View>
+      )}
 
       {/* ── Mappls attribution ── */}
       <View style={[styles.attribution, { backgroundColor: colors.card + "CC" }]}>
