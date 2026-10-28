@@ -17,6 +17,10 @@ export function notifTarget(type: string, data: Record<string, unknown> | null |
   if (link.startsWith("/") && !link.startsWith("//")) return { kind: "route", path: link };
   if (link.startsWith("https://")) return { kind: "url", url: link };
 
+  // Bookings live on their own screen, not under an order.
+  const bookingId = typeof data?.booking_id === "string" ? data.booking_id : "";
+  if (/^[0-9a-f-]{36}$/i.test(bookingId)) return { kind: "route", path: "/my-bookings" };
+
   const orderId = typeof data?.order_id === "string" ? data.order_id : "";
   if (!/^[0-9a-f-]{36}$/i.test(orderId)) return null;
   if (type === "order_message") {

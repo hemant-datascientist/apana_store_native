@@ -56,6 +56,12 @@ const DISPLAY: Record<string, { type: NotifType; icon: string; color: string; bg
   order_delivered: { type: "delivery", icon: "home-outline",             color: "#22C55E", bg: "#DCFCE7" },
   order_rejected:  { type: "order",    icon: "close-circle-outline",     color: "#EF4444", bg: "#FEE2E2" },
   order_cancelled: { type: "order",    icon: "close-circle-outline",     color: "#EF4444", bg: "#FEE2E2" },
+  order_rider_assigned: { type: "delivery", icon: "person-outline",     color: "#8B5CF6", bg: "#EDE9FE" },
+  no_rider_yet:    { type: "delivery", icon: "time-outline",             color: "#D97706", bg: "#FEF3C7" },
+  booking_confirmed: { type: "order",  icon: "calendar-outline",         color: "#22C55E", bg: "#DCFCE7" },
+  booking_rejected:  { type: "order",  icon: "close-circle-outline",     color: "#EF4444", bg: "#FEE2E2" },
+  booking_cancelled: { type: "order",  icon: "close-circle-outline",     color: "#EF4444", bg: "#FEE2E2" },
+  booking_completed: { type: "order",  icon: "checkmark-done-outline",   color: "#22C55E", bg: "#DCFCE7" },
   back_in_stock:   { type: "store",    icon: "pricetag-outline",         color: "#22C55E", bg: "#DCFCE7" },
   broadcast:       { type: "system",   icon: "megaphone-outline",        color: "#0F4C81", bg: "#DBEAFE" },
 };
