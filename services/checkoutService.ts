@@ -214,6 +214,8 @@ export async function placeOrder(
         // snapshots it onto the order. It used to take an address blob from
         // here, which meant the client decided where its own order went.
         address_id: req.addressId,
+        // The server applies (or refuses, with the reason) — never this app.
+        ...(req.promoCode ? { coupon_code: req.promoCode } : {}),
       }),
     });
     const text = await res.text();
@@ -221,6 +223,7 @@ export async function placeOrder(
       // The backend's message is the useful one — "Cotton Tee (L / Navy):
       // have 3, need 4" tells the customer exactly what to change.
       let message = `Order failed (${res.status})`;
+      let short: StockShortError | null = null;
       try {
         const err = JSON.parse(text) as {
           message?: string; error?: string;
@@ -228,11 +231,14 @@ export async function placeOrder(
         };
         message = err.message ?? err.error ?? message;
         if (err.error === "insufficient_stock" && err.details) {
-          throw new StockShortError(message, err.details.product_id, err.details.variant_id, err.details.available);
+          short = new StockShortError(message, err.details.product_id, err.details.variant_id, err.details.available);
         }
       } catch {
         // non-JSON body — keep the status message
       }
+      // 🔴 Thrown OUTSIDE the parse try: inside it, the catch above swallowed
+      // the StockShortError and the "take what's left" offer never appeared.
+      if (short) throw short;
       throw new Error(message);
     }
     body = JSON.parse(text) as { orders: WireOrder[] };
@@ -276,20 +282,29 @@ export async function placeOrder(
   };
 }
 
-// POST /api/promo/validate
+// POST {BASE}/coupons/check — a shop's or a brand's code (backend coupons.ts).
+// 🔴 This used to accept three invented codes (FIRST10, APANA20, SAVE30) that
+// no server knew — a customer would have seen "₹50 off applied!" and then been
+// charged full price. The discount here is an ESTIMATE on everyday prices; the
+// order itself carries the exact one.
 export async function validatePromoCode(
-  req: PromoValidateRequest,
+  req: PromoValidateRequest & { customerId: string | null; items: { productId: string; qty: number }[] },
 ): Promise<PromoValidateResponse> {
-  // TODO: replace stub with real call ↓
-  // const res = await fetch(`${API_BASE}/promo/validate`, { method: "POST", … });
-  // return res.json();
-
-  await new Promise(r => setTimeout(r, 600));
-  const MOCK_CODES: Record<string, number> = { FIRST10: 50, APANA20: 80, SAVE30: 30 };
-  const discount = MOCK_CODES[req.code.toUpperCase()] ?? 0;
-  return discount > 0
-    ? { valid: true,  discountAmt: discount, message: `₹${discount} off applied!` }
-    : { valid: false, discountAmt: 0,        message: "Invalid or expired promo code" };
+  if (!IS_LIVE) return { valid: false, discountAmt: 0, message: "Codes need a live connection." };
+  if (!req.customerId) return { valid: false, discountAmt: 0, message: "Sign in to use a code." };
+  try {
+    const res = await fetch(`${BASE_URL}/coupons/check?customer_id=${encodeURIComponent(req.customerId)}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ code: req.code, items: req.items.map((i) => ({ product_id: i.productId, qty: i.qty })) }),
+    });
+    const body = (await res.json().catch(() => ({}))) as { message?: string; title?: string; estimated_discount_cents?: number };
+    if (!res.ok) return { valid: false, discountAmt: 0, message: body.message ?? "This code cannot be used." };
+    const amt = (body.estimated_discount_cents ?? 0) / 100;
+    return { valid: true, discountAmt: amt, message: `${body.title ?? "Code applied"} — about ₹${Math.round(amt)} off` };
+  } catch {
+    return { valid: false, discountAmt: 0, message: "Could not check the code. Try again." };
+  }
 }
 
 // ── Order fees (POST /cart/resolve) ─────────────────────────

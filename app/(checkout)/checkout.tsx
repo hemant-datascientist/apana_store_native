@@ -37,6 +37,8 @@ import { FulfillmentMode, FULFILLMENT_CONFIG, CartStore } from "../../data/cartD
 import { storeCharged } from "../../lib/discount";
 import { useCartFees } from "../../hooks/useCartFees";
 import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
+import CheckoutCouponField from "../../components/checkout/CheckoutCouponField";
 import { useLocation } from "../../context/LocationContext";
 import { UserAddress } from "../../data/addressData";
 import { CHECKOUT_STEPS } from "../../data/checkoutData";
@@ -59,6 +61,9 @@ export default function CheckoutScreen() {
   // Filtering by mode means only stores the user chose THIS mode
   // for are included; changes made on the cart page are reflected.
   const { cart: fullCart } = useCart();
+  const { user } = useAuth();
+  // A code the server accepted, with its ESTIMATED discount (checkout sets the exact one).
+  const [coupon, setCoupon] = useState<{ code: string; discount: number; message: string } | null>(null);
   const cart = useMemo<CartStore[]>(
     () => fullCart.filter(s => s.fulfillment === mode),
     [fullCart, mode],
@@ -142,7 +147,8 @@ export default function CheckoutScreen() {
       mode,
       addressId:  needsAddress ? (selectedAddress?.id ?? "") : "",
       note:       encodeURIComponent(note.trim()),
-      total:      String(total),
+      total:      String(Math.max(0, total - (coupon?.discount ?? 0))),
+      ...(coupon ? { promoCode: coupon.code, discount: String(coupon.discount) } : {}),
     });
     router.push(`/checkout-payment?${params.toString()}`);
   }
@@ -327,12 +333,24 @@ export default function CheckoutScreen() {
           </Text>
         </View>
 
+        {/* ── Coupon (a shop's or a brand's code) ── */}
+        <CheckoutCouponField
+          customerId={user?.phone ?? null}
+          items={cart.flatMap((s) => s.items.filter((i) => i.productId).map((i) => ({ productId: i.productId!, qty: i.qty })))}
+          subtotal={subtotal}
+          mode={mode}
+          applied={coupon}
+          onChange={setCoupon}
+        />
+
         {/* ── Price breakdown ── */}
         <CheckoutPriceBreakdown
           subtotal={subtotal}
           deliveryTotal={deliveryTotal}
           platformFee={fees.platformTotal}
-          total={total}
+          discountAmt={coupon?.discount ?? 0}
+          appliedPromo={coupon?.code ?? null}
+          total={total == null ? null : Math.max(0, total - (coupon?.discount ?? 0))}
         />
 
         {/* ── Trust + policy ── */}
