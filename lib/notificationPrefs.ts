@@ -1,59 +1,60 @@
 // ============================================================
-// NOTIFICATION PREFS — the customer's opt-out controls for store ("Fan")
-// updates. §30 P4b — the receiving half of the seller broadcast (P4). Two
-// levers: a GLOBAL "store updates" switch + PER-STORE mute. A store's update is
-// allowed only if global-on AND that store isn't muted.
-// AsyncStorage-persisted; synced across screens via useSyncExternalStore.
-// BE swap = GET/PATCH /customer/notification-prefs. No spam = kept trust.
+// NOTIFICATION PREFS — the customer's off switches for promotions.
+//
+//   global    "Offers & news" — a shop's fan updates and Apana's broadcasts.
+//             Server: GET/PUT /customer/notifications/prefs { promotions }.
+//   per shop  mute a followed shop's updates without unfollowing it.
+//             Server: GET /customer/stores/:id/follow → muted,
+//                     PUT /customer/stores/:id/mute { muted }.
+//
+// 🔴 Both used to live in AsyncStorage only, and nothing on the server read
+// them — switching either off changed nothing; every update still arrived.
+// The SERVER filters now, so the switch is the truth on every phone. Order,
+// delivery and booking messages are never affected.
+//
+// Optimistic, and a failed save flips back: a switch showing "off" while the
+// server still sends is the exact defect this file replaced.
 // ============================================================
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_BASE_URL, getAuthToken } from "../services/api/client";
 
-const KEY = "apana_notif_prefs";
-
-interface PrefsShape {
-  storeUpdates: boolean;
-  muted: string[];
-}
-
-let storeUpdates = true; // default: opted in, but always overridable
-let muted = new Set<string>();
+let promotions = true;
+const muted = new Map<string, boolean>(); // storeId → muted (known once fetched)
 let version = 0;
-let loaded = false;
+let loadedGlobal = false;
 const listeners = new Set<() => void>();
 
 function emit(): void {
   version += 1;
-  listeners.forEach((l) => l());
+  for (const l of listeners) l();
 }
 
-async function hydrate(): Promise<void> {
-  if (loaded) return;
-  loaded = true;
-  try {
-    const raw = await AsyncStorage.getItem(KEY);
-    if (raw) {
-      const p = JSON.parse(raw) as PrefsShape;
-      storeUpdates = p.storeUpdates ?? true;
-      muted = new Set(p.muted ?? []);
-      emit();
-    }
-  } catch {
-    // defaults (opted in, nothing muted) are a valid state
-  }
+async function call(path: string, init?: RequestInit): Promise<unknown> {
+  const token = await getAuthToken();
+  if (!token) throw new Error("not signed in");
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    ...init,
+    headers: { Authorization: `Bearer ${token}`, "content-type": "application/json", ...(init?.headers ?? {}) },
+  });
+  if (!res.ok) throw new Error(String(res.status));
+  return res.json();
 }
-void hydrate();
 
-async function persist(): Promise<void> {
+async function loadGlobal(): Promise<void> {
+  if (loadedGlobal) return;
+  loadedGlobal = true;
   try {
-    await AsyncStorage.setItem(KEY, JSON.stringify({ storeUpdates, muted: [...muted] }));
+    const r = (await call("/notifications/prefs")) as { promotions: boolean };
+    promotions = r.promotions;
+    emit();
   } catch {
-    // non-fatal; in-memory prefs stay correct this session
+    loadedGlobal = false; // retry on the next read; the default (on) is the server's default too
   }
 }
 
 export function subscribe(cb: () => void): () => void {
   listeners.add(cb);
+  void loadGlobal();
   return () => {
     listeners.delete(cb);
   };
@@ -64,28 +65,38 @@ export function getVersion(): number {
 }
 
 export function storeUpdatesEnabled(): boolean {
-  return storeUpdates;
+  return promotions;
 }
 
 export function setStoreUpdatesEnabled(value: boolean): void {
-  storeUpdates = value;
+  promotions = value;
   emit();
-  void persist();
+  call("/notifications/prefs", { method: "PUT", body: JSON.stringify({ promotions: value }) }).catch(() => {
+    promotions = !value; // the server didn't take it — show the truth
+    emit();
+  });
 }
 
 export function isStoreMuted(id: string): boolean {
-  return muted.has(id);
+  if (id && !muted.has(id)) {
+    muted.set(id, false); // fetch once; show unmuted until it answers
+    call(`/stores/${id}/follow`)
+      .then((r) => {
+        muted.set(id, (r as { muted?: boolean }).muted === true);
+        emit();
+      })
+      .catch(() => muted.delete(id));
+  }
+  return muted.get(id) ?? false;
 }
 
 export function toggleStoreMute(id: string): void {
   if (!id) return;
-  if (muted.has(id)) muted.delete(id);
-  else muted.add(id);
+  const next = !(muted.get(id) ?? false);
+  muted.set(id, next);
   emit();
-  void persist();
-}
-
-// A store's updates reach the customer only if globally enabled AND not muted.
-export function storeUpdatesAllowed(id: string): boolean {
-  return storeUpdates && !muted.has(id);
+  call(`/stores/${id}/mute`, { method: "PUT", body: JSON.stringify({ muted: next }) }).catch(() => {
+    muted.set(id, !next); // not followed, offline, or refused — show the truth
+    emit();
+  });
 }

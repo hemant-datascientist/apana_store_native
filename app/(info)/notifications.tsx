@@ -105,17 +105,17 @@ export default function NotificationsScreen() {
         </View>
       </SafeAreaView>
 
-      {/* ── Store-updates opt-out (§30 P4b) ── */}
+      {/* ── Promotions off switch — saved on the server, which filters (0131) ── */}
       <View style={[styles.prefRow, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <View style={[styles.prefIcon, { backgroundColor: colors.primary + "14" }]}>
           <Ionicons name="storefront-outline" size={18} color={colors.primary} />
         </View>
         <View style={styles.prefText}>
           <Text style={[styles.prefTitle, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
-            Store updates
+            Offers & news
           </Text>
           <Text style={[styles.prefSub, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-            Offers & news from shops you follow
+            From shops you follow and from Apana. Order updates always arrive.
           </Text>
         </View>
         <Switch
