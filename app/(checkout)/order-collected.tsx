@@ -25,7 +25,7 @@ import useTheme       from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { FulfillmentMode, FULFILLMENT_CONFIG } from "../../data/cartData";
 import {
-  COLLECTED_CONFIG, MOCK_AGENTS,
+  COLLECTED_CONFIG, type HandshakeAgent,
 } from "../../data/orderCollectedData";
 import { StoreOrderResult } from "../../services/checkoutService";
 import { buildTrackingUrl } from "./order-tracking";
@@ -33,6 +33,7 @@ import { buildTrackingUrl } from "./order-tracking";
 import HandshakeHero    from "../../components/order-collected/HandshakeHero";
 import HandshakeDetails from "../../components/order-collected/HandshakeDetails";
 import HandshakeRating  from "../../components/order-collected/HandshakeRating";
+import { submitStoreReview, submitRiderRating } from "../../services/reviewService";
 
 export default function OrderCollectedScreen() {
   const { colors, isDark } = useTheme();
@@ -81,7 +82,27 @@ export default function OrderCollectedScreen() {
 
   const cfg      = COLLECTED_CONFIG[mode];
   const modeCfg  = FULFILLMENT_CONFIG[mode];
-  const agent    = MOCK_AGENTS[mode];
+  // 🔴 Real facts only. MOCK_AGENTS put an invented person ("Ramesh Kumar,
+  // 4.9★, 1,240 orders") on every handover. A pickup is handed over by the
+  // shop; a finished delivery's rider name is no longer sent, by design.
+  const agentName = mode === "pickup" ? (storeName ?? "The shop") : "Your delivery partner";
+  const agent: HandshakeAgent = {
+    id: serverOrderId || "handover",
+    name: agentName,
+    role: mode === "pickup" ? "Shop" : mode === "ride" ? "Apana Rider" : "Delivery Partner",
+    initials: agentName.slice(0, 1).toUpperCase(),
+    avatarColor: cfg.heroBg,
+  };
+  async function submitRating(stars: number, tags: string[]): Promise<void> {
+    const note = tags.length ? tags.join(", ") : undefined;
+    if (mode === "pickup") {
+      if (!storeId) throw new Error("no shop to rate");
+      await submitStoreReview(storeId, stars, note, serverOrderId || undefined);
+    } else {
+      if (!serverOrderId) throw new Error("no order to rate");
+      await submitRiderRating(serverOrderId, stars, note);
+    }
+  }
 
   // ── Tracking context — drives "Next Store" vs "Back to Home" ──
   // Parse the full store list + previously-visited set we received.
@@ -189,6 +210,7 @@ export default function OrderCollectedScreen() {
           agentName={agent.name}
           agentRole={agent.role}
           modeColor={cfg.heroColor}
+          onSubmit={submitRating}
         />
 
         <View style={styles.bottomSpacer} />

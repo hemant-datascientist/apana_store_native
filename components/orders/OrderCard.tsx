@@ -136,6 +136,13 @@ export default function OrderCard({ order, onTrack, onReorder, onRate, onMessage
         <AcceptCountdown deadline={order.acceptDeadline} />
       ) : null}
 
+      {/* Why it ended — the customer used to see only "cancelled". */}
+      {order.status === "cancelled" && order.closeReason ? (
+        <Text style={{ color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs, marginHorizontal: 14, marginBottom: 8 }}>
+          Reason: {order.closeReason}
+        </Text>
+      ) : null}
+
       {/* ── Action row ── */}
       <View style={[styles.actionRow, { borderTopColor: colors.border }]}>
         {/* Address chip */}

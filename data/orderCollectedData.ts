@@ -17,8 +17,9 @@ export interface HandshakeAgent {
   role:        string;        // "Store Staff" | "Delivery Partner" | "Rider"
   initials:    string;
   avatarColor: string;
-  rating:      number;        // agent's own rating (e.g. 4.8)
-  totalOrders: number;
+  // Optional: no real figure is sent for whoever handed the order over.
+  rating?:      number;
+  totalOrders?: number;
 }
 
 // ── Per-mode success copy and colors ─────────────────────

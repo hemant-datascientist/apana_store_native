@@ -338,11 +338,17 @@ export default function OrderTrackingScreen() {
         {!isPickup && (isRealOrder
           ? (progress.partnerName ? (
               <TrackingPartnerCard
+                // 🔴 Real fields only. This spread the MOCK rider, so a real
+                // rider was shown with "Honda Activa · MH12 AB 4521" and 4.8★ —
+                // a different bike at the door looked like an impostor.
                 partner={{
-                  ...partner,
+                  id: "live",
+                  avatarColor: partner.avatarColor,
                   name: progress.partnerName,
                   initials: String(progress.partnerName).slice(0, 1).toUpperCase(),
                   phone: progress.partnerPhone ?? "",
+                  vehicle: [progress.partnerVehicle?.name, progress.partnerVehicle?.type].filter(Boolean)[0] ?? "",
+                  vehicleNo: progress.partnerVehicle?.number ?? "",
                 }}
                 mode={mode}
               />

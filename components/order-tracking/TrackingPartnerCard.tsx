@@ -50,7 +50,8 @@ export default function TrackingPartnerCard({ partner, mode }: TrackingPartnerCa
             {partner.name}
           </Text>
 
-          {/* Rating row */}
+          {/* Rating row — only when a real figure exists */}
+          {partner.rating != null && partner.totalOrders != null && (
           <View style={styles.ratingRow}>
             <Ionicons name="star" size={12} color="#F59E0B" />
             <Text style={[styles.rating, { color: colors.text, fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
@@ -60,6 +61,7 @@ export default function TrackingPartnerCard({ partner, mode }: TrackingPartnerCa
               · {partner.totalOrders.toLocaleString()} orders
             </Text>
           </View>
+          )}
 
           {/* Vehicle */}
           {partner.vehicleNo !== "" && (

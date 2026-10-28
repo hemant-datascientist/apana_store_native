@@ -38,6 +38,7 @@ export interface OrderProgress {
    * server only sends it while the order is live (delivery/tracking.ts).
    */
   partnerPhone: string | null;
+  partnerVehicle: { type: string | null; name: string | null; number: string | null } | null;
   /** The active step's KEY (TRACKING_STEPS uses keys, not indexes), or null. */
   stepKey: string | null;
   /** Routed window in minutes, or null when it cannot be computed. */
@@ -72,6 +73,7 @@ export function useOrderProgress(orderId: string | undefined): OrderProgress {
     status: null,
     partnerName: null,
     partnerPhone: null,
+    partnerVehicle: null,
     stepKey: null,
     eta: null,
     destination: null,
@@ -89,6 +91,7 @@ export function useOrderProgress(orderId: string | undefined): OrderProgress {
           status: t.status,
           partnerName: t.partnerName,
           partnerPhone: t.partnerPhone,
+          partnerVehicle: t.partnerVehicle,
           stepKey: STEP_FOR_STATUS[t.status] ?? null,
           eta: t.eta,
           destination: t.destination,

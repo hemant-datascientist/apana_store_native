@@ -40,6 +40,8 @@ export interface OrderTracking {
   partnerName: string | null;
   /** The rider's real number, and only while they are carrying the order. */
   partnerPhone: string | null;
+  /** The rider's real vehicle — what the customer checks at the door. */
+  partnerVehicle: { type: string | null; name: string | null; number: string | null } | null;
   /** Routed window, or null when it cannot be computed. Never a constant. */
   eta: { min_minutes: number; max_minutes: number } | null;
   partner: TrackPoint | null;
@@ -53,6 +55,7 @@ interface WireTracking {
   partner_id: string | null;
   partner_name: string | null;
   partner_phone: string | null;
+  partner_vehicle?: { type: string | null; name: string | null; number: string | null } | null;
   eta: { min_minutes: number; max_minutes: number } | null;
   partner: TrackPoint | null;
   trail: TrackPoint[];
@@ -77,6 +80,7 @@ export async function fetchOrderTracking(orderId: string): Promise<OrderTracking
       partnerId: w.partner_id,
     partnerName: w.partner_name ?? null,
     partnerPhone: w.partner_phone ?? null,
+    partnerVehicle: w.partner_vehicle ?? null,
     eta: w.eta ?? null,
       partner: w.partner,
       trail: w.trail ?? [],

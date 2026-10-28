@@ -71,7 +71,8 @@ export default function HandshakeDetails({
           </Text>
         </View>
 
-        {/* Agent rating */}
+        {/* Agent rating — only a real figure */}
+        {agent.rating != null && agent.totalOrders != null && (
         <View style={styles.ratingCol}>
           <View style={styles.ratingRow}>
             <Ionicons name="star" size={13} color="#F59E0B" />
@@ -83,6 +84,7 @@ export default function HandshakeDetails({
             {agent.totalOrders.toLocaleString("en-IN")} orders
           </Text>
         </View>
+        )}
       </View>
 
       <View style={[styles.divider, { backgroundColor: colors.border }]} />

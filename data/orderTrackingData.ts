@@ -66,8 +66,10 @@ export interface TrackingPartner {
   name:        string;
   initials:    string;
   avatarColor: string;
-  rating:      number;       // 1–5
-  totalOrders: number;
+  // Optional: a real rider's rating and order count are not sent, and showing
+  // the mock's 4.8★ / 2,340 beside a real name was a claim about a person.
+  rating?:      number;       // 1–5
+  totalOrders?: number;
   vehicle:     string;       // e.g. "Honda Activa", "Maruti Swift", "On foot"
   vehicleNo:   string;       // e.g. "MH12 AB 1234"
   phone:       string;       // masked

@@ -7,7 +7,7 @@
 // ============================================================
 
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import useTheme from "../../theme/useTheme";
@@ -17,13 +17,15 @@ interface HandshakeRatingProps {
   agentName:  string;
   agentRole:  string;
   modeColor:  string;
+  /** Saves the rating. Rejects on failure so the card can say it did not save. */
+  onSubmit:   (stars: number, tags: string[]) => Promise<void>;
 }
 
 // Quick-tag chips that appear once a star is tapped
 const TAGS_POSITIVE = ["Fast handover", "Very polite", "Professional", "Well packaged"];
 const TAGS_NEGATIVE = ["Slow", "Rude behaviour", "Damaged item", "Wrong order"];
 
-export default function HandshakeRating({ agentName, agentRole, modeColor }: HandshakeRatingProps) {
+export default function HandshakeRating({ agentName, agentRole, modeColor, onSubmit }: HandshakeRatingProps) {
   const { colors } = useTheme();
 
   const [stars,     setStars]     = useState(0);
@@ -42,9 +44,21 @@ export default function HandshakeRating({ agentName, agentRole, modeColor }: Han
     );
   }
 
-  function handleSubmit() {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setSubmitted(true);
+  const [saving, setSaving] = useState(false);
+  // 🔴 This said "Thanks for your feedback!" and saved nothing. The thank-you
+  // now appears only after the server has the rating.
+  async function handleSubmit() {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await onSubmit(stars, tags);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setSubmitted(true);
+    } catch {
+      Alert.alert("Rating not saved", "Check your connection and try again.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   // ── Thank-you state ──────────────────────────────────────

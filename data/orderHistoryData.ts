@@ -61,6 +61,9 @@ export interface Order {
   /** ISO; when the shop's 2-minute accept window closes. Shown while pending. */
   acceptDeadline?: string;
 
+  /** Why it was cancelled or declined, in the shop's (or customer's) words. */
+  closeReason?: string;
+
   /**
    * Messages from the SHOP this customer has not opened.
    *
