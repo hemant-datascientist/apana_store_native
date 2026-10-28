@@ -3,8 +3,8 @@
 //
 // One card per store in a pickup order.
 // Shows: store name + type badge, item list, store subtotal,
-// individual QR code (encodes storeOrderId), estimated prep
-// time, and a "Simulate Scan" button → order-collected screen.
+// and the REAL handover code (ADL-…) as a QR once the shop has the order
+// ready. The shop scans it; nothing on this phone can complete the handover.
 //
 // For delivery/ride mode a single combined QR is used instead;
 // this component is only rendered for pickup.
@@ -21,6 +21,7 @@ import { typography } from "../../theme/typography";
 import { CartItem } from "../../data/cartData";
 import { StoreOrderResult } from "../../services/checkoutService";
 import QRShareButton from "../qr/QRShareButton";
+import type { HandoverState } from "../../hooks/useHandoverCodes";
 
 const { width: SW } = Dimensions.get("window");
 const QR_SIZE = SW * 0.46;   // smaller than the full-screen QR
@@ -33,32 +34,27 @@ interface OrderQrStoreCardProps {
   validityHours: number;
   placedAt:      Date;
   qrFilePath:    string | null;     // PNG path from parent QRGenerator (null while building)
-  onSimulateScan: () => void;       // navigate to order-collected for this store
+  /** Live code + status from the server; undefined until the first load. */
+  handover?:     HandoverState;
   onViewInvoice:  () => void;       // navigate to invoice for this store
 }
 
 export default function OrderQrStoreCard({
   storeOrder, items, masterOrderId, modeColor,
-  validityHours, placedAt, qrFilePath, onSimulateScan, onViewInvoice,
+  validityHours, placedAt, qrFilePath, handover, onViewInvoice,
 }: OrderQrStoreCardProps) {
   const { colors } = useTheme();
   const [bright, setBright] = useState(false);
 
-  // ── QR payload — scanned by store staff / partner app ────
-  // Contains both masterOrderId (for grouping) and storeOrderId
-  // (unique to THIS store's sub-order). Staff app validates storeOrderId.
-  const qrValue = JSON.stringify({
-    type:          "apana_order",
-    masterOrderId,
-    storeOrderId:  storeOrder.storeOrderId,
-    storeId:       storeOrder.storeId,
-    mode:          "pickup",
-    ts:            placedAt.getTime(),
-  });
-
-  // ── Expiry time ───────────────────────────────────────────
-  const expiresAt = new Date(placedAt.getTime() + validityHours * 60 * 60 * 1000);
-  const expiryStr = expiresAt.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+  // 🔴 The QR is the server's handover code, shown only when the shop can
+  // accept a scan. The old JSON payload was rejected by every scanner.
+  const scannable = handover?.scannable === true && Boolean(handover.code);
+  const waitText =
+    !handover ? "Loading your order…"
+    : handover.status === "pending" ? "Waiting for the shop to accept"
+    : handover.status === "cancelled" ? "This order was cancelled"
+    : handover.status === "delivered" ? "Collected — thank you!"
+    : "The shop is packing your order. Your QR appears here when it is ready.";
 
   // ── Item total ────────────────────────────────────────────
   const itemTotal = items.reduce((s, i) => s + i.price * i.qty, 0);
@@ -135,14 +131,23 @@ export default function OrderQrStoreCard({
           <View style={[styles.dot, styles.TR, { backgroundColor: modeColor }]} />
           <View style={[styles.dot, styles.BL, { backgroundColor: modeColor }]} />
           <View style={[styles.dot, styles.BR, { backgroundColor: modeColor }]} />
-          <QRCode
-            value={qrValue}
-            size={QR_SIZE}
-            color="#111827"
-            backgroundColor="#FFFFFF"
-            quietZone={10}
-          />
-          {!bright && (
+          {scannable ? (
+            <QRCode
+              value={handover!.code!}
+              size={QR_SIZE}
+              color="#111827"
+              backgroundColor="#FFFFFF"
+              quietZone={10}
+            />
+          ) : (
+            <View style={{ width: QR_SIZE, height: QR_SIZE, alignItems: "center", justifyContent: "center", padding: 12 }}>
+              <Ionicons name="time-outline" size={28} color={colors.subText} />
+              <Text style={{ color: colors.subText, fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs, textAlign: "center", marginTop: 8 }}>
+                {waitText}
+              </Text>
+            </View>
+          )}
+          {scannable && !bright && (
             <View style={[styles.brightHint, { backgroundColor: modeColor + "18" }]}>
               <Ionicons name="sunny-outline" size={11} color={modeColor} />
               <Text style={[styles.brightHintText, { color: modeColor, fontFamily: typography.fontFamily.regular, fontSize: typography.size.ss }]}>
@@ -160,30 +165,17 @@ export default function OrderQrStoreCard({
           </Text>
         </View>
 
-        {/* Expiry — warning tokens for amber state surface in both themes */}
-        <View style={[styles.expiryChip, { backgroundColor: colors.warningLight }]}>
-          <Ionicons name="hourglass-outline" size={11} color={colors.warning} />
-          <Text style={[styles.expiryText, { color: colors.warning, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.ss }]}>
-            Valid until {expiryStr}
+        {/* The code in text too — a camera that will not focus at a dim counter. */}
+        {scannable && (
+          <Text selectable style={{ color: colors.text, fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs, letterSpacing: 0.5, marginTop: 6 }}>
+            {handover!.code}
           </Text>
-        </View>
+        )}
       </View>
 
       {/* ── Action buttons ── */}
       <View style={[styles.actionsDivider, { backgroundColor: colors.border }]} />
       <View style={styles.actions}>
-        {/* Simulate scan — goes to order-collected for this store */}
-        <TouchableOpacity
-          style={[styles.actionBtn, { backgroundColor: modeColor + "14", borderColor: modeColor + "40" }]}
-          onPress={onSimulateScan}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="qr-code-outline" size={15} color={modeColor} />
-          <Text style={[styles.actionText, { color: modeColor, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
-            Simulate Scan
-          </Text>
-        </TouchableOpacity>
-
         {/* View invoice for this store */}
         <TouchableOpacity
           style={[styles.actionBtn, { backgroundColor: colors.background, borderColor: colors.border }]}

@@ -2,8 +2,8 @@
 // ORDER QR CODE — Apana Store
 //
 // Renders the actual QR code inside a white elevated card.
-// The QR encodes a JSON payload: { type, orderId, mode, ts }
-// that the store / delivery partner / rider app will scan.
+// The QR is the server's handover code (ADL-…), which the rider scans at the
+// door. It used to be an invented JSON payload that no scanner accepted.
 //
 // Below the QR: order ID in large monospaced-style text.
 // A subtle "tap to brighten" hint helps in low-light scenarios.
@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { FulfillmentMode } from "../../data/cartData";
+import type { HandoverState } from "../../hooks/useHandoverCodes";
 
 const { width: SW } = Dimensions.get("window");
 const QR_SIZE       = SW * 0.60;   // 60% of screen width
@@ -25,21 +26,23 @@ interface OrderQrCodeProps {
   mode:     FulfillmentMode;
   modeColor: string;
   qrLabel:  string;
+  /** Live code + status; the QR shows only while a scan can succeed. */
+  handover?: HandoverState;
 }
 
-export default function OrderQrCode({ orderId, mode, modeColor, qrLabel }: OrderQrCodeProps) {
+export default function OrderQrCode({ orderId, mode, modeColor, qrLabel, handover }: OrderQrCodeProps) {
   const { colors } = useTheme();
 
   // ── Brightness boost on tap (helpful in low light) ───────
   const [bright, setBright] = useState(false);
 
-  // ── QR payload — scanned by partner/store/rider app ──────
-  const qrValue = JSON.stringify({
-    type:    "apana_order",
-    orderId,
-    mode,
-    ts:      Date.now(),
-  });
+  const scannable = handover?.scannable === true && Boolean(handover.code);
+  const waitText =
+    !handover ? "Loading your order…"
+    : handover.status === "pending" ? "Waiting for the shop to accept"
+    : handover.status === "cancelled" ? "This order was cancelled"
+    : handover.status === "delivered" ? "Delivered — thank you!"
+    : "Your QR appears here once the delivery partner has collected your order.";
 
   return (
     <View style={styles.wrap}>
@@ -60,16 +63,25 @@ export default function OrderQrCode({ orderId, mode, modeColor, qrLabel }: Order
         <View style={[styles.cornerDot, styles.BR, { backgroundColor: modeColor }]} />
 
         {/* The QR code itself */}
-        <QRCode
-          value={qrValue}
-          size={QR_SIZE}
-          color="#111827"
-          backgroundColor="#FFFFFF"
-          quietZone={12}
-        />
+        {scannable ? (
+          <QRCode
+            value={handover!.code!}
+            size={QR_SIZE}
+            color="#111827"
+            backgroundColor="#FFFFFF"
+            quietZone={12}
+          />
+        ) : (
+          <View style={{ width: QR_SIZE, height: QR_SIZE, alignItems: "center", justifyContent: "center", padding: 16 }}>
+            <Ionicons name="time-outline" size={32} color={colors.subText} />
+            <Text style={{ color: colors.subText, fontFamily: typography.fontFamily.medium, fontSize: typography.size.sm, textAlign: "center", marginTop: 10 }}>
+              {waitText}
+            </Text>
+          </View>
+        )}
 
         {/* Brightness hint */}
-        {!bright && (
+        {scannable && !bright && (
           <View style={[styles.brightHint, { backgroundColor: modeColor + "18" }]}>
             <Ionicons name="sunny-outline" size={12} color={modeColor} />
             <Text style={[styles.brightText, { color: modeColor, fontFamily: typography.fontFamily.regular, fontSize: typography.size.ss }]}>

@@ -114,7 +114,10 @@ export function useOrderProgress(orderId: string | undefined): OrderProgress {
 // Customer-facing label for a status. Plain words a shopper understands, and
 // never a time — the shop has accepted the order, which is a fact; when it will
 // arrive is not one the system knows.
-export function statusLabel(status: string | null): string {
+export function statusLabel(status: string | null, pickup = false): string {
+  // A pickup has no rider — the customer walks in and shows their QR.
+  if (pickup && status === "ready") return "Ready — go to the shop and show your QR";
+  if (pickup && status === "delivered") return "Collected";
   switch (status) {
     case "pending": return "Waiting for the shop to accept";
     case "accepted": return "Preparing your order";

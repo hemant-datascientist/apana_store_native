@@ -280,7 +280,7 @@ export default function OrderTrackingScreen() {
           mode={mode}
           minutes={etaMinutes}
           label={isRealOrder
-            ? (progress.eta ? `Arrives in ${progress.eta.min_minutes}–${progress.eta.max_minutes} min` : statusLabel(progress.status))
+            ? (progress.eta ? `Arrives in ${progress.eta.min_minutes}–${progress.eta.max_minutes} min` : statusLabel(progress.status, mode === "pickup"))
             : MOCK_ETA[mode].label}
           orderId={orderId}
           total={totalAmt}

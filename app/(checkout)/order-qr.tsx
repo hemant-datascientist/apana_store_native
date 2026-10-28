@@ -23,7 +23,7 @@
 //   storeOrdersJson — URL-encoded JSON of StoreOrderResult[]
 // ============================================================
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, StatusBar, Share,
@@ -46,6 +46,7 @@ import OrderQrSummary       from "../../components/order-qr/OrderQrSummary";
 import OrderQrStoreCard     from "../../components/order-qr/OrderQrStoreCard";
 import QRGenerator          from "../../components/qr/QRGenerator";
 import QRShareButton        from "../../components/qr/QRShareButton";
+import useHandoverCodes     from "../../hooks/useHandoverCodes";
 
 export default function OrderQrScreen() {
   const { colors, isDark } = useTheme();
@@ -117,25 +118,39 @@ export default function OrderQrScreen() {
     setStoreQrPaths(prev => ({ ...prev, [storeOrderId]: path }));
   }
 
-  // ── Per-store QR payload (mirrors OrderQrStoreCard's qrValue) ─
-  function makeStoreQrValue(so: StoreOrderResult) {
-    return JSON.stringify({
-      type:          "apana_order",
-      masterOrderId: orderId,
-      storeOrderId:  so.storeOrderId,
-      storeId:       so.storeId,
-      mode:          "pickup",
-      ts:            placedAt.getTime(),
-    });
+  // 🔴 The QR is the server's handover code. The invented JSON payloads that
+  // were here, and the "Simulate Scan" buttons beside them, are gone: no
+  // scanner accepted the payload, and the buttons claimed a handover the
+  // server never saw. The screen now moves on when the SERVER says scanned.
+  const handoverIds = mode === "pickup" ? storeOrders.map((so) => so.id) : [serverOrderIdParam];
+  const handovers = useHandoverCodes(handoverIds);
+  const combined = handovers[serverOrderIdParam];
+
+  function goCollected(so: StoreOrderResult) {
+    // storeId lets order-collected open the invoice; the tracking* params let
+    // it return to /order-tracking with this store marked visited.
+    const base = `/order-collected?storeOrderId=${so.storeOrderId}&storeId=${so.storeId}&orderId=${orderId}&serverOrderId=${so.id}&mode=${mode}&total=${so.subtotal}&storeName=${encodeURIComponent(so.storeName)}`;
+    const ctx = trackingStoreOrdersParam
+      ? `&trackingStoreOrdersJson=${encodeURIComponent(trackingStoreOrdersParam)}` +
+        `&trackingVisitedJson=${encodeURIComponent(trackingVisitedParam || "[]")}` +
+        (trackingSequenceParam ? `&trackingSequenceJson=${encodeURIComponent(trackingSequenceParam)}` : "")
+      : "";
+    router.push((base + ctx) as any);
   }
 
-  // ── Combined QR payload (delivery/ride) ──────────────────
-  const combinedQrValue = JSON.stringify({
-    type:         "apana_order",
-    masterOrderId: orderId,
-    mode,
-    ts:           placedAt.getTime(),
-  });
+  const moved = useRef(new Set<string>());
+  useEffect(() => {
+    if (mode === "pickup") {
+      const done = storeOrders.find((so) => handovers[so.id]?.status === "delivered" && !moved.current.has(so.id));
+      if (done) { moved.current.add(done.id); goCollected(done); }
+      return;
+    }
+    if (combined?.status === "delivered" && !moved.current.has(serverOrderIdParam)) {
+      moved.current.add(serverOrderIdParam);
+      router.push(`/order-collected?orderId=${orderId}&serverOrderId=${serverOrderIdParam}&mode=${mode}&total=${totalAmt}` as any);
+    }
+    // goCollected reads only stable params; the trigger is the server status.
+  }, [handovers]);
 
   // ── Share order as text ───────────────────────────────────
   async function handleShareOrderText() {
@@ -168,9 +183,9 @@ export default function OrderQrScreen() {
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={modeCfg.color} />
 
       {/* QRGenerator — hidden PNG builder for combined share (delivery/ride) */}
-      {mode !== "pickup" && (
+      {mode !== "pickup" && combined?.scannable && combined.code && (
         <QRGenerator
-          value={combinedQrValue}
+          value={combined.code}
           cacheKey={`order-${orderId}`}
           label={`Order ID: ${orderId}`}
           sublabel={`Apana Store · ${modeCfg.label} Order · ₹${totalAmt}`}
@@ -180,10 +195,10 @@ export default function OrderQrScreen() {
       )}
 
       {/* One hidden QRGenerator per store for pickup share buttons */}
-      {mode === "pickup" && storeOrders.map(so => (
+      {mode === "pickup" && storeOrders.filter(so => handovers[so.id]?.scannable && handovers[so.id]?.code).map(so => (
         <QRGenerator
           key={so.storeOrderId}
-          value={makeStoreQrValue(so)}
+          value={handovers[so.id]!.code!}
           cacheKey={`order-${so.storeOrderId}`}
           label={so.storeName}
           sublabel={`Order: ${so.storeOrderId} · Apana Store · ₹${so.subtotal}`}
@@ -247,20 +262,7 @@ export default function OrderQrScreen() {
                 validityHours={cfg.validityHours}
                 placedAt={placedAt}
                 qrFilePath={storeQrPaths[so.storeOrderId] ?? null}
-                onSimulateScan={() => {
-                  // storeId is forwarded so order-collected can pass it
-                  // to the invoice screen.
-                  // The three `tracking*` params are carried through so
-                  // /order-collected can navigate back to /order-tracking
-                  // with this storeId merged into `visitedJson`.
-                  const base = `/order-collected?storeOrderId=${so.storeOrderId}&storeId=${so.storeId}&orderId=${orderId}&serverOrderId=${so.id}&mode=${mode}&total=${so.subtotal}&storeName=${encodeURIComponent(so.storeName)}`;
-                  const ctx = trackingStoreOrdersParam
-                    ? `&trackingStoreOrdersJson=${encodeURIComponent(trackingStoreOrdersParam)}` +
-                      `&trackingVisitedJson=${encodeURIComponent(trackingVisitedParam || "[]")}` +
-                      (trackingSequenceParam ? `&trackingSequenceJson=${encodeURIComponent(trackingSequenceParam)}` : "")
-                    : "";
-                  router.push((base + ctx) as any);
-                }}
+                handover={handovers[so.id]}
                 onViewInvoice={() =>
                   router.push(`/invoice?storeOrderId=${so.storeOrderId}&storeId=${so.storeId}&serverOrderId=${so.id}` as any)
                 }
@@ -286,6 +288,7 @@ export default function OrderQrScreen() {
               mode={mode}
               modeColor={modeCfg.color}
               qrLabel={cfg.qrLabel}
+              handover={combined}
             />
 
             <OrderQrStatus
@@ -310,19 +313,6 @@ export default function OrderQrScreen() {
               style={styles.shareBtn}
             />
 
-            {/* Simulate scan for delivery/ride */}
-            <TouchableOpacity
-              style={[styles.shareTextBtn, { borderColor: modeCfg.color + "60", backgroundColor: modeCfg.color + "10" }]}
-              onPress={() => router.push(
-                `/order-collected?orderId=${orderId}&serverOrderId=${serverOrderIdParam}&mode=${mode}&total=${totalAmt}`
-              )}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="qr-code-outline" size={18} color={modeCfg.color} />
-              <Text style={[styles.shareTextLabel, { color: modeCfg.color, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm }]}>
-                Simulate QR Scan Complete
-              </Text>
-            </TouchableOpacity>
           </>
         )}
 
