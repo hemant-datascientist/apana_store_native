@@ -28,15 +28,23 @@ interface Props {
 export default function LiveBanners({ placement = "home", category = null, storeId = null }: Props) {
   const { colors } = useTheme();
   const router = useRouter();
-  const { selectedAddress, deviceCity } = useLocation();
+  const { selectedAddress, deviceCity, deviceCoords } = useLocation();
   const state = selectedAddress.state || null;
   const city = deviceCity || selectedAddress.city || null;
+  // Where the shopper is, for banners aimed at picked areas: the address they
+  // are shopping for, else this phone. Rounded to ~110 m — enough to find the
+  // area, not an exact position on every request.
+  const pin = Number.isFinite(selectedAddress.lat) && Number.isFinite(selectedAddress.lng)
+    ? { lat: selectedAddress.lat as number, lng: selectedAddress.lng as number }
+    : deviceCoords;
+  const lat = pin ? Math.round(pin.lat * 1000) / 1000 : null;
+  const lng = pin ? Math.round(pin.lng * 1000) / 1000 : null;
   const [items, setItems] = useState<LiveBanner[]>([]);
 
   useEffect(() => {
     let alive = true;
     // A failed fetch just shows no banners — banners are never worth an error.
-    fetchLiveBanners({ state, city, placement, category, storeId })
+    fetchLiveBanners({ state, city, lat, lng, placement, category, storeId })
       .then((b) => {
         if (!alive) return;
         setItems(b);
@@ -44,7 +52,7 @@ export default function LiveBanners({ placement = "home", category = null, store
       })
       .catch(() => {});
     return () => { alive = false; };
-  }, [state, city, placement, category, storeId]);
+  }, [state, city, lat, lng, placement, category, storeId]);
 
   if (items.length === 0) return null;
 

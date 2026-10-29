@@ -680,6 +680,9 @@ export type BannerPlacement = "home" | "category" | "store" | "checkout";
 export interface BannerQuery {
   state: string | null;
   city: string | null;
+  /** Rounded shopper point, so banners aimed at picked areas can find them. */
+  lat?: number | null;
+  lng?: number | null;
   placement: BannerPlacement;
   category?: string | null; // APC class code on a category page
   storeId?: string | null;  // the shop whose page is open
@@ -697,6 +700,7 @@ export async function fetchLiveBanners(q: BannerQuery): Promise<LiveBanner[]> {
   const qs = new URLSearchParams({ placement: q.placement });
   if (q.state) qs.set("state", q.state);
   if (q.city) qs.set("city", q.city);
+  if (q.lat != null && q.lng != null) { qs.set("lat", String(q.lat)); qs.set("lng", String(q.lng)); }
   if (q.category) qs.set("category", q.category);
   if (q.storeId) qs.set("store_id", q.storeId);
   const ctl = new AbortController();
