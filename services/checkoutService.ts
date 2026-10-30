@@ -316,6 +316,8 @@ export interface StoreFees {
   delivery: number | null;
   /** ₹ */
   platform: number;
+  /** ₹ GST on Apana's delivery + platform fee (exclusive, 0154); null while delivery is unpriced. */
+  gst?: number | null;
   /** Why delivery is refused right now (no rider near the shop, another city); null = fine. */
   block?: string | null;
   /** Why delivery costs more than usual right now (rider pay boost / busy); null = normal. */
@@ -346,11 +348,13 @@ export async function fetchBasketFees(
   if (!res.ok) throw new Error(`Could not price this order (${res.status})`);
   const body = (await res.json()) as {
     delivery_note?: string | null;
-    sellers: { seller_id: string; delivery_fee_cents: number | null; platform_fee_cents: number; delivery_block?: { message: string } | null }[];
+    sellers: { seller_id: string; delivery_fee_cents: number | null; platform_fee_cents: number; delivery_gst_cents?: number | null; platform_gst_cents?: number; delivery_block?: { message: string } | null }[];
   };
   return Object.fromEntries(body.sellers.map((s) => [s.seller_id, {
     delivery: s.delivery_fee_cents == null ? null : s.delivery_fee_cents / 100,
     platform: s.platform_fee_cents / 100,
+    // An older backend sends no GST lines: 0, exactly what it charges.
+    gst: s.delivery_gst_cents === null ? null : ((s.delivery_gst_cents ?? 0) + (s.platform_gst_cents ?? 0)) / 100,
     block: s.delivery_block?.message ?? null,
     note: body.delivery_note ?? null,
   }]));

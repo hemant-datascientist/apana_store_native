@@ -107,7 +107,7 @@ export default function CheckoutScreen() {
     totalItems: cart.reduce((s, st) => s + st.items.reduce((si, i) => si + i.qty, 0), 0),
   }), [cart]);
   const deliveryTotal = fees.deliveryTotal;
-  const total = deliveryTotal == null ? null : subtotal + deliveryTotal + fees.platformTotal;
+  const total = deliveryTotal == null || fees.gstTotal == null ? null : subtotal + deliveryTotal + fees.platformTotal + fees.gstTotal;
 
   // ── Progress: "checkout" step is active ──────────────────
   const ACTIVE_STEP = "checkout";
@@ -348,6 +348,7 @@ export default function CheckoutScreen() {
           subtotal={subtotal}
           deliveryTotal={deliveryTotal}
           platformFee={fees.platformTotal}
+          gst={fees.gstTotal}
           discountAmt={coupon?.discount ?? 0}
           appliedPromo={coupon?.code ?? null}
           total={total == null ? null : Math.max(0, total - (coupon?.discount ?? 0))}

@@ -59,6 +59,8 @@ export function useCartFees(stores: CartStore[], pin: Pin) {
       /** null until every store is priced. */
       deliveryTotal: known ? list.reduce((t, f) => t + (f!.delivery ?? 0), 0) : null,
       platformTotal: list.reduce((t, f) => t + (f?.platform ?? 0), 0),
+      /** GST on Apana's delivery + platform fee; null until every store is priced. */
+      gstTotal: known ? Math.round(list.reduce((t, f) => t + (f!.gst ?? 0), 0) * 100) / 100 : null,
       /** Why delivery costs more than usual right now; null = normal. */
       deliveryNote: list.find((f) => f?.note)?.note ?? null,
     };

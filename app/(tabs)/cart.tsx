@@ -62,7 +62,7 @@ export default function CartScreen() {
     ? { lat: selectedAddress.lat, lng: selectedAddress.lng } : null;
   const fees            = useCartFees(cart, dropPin);
   const deliveryTotal   = fees.deliveryTotal;
-  const total           = deliveryTotal == null ? null : chargedSubtotal + deliveryTotal + fees.platformTotal;
+  const total           = deliveryTotal == null || fees.gstTotal == null ? null : chargedSubtotal + deliveryTotal + fees.platformTotal + fees.gstTotal;
   const totalItems      = cart.reduce((s, st) => s + st.items.reduce((si, i) => si + i.qty, 0), 0);
 
   // ── Fulfillment groups for the per-mode checkout bar ──────
@@ -169,6 +169,7 @@ export default function CartScreen() {
           brandSavings={brandSavings}
           deliveryTotal={deliveryTotal}
           platformFee={fees.platformTotal}
+          gst={fees.gstTotal}
           total={total}
         />
 

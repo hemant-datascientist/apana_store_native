@@ -16,13 +16,15 @@ interface CheckoutPriceBreakdownProps {
   /** null = not priced yet (no delivery pin) — shown as "—", never guessed. */
   deliveryTotal: number | null;
   platformFee:   number;     // ₹5 per shop order, from the server
+  /** GST on Apana's delivery + platform fee (₹); null = not priced yet. */
+  gst?:          number | null;
   discountAmt?:  number;  // promo code — removed from Review (never backend-validated)
   appliedPromo?: string | null;
   total:         number | null;
 }
 
 export default function CheckoutPriceBreakdown({
-  subtotal, deliveryTotal, platformFee, discountAmt = 0, appliedPromo = null, total,
+  subtotal, deliveryTotal, platformFee, gst = null, discountAmt = 0, appliedPromo = null, total,
 }: CheckoutPriceBreakdownProps) {
   const { colors } = useTheme();
 
@@ -63,6 +65,16 @@ export default function CheckoutPriceBreakdown({
           textColor={colors.text}
           valueColor={colors.subText}
         />
+
+        {/* GST on Apana's delivery + platform fee — its own line, added on top (0154) */}
+        {gst != null && gst > 0 && (
+          <PriceRow
+            label="GST on delivery & platform fee"
+            value={`₹${gst}`}
+            textColor={colors.text}
+            valueColor={colors.subText}
+          />
+        )}
 
         {/* Promo discount — only if applied */}
         {discountAmt > 0 && appliedPromo && (
