@@ -23,6 +23,8 @@ export type { SearchProductResult, SearchStoreResult, SearchSort };
 export interface FetchSearchParams {
   query: string;
   sort?: SearchSort;
+  /** Where the shopper is — picks nearby promoted listings only (0147). */
+  viewer?: { lat: number; lng: number } | null;
 }
 
 // ── Aggregated response ───────────────────────────────────────
@@ -44,7 +46,7 @@ export async function fetchSearchResults(
   const q = params.query.trim();
   if (!q) return { products: [], stores: [] };
 
-  const live = await fetchLiveProducts(60, q);
+  const live = await fetchLiveProducts(60, q, null, params.viewer ?? null);
 
   let products: SearchProductResult[] = live.map((p) => ({
     id: p.id,
@@ -62,13 +64,19 @@ export async function fetchSearchResults(
     image: p.image,
     icon: "cube-outline",
     iconBg: ICON_BG,
+    sponsored: p.sponsored,
+    promotionId: p.promotionId,
   }));
 
   // Client-side sort. "rating"/"relevance" keep the server order (newest-add
   // first) — there are no real ratings to sort by, and inventing them is exactly
   // the phantom data this rewrite removes.
-  if (params.sort === "price_asc") products = [...products].sort((a, b) => a.price - b.price);
-  else if (params.sort === "price_desc") products = [...products].sort((a, b) => b.price - a.price);
+  // Paid slots stay on top whatever the sort; the sort orders what was earned.
+  const paid = products.filter((p) => p.sponsored);
+  let earned = products.filter((p) => !p.sponsored);
+  if (params.sort === "price_asc") earned = [...earned].sort((a, b) => a.price - b.price);
+  else if (params.sort === "price_desc") earned = [...earned].sort((a, b) => b.price - a.price);
+  products = [...paid, ...earned];
 
   // Store text-search is not implemented — honest-empty, not a mock store list.
   return { products, stores: [] };

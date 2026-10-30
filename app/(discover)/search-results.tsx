@@ -49,6 +49,8 @@ import SearchSortBar       from "../../components/search-results/SearchSortBar";
 import SearchProductCard   from "../../components/search-results/SearchProductCard";
 import SearchStoreCard     from "../../components/search-results/SearchStoreCard";
 import SearchEmptyState    from "../../components/search-results/SearchEmptyState";
+import useViewerPoint      from "../../hooks/useViewerPoint";
+import { recordPromotedTap } from "../../services/liveCatalogService";
 
 // Debounce delay before firing the search service call
 const DEBOUNCE_MS = 350;
@@ -56,6 +58,8 @@ const DEBOUNCE_MS = 350;
 export default function SearchResultsScreen() {
   const { colors, isDark } = useTheme();
   const router             = useRouter();
+  // Places the shopper for nearby promoted listings; results stay whole-catalogue.
+  const viewer             = useViewerPoint();
 
   // ── URL param — initial query ─────────────────────────────
   const { q: qParam = "" } = useLocalSearchParams<{ q?: string }>();
@@ -95,7 +99,7 @@ export default function SearchResultsScreen() {
 
     let cancelled = false;
 
-    fetchSearchResults({ query: q, sort: s })
+    fetchSearchResults({ query: q, sort: s, viewer })
       .then(res => {
         if (!cancelled) {
           setProducts(res.products);
@@ -110,7 +114,7 @@ export default function SearchResultsScreen() {
       });
 
     return () => { cancelled = true; };
-  }, []);
+  }, [viewer]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -267,7 +271,7 @@ export default function SearchResultsScreen() {
                 <View key={p.id} style={styles.gridCell}>
                   <SearchProductCard
                     product={p}
-                    onPress={() => handleProductPress(p.id)}
+                    onPress={() => { recordPromotedTap(p.promotionId ?? null); handleProductPress(p.id); }}
                     onAddCart={handleAddCart}
                   />
                 </View>

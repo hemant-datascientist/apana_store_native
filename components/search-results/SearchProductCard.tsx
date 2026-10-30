@@ -48,6 +48,13 @@ export default function SearchProductCard({ product, onPress, onAddCart }: Searc
           <Ionicons name={product.icon as any} size={38} color={colors.text} style={{ opacity: 0.5 }} />
         )}
 
+        {/* Paid placement is always disclosed (ASCI) — never passed off as a result. */}
+        {product.sponsored && (
+          <View style={[styles.sponsored, { backgroundColor: colors.card }]}>
+            <Text style={{ color: colors.subText, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.ss }}>Sponsored</Text>
+          </View>
+        )}
+
         {/* Badge overlay (e.g. "FRESH", "BESTSELLER") */}
         {!!product.badge && (
           <View style={[styles.badge, { backgroundColor: colors.primary }]}>
@@ -134,6 +141,7 @@ export default function SearchProductCard({ product, onPress, onAddCart }: Searc
 }
 
 const styles = StyleSheet.create({
+  sponsored: { position: "absolute", bottom: 6, left: 6, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   card: {
     flex:         1,
     borderRadius: 14,

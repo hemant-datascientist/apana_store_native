@@ -102,6 +102,10 @@ export interface LiveProduct {
   // Empty when the listing does not sell as SKUs.
   variants: ProductVariant[];
   store: LiveProductStore;
+  /** 0147 — paid placement; the card must say "Sponsored" (ASCI). */
+  sponsored: boolean;
+  /** Where a tap on it is reported (it may cost the shop). null = not promoted. */
+  promotionId: string | null;
 }
 
 // ── Product detail (SmartConsumer-style) ──────────────────────
@@ -192,6 +196,9 @@ interface WireVariant {
 interface WireProduct {
   id: string;
   name: string;
+  /** 0147 — a paid promoted listing (shown first, labelled Sponsored). */
+  sponsored?: boolean;
+  promotion_id?: string;
   brand: string | null;
   price_cents: number;
   mrp_cents: number | null;
@@ -325,6 +332,8 @@ function toLiveProduct(w: WireProduct): LiveProduct {
     variants: (w.variants ?? [])
       .filter((v) => v.is_active)
       .map(toVariant),
+    sponsored: w.sponsored === true,
+    promotionId: w.promotion_id ?? null,
     store: {
       id: w.store.id,
       name: w.store.name,
@@ -418,6 +427,9 @@ export async function fetchLiveProducts(
   // Restrict to shops the customer can actually order from (§19.6 k-ring).
   // The HOME feed passes this; search deliberately does not.
   near?: { lat: number; lng: number } | null,
+  // 0147 — where the shopper is, ONLY to pick nearby promoted listings; it
+  // does not narrow the results the way `near` does.
+  viewer?: { lat: number; lng: number } | null,
 ): Promise<LiveProduct[]> {
   if (!IS_LIVE) return []; // mock: no real inventory to show
   // view=card: only the fields toLiveProduct reads — ~1/3 of the bytes on a
@@ -428,6 +440,10 @@ export async function fetchLiveProducts(
   if (near) {
     params.set("lat", String(near.lat));
     params.set("lng", String(near.lng));
+  }
+  if (viewer) {
+    params.set("viewer_lat", String(Math.round(viewer.lat * 1000) / 1000));
+    params.set("viewer_lng", String(Math.round(viewer.lng * 1000) / 1000));
   }
   const body = await fetchJson<WireList>(`${BASE_URL}/catalog/products?${params.toString()}`);
   return body.items.map(toLiveProduct);
@@ -465,7 +481,7 @@ export async function fetchApcProducts(
   // `near` restricts the result to shops the customer can actually order from
   // (§19.6 k-ring). Pass it on the HOME feed; leave it off for APC browsing and
   // search, which legitimately span the whole catalogue.
-  opts: { family?: string; limit?: number; near?: { lat: number; lng: number } | null } = {},
+  opts: { family?: string; limit?: number; near?: { lat: number; lng: number } | null; viewer?: { lat: number; lng: number } | null } = {},
 ): Promise<ApcProductsResult> {
   if (!IS_LIVE) return { products: [], families: [], total: 0 };
   const params = new URLSearchParams({ apc_class: apcClass, limit: String(opts.limit ?? 100), view: "card" });
@@ -473,6 +489,10 @@ export async function fetchApcProducts(
   if (opts.near) {
     params.set("lat", String(opts.near.lat));
     params.set("lng", String(opts.near.lng));
+  }
+  if (opts.viewer) {
+    params.set("viewer_lat", String(Math.round(opts.viewer.lat * 1000) / 1000));
+    params.set("viewer_lng", String(Math.round(opts.viewer.lng * 1000) / 1000));
   }
   const body = await fetchJson<WireList>(`${BASE_URL}/catalog/products?${params.toString()}`);
   return {
@@ -717,6 +737,22 @@ export async function fetchLiveBanners(q: BannerQuery): Promise<LiveBanner[]> {
     id: i.id, kind: i.kind, title: i.title, body: i.body,
     image: resolveImage(i.image_url ?? undefined), link: i.link, sponsored: i.sponsored,
   }));
+}
+
+/**
+ * A tap on a promoted listing (0147). Sent signed in, because a pay-per-tap
+ * listing charges the shop once per customer per day — and only for a tap the
+ * server can tie to a real customer. Fire and forget.
+ */
+export function recordPromotedTap(promotionId: string | null): void {
+  if (!IS_LIVE || !promotionId) return;
+  bannerHeaders()
+    .then((auth) => fetch(`${BASE_URL}/content/${encodeURIComponent(promotionId)}/event`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...auth },
+      body: JSON.stringify({ type: "click" }),
+    }))
+    .catch(() => {});
 }
 
 // Views count once per banner per app session; taps every time. Fire and

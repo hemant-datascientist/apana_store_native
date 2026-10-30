@@ -36,6 +36,9 @@ export interface SearchProductResult {
   image?:    string | null; // real product photo when present; else the icon
   icon:      string;   // Ionicons glyph fallback when there is no image
   iconBg:    string;   // placeholder background color
+  /** 0147 — a paid promoted listing; the card says "Sponsored". */
+  sponsored?: boolean;
+  promotionId?: string | null;
 }
 
 // ── Store result ──────────────────────────────────────────────

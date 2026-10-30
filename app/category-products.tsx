@@ -25,10 +25,11 @@ import { cartRowId, useCart } from "../context/CartContext";
 import { storeTint } from "../lib/storeTint";
 import { getClasses, getFamilies, familyImage } from "../services/apc";
 import {
-  fetchApcProducts, ApcFamilyFacet, LiveProduct, orderCeiling,
+  fetchApcProducts, ApcFamilyFacet, LiveProduct, orderCeiling, recordPromotedTap,
 } from "../services/liveCatalogService";
 import ApcFamilyRail from "../components/category/ApcFamilyRail";
 import ApcGridCard from "../components/category/ApcGridCard";
+import useViewerPoint from "../hooks/useViewerPoint";
 
 const ACCENT = "#0F4C81";
 // 2-col product grid sitting to the right of the 96px family rail.
@@ -44,6 +45,8 @@ interface Section { code: string; name: string; products: LiveProduct[] }
 export default function CategoryProducts() {
   const { colors } = useTheme();
   const router = useRouter();
+  // Places the shopper for nearby promoted listings (0147); the list stays whole-catalogue.
+  const viewer = useViewerPoint();
   const params = useLocalSearchParams<{ code: string; title?: string }>();
   // The browser may hand us a CLASS code (APC-02-BEV), a FAMILY code
   // (APC-02-BEV-SOFTDRINK) or a variety — single-class departments show family
@@ -80,7 +83,7 @@ export default function CategoryProducts() {
     let alive = true;
     setLoading(true);
     setFailed(false);
-    fetchApcProducts(code, { limit: 100 })
+    fetchApcProducts(code, { limit: 100, viewer })
       .then((res) => { if (!alive) return; setProducts(res.products); setFamilies(res.families); })
       .catch(() => { if (alive) setFailed(true); })
       .finally(() => { if (alive) setLoading(false); });
@@ -89,7 +92,7 @@ export default function CategoryProducts() {
       .then((fs) => { if (alive) setTaxo(fs.map((f) => ({ code: f.code, name: f.name, image: familyImage(f.image_url) }))); })
       .catch(() => {});
     return () => { alive = false; };
-  }, [code]);
+  }, [code, viewer]);
 
   const familyImages = useMemo(
     () => Object.fromEntries(taxo.map((f) => [f.code, f.image])),
@@ -196,7 +199,7 @@ export default function CategoryProducts() {
                       <ApcGridCard
                         product={item}
                         qty={getItemQty(item.store.id, item.id)}
-                        onOpen={() => router.push(`/live-product-detail?id=${item.id}` as never)}
+                        onOpen={() => { recordPromotedTap(item.promotionId); router.push(`/live-product-detail?id=${item.id}` as never); }}
                         onAdd={() => addProduct(item)}
                         onInc={() => updateQty(item.store.id, item.id, 1)}
                         onDec={() => decProduct(item)}

@@ -48,6 +48,12 @@ export default function ApcGridCard({ product, qty, onOpen, onAdd, onInc, onDec 
             <View style={[styles.vegDot, { backgroundColor: product.isVeg ? colors.success : colors.danger }]} />
           </View>
         )}
+        {/* Paid placement is always disclosed (ASCI). */}
+        {product.sponsored && (
+          <View style={[styles.sponsored, { backgroundColor: colors.card }]}>
+            <Text style={{ color: colors.subText, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.ss }}>Sponsored</Text>
+          </View>
+        )}
         {product.dealPrice != null && (
           <View style={[styles.dealTag, { backgroundColor: colors.primary }]}>
             <Text style={[styles.dealText, { color: colors.white, fontFamily: typography.fontFamily.bold }]}>DEAL</Text>
@@ -144,6 +150,7 @@ export default function ApcGridCard({ product, qty, onOpen, onAdd, onInc, onDec 
 }
 
 const styles = StyleSheet.create({
+  sponsored: { position: "absolute", bottom: 6, left: 6, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   card: { flex: 1, borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, overflow: "hidden" },
   media: { height: 118, alignItems: "center", justifyContent: "center", position: "relative" },
   image: { width: "100%", height: "100%" },
