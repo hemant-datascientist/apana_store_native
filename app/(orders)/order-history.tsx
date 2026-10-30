@@ -44,6 +44,8 @@ import RateStoreSheet   from "../../components/orders/RateStoreSheet";
 import { submitStoreReview, submitRiderRating } from "../../services/reviewService";
 import { fetchOrderHistory, fetchReorder, reorderLineReason, ORDERS_LIVE } from "../../services/orderHistoryService";
 import { useAuth } from "../../context/AuthContext";
+import { payForOrder } from "../../services/paymentsService";
+import { useRazorpay } from "../../hooks/useRazorpay";
 
 export default function OrderHistoryScreen() {
   const { colors } = useTheme();
@@ -55,6 +57,7 @@ export default function OrderHistoryScreen() {
   // exist — the worst possible answer to "did my order go through?".
   const { user } = useAuth();
   const customerId = user?.phone ?? "";
+  const { collect, sheet: razorpaySheet } = useRazorpay(customerId || undefined);
   const [orders,  setOrders]  = useState<Order[]>([]);
   const [loading, setLoading] = useState(ORDERS_LIVE);
   const [error,   setError]   = useState<string | null>(null);
@@ -144,6 +147,18 @@ export default function OrderHistoryScreen() {
       `&invoice=` + encodeURIComponent(order.orderNo) +
       `&store=` + encodeURIComponent(order.storeName) as never,
     );
+  }
+
+  async function handlePay(order: Order) {
+    if (!customerId) return;
+    try {
+      // Same idempotency key as checkout: a retry continues that attempt.
+      const r = await payForOrder(order.id, customerId, `order-${order.id}`, collect);
+      if (r.paid) Alert.alert("Paid", "Your order is paid.");
+    } catch (e: unknown) {
+      Alert.alert("Not paid", e instanceof Error ? e.message : "Payment did not go through. Try again.");
+    }
+    loadOrders();
   }
 
   async function handleReorder(order: Order) {
@@ -259,6 +274,7 @@ export default function OrderHistoryScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={["top"]}>
+      {razorpaySheet}
 
       {/* ── Header ── */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
@@ -339,6 +355,7 @@ export default function OrderHistoryScreen() {
                   order={order}
                   onTrack={handleTrack}
                   onReorder={handleReorder}
+                  onPay={handlePay}
                   onRate={setRateOrder}
                   onMessage={handleMessage}
                 />

@@ -30,10 +30,12 @@ interface OrderCardProps {
   order:     Order;
   onTrack:   (order: Order) => void;
   onReorder: (order: Order) => void;
+  /** Pay an unpaid online order (opens the payment sheet). */
+  onPay?: (order: Order) => void;
   onRate?:   (order: Order) => void;
 }
 
-export default function OrderCard({ order, onTrack, onReorder, onRate, onMessage }: OrderCardProps) {
+export default function OrderCard({ order, onTrack, onReorder, onRate, onMessage, onPay }: OrderCardProps) {
   const { colors } = useTheme();
   // ⚠ undefined means "never counted" (mock rows, or a reader the server could
   // not place); 0 means "counted, none waiting". Neither draws a badge, but
@@ -121,6 +123,13 @@ export default function OrderCard({ order, onTrack, onReorder, onRate, onMessage
           }]}>
             {order.paymentMethod}
           </Text>
+          {order.needsPayment && onPay && (
+            <TouchableOpacity onPress={() => onPay(order)} hitSlop={8}>
+              <Text style={{ color: colors.primary, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }}>
+                Pay now
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 

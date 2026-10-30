@@ -41,6 +41,7 @@ import {
   placeOrder, PlaceOrderRequest, StoreOrderInput, StoreOrderResult, StockShortError,
 } from "../../services/checkoutService";
 import { payForOrder } from "../../services/paymentsService";
+import { useRazorpay } from "../../hooks/useRazorpay";
 
 import CheckoutPaymentSelector from "../../components/checkout/CheckoutPaymentSelector";
 import { offerStockShort } from "../../lib/stockShort";
@@ -109,6 +110,7 @@ export default function CheckoutPaymentScreen() {
   const isCod = selectedPayment.type === "cod";
   const [placing,  setPlacing]  = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
+  const { collect, sheet: razorpaySheet } = useRazorpay(user?.phone ?? undefined);
 
   // ── Progress step ─────────────────────────────────────────────
   const activeProgressIdx = useMemo(
@@ -174,7 +176,8 @@ export default function CheckoutPaymentScreen() {
           // res.orderId is the display invoice, which matches no row. The
           // idempotency key is derived from the same real id, so a retry
           // reuses the same attempt rather than opening a second one.
-          await payForOrder(res.serverOrderId, user?.phone ?? "", `order-${res.serverOrderId}`);
+          // A multi-shop basket is one payment for every shop (server-side).
+          await payForOrder(res.serverOrderId, user?.phone ?? "", `order-${res.serverOrderId}`, collect);
         } catch (payErr: any) {
           // The order stands, unpaid — deleting it would lose a basket the
           // customer may still want to pay for. Say what happened and let them
@@ -217,6 +220,7 @@ export default function CheckoutPaymentScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.card} />
+      {razorpaySheet}
 
       {/* ── Header ── */}
       <SafeAreaView style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]} edges={["top"]}>

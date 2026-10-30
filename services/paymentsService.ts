@@ -116,14 +116,23 @@ export async function payForOrder(
   orderId: string,
   customerId: string,
   idempotencyKey: string,
+  // Opens the real payment sheet (RazorpaySheet) and resolves with what
+  // Razorpay handed back; rejects if the customer closes it or it fails.
+  collect?: (intent: PaymentIntent) => Promise<{ provider_order_id: string; provider_payment_id: string; signature: string }>,
 ): Promise<{ paid: boolean; isLive: boolean }> {
   const intent = await initPayment(orderId, customerId, idempotencyKey);
 
   if (intent.is_live) {
-    // Razorpay checkout goes here (react-native-razorpay). Until it is wired,
-    // say so plainly rather than silently reporting a payment that never
-    // happened — the shop would hand over goods for money that never moved.
-    throw new Error("Online payment is not available in this build yet.");
+    // Without a sheet to show, say so plainly rather than silently reporting a
+    // payment that never happened.
+    if (!collect) throw new Error("Online payment is not available on this screen.");
+    const r = await collect(intent);
+    const res = await confirmPayment({
+      providerOrderId: r.provider_order_id,
+      providerPaymentId: r.provider_payment_id,
+      signature: r.signature,
+    });
+    return { paid: res.paid, isLive: true };
   }
 
   const gateway = await mockGatewayPay(intent.provider_order_id);

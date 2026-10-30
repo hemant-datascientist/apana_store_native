@@ -72,6 +72,8 @@ export interface Order {
    * conversation nobody looked at. Only a real number renders a badge.
    */
   unreadMessages?: number;
+  /** Online order the customer has not paid yet, and still live — show "Pay now". */
+  needsPayment?: boolean;
 }
 
 // ── Status meta (label + theme key) ──────────────────────────

@@ -135,6 +135,8 @@ function toOrder(w: WireOrder): Order {
     // determine); 0 means it counted and none are waiting. Both leave the
     // badge off, but only the second is a claim.
     unreadMessages: w.unread_messages ?? undefined,
+    needsPayment: w.payment_mode !== "cod" && w.payment_status !== "paid"
+      && !["cancelled", "rejected", "delivered"].includes(w.status),
     paymentMethod:
       w.payment_mode === "cod"
         ? "Cash on Delivery"
