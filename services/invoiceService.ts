@@ -140,7 +140,7 @@ export async function fetchInvoice(params: FetchInvoiceParams): Promise<Invoice>
     amountInMRP:    rupees(r.subtotal_cents),
     // Delivery + Apana's ₹5 platform fee, so the lines add up to the total.
     // Delivery + platform fee + Apana's GST on them (0154; absent on an older backend).
-    otherCharges:   rupees(r.delivery_fee_cents + (r.platform_fee_cents ?? 0) + (r.delivery_gst_cents ?? 0) + (r.platform_gst_cents ?? 0)),
+    otherCharges:   rupees(r.delivery_fee_cents + (r.platform_fee_cents ?? 0) + (r.delivery_gst_cents ?? 0) + (r.platform_gst_cents ?? 0) + (r.food_gst_cents ?? 0)),
     netAmount:      total,
     payment: {
       billAmount:   total,
@@ -221,6 +221,7 @@ interface WireReceipt {
   platform_fee_cents?: number; // 0113; absent on an older backend
   delivery_gst_cents?: number; // 0154
   platform_gst_cents?: number;
+  food_gst_cents?: number; // 0156 — GST on restaurant food, paid by Apana (§9(5))
   total_cents: number;
   payment_mode: string;
   payment_status: string;
