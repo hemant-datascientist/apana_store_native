@@ -375,3 +375,19 @@ export async function fetchStoreThreshold(productIds: string[]): Promise<number 
   const t = body.sellers[0]?.threshold_cents ?? null;
   return t == null ? null : t / 100;
 }
+
+/**
+ * Pickup customer geofence (backend 0157): where the customer is, while a pickup
+ * order is open. Within ~300 m of the shop the shop is told "customer arriving".
+ * Returns true once that has happened (the app stops reporting).
+ */
+export async function reportNearShop(orderId: string, customerId: string, lat: number, lng: number): Promise<boolean> {
+  if (!IS_LIVE) return false;
+  const res = await fetch(`${BASE_URL}/orders/${encodeURIComponent(orderId)}/near?customer_id=${encodeURIComponent(customerId)}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ lat, lng }),
+  });
+  if (!res.ok) return false;
+  return ((await res.json()) as { near?: boolean }).near === true;
+}

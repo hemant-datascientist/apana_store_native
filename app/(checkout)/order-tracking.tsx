@@ -52,6 +52,8 @@ import {
 import { useMockPartnerFix }    from "../../hooks/useMockPartnerFix";
 import { usePartnerFix }        from "../../hooks/usePartnerFix";
 import { useOrderProgress, statusLabel } from "../../hooks/useOrderProgress";
+import { useCustomerNear } from "../../hooks/useCustomerNear";
+import { useAuth } from "../../context/AuthContext";
 
 import TrackingProgress         from "../../components/order-tracking/TrackingProgress";
 import TrackingMapPlaceholder   from "../../components/order-tracking/TrackingMapPlaceholder";
@@ -192,6 +194,10 @@ export default function OrderTrackingScreen() {
   // step whatever the shop had actually done; MOCK_PARTNERS put a rider who did
   // not exist beside a map marker that was genuinely moving.
   const progress = useOrderProgress(isRealOrder ? serverOrderId : undefined);
+  // Pickup: tell the shop when the customer is close, so the order is at the counter.
+  const { user } = useAuth();
+  useCustomerNear(serverOrderId, user?.phone, isRealOrder && mode === "pickup"
+    && !["delivered", "cancelled", "rejected"].includes(progress.status ?? ""));
   const activeStep = isRealOrder ? (progress.stepKey ?? "placed") : MOCK_ACTIVE_STEP[mode];
   const partner = MOCK_PARTNERS[mode];
   // No ETA for a real order. Nothing computes one — no routing, no distance, no
