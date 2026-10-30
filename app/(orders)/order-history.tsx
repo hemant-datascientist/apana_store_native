@@ -141,6 +141,10 @@ export default function OrderHistoryScreen() {
   // The shop name and invoice ride along so the chat header can say which
   // conversation this is before the thread has loaded — a blank header on a
   // slow connection is how a customer messages the wrong shop.
+  function handleReturn(order: Order) {
+    router.push(`/return-items?orderId=${encodeURIComponent(order.id)}&invoice=${encodeURIComponent(order.orderNo)}` as never);
+  }
+
   function handleMessage(order: Order) {
     router.push(
       `/order-chat?orderId=` + encodeURIComponent(order.id) +
@@ -358,6 +362,7 @@ export default function OrderHistoryScreen() {
                   onPay={handlePay}
                   onRate={setRateOrder}
                   onMessage={handleMessage}
+                  onReturn={handleReturn}
                 />
               ))
             : <OrderEmptyState filter={activeFilter} />

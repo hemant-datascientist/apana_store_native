@@ -13,6 +13,7 @@ export default function OrdersLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="order-history" />
+      <Stack.Screen name="return-items" />
     </Stack>
   );
 }

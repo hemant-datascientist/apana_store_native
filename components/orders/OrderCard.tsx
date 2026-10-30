@@ -33,9 +33,11 @@ interface OrderCardProps {
   /** Pay an unpaid online order (opens the payment sheet). */
   onPay?: (order: Order) => void;
   onRate?:   (order: Order) => void;
+  /** Ask to return goods from a delivered order (the shop's own window). */
+  onReturn?: (order: Order) => void;
 }
 
-export default function OrderCard({ order, onTrack, onReorder, onRate, onMessage, onPay }: OrderCardProps) {
+export default function OrderCard({ order, onTrack, onReorder, onRate, onMessage, onPay, onReturn }: OrderCardProps) {
   const { colors } = useTheme();
   // ⚠ undefined means "never counted" (mock rows, or a reader the server could
   // not place); 0 means "counted, none waiting". Neither draws a badge, but
@@ -196,6 +198,24 @@ export default function OrderCard({ order, onTrack, onReorder, onRate, onMessage
               {/* The count itself, not a dot: "2" tells the customer there is a
                   conversation to catch up on, a dot only that something moved. */}
               {unread > 0 ? `Chat ${unread}` : "Chat"}
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Return — delivered orders; the screen says if the shop's window allows it */}
+        {isDelivered && onReturn && (
+          <TouchableOpacity
+            style={[styles.cta, { backgroundColor: "transparent", borderWidth: 1, borderColor: colors.border }]}
+            activeOpacity={0.8}
+            onPress={() => onReturn(order)}
+          >
+            <Ionicons name="return-down-back-outline" size={14} color={colors.text} />
+            <Text style={[styles.ctaLabel, {
+              color:      colors.text,
+              fontFamily: typography.fontFamily.semiBold,
+              fontSize:   typography.size.xs,
+            }]}>
+              Return
             </Text>
           </TouchableOpacity>
         )}
