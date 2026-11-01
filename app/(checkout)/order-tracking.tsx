@@ -301,7 +301,7 @@ export default function OrderTrackingScreen() {
         <TrackingMapPlaceholder
           mode={mode}
           etaMinutes={etaMinutes}
-          partnerInitials={partner.initials}
+          partnerInitials={isRealOrder ? String(progress.partnerName ?? "").slice(0, 1).toUpperCase() : partner.initials}
           partnerColor={partner.avatarColor}
           fix={partnerFix}
           customerLocation={isRealOrder ? (progress.destination ?? undefined) : MOCK_CUSTOMER_LOCATION}

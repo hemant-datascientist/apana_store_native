@@ -113,6 +113,7 @@ export default function OrderHistoryScreen() {
     // Build a minimal StoreOrderResult so order-tracking can render
     // the store list / QR flow. Real data comes from backend later.
     const storeOrders = [{
+      id:             order.id,
       storeOrderId:   order.id,
       storeId:        order.storeId,
       storeName:      order.storeName,
@@ -121,7 +122,9 @@ export default function OrderHistoryScreen() {
     }];
     const so = encodeURIComponent(JSON.stringify(storeOrders));
     router.push(
-      `/order-tracking?mode=${order.mode}&orderId=${order.id}&total=${order.total}&storeOrdersJson=${so}` as any,
+      // serverOrderId makes tracking read THIS order (real rider, real status).
+      // Without it the screen fell back to its demo rider ("Ramesh Patil").
+      `/order-tracking?mode=${order.mode}&orderId=${order.id}${ORDERS_LIVE ? `&serverOrderId=${order.id}` : ""}&total=${order.total}&storeOrdersJson=${so}` as any,
     );
   }
 

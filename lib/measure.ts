@@ -90,11 +90,16 @@ const WEIGHT_PRESETS = [250, 500, 1000, 2000];
 const VOLUME_PRESETS = [200, 500, 1000, 2000];
 const PIECE_PRESETS = [1, 2, 5, 10];
 const DOZEN_PRESETS = [12, 24, 60, 120]; // 1, 2, 5, 10 dozen, in pieces
+const SINGLES_PRESETS = [1, 3, 6, 12];   // a dozen listing that sells single pieces
 
-/** A dozen listing with no step of its own moves a whole dozen at a time. */
+/**
+ * A dozen listing with NO step of its own moves a whole dozen at a time. A step
+ * the seller set is honoured — step 1 means the shop sells single pieces
+ * ("customers can buy single pieces", 2026-11-01: a shopper wants 3 mangoes).
+ */
 export function dozenAwareStep(step: number | null | undefined, unit?: string | null): number {
-  const s = Math.max(1, step ?? 1);
-  return unit === "dozen" && s === 1 ? 12 : s;
+  if (step == null) return unit === "dozen" ? 12 : 1;
+  return Math.max(1, step);
 }
 
 export function measurePresets(
@@ -102,7 +107,7 @@ export function measurePresets(
   opts: { min?: number | null; step?: number | null; max?: number | null; unit?: string | null },
 ): number[] {
   const base = kind === "weight" ? WEIGHT_PRESETS : kind === "volume" ? VOLUME_PRESETS
-    : opts.unit === "dozen" ? DOZEN_PRESETS : PIECE_PRESETS;
+    : opts.unit === "dozen" ? ((opts.step ?? 12) < 12 ? SINGLES_PRESETS : DOZEN_PRESETS) : PIECE_PRESETS;
   const min = opts.min ?? 1;
   const step = opts.step ?? 1;
   const max = opts.max ?? Infinity;
@@ -136,7 +141,12 @@ if ((import.meta as { main?: boolean }).main) {
   eq(formatMeasure("piece", 144, "dozen"), "12 dozen", "144 pieces is 12 dozen");
   eq(formatMeasure("piece", 6, "dozen"), "6 pieces", "a part dozen reads in pieces");
   eq(measureLineTotalCents("piece", 144, 600), 86400, "12 dozen x Rs72 = Rs864");
-  eq(dozenAwareStep(1, "dozen"), 12, "dozen steps a dozen");
+  eq(dozenAwareStep(null, "dozen"), 12, "dozen with no step moves a dozen");
+  eq(dozenAwareStep(1, "dozen"), 1, "a shop selling single pieces steps one piece");
+  eq(dozenAwareStep(12, "dozen"), 12, "a whole-dozen shop steps a dozen");
+  eq(measurePresets("piece", { min: 1, step: 1, unit: "dozen" }).join(","), "1,3,6,12", "single-piece dozen presets");
+  eq(measurePresets("piece", { min: 12, step: 12, unit: "dozen" }).join(","), "12,24,60,120", "whole-dozen presets");
+  eq(formatMeasure("piece", 3, "dozen"), "3 pieces", "3 mangoes read as pieces");
   const apple = withLooseTotals({ measureKind: "piece", qty: 144, unit: "dozen", pricePerMeasureCents: 600, price: 72 } as unknown as CartItem);
   eq(apple.price, 864, "a 12-dozen cart line is priced Rs864, not the stale Rs72");
   eq(apple.variantLabel, "12 dozen", "and labelled from its amount");
