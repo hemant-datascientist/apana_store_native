@@ -17,6 +17,7 @@ import useTheme from "../theme/useTheme";
 import { typography } from "../theme/typography";
 import { useApcBrowser } from "../hooks/useApcBrowser";
 import ApcTileCard, { ApcTile } from "../components/tabs/category/ApcTileCard";
+import { getApcClassImage } from "../data/apcCategoryImages";
 
 const ACCENT = "#0F4C81";
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -39,7 +40,7 @@ export default function ApcClassesScreen() {
     key: c.code,
     label: c.name,
     emoji: c.icon_emoji,
-    imageUrl: null,
+    imageUrl: getApcClassImage(c.code)?.uri ?? null,
     color: TILE_COLORS[i % TILE_COLORS.length],
   }));
 

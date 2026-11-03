@@ -10,6 +10,7 @@ import React from "react";
 import { View, StyleSheet, Dimensions } from "react-native";
 import ApcTileCard, { ApcTile } from "./ApcTileCard";
 import type { ApcBrowseGroup } from "../../../hooks/useApcBrowser";
+import { getApcDeptImage } from "../../../data/apcCategoryImages";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const H_PADDING = 12;
@@ -35,7 +36,7 @@ export default function ApcDeptGrid({ groups, onSelect }: Props) {
     key: g.code,
     label: g.title,
     emoji: g.icon,
-    imageUrl: null,
+    imageUrl: getApcDeptImage(g.code)?.uri ?? null,
     color: TILE_COLORS[i % TILE_COLORS.length],
   }));
 

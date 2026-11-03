@@ -9,10 +9,6 @@
 // ============================================================
 import { assetImg } from "../lib/assetImg";
 
-
-const TOWER_IP = process.env.EXPO_PUBLIC_TOWER_IP ?? "10.153.78.94";
-const getAssetUrl = (path: string) => `http://${TOWER_IP}:8000/assets/images/apana_store/${path}`;
-
 export interface SubCategory {
   key: string;
   label: string;

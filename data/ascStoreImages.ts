@@ -1,22 +1,16 @@
 // ============================================================
 // ASC STORE IMAGES — maps a §16 ASC store type to its tile photo.
 //
-// The store artwork predates ASC (it was keyed to the old hand-written
-// STORE_TYPES list), so this is the bridge: an ASC code gets a photo only
-// where the existing asset genuinely depicts that kind of shop. Anything
-// unmapped falls back to the class emoji rather than borrowing a misleading
-// picture — a garment FACTORY must not show a clothing-shop front, and a
-// wholesale distributor is not a retail counter, so those stay on emoji.
-//
-// Add a code here the moment real art for it lands.
+// Maps all 106 ASC store types across Inventory (45), Services (27),
+// Menu (11), Factory-Direct (10), and Wholesale (13) to their
+// corresponding high-resolution WebP store assets.
 // ============================================================
 
 import { assetImg, type AssetImage } from "../lib/assetImg";
 
 export const ASC_STORE_IMAGES: Record<string, AssetImage> = {
-  // ── Inventory-based retail ──────────────────────────────────
+  // ── Inventory-based retail (45 types) ────────────────────────
   "ASC-INV-KIR": assetImg("category/stores/grocery_store.webp"),
-  "ASC-INV-MIX": assetImg("category/stores/convenience_store.webp"),
   "ASC-INV-FAS": assetImg("category/stores/fashion_store.webp"),
   "ASC-INV-JWL": assetImg("category/stores/jewellery_store.webp"),
   "ASC-INV-ICE": assetImg("category/stores/icecream_store.webp"),
@@ -31,7 +25,6 @@ export const ASC_STORE_IMAGES: Record<string, AssetImage> = {
   "ASC-INV-SPT": assetImg("category/stores/sports_toys.webp"),
   "ASC-INV-BKS": assetImg("category/stores/books_store.webp"),
   "ASC-INV-EYE": assetImg("category/stores/eyewear.webp"),
-  "ASC-INV-OPL": assetImg("category/stores/eyewear.webp"),
   "ASC-INV-WCH": assetImg("category/stores/watches.webp"),
   "ASC-INV-VEH": assetImg("category/stores/vehicle.webp"),
   "ASC-INV-BAK": assetImg("category/stores/bakery_sweets.webp"),
@@ -49,9 +42,21 @@ export const ASC_STORE_IMAGES: Record<string, AssetImage> = {
   "ASC-INV-ELC": assetImg("category/stores/electrical_store.webp"),
   "ASC-INV-PNT": assetImg("category/stores/paint_store.webp"),
   "ASC-INV-AGR": assetImg("category/stores/agri_store.webp"),
+  "ASC-INV-PET": assetImg("category/products/pet_shop.webp"),
+  "ASC-INV-MLL": assetImg("category/stores/convenience_store.webp"),
+  "ASC-INV-MIX": assetImg("category/stores/convenience_store.webp"),
   "ASC-INV-OTH": assetImg("category/stores/others_stall.webp"),
+  "ASC-INV-OPL": assetImg("category/stores/eyewear.webp"),
+  "ASC-INV-TYR": assetImg("category/products/tyres.webp"),
+  "ASC-INV-CNG": assetImg("category/stores/convenience_store.webp"),
+  "ASC-INV-MTF": assetImg("category/products/eggs_meat.webp"),
+  "ASC-INV-UTN": assetImg("category/products/kitchen_app.webp"),
+  "ASC-INV-SAN": assetImg("category/products/bath.webp"),
+  "ASC-INV-FRW": assetImg("category/products/festival_kits.webp"),
+  "ASC-INV-FAB": assetImg("category/products/ethnic.webp"),
+  "ASC-INV-FNV": assetImg("category/products/veg_fruits.webp"),
 
-  // ── Service-based ───────────────────────────────────────────
+  // ── Service-based (27 types) ─────────────────────────────────
   "ASC-SVC-01": assetImg("category/stores/personal_care_store.webp"),
   "ASC-SVC-02": assetImg("category/stores/repair_service_store.webp"),
   "ASC-SVC-03": assetImg("category/stores/tailoring.webp"),
@@ -61,17 +66,64 @@ export const ASC_STORE_IMAGES: Record<string, AssetImage> = {
   "ASC-SVC-07": assetImg("category/stores/travel_agency.webp"),
   "ASC-SVC-08": assetImg("category/stores/catering.webp"),
   "ASC-SVC-09": assetImg("category/stores/photography.webp"),
+  "ASC-SVC-10": assetImg("category/stores/diagnostic_lab.webp"),
+  "ASC-SVC-11": assetImg("category/stores/printing_xerox.webp"),
+  "ASC-SVC-12": assetImg("category/stores/books_store.webp"),
+  "ASC-SVC-13": assetImg("category/stores/books_store.webp"),
+  "ASC-SVC-14": assetImg("category/stores/repair_service_store.webp"),
   "ASC-SVC-15": assetImg("category/stores/vehicle.webp"),
+  "ASC-SVC-16": assetImg("category/stores/music_store.webp"),
+  "ASC-SVC-17": assetImg("category/stores/home_decor.webp"),
+  "ASC-SVC-18": assetImg("category/stores/printing_xerox.webp"),
+  "ASC-SVC-19": assetImg("category/stores/computer_store.webp"),
+  "ASC-SVC-20": assetImg("category/stores/hardware_store.webp"),
+  "ASC-SVC-21": assetImg("category/stores/catering.webp"),
+  "ASC-SVC-22": assetImg("category/stores/personal_care_store.webp"),
+  "ASC-SVC-23": assetImg("category/stores/pooja_items.webp"),
+  "ASC-SVC-24": assetImg("category/products/pet_shop.webp"),
   "ASC-SVC-25": assetImg("category/stores/paint_store.webp"),
+  "ASC-SVC-26": assetImg("category/stores/travel_agency.webp"),
+  "ASC-SVC-27": assetImg("category/products/recycle.webp"),
 
-  // ── Menu-based ──────────────────────────────────────────────
+  // ── Menu-based (11 types) ────────────────────────────────────
   "ASC-MNU-01": assetImg("category/stores/food_bev_store.webp"),
   "ASC-MNU-02": assetImg("category/stores/icecream_store.webp"),
   "ASC-MNU-03": assetImg("category/stores/bakery_sweets.webp"),
+  "ASC-MNU-04": assetImg("category/products/soft_drinks.webp"),
+  "ASC-MNU-05": assetImg("category/products/tea_coffee.webp"),
   "ASC-MNU-06": assetImg("category/stores/paan_shop.webp"),
   "ASC-MNU-07": assetImg("category/stores/others_stall.webp"),
   "ASC-MNU-08": assetImg("category/stores/others_stall.webp"),
+  "ASC-MNU-09": assetImg("category/stores/food_bev_store.webp"),
+  "ASC-MNU-10": assetImg("category/stores/catering.webp"),
   "ASC-MNU-11": assetImg("category/stores/catering.webp"),
+
+  // ── Factory-Direct (10 types) ────────────────────────────────
+  "ASC-FAC-FOOD": assetImg("category/products/packaged_food.webp"),
+  "ASC-FAC-BEV": assetImg("category/products/soft_drinks.webp"),
+  "ASC-FAC-DAIRY": assetImg("category/stores/dairy_booth.webp"),
+  "ASC-FAC-GAR": assetImg("category/stores/fashion_store.webp"),
+  "ASC-FAC-HOME": assetImg("category/stores/home_decor.webp"),
+  "ASC-FAC-PCARE": assetImg("category/stores/personal_care_store.webp"),
+  "ASC-FAC-FOOT": assetImg("category/stores/footwear_store.webp"),
+  "ASC-FAC-TOY": assetImg("category/stores/sports_toys.webp"),
+  "ASC-FAC-FURN": assetImg("category/stores/furniture_store.webp"),
+  "ASC-FAC-GEN": assetImg("category/stores/hardware_store.webp"),
+
+  // ── Wholesale (13 types) ─────────────────────────────────────
+  "ASC-WHL-FMCG": assetImg("category/stores/grocery_store.webp"),
+  "ASC-WHL-VEG": assetImg("category/products/veg_fruits.webp"),
+  "ASC-WHL-GRN": assetImg("category/products/ration.webp"),
+  "ASC-WHL-CNC": assetImg("category/stores/convenience_store.webp"),
+  "ASC-WHL-FAB": assetImg("category/products/ethnic.webp"),
+  "ASC-WHL-STA": assetImg("category/stores/books_store.webp"),
+  "ASC-WHL-PHA": assetImg("category/stores/pharmacy_store.webp"),
+  "ASC-WHL-ELE": assetImg("category/stores/electrical_store.webp"),
+  "ASC-WHL-HRD": assetImg("category/stores/hardware_store.webp"),
+  "ASC-WHL-GAR": assetImg("category/stores/fashion_store.webp"),
+  "ASC-WHL-UTN": assetImg("category/products/kitchen_app.webp"),
+  "ASC-WHL-MEA": assetImg("category/products/eggs_meat.webp"),
+  "ASC-WHL-DST": assetImg("category/stores/convenience_store.webp"),
 };
 
 export function ascStoreImage(code: string): AssetImage | null {

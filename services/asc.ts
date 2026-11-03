@@ -9,14 +9,18 @@
 // Own BE surface (/api/asc/*), same env resolution as services/apc.ts.
 // ============================================================
 
+import { effectiveOrigin } from "../lib/backendOverride";
+
 const API_MODE = process.env.EXPO_PUBLIC_API_MODE ?? "mock";
 const TOWER_IP = process.env.EXPO_PUBLIC_TOWER_IP ?? "10.153.78.94";
 
-export const ASC_BASE_URL =
+export const getAscBaseUrl = (): string =>
   process.env.EXPO_PUBLIC_ASC_API_URL ??
   (API_MODE === "prod"
     ? "https://api.apana.in/api/asc"
-    : `${(process.env.EXPO_PUBLIC_BE_BASE_URL ?? "").replace(/\/+$/, "") || `http://${TOWER_IP}:8000`}/api/asc`);
+    : `${effectiveOrigin() || (process.env.EXPO_PUBLIC_BE_BASE_URL ?? "").replace(/\/+$/, "") || `http://${TOWER_IP}:8000`}/api/asc`);
+
+export const ASC_BASE_URL = getAscBaseUrl();
 
 export interface AscClass {
   id: string;        // "inventory" | "service" | "menu" | "factory" | "wholesale"
@@ -41,7 +45,7 @@ export interface AscType {
 }
 
 async function getJson<T>(path: string): Promise<T> {
-  const res = await fetch(`${ASC_BASE_URL}${path}`);
+  const res = await fetch(`${getAscBaseUrl()}${path}`);
   if (!res.ok) throw new Error(`ASC ${path} -> ${res.status}`);
   return (await res.json()) as T;
 }
