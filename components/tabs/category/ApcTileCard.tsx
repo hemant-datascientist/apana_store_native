@@ -15,7 +15,7 @@ export interface ApcTile {
   key: string;    // APC code
   label: string;
   emoji: string | null;
-  imageUrl: string | null;
+  imageUrl: string | { uri: string } | null;
   color: string;  // tile background
 }
 
@@ -45,7 +45,11 @@ function ApcTileCard({ item, width, onPress }: ApcTileCardProps) {
 
         {item.imageUrl ? (
           <Image
-            source={{ uri: item.imageUrl }}
+            source={
+              typeof item.imageUrl === "string"
+                ? { uri: item.imageUrl }
+                : item.imageUrl
+            }
             style={StyleSheet.absoluteFill}
             contentFit="cover"
             transition={300}

@@ -150,3 +150,4 @@ export function getApcClassImage(codeOrSlug: string): AssetImage | null {
   const normalized = codeOrSlug.replace(/^APC-(?:[0-9]+-)?/, "").toUpperCase();
   return APC_CLASS_IMAGES[normalized] ?? null;
 }
+

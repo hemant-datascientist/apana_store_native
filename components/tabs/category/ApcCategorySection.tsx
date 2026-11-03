@@ -17,6 +17,7 @@ import { typography } from "../../../theme/typography";
 import ApcTileCard, { ApcTile } from "./ApcTileCard";
 import { useApcFamilies } from "../../../hooks/useApcFamilies";
 import { familyImage } from "../../../services/apc";
+import { getApcClassImage } from "../../../data/apcCategoryImages";
 import type { ApcBrowseGroup } from "../../../hooks/useApcBrowser";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -57,7 +58,7 @@ function ApcCategorySection({ group, accent, onPress }: ApcCategorySectionProps)
           key: c.code,
           label: c.name,
           emoji: c.icon_emoji,
-          imageUrl: null,
+          imageUrl: getApcClassImage(c.code)?.uri ?? null,
           color: TILE_COLORS[i % TILE_COLORS.length],
         }));
 
