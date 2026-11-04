@@ -20,11 +20,15 @@ import Constants from "expo-constants";
 // Lazy: a top-level import crashes
 // Expo Go, and on web it touches localStorage during server render.
 let Notifications: typeof import("expo-notifications") | null = null;
-if (Platform.OS !== "web") {
+// 🔴 EXPO GO CANNOT DO REMOTE PUSH (Android, SDK 53+): addPushTokenListener THROWS there, and a throw inside
+// a layout effect unmounts the whole app. Importing the module is fine; using it is not — so in Expo Go
+// push is switched off here and nothing below can reach it. A dev or release build is unaffected.
+const IN_EXPO_GO = Constants.executionEnvironment === "storeClient" || Constants.appOwnership === "expo";
+if (Platform.OS !== "web" && !IN_EXPO_GO) {
   try {
     Notifications = require("expo-notifications");
   } catch {
-    // Expo Go — push unavailable.
+    // Push unavailable in this build.
   }
 }
 
@@ -93,11 +97,17 @@ export function startPush(
   })();
 
   // Fires with the new DEVICE token; the Expo token is derived from it, so re-ask.
-  subs.push(N.addPushTokenListener(() => { void expoToken(N).then(send).catch(() => {}); }));
-  subs.push(N.addNotificationResponseReceivedListener((r) => {
-    onOpen((r.notification.request.content.data ?? {}) as Record<string, unknown>);
-  }));
-  return () => subs.forEach((s) => s.remove());
+  // Push must never be able to take the app down: a listener that cannot be added is a push that does
+  // not work, not a crash.
+  try {
+    subs.push(N.addPushTokenListener(() => { void expoToken(N).then(send).catch(() => {}); }));
+    subs.push(N.addNotificationResponseReceivedListener((r) => {
+      onOpen((r.notification.request.content.data ?? {}) as Record<string, unknown>);
+    }));
+  } catch (err) {
+    console.warn("[push] listeners not added:", (err as Error).message);
+  }
+  return () => subs.forEach((s) => { try { s.remove(); } catch { /* already gone */ } });
 }
 
 /** This phone's current token, for sign-out. null when push never registered. */
