@@ -330,6 +330,13 @@ export interface StoreFees {
   free?: boolean;
 }
 
+// Why a bulky basket's delivery costs more (backend 0167): the fee follows the vehicle it needs.
+const VEHICLE_NOTE: Record<string, string> = {
+  three_wheeler: "This order needs an auto or bigger, so delivery costs more.",
+  four_wheeler: "This order needs a car or bigger, so delivery costs more.",
+  goods: "This order needs a goods vehicle, so delivery costs more.",
+};
+
 /**
  * Fees for every shop in one fulfillment group at once — one checkout is one
  * basket, delivered by ONE rider on ONE trip, so the server splits a single
@@ -354,6 +361,7 @@ export async function fetchBasketFees(
   if (!res.ok) throw new Error(`Could not price this order (${res.status})`);
   const body = (await res.json()) as {
     delivery_note?: string | null;
+    required_vehicle?: string;
     sellers: { seller_id: string; delivery_fee_cents: number | null; platform_fee_cents: number; delivery_gst_cents?: number | null; platform_gst_cents?: number; delivery_block?: { message: string } | null; free_delivery_above_cents?: number | null }[];
   };
   return Object.fromEntries(body.sellers.map((s) => [s.seller_id, {
@@ -362,7 +370,7 @@ export async function fetchBasketFees(
     // An older backend sends no GST lines: 0, exactly what it charges.
     gst: s.delivery_gst_cents === null ? null : ((s.delivery_gst_cents ?? 0) + (s.platform_gst_cents ?? 0)) / 100,
     block: s.delivery_block?.message ?? null,
-    note: body.delivery_note ?? null,
+    note: body.delivery_note ?? VEHICLE_NOTE[body.required_vehicle ?? ""] ?? null,
     deliveryGst: s.delivery_gst_cents == null ? null : s.delivery_gst_cents / 100,
     freeAbove: s.free_delivery_above_cents == null ? null : s.free_delivery_above_cents / 100,
   }]));

@@ -16,5 +16,6 @@ export function applyDeliveryTerms(f: StoreFees, charged: number): StoreFees {
   const free = f.freeAbove == null ? null : paise(f.freeAbove);
   if (free == null || paise(charged) < free) return f;
   const dGst = f.deliveryGst ?? 0;
-  return { ...f, free: true, delivery: 0, gst: f.gst == null ? f.gst : Math.max(0, Math.round((f.gst - dGst) * 100) / 100) };
+  // note: null - "delivery costs more" is no reason to give on a delivery the shop is paying for.
+  return { ...f, free: true, note: null, delivery: 0, gst: f.gst == null ? f.gst : Math.max(0, Math.round((f.gst - dGst) * 100) / 100) };
 }
