@@ -11,6 +11,8 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CartStore } from "../data/cartData";
 import { fetchBasketFees, type StoreFees } from "../services/checkoutService";
+import { storeCharged } from "../lib/discount";
+import { applyDeliveryTerms } from "../lib/deliveryTerms";
 
 type Pin = { lat: number; lng: number } | null;
 
@@ -51,11 +53,18 @@ export function useCartFees(stores: CartStore[], pin: Pin) {
   }, [key]);
 
   return useMemo(() => {
-    const list = stores.map((s) => fees[s.id]);
+    // The shop's own delivery terms (0162) on this basket: a minimum order for delivery (becomes the
+    // same "delivery refused" message checkout already shows) and a delivery the shop pays for.
+    const termed: Record<string, StoreFees> = {};
+    for (const s of stores) {
+      const f = fees[s.id];
+      if (f) termed[s.id] = s.fulfillment === "pickup" ? f : applyDeliveryTerms(f, storeCharged(s), s.name);
+    }
+    const list = stores.map((s) => termed[s.id]);
     const known = ready && list.every((f) => f && f.delivery != null);
     return {
       ready,
-      feeOf: (storeId: string): StoreFees | undefined => fees[storeId],
+      feeOf: (storeId: string): StoreFees | undefined => termed[storeId],
       /** null until every store is priced. */
       deliveryTotal: known ? list.reduce((t, f) => t + (f!.delivery ?? 0), 0) : null,
       platformTotal: list.reduce((t, f) => t + (f?.platform ?? 0), 0),

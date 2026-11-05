@@ -48,6 +48,7 @@ import { useFollow }           from "../../hooks/useFollow";
 import { useStoreMute }        from "../../hooks/useNotificationPrefs";
 import StoreShareSheet         from "../../components/store/StoreShareSheet";
 
+import StoreDeliveryOffer from "../../components/store/StoreDeliveryOffer";
 import StoreHeroBanner        from "../../components/store/StoreHeroBanner";
 import StoreInfoHeader        from "../../components/store/StoreInfoHeader";
 import StoreActionButtons     from "../../components/store/StoreActionButtons";
@@ -289,6 +290,7 @@ export default function StoreDetailScreen() {
 
         {/* ── Store name, address, status ── */}
         <StoreInfoHeader store={store} openStatus={openStatus} />
+        {live.meta && <StoreDeliveryOffer freeAbove={live.meta.freeDeliveryAbove} minOrder={live.meta.minDeliveryOrder} />}
 
         {/* ── Admin banners aimed at this shop / its store type ── */}
         <LiveBanners placement="store" storeId={store.id} />

@@ -322,6 +322,13 @@ export interface StoreFees {
   block?: string | null;
   /** Why delivery costs more than usual right now (rider pay boost / busy); null = normal. */
   note?: string | null;
+  /** GST on the delivery fee alone (part of `gst`), needed to take a shop-paid delivery off both. */
+  deliveryGst?: number | null;
+  /** The shop's delivery terms (0162), in rupees; null = none. Applied by useCartFees. */
+  minDelivery?: number | null;
+  freeAbove?: number | null;
+  /** True when the shop pays this delivery: `delivery` and `gst` already exclude it. */
+  free?: boolean;
 }
 
 /**
@@ -348,7 +355,7 @@ export async function fetchBasketFees(
   if (!res.ok) throw new Error(`Could not price this order (${res.status})`);
   const body = (await res.json()) as {
     delivery_note?: string | null;
-    sellers: { seller_id: string; delivery_fee_cents: number | null; platform_fee_cents: number; delivery_gst_cents?: number | null; platform_gst_cents?: number; delivery_block?: { message: string } | null }[];
+    sellers: { seller_id: string; delivery_fee_cents: number | null; platform_fee_cents: number; delivery_gst_cents?: number | null; platform_gst_cents?: number; delivery_block?: { message: string } | null; min_delivery_order_cents?: number | null; free_delivery_above_cents?: number | null }[];
   };
   return Object.fromEntries(body.sellers.map((s) => [s.seller_id, {
     delivery: s.delivery_fee_cents == null ? null : s.delivery_fee_cents / 100,
@@ -357,6 +364,9 @@ export async function fetchBasketFees(
     gst: s.delivery_gst_cents === null ? null : ((s.delivery_gst_cents ?? 0) + (s.platform_gst_cents ?? 0)) / 100,
     block: s.delivery_block?.message ?? null,
     note: body.delivery_note ?? null,
+    deliveryGst: s.delivery_gst_cents == null ? null : s.delivery_gst_cents / 100,
+    minDelivery: s.min_delivery_order_cents == null ? null : s.min_delivery_order_cents / 100,
+    freeAbove: s.free_delivery_above_cents == null ? null : s.free_delivery_above_cents / 100,
   }]));
 }
 

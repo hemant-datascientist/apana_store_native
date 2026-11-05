@@ -538,6 +538,9 @@ export interface StoreMeta {
   gallery: string[];
   /** Weekly hours as the shop set them; null = never set (open when online). */
   businessHours: BusinessHours | null;
+  /** The shop's delivery terms (0162), ₹. freeDeliveryAbove: 0 = always free, null = customer pays. */
+  minDeliveryOrder: number | null;
+  freeDeliveryAbove: number | null;
 }
 interface WireStoreMeta {
   id: string;
@@ -562,6 +565,8 @@ interface WireStoreMeta {
   cover_url: string | null;
   gallery: string[] | null;
   business_hours?: BusinessHours | null;
+  min_delivery_order_cents?: number | null;
+  free_delivery_above_cents?: number | null;
 }
 
 // null when the id isn't an approved store (404) or in mock mode — the caller
@@ -595,6 +600,8 @@ export async function fetchStoreMeta(storeId: string): Promise<StoreMeta | null>
       coverUrl: resolveImage(w.cover_url ?? undefined),
       gallery: (w.gallery ?? []).map(resolveImage).filter((u): u is string => u != null),
       businessHours: w.business_hours ?? null,
+      minDeliveryOrder: w.min_delivery_order_cents == null ? null : w.min_delivery_order_cents / 100,
+      freeDeliveryAbove: w.free_delivery_above_cents == null ? null : w.free_delivery_above_cents / 100,
     };
   } catch {
     return null;
