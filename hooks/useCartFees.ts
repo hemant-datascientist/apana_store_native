@@ -58,7 +58,7 @@ export function useCartFees(stores: CartStore[], pin: Pin) {
     const termed: Record<string, StoreFees> = {};
     for (const s of stores) {
       const f = fees[s.id];
-      if (f) termed[s.id] = s.fulfillment === "pickup" ? f : applyDeliveryTerms(f, storeCharged(s), s.name);
+      if (f) termed[s.id] = s.fulfillment === "pickup" ? f : applyDeliveryTerms(f, storeCharged(s));
     }
     const list = stores.map((s) => termed[s.id]);
     const known = ready && list.every((f) => f && f.delivery != null);

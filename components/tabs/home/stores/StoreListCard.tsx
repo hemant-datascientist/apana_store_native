@@ -17,6 +17,7 @@ import { typography } from "../../../../theme/typography";
 import useTheme from "../../../../theme/useTheme";
 import { NearbyStore } from "../../../../data/nearbyStoresData";
 import { getStoreProfileImage } from "../../../../data/storeProfileImages";
+import StoreDeliveryOffer from "../../../store/StoreDeliveryOffer";
 
 interface StoreListCardProps {
   store:         NearbyStore;
@@ -106,6 +107,8 @@ export default function StoreListCard({ store, onPress, onDirection, onViewItems
               </View>
             ))}
           </View>
+
+          <StoreDeliveryOffer freeAbove={store.freeDeliveryAbove} compact />
 
           {/* Action buttons */}
           <View style={styles.actions}>

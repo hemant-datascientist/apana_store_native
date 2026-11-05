@@ -290,7 +290,7 @@ export default function StoreDetailScreen() {
 
         {/* ── Store name, address, status ── */}
         <StoreInfoHeader store={store} openStatus={openStatus} />
-        {live.meta && <StoreDeliveryOffer freeAbove={live.meta.freeDeliveryAbove} minOrder={live.meta.minDeliveryOrder} />}
+        {live.meta && <StoreDeliveryOffer freeAbove={live.meta.freeDeliveryAbove} />}
 
         {/* ── Admin banners aimed at this shop / its store type ── */}
         <LiveBanners placement="store" storeId={store.id} />

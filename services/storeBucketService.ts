@@ -52,6 +52,8 @@ export interface BucketStore {
   is_live: boolean;
   rating: number;
   review_count: number;
+  /** 0162 - the shop pays delivery from this basket (₹ cents; 0 = always); null/absent = customer pays. */
+  free_delivery_above_cents?: number | null;
   /** ISO timestamp the shop joined Apana — the only honest source for "new".
    *  The New Launches screen ran on hand-written launch dates before this. */
   joined_at: string;
@@ -82,6 +84,8 @@ export interface StoreCardData {
   bgColor: string;
   icon: string;
   city: string | null;
+  /** ₹ basket from which the shop pays delivery (0 = always); null = the customer pays. */
+  freeDeliveryAbove?: number | null;
   /** The shop pin. null when it never set one — directions must say so, not
    *  send someone to a defaulted city centre. */
   lat?: number;
@@ -115,6 +119,7 @@ export function toCardData(s: BucketStore): StoreCardData {
     bgColor: bg,
     icon: st?.icon ?? FALLBACK.icon,
     city: s.city,
+    freeDeliveryAbove: s.free_delivery_above_cents == null ? null : s.free_delivery_above_cents / 100,
     // Carried, not dropped: the server has always returned these, and the card
     // discarding them is why every feed Directions button said "coming soon".
     lat: s.lat ?? undefined,
