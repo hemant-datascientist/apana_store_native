@@ -98,7 +98,7 @@ export default function RootLayout() {
             <Stack.Screen name="(checkout)" />
             {/* Order history */}
             <Stack.Screen name="(orders)"   />
-            {/* Account management — address-book, payment-methods, add-payment, favourite */}
+            {/* Account management — address-book, favourite */}
             <Stack.Screen name="(account)"  />
             {/* Discovery — search-results, product-detail, product-finder, scanner, brands, offer-zone, new-launchers */}
             <Stack.Screen name="(discover)" />

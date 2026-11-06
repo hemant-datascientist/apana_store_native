@@ -34,7 +34,7 @@ import useTheme              from "../../theme/useTheme";
 import { typography }        from "../../theme/typography";
 import { FulfillmentMode, FULFILLMENT_CONFIG } from "../../data/cartData";
 import { CHECKOUT_STEPS }    from "../../data/checkoutData";
-import { MOCK_PAYMENT_METHODS, PaymentMethod } from "../../data/paymentData";
+import { PAYMENT_METHODS, PaymentMethod } from "../../data/paymentData";
 import { useCart }           from "../../context/CartContext";
 import { useAuth }           from "../../context/AuthContext";
 import {
@@ -54,9 +54,9 @@ import { offerStockShort } from "../../lib/stockShort";
 // an unsupported option.
 function getEligibleMethods(mode: FulfillmentMode) {
   if (mode === "pickup" || mode === "ride") {
-    return MOCK_PAYMENT_METHODS.filter(m => m.type !== "cod");
+    return PAYMENT_METHODS.filter(m => m.type !== "cod");
   }
-  return MOCK_PAYMENT_METHODS;
+  return PAYMENT_METHODS;
 }
 
 const ACTIVE_STEP = "payment";
@@ -105,8 +105,7 @@ export default function CheckoutPaymentScreen() {
 
   // ── Payment method state ──────────────────────────────────────
   const eligibleMethods = useMemo(() => getEligibleMethods(mode), [mode]);
-  const defaultMethod   = eligibleMethods.find(m => m.isDefault) ?? eligibleMethods[0];
-  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>(defaultMethod);
+  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>(eligibleMethods[0]);
   const isCod = selectedPayment.type === "cod";
   const [placing,  setPlacing]  = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
@@ -121,14 +120,14 @@ export default function CheckoutPaymentScreen() {
   // ── Confirm payment → place order → navigate ─────────────────
   // placeOrder() → POST /customer/orders
   //
-  // `overrideMethodId` lets the "Skip — Pay at Store" CTA bypass the
-  // selected radio method. We send a sentinel `"skip"` so the backend
-  // can mark the order as unpaid (customer settles directly with the
-  // store/rider). Only allowed for pickup + ride.
-  async function handlePay(overrideMethodId?: string) {
+  // `payAtShop` is the "Skip — Pay at Store" CTA (pickup + ride only): the
+  // customer settles in cash on arrival, so it goes to the server as "cod"
+  // and never opens the gateway, whatever method is selected above it.
+  async function handlePay(payAtShop = false) {
     setPayError(null);
     setPlacing(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const paysLater = payAtShop || selectedPayment.type === "cod";
 
     try {
       const storeOrders: StoreOrderInput[] = cart.map(store => ({
@@ -148,7 +147,6 @@ export default function CheckoutPaymentScreen() {
       const req: PlaceOrderRequest = {
         mode,
         addressId:       addrId || null,
-        paymentMethodId: overrideMethodId ?? selectedPayment.id,
         storeOrders,
         promoCode,
         note,
@@ -156,7 +154,7 @@ export default function CheckoutPaymentScreen() {
         customerId: user?.phone ?? null,
         // Cash settles on delivery; every other method is an online payment the
         // server will not treat as paid until a signature verifies.
-        paymentMode: selectedPayment.type === "cod" ? "cod" : "online",
+        paymentMode: paysLater ? "cod" : "online",
       };
 
       const res = await placeOrder(req);
@@ -169,7 +167,7 @@ export default function CheckoutPaymentScreen() {
       // The order exists but is UNPAID. Collect the money before calling this
       // done — navigating first would show the customer a confirmed order the
       // shop has not been paid for.
-      if (selectedPayment.type !== "cod") {
+      if (!paysLater) {
         try {
           // MUST be the real backend id — the payment module looks the order
           // up by primary key (WHERE id = ... AND customer_id = ...), and
@@ -405,7 +403,7 @@ export default function CheckoutPaymentScreen() {
                   styles.skipBtn,
                   { borderColor: "rgba(255,255,255,0.55)", opacity: placing ? 0.6 : 1 },
                 ]}
-                onPress={() => handlePay("skip")}
+                onPress={() => handlePay(true)}
                 disabled={placing}
                 activeOpacity={0.85}
               >

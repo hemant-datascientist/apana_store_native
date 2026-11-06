@@ -99,7 +99,6 @@ export const SETTING_GROUPS: SettingGroup[] = [
     items: [
       { key: "edit_profile",  label: "Edit Profile",      icon: "person-outline"          },
       { key: "addresses",     label: "Saved Addresses",   icon: "location-outline"        },
-      { key: "payments",      label: "Payment Methods",   icon: "card-outline"            },
       { key: "orders_hist",   label: "Order History",     icon: "receipt-outline"         },
     ],
   },

@@ -2,7 +2,7 @@
 // ACCOUNT LAYOUT — Apana Store (Customer App)
 //
 // Route group for account-management screens:
-//   address-book, payment-methods, add-payment, favourite
+//   address-book, favourite
 //
 // All screens manage their own headers.
 // ============================================================
@@ -18,8 +18,6 @@ export default function AccountLayout() {
           The route stays registered only so an old deep link does not crash. */}
       <Stack.Screen name="add-address"     />
       <Stack.Screen name="pin-address"     />
-      <Stack.Screen name="payment-methods" />
-      <Stack.Screen name="add-payment"     />
       <Stack.Screen name="favourite"       />
       <Stack.Screen name="my-bookings"     />
     </Stack>

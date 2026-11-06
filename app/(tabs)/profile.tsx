@@ -105,7 +105,6 @@ export default function ProfileScreen() {
     if (key === "rate")         { router.push("/rate-us");             return; }
     if (key === "help")         { router.push("/help-support");        return; }
     if (key === "orders_hist") { router.push("/order-history");       return; }
-    if (key === "payments")    { router.push("/payment-methods");     return; }
     if (key === "connect")     { router.push("/connect");             return; }
     Alert.alert(key, `"${key}" is not built yet.`);
   }

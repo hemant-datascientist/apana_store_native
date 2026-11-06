@@ -59,7 +59,6 @@ export interface StoreOrderResult {
 export interface PlaceOrderRequest {
   mode:            FulfillmentMode;
   addressId:       string | null;    // null for pickup
-  paymentMethodId: string;
   storeOrders:     StoreOrderInput[];
   promoCode:       string | null;
   note:            string;
