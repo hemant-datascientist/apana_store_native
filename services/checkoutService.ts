@@ -325,6 +325,8 @@ export interface StoreFees {
   deliveryGst?: number | null;
   /** The shop's free-delivery amount (0162), in rupees; 0 = always, null = the customer pays. Applied by useCartFees. */
   freeAbove?: number | null;
+  /** False while the shop is being verified: cash and pickup only. */
+  onlineAllowed: boolean;
   /** True when the shop pays this delivery: `delivery` and `gst` already exclude it. */
   free?: boolean;
 }
@@ -361,7 +363,7 @@ export async function fetchBasketFees(
   const body = (await res.json()) as {
     delivery_note?: string | null;
     required_vehicle?: string;
-    sellers: { seller_id: string; delivery_fee_cents: number | null; platform_fee_cents: number; delivery_gst_cents?: number | null; platform_gst_cents?: number; delivery_block?: { message: string } | null; free_delivery_above_cents?: number | null }[];
+    sellers: { online_allowed?: boolean; seller_id: string; delivery_fee_cents: number | null; platform_fee_cents: number; delivery_gst_cents?: number | null; platform_gst_cents?: number; delivery_block?: { message: string } | null; free_delivery_above_cents?: number | null }[];
   };
   return Object.fromEntries(body.sellers.map((s) => [s.seller_id, {
     delivery: s.delivery_fee_cents == null ? null : s.delivery_fee_cents / 100,
@@ -372,6 +374,7 @@ export async function fetchBasketFees(
     note: body.delivery_note ?? VEHICLE_NOTE[body.required_vehicle ?? ""] ?? null,
     deliveryGst: s.delivery_gst_cents == null ? null : s.delivery_gst_cents / 100,
     freeAbove: s.free_delivery_above_cents == null ? null : s.free_delivery_above_cents / 100,
+    onlineAllowed: s.online_allowed ?? true,
   }]));
 }
 

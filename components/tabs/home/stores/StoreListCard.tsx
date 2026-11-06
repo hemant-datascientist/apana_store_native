@@ -18,6 +18,7 @@ import useTheme from "../../../../theme/useTheme";
 import { NearbyStore } from "../../../../data/nearbyStoresData";
 import { getStoreProfileImage } from "../../../../data/storeProfileImages";
 import StoreDeliveryOffer from "../../../store/StoreDeliveryOffer";
+import StoreVerificationPending from "../../../store/StoreVerificationPending";
 
 interface StoreListCardProps {
   store:         NearbyStore;
@@ -109,6 +110,7 @@ export default function StoreListCard({ store, onPress, onDirection, onViewItems
           </View>
 
           <StoreDeliveryOffer freeAbove={store.freeDeliveryAbove} compact />
+          <StoreVerificationPending pending={store.verificationPending} compact />
 
           {/* Action buttons */}
           <View style={styles.actions}>

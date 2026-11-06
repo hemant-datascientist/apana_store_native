@@ -19,7 +19,7 @@
 // Backend: POST /customer/orders  →  PlaceOrderResponse
 // ============================================================
 
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, StatusBar, ActivityIndicator, Alert,
@@ -34,11 +34,11 @@ import useTheme              from "../../theme/useTheme";
 import { typography }        from "../../theme/typography";
 import { FulfillmentMode, FULFILLMENT_CONFIG } from "../../data/cartData";
 import { CHECKOUT_STEPS }    from "../../data/checkoutData";
-import { PAYMENT_METHODS, PaymentMethod } from "../../data/paymentData";
+import { PAY_AT_SHOP, PAYMENT_METHODS } from "../../data/paymentData";
 import { useCart }           from "../../context/CartContext";
 import { useAuth }           from "../../context/AuthContext";
 import {
-  placeOrder, PlaceOrderRequest, StoreOrderInput, StoreOrderResult, StockShortError,
+  fetchBasketFees, placeOrder, PlaceOrderRequest, StoreOrderInput, StoreOrderResult, StockShortError,
 } from "../../services/checkoutService";
 import { payForOrder } from "../../services/paymentsService";
 import { useRazorpay } from "../../hooks/useRazorpay";
@@ -52,11 +52,13 @@ import { offerStockShort } from "../../lib/stockShort";
 // directly via a non-COD method or chooses "Pay at store" prepaid
 // alternative — we hide COD entirely so the radio list can't surface
 // an unsupported option.
-function getEligibleMethods(mode: FulfillmentMode) {
+//
+// A basket with a shop still being verified is cash only (founder, 2026-11-06).
+function getEligibleMethods(mode: FulfillmentMode, onlineAllowed: boolean) {
   if (mode === "pickup" || mode === "ride") {
-    return PAYMENT_METHODS.filter(m => m.type !== "cod");
+    return onlineAllowed ? PAYMENT_METHODS.filter(m => m.type !== "cod") : [PAY_AT_SHOP];
   }
-  return PAYMENT_METHODS;
+  return onlineAllowed ? PAYMENT_METHODS : PAYMENT_METHODS.filter(m => m.type === "cod");
 }
 
 const ACTIVE_STEP = "payment";
@@ -104,8 +106,20 @@ export default function CheckoutPaymentScreen() {
   );
 
   // ── Payment method state ──────────────────────────────────────
-  const eligibleMethods = useMemo(() => getEligibleMethods(mode), [mode]);
-  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>(eligibleMethods[0]);
+  const [onlineAllowed, setOnlineAllowed] = useState(true);
+  useEffect(() => {
+    const ids = cart.flatMap(s => s.items.map(i => i.productId)).filter((id): id is string => !!id);
+    if (ids.length === 0) return;
+    let live = true;
+    // If this fails the option stays on screen and the server still refuses it, with its reason.
+    fetchBasketFees(ids, mode, null)
+      .then(fees => { if (live) setOnlineAllowed(Object.values(fees).every(f => f.onlineAllowed)); })
+      .catch(() => {});
+    return () => { live = false; };
+  }, [cart, mode]);
+  const eligibleMethods = useMemo(() => getEligibleMethods(mode, onlineAllowed), [mode, onlineAllowed]);
+  const [selectedId, setSelectedId] = useState(eligibleMethods[0].id);
+  const selectedPayment = eligibleMethods.find(m => m.id === selectedId) ?? eligibleMethods[0];
   const isCod = selectedPayment.type === "cod";
   const [placing,  setPlacing]  = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
@@ -338,11 +352,21 @@ export default function CheckoutPaymentScreen() {
         <CheckoutPaymentSelector
           methods={eligibleMethods}
           selectedId={selectedPayment.id}
-          onSelect={setSelectedPayment}
+          onSelect={m => setSelectedId(m.id)}
         />
 
+        {/* ── Cash only while a shop is being verified ── */}
+        {!onlineAllowed && (
+          <View style={[styles.codStrip, { backgroundColor: colors.warningLight, borderColor: colors.warning + "70" }]}>
+            <Ionicons name="time-outline" size={18} color={colors.warning} />
+            <Text style={[styles.codSub, { flex: 1, color: colors.warning, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+              A shop in this order is still being verified, so it takes cash for now.
+            </Text>
+          </View>
+        )}
+
         {/* ── COD info strip — warning tokens so amber surface reads cleanly in dark ── */}
-        {isCod && (
+        {isCod && mode === "delivery" && (
           <View style={[styles.codStrip, { backgroundColor: colors.warningLight, borderColor: colors.warning + "70" }]}>
             <Ionicons name="cash-outline" size={18} color={colors.warning} />
             <View style={{ flex: 1 }}>
@@ -390,14 +414,14 @@ export default function CheckoutPaymentScreen() {
               via {selectedPayment.label}
             </Text>
             <Text style={[styles.ctaAmount, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg }]}>
-              {isCod ? "₹" + total.toFixed(2) + " COD" : "Pay ₹" + total.toFixed(2)}
+              {isCod ? "₹" + total.toFixed(2) + (mode === "delivery" ? " COD" : "") : "Pay ₹" + total.toFixed(2)}
             </Text>
           </View>
 
           <View style={styles.ctaBtnRow}>
             {/* Skip — pickup + ride only. Bypasses prepaid; customer pays
                  store/rider directly on arrival. */}
-            {(mode === "pickup" || mode === "ride") && (
+            {(mode === "pickup" || mode === "ride") && onlineAllowed && (
               <TouchableOpacity
                 style={[
                   styles.skipBtn,
@@ -426,7 +450,7 @@ export default function CheckoutPaymentScreen() {
                 : <Ionicons name={isCod ? "cash-outline" : "lock-closed-outline"} size={18} color="#fff" />
               }
               <Text style={[styles.ctaBtnText, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-                {placing ? "Placing…" : isCod ? "Place (COD)" : "Pay Now"}
+                {placing ? "Placing…" : isCod ? (mode === "delivery" ? "Place (COD)" : "Place Order") : "Pay Now"}
               </Text>
             </TouchableOpacity>
           </View>

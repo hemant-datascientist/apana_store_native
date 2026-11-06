@@ -51,6 +51,7 @@ import StoreShareSheet         from "../../components/store/StoreShareSheet";
 import StoreDeliveryOffer from "../../components/store/StoreDeliveryOffer";
 import StoreHeroBanner        from "../../components/store/StoreHeroBanner";
 import StoreInfoHeader        from "../../components/store/StoreInfoHeader";
+import StoreVerificationPending from "../../components/store/StoreVerificationPending";
 import StoreActionButtons     from "../../components/store/StoreActionButtons";
 import StoreProductSearch     from "../../components/store/StoreProductSearch";
 import StoreHoursCard         from "../../components/store/StoreHoursCard";
@@ -291,6 +292,7 @@ export default function StoreDetailScreen() {
         {/* ── Store name, address, status ── */}
         <StoreInfoHeader store={store} openStatus={openStatus} />
         {live.meta && <StoreDeliveryOffer freeAbove={live.meta.freeDeliveryAbove} />}
+        <StoreVerificationPending pending={live.meta?.verificationPending} />
 
         {/* ── Admin banners aimed at this shop / its store type ── */}
         <LiveBanners placement="store" storeId={store.id} />

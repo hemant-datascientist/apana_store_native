@@ -32,3 +32,12 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     icon:   "cash-outline",
   },
 ];
+
+// Pickup at a shop still being verified: cash is the only way, and there is no delivery.
+export const PAY_AT_SHOP: PaymentMethod = {
+  id:     "shop",
+  type:   "cod",
+  label:  "Pay at the shop",
+  detail: "Pay in cash when you collect",
+  icon:   "cash-outline",
+};

@@ -43,6 +43,7 @@ export interface NearbyStore {
   // Optional so other feeds (e.g. wholesale) can reuse StoreListCard
   // without coords; the nearby list always provides them for sorting.
   city?:      string;     // store city (banner bottom-left)
+  verificationPending?: boolean;
   freeDeliveryAbove?: number | null; // ₹ basket from which the shop pays delivery (0 = always); null = customer pays
   lat?:       number;
   lng?:       number;
