@@ -87,6 +87,10 @@ export default function LiveProductDetailScreen() {
   // A variant listing with nothing resolved yet is not orderable — the
   // customer has an axis left to pick, or picked a combination nobody stocks.
   const needsChoice = variants.length > 0 && chosen == null;
+  // 0176 — the hero follows the chosen colour once one is picked; a colour the
+  // shop gave no photos keeps the product's own.
+  const colourValue = detail?.colourPhotos ? selection[detail.colourPhotos.axis] : undefined;
+  const heroImages = (colourValue && detail?.colourPhotos?.byValue[colourValue]) || p?.images || [];
 
   const rowId = p != null ? cartRowId(p.id, chosen?.id ?? null) : "";
   const inCartQty =
@@ -168,7 +172,7 @@ export default function LiveProductDetailScreen() {
         variantLabel: chosen != null ? Object.values(chosen.axes).join(" / ") : null,
         // The shop's ration, when lower than the shelf (sizes included).
         maxQty: p.maxPerOrder != null ? Math.min(shownStock, p.maxPerOrder) : shownStock,
-        image: p.image,
+        image: heroImages[0] ?? p.image,
         name: p.name,
         unit: p.unit,
         price: shownPrice,
@@ -210,7 +214,8 @@ export default function LiveProductDetailScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <DetailHero images={p.images} isIndia={isIndia} />
+          {/* key resets the carousel to photo 1 when the colour changes */}
+          <DetailHero key={heroImages.join("|")} images={heroImages} isIndia={isIndia} />
           <DetailHeader name={p.name} brand={p.brand} verified={detail?.enrichment?.verified ?? false} gtin={detail?.enrichment?.gtin ?? null} />
 
           {/* ── Price row — follows the selected SKU ── */}

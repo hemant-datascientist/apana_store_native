@@ -146,8 +146,18 @@ export interface StockingStore {
   unit: string;
   isCurrent: boolean;
 }
+/**
+ * 0176 — photos per colour: pick Red, see the red one. Detail-only on purpose:
+ * cards carry no colour photos (cardView CARD_FIELDS), so toLiveProduct must
+ * not read them. A value with no photos falls back to the product's own.
+ */
+export interface ColourPhotos {
+  axis: string;
+  byValue: Record<string, string[]>;
+}
 export interface ProductDetail {
   product: LiveProduct;
+  colourPhotos: ColourPhotos | null;
   enrichment: ProductEnrichment | null;
   stores: StockingStore[];
   rating: number;       // real AVG; 0 = no ratings yet (never a fake star)
@@ -262,7 +272,7 @@ interface WireStockingStore {
   is_current: boolean;
 }
 interface WireDetail {
-  product: WireProduct;
+  product: WireProduct & { visual_axis?: string | null; axis_images?: Record<string, string[]> };
   enrichment: WireEnrichment | null;
   stores: WireStockingStore[];
   rating: number;
@@ -610,6 +620,19 @@ export async function fetchStoreMeta(storeId: string): Promise<StoreMeta | null>
 
 // Full SmartConsumer-style detail: product + GTIN enrichment + stocking stores.
 // null when the id doesn't resolve (404) or in mock mode.
+function toColourPhotos(
+  axis: string | null | undefined,
+  images: Record<string, string[]> | undefined,
+): ColourPhotos | null {
+  if (!axis || !images) return null;
+  const byValue: Record<string, string[]> = {};
+  for (const [value, refs] of Object.entries(images)) {
+    const resolved = (refs ?? []).map(resolveImage).filter((u): u is string => u != null);
+    if (resolved.length > 0) byValue[value] = resolved;
+  }
+  return Object.keys(byValue).length > 0 ? { axis, byValue } : null;
+}
+
 export async function fetchProductDetail(id: string): Promise<ProductDetail | null> {
   if (!IS_LIVE) return null;
   try {
@@ -618,6 +641,7 @@ export async function fetchProductDetail(id: string): Promise<ProductDetail | nu
     );
     return {
       product: toLiveProduct(body.product),
+      colourPhotos: toColourPhotos(body.product.visual_axis, body.product.axis_images),
       enrichment: body.enrichment ? toEnrichment(body.enrichment) : null,
       stores: (body.stores ?? []).map(toStockingStore),
       rating: body.rating ?? 0,
