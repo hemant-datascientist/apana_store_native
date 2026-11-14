@@ -49,6 +49,21 @@ export function buildTabs(detail: ProductDetail): TabDef[] {
     tabs.push({ key: "details", label: "Details", icon: "document-text-outline", kind: "kv", rows: details });
   }
 
+  // 2b · A6 — what the SHOP typed (fabric, wash care...). Server-labelled and
+  // server-filtered; most useful on own-label goods, which have no GTIN scrape.
+  if (detail.specs.details.length > 0) {
+    tabs.push({
+      key: "specs", label: "Specifications", icon: "list-outline", kind: "kv",
+      rows: detail.specs.details.map((r) => ({ k: r.label, v: r.value })),
+    });
+  }
+  if (detail.specs.legal.length > 0) {
+    tabs.push({
+      key: "legal", label: "Legal info", icon: "shield-checkmark-outline", kind: "kv",
+      rows: detail.specs.legal.map((r) => ({ k: r.label, v: r.value })),
+    });
+  }
+
   // 3 · MRP.
   const mrp = enrichment?.mrp ?? product.mrp ?? null;
   if (mrp != null) {

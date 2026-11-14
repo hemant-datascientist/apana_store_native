@@ -155,11 +155,14 @@ export interface ColourPhotos {
   axis: string;
   byValue: Record<string, string[]>;
 }
+export interface SpecRow { label: string; value: string }
 export interface ProductDetail {
   product: LiveProduct;
   colourPhotos: ColourPhotos | null;
   /** 0177 — whose name is on the label; null = the shop did not say. */
   labelOwner: "brand" | "own" | "made_here" | "none" | null;
+  /** A6 — the shop's typed details, labelled by the server. Empty when none. */
+  specs: { details: SpecRow[]; legal: SpecRow[] };
   enrichment: ProductEnrichment | null;
   stores: StockingStore[];
   rating: number;       // real AVG; 0 = no ratings yet (never a fake star)
@@ -283,6 +286,8 @@ interface WireDetail {
   stores: WireStockingStore[];
   rating: number;
   review_count: number;
+  /** Absent on a server older than A6. */
+  specs?: { details?: SpecRow[]; legal?: SpecRow[] };
 }
 interface WireReview {
   id: string;
@@ -649,6 +654,7 @@ export async function fetchProductDetail(id: string): Promise<ProductDetail | nu
       product: toLiveProduct(body.product),
       colourPhotos: toColourPhotos(body.product.visual_axis, body.product.axis_images),
       labelOwner: body.product.label_owner ?? null,
+      specs: { details: body.specs?.details ?? [], legal: body.specs?.legal ?? [] },
       enrichment: body.enrichment ? toEnrichment(body.enrichment) : null,
       stores: (body.stores ?? []).map(toStockingStore),
       rating: body.rating ?? 0,
