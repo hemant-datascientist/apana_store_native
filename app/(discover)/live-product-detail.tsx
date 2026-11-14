@@ -217,6 +217,13 @@ export default function LiveProductDetailScreen() {
           {/* key resets the carousel to photo 1 when the colour changes */}
           <DetailHero key={heroImages.join("|")} images={heroImages} isIndia={isIndia} />
           <DetailHeader name={p.name} brand={p.brand} verified={detail?.enrichment?.verified ?? false} gtin={detail?.enrichment?.gtin ?? null} />
+          {/* 0177 — the shop's own label is the shop's word, not a brand's. Only
+              said when the shop said it; nothing is shown for "brand"/"none"/unanswered. */}
+          {detail?.labelOwner === "own" || detail?.labelOwner === "made_here" ? (
+            <Text style={[styles.labelLine, { color: colors.subText, fontFamily: typography.fontFamily.medium }]}>
+              {detail.labelOwner === "own" ? `${p.store.name}'s own label` : `Made by ${p.store.name}`}
+            </Text>
+          ) : null}
 
           {/* ── Price row — follows the selected SKU ── */}
           <View style={styles.priceRow}>
@@ -352,6 +359,7 @@ const styles = StyleSheet.create({
   vegMark: { width: 16, height: 16, borderRadius: 3, borderWidth: 1.5, alignItems: "center", justifyContent: "center", alignSelf: "center" },
   vegDot: { width: 7, height: 7, borderRadius: 4 },
   availLine: { fontSize: typography.size.sm, marginTop: 8 },
+  labelLine: { fontSize: typography.size.sm, marginTop: 4 },
   ratingChip: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 8 },
   ratingChipTxt: { fontSize: typography.size.sm },
   ratingChipSub: { fontSize: typography.size.xs },

@@ -158,6 +158,8 @@ export interface ColourPhotos {
 export interface ProductDetail {
   product: LiveProduct;
   colourPhotos: ColourPhotos | null;
+  /** 0177 — whose name is on the label; null = the shop did not say. */
+  labelOwner: "brand" | "own" | "made_here" | "none" | null;
   enrichment: ProductEnrichment | null;
   stores: StockingStore[];
   rating: number;       // real AVG; 0 = no ratings yet (never a fake star)
@@ -272,7 +274,11 @@ interface WireStockingStore {
   is_current: boolean;
 }
 interface WireDetail {
-  product: WireProduct & { visual_axis?: string | null; axis_images?: Record<string, string[]> };
+  product: WireProduct & {
+    visual_axis?: string | null;
+    axis_images?: Record<string, string[]>;
+    label_owner?: "brand" | "own" | "made_here" | "none" | null;
+  };
   enrichment: WireEnrichment | null;
   stores: WireStockingStore[];
   rating: number;
@@ -642,6 +648,7 @@ export async function fetchProductDetail(id: string): Promise<ProductDetail | nu
     return {
       product: toLiveProduct(body.product),
       colourPhotos: toColourPhotos(body.product.visual_axis, body.product.axis_images),
+      labelOwner: body.product.label_owner ?? null,
       enrichment: body.enrichment ? toEnrichment(body.enrichment) : null,
       stores: (body.stores ?? []).map(toStockingStore),
       rating: body.rating ?? 0,
