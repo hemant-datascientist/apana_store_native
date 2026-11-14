@@ -33,6 +33,11 @@ import useTheme from "../../theme/useTheme";
 import { parseStoreId } from "../../lib/storeShare";
 import { playSound } from "../../lib/sound";
 import { goBackOr } from "../../lib/goBack";
+import { useLocation } from "../../context/LocationContext";
+import { resolveScannedCode, type ScanResolve } from "../../services/scanResolveService";
+import ScanLookup from "../../components/scanner/ScanLookup";
+
+type Lookup = { status: "loading" } | { status: "error" } | { status: "done"; data: ScanResolve };
 
 // ── Scan zone dimensions ──────────────────────────────────────
 const { width: SW, height: SH } = Dimensions.get("window");
@@ -60,6 +65,9 @@ export default function ScannerScreen() {
   const [torch,   setTorch]   = useState(false);
   const [scanned, setScanned] = useState(false);
   const [result,  setResult]  = useState<BarcodeScanningResult | null>(null);
+  const [lookup,  setLookup]  = useState<Lookup | null>(null);
+  const lookupSeq = useRef(0);
+  const { deviceCoords } = useLocation();
 
   // ── Scan line animation ──────────────────────────────────────
   const scanAnim  = useRef(new Animated.Value(0)).current;
@@ -92,6 +100,20 @@ export default function ScannerScreen() {
   // If the scanned code is an Apana store link, offer "Open Store" (§30).
   const scannedStoreId = result ? parseStoreId(result.data) : null;
 
+  // Ask the server what the code is. The latest scan wins, so a slow answer for
+  // an earlier code never replaces the current one.
+  const runLookup = useCallback((code: string) => {
+    const seq = ++lookupSeq.current;
+    setLookup({ status: "loading" });
+    resolveScannedCode(code, deviceCoords)
+      .then((data) => { if (seq === lookupSeq.current) setLookup({ status: "done", data }); })
+      .catch(() => { if (seq === lookupSeq.current) setLookup({ status: "error" }); });
+  }, [deviceCoords]);
+
+  useEffect(() => {
+    if (result && !parseStoreId(result.data)) runLookup(result.data);
+  }, [result, runLookup]);
+
   // ── Handle scanned barcode ───────────────────────────────────
   const handleBarCodeScanned = useCallback((data: BarcodeScanningResult) => {
     if (scanned) return;
@@ -112,10 +134,15 @@ export default function ScannerScreen() {
     }).start();
   }, [scanned, slideAnim]);
 
+  // Search by the product's real name — the raw digits match nothing in search.
+  const foundName = lookup?.status === "done" ? lookup.data.product?.name ?? null : null;
+
   // ── Scan again ───────────────────────────────────────────────
   function handleScanAgain() {
     setScanned(false);
     setResult(null);
+    setLookup(null);
+    lookupSeq.current++;
     slideAnim.setValue(300);
   }
 
@@ -340,6 +367,14 @@ export default function ScannerScreen() {
             </View>
           </View>
 
+          {lookup && (
+            <ScanLookup
+              state={lookup}
+              onRetry={() => result && runLookup(result.data)}
+              onOpenStore={(id) => router.push(`/store-detail?id=${id}`)}
+            />
+          )}
+
           {/* Actions */}
           <View style={styles.resultActions}>
             {scannedStoreId ? (
@@ -355,11 +390,11 @@ export default function ScannerScreen() {
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
-                style={[styles.resultBtn, styles.resultBtnFill, { backgroundColor: colors.primary }]}
+                style={[styles.resultBtn, styles.resultBtnFill, { backgroundColor: colors.primary, opacity: foundName ? 1 : 0.45 }]}
                 activeOpacity={0.85}
+                disabled={!foundName}
                 onPress={() => {
-                  // Navigate to product search with scanned value
-                  goBackOr();
+                  if (foundName) router.push(`/search-results?q=${encodeURIComponent(foundName)}`);
                 }}
               >
                 <Ionicons name="search-outline" size={16} color="#fff" />
