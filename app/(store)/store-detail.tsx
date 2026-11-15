@@ -119,6 +119,10 @@ export default function StoreDetailScreen() {
         lat: live.meta.lat ?? base.lat,
         lng: live.meta.lng ?? base.lng,
         categories: live.categories,
+        // The app's own colour and a plain shop glyph — never the demo store's
+        // hero colour and icon, which every real shop used to borrow.
+        heroBg: colors.primary,
+        icon: "storefront-outline",
       }
     : base;
 
