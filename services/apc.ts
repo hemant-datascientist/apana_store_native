@@ -194,6 +194,12 @@ export async function getVarieties(familyCode: string): Promise<ApcVariety[]> {
   ).items;
 }
 
+/** 0192 — one kind (Mango > Alphonso) by its code. */
+export interface ApcKind { code: string; variety_code: string; name: string; name_hi: string | null; image_url: string | null; numeric_code: string | null }
+export async function getKind(code: string): Promise<ApcKind> {
+  return getJson<ApcKind>(`/kinds/${encodeURIComponent(code)}`);
+}
+
 // Family tile art -> absolute URL (BE serves these relative, same as nodeImage).
 export function familyImage(url: string | null | undefined): string | null {
   if (!url) return null;

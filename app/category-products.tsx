@@ -25,9 +25,10 @@ import { cartRowId, useCart } from "../context/CartContext";
 import { storeTint } from "../lib/storeTint";
 import { getClasses, getFamilies, familyImage } from "../services/apc";
 import {
-  fetchApcProducts, ApcFamilyFacet, LiveProduct, orderCeiling, recordPromotedTap,
+  fetchApcProducts, ApcFamilyFacet, ApcKindFacet, LiveProduct, orderCeiling, recordPromotedTap,
 } from "../services/liveCatalogService";
 import ApcFamilyRail from "../components/category/ApcFamilyRail";
+import KindChips from "../components/category/KindChips";
 import ApcGridCard from "../components/category/ApcGridCard";
 import useViewerPoint from "../hooks/useViewerPoint";
 
@@ -62,7 +63,11 @@ export default function CategoryProducts() {
   const [title, setTitle] = useState(params.title ?? "");
   const [products, setProducts] = useState<LiveProduct[]>([]);
   const [families, setFamilies] = useState<ApcFamilyFacet[]>([]);
-  const [family, setFamily] = useState<string | null>(initialFamily);
+  const [family, setFamilyState] = useState<string | null>(initialFamily);
+  // 0192 — kinds with live products (Mango > Alphonso), and the one picked.
+  const [kindFacets, setKindFacets] = useState<ApcKindFacet[]>([]);
+  const [kind, setKind] = useState<string | null>(null);
+  const setFamily = (f: string | null) => { setFamilyState(f); setKind(null); };
   // The class's families in CANVAS order (getFamilies = sort_order) — drives
   // both the rail thumbnails and the family section headers below.
   const [taxo, setTaxo] = useState<FamilyMeta[]>([]);
@@ -84,7 +89,7 @@ export default function CategoryProducts() {
     setLoading(true);
     setFailed(false);
     fetchApcProducts(code, { limit: 100, viewer })
-      .then((res) => { if (!alive) return; setProducts(res.products); setFamilies(res.families); })
+      .then((res) => { if (!alive) return; setProducts(res.products); setFamilies(res.families); setKindFacets(res.kinds); })
       .catch(() => { if (alive) setFailed(true); })
       .finally(() => { if (alive) setLoading(false); });
     // The class's families, in canvas order, with tile art (for rail + headers).
@@ -111,7 +116,9 @@ export default function CategoryProducts() {
       byFamily.set(k, list);
     }
     if (family) {
-      return [{ code: family, name: taxo.find((f) => f.code === family)?.name ?? "Products", products: byFamily.get(family) ?? [] }];
+      const inFamily = byFamily.get(family) ?? [];
+      return [{ code: family, name: taxo.find((f) => f.code === family)?.name ?? "Products",
+        products: kind ? inFamily.filter((p) => p.apcKindCode === kind) : inFamily }];
     }
     const out: Section[] = taxo
       .filter((f) => byFamily.has(f.code))
@@ -119,7 +126,8 @@ export default function CategoryProducts() {
     const none = byFamily.get("__none");
     if (none?.length) out.push({ code: "__none", name: "More", products: none });
     return out;
-  }, [products, taxo, family]);
+  }, [products, taxo, family, kind]);
+  const familyKinds = useMemo(() => (family ? kindFacets.filter((k) => k.family_code === family) : []), [kindFacets, family]);
 
   const cartCount = cart.reduce((n, s) => n + s.items.reduce((m, i) => m + i.qty, 0), 0);
 
@@ -184,6 +192,7 @@ export default function CategoryProducts() {
         <View style={styles.bodyRow}>
           <ApcFamilyRail families={families} totalCount={products.length} selected={family} onSelect={setFamily} images={familyImages} />
           <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
+            <KindChips kinds={familyKinds} selected={kind} onSelect={setKind} />
             {sections.map((sec) => (
               <View key={sec.code} style={styles.section}>
                 {/* Family header — the canvas family this block of products sits under */}

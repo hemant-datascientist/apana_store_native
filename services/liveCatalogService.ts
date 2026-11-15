@@ -88,6 +88,8 @@ export interface LiveProduct {
   apcClassCode: string | null;
   apcFamilyCode: string | null;
   apcVarietyCode: string | null;
+  /** 0192 — optional kind (Mango > Alphonso). */
+  apcKindCode: string | null;
   // Real review aggregate for the card ★ (0/0 = no reviews yet, never faked).
   rating: number;
   reviewCount: number;
@@ -228,6 +230,7 @@ interface WireProduct {
   apc_class_code: string | null;
   apc_family_code: string | null;
   apc_variety_code: string | null;
+  apc_kind_code?: string | null;
   rating?: number;
   review_count?: number;
   prep_minutes?: number | null;
@@ -248,6 +251,7 @@ interface WireList {
   limit: number;
   total: number;
   families?: WireFamilyFacet[];
+  kinds?: ApcKindFacet[];
 }
 interface WireEnrichment {
   gtin: string | null;
@@ -340,6 +344,7 @@ function toLiveProduct(w: WireProduct): LiveProduct {
     apcClassCode: w.apc_class_code,
     apcFamilyCode: w.apc_family_code ?? null,
     apcVarietyCode: w.apc_variety_code ?? null,
+    apcKindCode: w.apc_kind_code ?? null,
     rating: w.rating ?? 0,
     reviewCount: w.review_count ?? 0,
     prepMinutes: w.prep_minutes ?? null,
@@ -487,9 +492,19 @@ export interface ApcFamilyFacet {
   count: number;
 }
 
+/** 0192 — a kind with live products nearby (Mango > Alphonso · 3), for kind chips. */
+export interface ApcKindFacet {
+  code: string;
+  name: string;
+  variety_code: string;
+  family_code: string;
+  count: number;
+}
+
 export interface ApcProductsResult {
   products: LiveProduct[];
   families: ApcFamilyFacet[];
+  kinds: ApcKindFacet[];
   total: number;
 }
 
@@ -504,7 +519,7 @@ export async function fetchApcProducts(
   // search, which legitimately span the whole catalogue.
   opts: { family?: string; limit?: number; near?: { lat: number; lng: number } | null; viewer?: { lat: number; lng: number } | null } = {},
 ): Promise<ApcProductsResult> {
-  if (!IS_LIVE) return { products: [], families: [], total: 0 };
+  if (!IS_LIVE) return { products: [], families: [], kinds: [], total: 0 };
   const params = new URLSearchParams({ apc_class: apcClass, limit: String(opts.limit ?? 100), view: "card" });
   if (opts.family) params.set("apc_family", opts.family);
   if (opts.near) {
@@ -519,6 +534,7 @@ export async function fetchApcProducts(
   return {
     products: body.items.map(toLiveProduct),
     families: body.families ?? [],
+    kinds: body.kinds ?? [],
     total: body.total,
   };
 }

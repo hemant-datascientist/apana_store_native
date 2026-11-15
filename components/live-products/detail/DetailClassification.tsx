@@ -13,12 +13,14 @@ import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../../theme/useTheme";
 import { typography } from "../../../theme/typography";
-import { getClasses, getFamilies, getVarieties } from "../../../services/apc";
+import { getClasses, getFamilies, getKind, getVarieties } from "../../../services/apc";
 
 interface Props {
   classCode: string | null;
   familyCode: string | null;
   varietyCode: string | null;
+  /** 0192 — optional kind (Mango > Alphonso). */
+  kindCode?: string | null;
 }
 
 // "APC-10-FASH-FOOTWEAR" → "FOOTWEAR" — a readable leaf when no name resolves.
@@ -27,7 +29,7 @@ function tailLabel(code: string): string {
   return tail.charAt(0) + tail.slice(1).toLowerCase();
 }
 
-export default function DetailClassification({ classCode, familyCode, varietyCode }: Props) {
+export default function DetailClassification({ classCode, familyCode, varietyCode, kindCode }: Props) {
   const { colors } = useTheme();
   const [className, setClassName] = useState<string | null>(null);
   const [classEmoji, setClassEmoji] = useState<string | null>(null);
@@ -36,6 +38,8 @@ export default function DetailClassification({ classCode, familyCode, varietyCod
   const [familyNumeric, setFamilyNumeric] = useState<string | null>(null);
   const [varietyName, setVarietyName] = useState<string | null>(null);
   const [varietyNumeric, setVarietyNumeric] = useState<string | null>(null);
+  const [kindName, setKindName] = useState<string | null>(null);
+  const [kindNumeric, setKindNumeric] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -69,8 +73,13 @@ export default function DetailClassification({ classCode, familyCode, varietyCod
         })
         .catch(() => {});
     }
+    if (kindCode) {
+      getKind(kindCode)
+        .then((k) => { if (alive) { setKindName(k.name); setKindNumeric(k.numeric_code); } })
+        .catch(() => {});
+    }
     return () => { alive = false; };
-  }, [classCode, familyCode, varietyCode]);
+  }, [classCode, familyCode, varietyCode, kindCode]);
 
   if (!classCode) return null;
 
@@ -84,6 +93,7 @@ export default function DetailClassification({ classCode, familyCode, varietyCod
   ];
   if (familyCode) rows.push({ label: "Family", name: familyName ?? tailLabel(familyCode), code: familyCode, num: numeric(familyNumeric) });
   if (varietyCode) rows.push({ label: "Type", name: varietyName ?? tailLabel(varietyCode), code: varietyCode, num: numeric(varietyNumeric) });
+  if (kindCode) rows.push({ label: "Kind", name: kindName ?? tailLabel(kindCode), code: kindCode, num: numeric(kindNumeric) });
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>

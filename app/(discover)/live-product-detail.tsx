@@ -300,6 +300,7 @@ export default function LiveProductDetailScreen() {
             classCode={p.apcClassCode}
             familyCode={p.apcFamilyCode}
             varietyCode={p.apcVarietyCode}
+            kindCode={p.apcKindCode}
           />
 
           {/* ── Ratings & reviews (real, buyer-gated) ── */}
