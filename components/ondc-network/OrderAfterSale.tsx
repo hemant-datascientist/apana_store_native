@@ -1,6 +1,7 @@
 // A placed ONDC order: where it is, cancelling it, and the refund Apana owes.
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
+import { useRouter } from "expo-router";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { cancelReasons, type NetworkOrder } from "../../services/ondcNetworkService";
@@ -12,6 +13,12 @@ export default function OrderAfterSale({ order, busy, onCancel, onRefresh }: {
   order: NetworkOrder; busy: boolean; onCancel: (reasonId: string) => void; onRefresh: () => void;
 }) {
   const { colors } = useTheme();
+  const router = useRouter();
+  const report = (
+    <TouchableOpacity onPress={() => router.push({ pathname: "/ondc-issue", params: { order_id: order.id } })} style={[styles.btn, { borderColor: colors.border }]}>
+      <Text style={[styles.btnText, { color: colors.primary }]}>Report a problem</Text>
+    </TouchableOpacity>
+  );
   const [reasons, setReasons] = useState<Array<{ id: string; label: string }>>([]);
   const [asking, setAsking] = useState(false);
   useEffect(() => { if (asking && reasons.length === 0) cancelReasons().then((r) => setReasons(r.items)).catch(() => setReasons([])); }, [asking]);
@@ -30,6 +37,7 @@ export default function OrderAfterSale({ order, busy, onCancel, onRefresh }: {
             : text("No refund is due for this order.", colors.subText)
           : null}
         {order.refund?.note && order.refund.due_paise !== (order.total_paise ?? 0) ? text(order.refund.note, colors.subText) : null}
+        {order.paid ? report : null}
       </View>
     );
   }
@@ -52,6 +60,11 @@ export default function OrderAfterSale({ order, busy, onCancel, onRefresh }: {
           <Text style={[styles.btnText, { color: colors.text }]}>{r.label}</Text>
         </TouchableOpacity>
       )) : null}
+      {/* A refund agreed in a complaint, on an order that was delivered rather than cancelled. */}
+      {order.refund && order.refund.due_paise > 0
+        ? text(order.refund.refunded_at ? `Refunded ${rupees(order.refund.due_paise)} after your complaint.` : `Refund of ${rupees(order.refund.due_paise)} is being processed.`, colors.success)
+        : null}
+      {order.status === "confirmed" ? report : null}
     </View>
   );
 }

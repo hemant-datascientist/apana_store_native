@@ -24,6 +24,7 @@ export default function DiscoverLayout() {
       <Stack.Screen name="ondc-network"        />
       <Stack.Screen name="ondc-order"          />
       <Stack.Screen name="ondc-orders"         />
+      <Stack.Screen name="ondc-issue"          />
     </Stack>
   );
 }

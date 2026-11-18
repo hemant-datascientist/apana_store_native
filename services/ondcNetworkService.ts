@@ -136,3 +136,42 @@ export function cancelNetworkOrder(id: string, reasonId: string) {
 export function refreshNetworkOrder(id: string) {
   return call<NetworkOrder>(`/ondc/orders/${encodeURIComponent(id)}/status`, { method: "POST" });
 }
+
+// ── Phase 4: complaints (ONDC IGM 2.0) ──────────────────────
+
+export interface NetworkIssue {
+  id: string;
+  order_id: string;
+  status: "OPEN" | "PROCESSING" | "NEED_MORE_INFO" | "INFO_PROVIDED" | "RESOLVED" | "CLOSED";
+  code: string;
+  title: string;
+  description: string;
+  /** Every step so far, the customer's and the shop's, in order. */
+  actions: Array<{ code: string | null; text: string | null; at: string | null; by: string | null }>;
+  /** What the shop proposes; a refund carries its amount. */
+  resolutions: Array<{ id: string; code: string | null; text: string | null; refund_paise: number | null }>;
+  accepted_resolution_id: string | null;
+  rating: "THUMBS_UP" | "THUMBS_DOWN" | null;
+}
+
+export function issueCodes() {
+  return call<{ items: Array<{ code: string; label: string }> }>("/ondc/issue-codes");
+}
+export function listOrderIssues(orderId: string) {
+  return call<{ items: NetworkIssue[] }>(`/ondc/issues?order_id=${encodeURIComponent(orderId)}`);
+}
+export function raiseIssue(orderId: string, code: string, description: string) {
+  return call<NetworkIssue>(`/ondc/orders/${encodeURIComponent(orderId)}/issues`, { method: "POST", body: JSON.stringify({ code, description }) });
+}
+export function getIssue(id: string) {
+  return call<NetworkIssue>(`/ondc/issues/${encodeURIComponent(id)}`);
+}
+export function replyToIssue(id: string, text: string) {
+  return call<NetworkIssue>(`/ondc/issues/${encodeURIComponent(id)}/info`, { method: "POST", body: JSON.stringify({ text }) });
+}
+export function acceptIssueResolution(id: string, resolutionId: string) {
+  return call<NetworkIssue>(`/ondc/issues/${encodeURIComponent(id)}/accept`, { method: "POST", body: JSON.stringify({ resolution_id: resolutionId }) });
+}
+export function closeIssue(id: string, rating: "THUMBS_UP" | "THUMBS_DOWN") {
+  return call<NetworkIssue>(`/ondc/issues/${encodeURIComponent(id)}/close`, { method: "POST", body: JSON.stringify({ rating }) });
+}
