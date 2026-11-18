@@ -21,6 +21,7 @@ export default function DiscoverLayout() {
       <Stack.Screen name="new-launchers"   />
       <Stack.Screen name="live-products"       />
       <Stack.Screen name="live-product-detail" />
+      <Stack.Screen name="ondc-network"        />
     </Stack>
   );
 }

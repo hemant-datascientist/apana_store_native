@@ -39,6 +39,13 @@ const TILES = [
     color:       "#7C3AED",
     route:       "/new-launchers",
   },
+  {
+    label:       "ONDC Network",
+    description: "Shops on other ONDC apps",
+    icon:        "globe-outline",
+    color:       "#0EA5E9",
+    route:       "/ondc-network",
+  },
 ] as const;
 
 export default function HomeDiscoverRow() {
