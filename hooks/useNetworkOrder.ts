@@ -3,7 +3,7 @@
 // price (select) -> final bill (init) -> pay -> confirm.
 import { useCallback, useRef, useState } from "react";
 import {
-  confirmNetworkOrder, getNetworkOrder, initNetworkOrder, payNetworkOrder, startNetworkOrder,
+  cancelNetworkOrder, confirmNetworkOrder, getNetworkOrder, initNetworkOrder, payNetworkOrder, refreshNetworkOrder, startNetworkOrder,
   type NetworkOrder, type NetworkOrderStatus,
 } from "../services/ondcNetworkService";
 import { mockGatewayPay } from "../services/paymentsService";
@@ -11,7 +11,7 @@ import { mockGatewayPay } from "../services/paymentsService";
 const POLL_MS = 1500;
 /** Seller apps answer within the message TTL (30 s); after that it is not coming. */
 const WAIT_LIMIT_MS = 35_000;
-const WAITING: NetworkOrderStatus[] = ["selecting", "initializing", "confirming"];
+const WAITING: NetworkOrderStatus[] = ["selecting", "initializing", "confirming", "cancelling"];
 
 export function useNetworkOrder() {
   const [order, setOrder] = useState<NetworkOrder | null>(null);
@@ -30,6 +30,8 @@ export function useNetworkOrder() {
     }
     if (WAITING.includes(o.status)) throw new Error("The shop's app has not answered yet. Check again in a minute.");
     if (o.status === "failed") throw new Error(o.error ?? "The shop's app refused this order.");
+    // A refused cancellation comes back as a confirmed order carrying the shop's reason.
+    if (o.status === "confirmed" && o.error?.startsWith("cancellation refused")) throw new Error(o.error);
     return o;
   }, []);
 
@@ -57,5 +59,26 @@ export function useNetworkOrder() {
     return confirmNetworkOrder(order.id, gateway);
   });
 
-  return { order, busy, error, getPrice, getFinalBill, payAndConfirm, stop: () => { cancelled.current = true; } };
+  const load = async (id: string) => {
+    try { setOrder(await getNetworkOrder(id)); } catch (e) { setError((e as Error).message); }
+  };
+  const cancel = (reasonId: string) => order && run(() => cancelNetworkOrder(order.id, reasonId));
+  // The shop's app answers a status request a moment later: read again a few times.
+  const refresh = async () => {
+    if (!order) return;
+    setBusy(true); setError(null);
+    try {
+      await refreshNetworkOrder(order.id);
+      for (let i = 0; i < 3 && !cancelled.current; i++) {
+        await new Promise((r) => setTimeout(r, POLL_MS));
+        setOrder(await getNetworkOrder(order.id));
+      }
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return { order, busy, error, getPrice, getFinalBill, payAndConfirm, load, cancel, refresh, stop: () => { cancelled.current = true; } };
 }

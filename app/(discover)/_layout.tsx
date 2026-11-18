@@ -23,6 +23,7 @@ export default function DiscoverLayout() {
       <Stack.Screen name="live-product-detail" />
       <Stack.Screen name="ondc-network"        />
       <Stack.Screen name="ondc-order"          />
+      <Stack.Screen name="ondc-orders"         />
     </Stack>
   );
 }

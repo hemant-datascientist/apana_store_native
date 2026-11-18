@@ -35,6 +35,9 @@ export default function OndcNetworkScreen() {
           <Text style={[styles.title, { color: colors.text }]}>ONDC Network</Text>
           <Text style={[styles.sub, { color: colors.subText }]}>Shops near you on other ONDC apps</Text>
         </View>
+        <TouchableOpacity onPress={() => router.push("/ondc-orders")} style={styles.back}>
+          <Ionicons name="receipt-outline" size={20} color={colors.primary} />
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => void retry()} disabled={searching} style={styles.back}>
           <Ionicons name="refresh" size={20} color={searching ? colors.subText : colors.primary} />
         </TouchableOpacity>

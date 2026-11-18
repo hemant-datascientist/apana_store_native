@@ -18,21 +18,24 @@ import { useLocation } from "../../context/LocationContext";
 import { networkResults, type NetworkShop } from "../../services/ondcNetworkService";
 import { useNetworkOrder } from "../../hooks/useNetworkOrder";
 import OrderBill from "../../components/ondc-network/OrderBill";
+import OrderAfterSale from "../../components/ondc-network/OrderAfterSale";
 
 export default function OndcOrderScreen() {
   const { colors } = useTheme();
-  const { txn, bpp_id, provider_id } = useLocalSearchParams<{ txn: string; bpp_id: string; provider_id: string }>();
+  // Either a new order (txn + shop) or an existing one opened from the orders list (id).
+  const { txn, bpp_id, provider_id, id } = useLocalSearchParams<{ txn?: string; bpp_id?: string; provider_id?: string; id?: string }>();
   const { addresses, deviceCoords, selectedAddress } = useLocation();
   const [shop, setShop] = useState<NetworkShop | null>(null);
   const [qty, setQty] = useState<Record<string, number>>({});
-  const { order, busy, error, getPrice, getFinalBill, payAndConfirm, stop } = useNetworkOrder();
+  const { order, busy, error, getPrice, getFinalBill, payAndConfirm, load, cancel, refresh, stop } = useNetworkOrder();
   const address = addresses.find((a) => a.isDefault) ?? addresses[0];
   const point = deviceCoords ?? (selectedAddress.lat != null && selectedAddress.lng != null ? { lat: selectedAddress.lat, lng: selectedAddress.lng } : null);
 
   useEffect(() => {
+    if (id) void load(id);
     if (txn) networkResults(txn).then((r) => setShop(r.shops.find((s) => s.bpp_id === bpp_id && s.provider_id === provider_id) ?? null)).catch(() => setShop(null));
     return stop;
-  }, [txn, bpp_id, provider_id]);
+  }, [txn, bpp_id, provider_id, id]);
 
   const chosen = Object.entries(qty).filter(([, n]) => n > 0).map(([id, n]) => ({ id, qty: n }));
   const step = order?.status ?? "choose";
@@ -46,10 +49,10 @@ export default function OndcOrderScreen() {
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <SafeAreaView edges={["top"]} style={[styles.header, { borderColor: colors.border }]}>
         <TouchableOpacity onPress={() => goBackOr()} style={{ padding: 8 }}><Ionicons name="arrow-back" size={22} color={colors.text} /></TouchableOpacity>
-        <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>{shop?.name ?? "ONDC shop"}</Text>
+        <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>{shop?.name ?? order?.shop_name ?? "ONDC shop"}</Text>
       </SafeAreaView>
       <ScrollView contentContainerStyle={styles.body}>
-        {!shop ? <Text style={[styles.note, { color: colors.subText }]}>This shop's results have expired — go back and search again.</Text> : null}
+        {!shop && !id ? <Text style={[styles.note, { color: colors.subText }]}>This shop's results have expired — go back and search again.</Text> : null}
         {shop && step === "choose" ? shop.items.filter((i) => i.in_stock).map((i) => (
           <View key={i.id} style={[styles.item, { borderColor: colors.border, backgroundColor: colors.card }]}>
             <Text style={[styles.itemName, { color: colors.text }]} numberOfLines={2}>{i.name} · ₹{(i.price_paise / 100).toFixed(2)}</Text>
@@ -62,7 +65,7 @@ export default function OndcOrderScreen() {
         )) : null}
         {shop && step === "choose" ? btn("Get the shop's price", () => point && txn && void getPrice({ search_txn: txn, bpp_id: shop.bpp_id, provider_id: shop.provider_id, items: chosen, ...point }), chosen.length === 0 || !point) : null}
 
-        {order && ["quoted", "initialized", "confirmed"].includes(order.status) ? (
+        {order && ["quoted", "initialized", "confirmed", "cancelling", "cancelled"].includes(order.status) ? (
           <OrderBill order={order} label={order.status === "quoted" ? "The shop's price" : "The shop's final bill"} />
         ) : null}
         {order?.status === "quoted" ? (
@@ -73,9 +76,21 @@ export default function OndcOrderScreen() {
               </>
             : <Text style={[styles.note, { color: colors.danger }]}>Add a pinned delivery address first.</Text>
         ) : null}
-        {order?.status === "initialized" && order.total_paise ? btn(`Pay ₹${(order.total_paise / 100).toFixed(2)}`, () => void payAndConfirm()) : null}
-        {order?.status === "confirmed" ? (
+        {order?.status === "initialized" && order.total_paise ? (
+          <>
+            {/* Refund policy, shown before payment (Consumer Protection (E-Commerce) Rules 2020). */}
+            <Text style={[styles.note, { color: colors.subText }]}>
+              Refunds: if this order is cancelled, Apana refunds you within 24 hours. If you cannot be reached or do not accept the
+              delivery, perishable items (fruit and vegetables, dairy, bakery, eggs, meat and fish, frozen food, sweets) are not refunded.
+            </Text>
+            {btn(`Pay ₹${(order.total_paise / 100).toFixed(2)}`, () => void payAndConfirm())}
+          </>
+        ) : null}
+        {order?.status === "confirmed" && !id ? (
           <Text style={[styles.done, { color: colors.success }]}>Order placed with {order.shop_name}. Order id {order.ondc_order_id}.</Text>
+        ) : null}
+        {order && ["confirmed", "cancelling", "cancelled"].includes(order.status) ? (
+          <OrderAfterSale order={order} busy={busy} onCancel={(r) => void cancel(r)} onRefresh={() => void refresh()} />
         ) : null}
         {error ? <Text style={[styles.note, { color: colors.danger }]}>{error}</Text> : null}
       </ScrollView>

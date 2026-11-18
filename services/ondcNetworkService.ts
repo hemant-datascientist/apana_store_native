@@ -70,7 +70,7 @@ export function networkResults(txn: string) {
 // The app sends ids and quantities only. The server takes the shop's address,
 // names and prices from its own stored search results.
 
-export type NetworkOrderStatus = "selecting" | "quoted" | "initializing" | "initialized" | "confirming" | "confirmed" | "failed";
+export type NetworkOrderStatus = "selecting" | "quoted" | "initializing" | "initialized" | "confirming" | "confirmed" | "cancelling" | "cancelled" | "failed";
 
 export interface NetworkOrder {
   id: string;
@@ -85,6 +85,12 @@ export interface NetworkOrder {
   paid: boolean;
   ondc_order_id: string | null;
   ondc_state: string | null;
+  /** The shop's own delivery state, e.g. "Agent-assigned", "Out-for-delivery", "Order-delivered". */
+  fulfillment_state: string | null;
+  cancel_reason_id: string | null;
+  cancelled_by: "buyer" | "seller" | "apana" | null;
+  /** Set once the order is cancelled: what Apana owes back and whether it has been paid. */
+  refund: { due_paise: number; note: string | null; refunded_at: string | null } | null;
 }
 
 export function startNetworkOrder(input: {
@@ -110,4 +116,23 @@ export function payNetworkOrder(id: string) {
 
 export function confirmNetworkOrder(id: string, paid: { provider_order_id: string; provider_payment_id: string; signature: string }) {
   return call<NetworkOrder>(`/ondc/orders/${encodeURIComponent(id)}/confirm`, { method: "POST", body: JSON.stringify(paid) });
+}
+
+// ── Phase 3: after the sale ─────────────────────────────────
+
+export function listNetworkOrders() {
+  return call<{ items: NetworkOrder[] }>("/ondc/orders");
+}
+
+export function cancelReasons() {
+  return call<{ items: Array<{ id: string; label: string }> }>("/ondc/cancel-reasons");
+}
+
+export function cancelNetworkOrder(id: string, reasonId: string) {
+  return call<NetworkOrder>(`/ondc/orders/${encodeURIComponent(id)}/cancel`, { method: "POST", body: JSON.stringify({ reason_id: reasonId }) });
+}
+
+/** Ask the shop's app for the latest; its answer arrives a moment later (poll getNetworkOrder). */
+export function refreshNetworkOrder(id: string) {
+  return call<NetworkOrder>(`/ondc/orders/${encodeURIComponent(id)}/status`, { method: "POST" });
 }
