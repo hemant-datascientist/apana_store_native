@@ -15,6 +15,7 @@ export function useNetworkShops() {
   const [shops, setShops] = useState<NetworkShop[]>([]);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [txn, setTxn] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const stop = () => { if (timer.current) clearTimeout(timer.current); timer.current = null; };
@@ -26,6 +27,7 @@ export function useNetworkShops() {
     setError(null); setShops([]); setSearching(true);
     try {
       const { transaction_id } = await startNetworkSearch({ ...point, pincode });
+      setTxn(transaction_id);
       const poll = async () => {
         try {
           const r = await networkResults(transaction_id);
@@ -46,5 +48,5 @@ export function useNetworkShops() {
 
   useEffect(() => { void search(); return stop; }, [search]);
 
-  return { shops, searching, error, retry: search };
+  return { shops, searching, error, retry: search, txn, point, pincode };
 }

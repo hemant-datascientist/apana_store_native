@@ -3,14 +3,15 @@
 //
 // A separate screen from Apana's own shops on purpose: their answers arrive
 // over ~30 seconds from other companies' servers, and Apana's feed must never
-// wait on that. Ordering from these shops comes in the next phase, so this
-// screen shows and never pretends to sell (no add-to-cart that goes nowhere).
+// wait on that. "Order from this shop" opens ondc-order, where the shop's own
+// app quotes the price and the final bill before anything is paid.
 // ============================================================
 
 import React from "react";
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { goBackOr } from "../../lib/goBack";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
@@ -21,7 +22,8 @@ import NetworkShopCard from "../../components/ondc-network/NetworkShopCard";
 
 export default function OndcNetworkScreen() {
   const { colors } = useTheme();
-  const { shops, searching, error, retry } = useNetworkShops();
+  const router = useRouter();
+  const { shops, searching, error, retry, txn } = useNetworkShops();
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -40,9 +42,15 @@ export default function OndcNetworkScreen() {
 
       <ScrollView contentContainerStyle={styles.body}>
         <Text style={[styles.note, { color: colors.subText }]}>
-          Prices and stock are as these shops publish them. Ordering from ONDC shops is coming next.
+          Prices and stock are as these shops publish them; the shop's app confirms the final bill before you pay.
         </Text>
-        {shops.map((s) => <NetworkShopCard key={`${s.bpp_id}|${s.provider_id}`} shop={s} />)}
+        {shops.map((s) => (
+          <NetworkShopCard
+            key={`${s.bpp_id}|${s.provider_id}`}
+            shop={s}
+            onOrder={txn ? () => router.push({ pathname: "/ondc-order", params: { txn, bpp_id: s.bpp_id, provider_id: s.provider_id } }) : undefined}
+          />
+        ))}
         {searching ? (
           <>
             <Text style={[styles.note, { color: colors.subText }]}>Asking shops on the ONDC network…</Text>

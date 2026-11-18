@@ -1,6 +1,6 @@
 // One shop from another ONDC seller app: name, measured distance, its items as sent.
 import React from "react";
-import { View, Text, Image, ScrollView, StyleSheet } from "react-native";
+import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import type { NetworkShop } from "../../services/ondcNetworkService";
@@ -8,7 +8,7 @@ import type { NetworkShop } from "../../services/ondcNetworkService";
 const rupees = (p: number) => `₹${(p / 100).toFixed(p % 100 ? 2 : 0)}`;
 const distance = (m: number | null) => (m == null ? null : m < 1000 ? `${m} m` : `${(m / 1000).toFixed(1)} km`);
 
-export default function NetworkShopCard({ shop }: { shop: NetworkShop }) {
+export default function NetworkShopCard({ shop, onOrder }: { shop: NetworkShop; onOrder?: () => void }) {
   const { colors } = useTheme();
   const away = distance(shop.distance_m);
   return (
@@ -31,6 +31,11 @@ export default function NetworkShopCard({ shop }: { shop: NetworkShop }) {
           </View>
         ))}
       </ScrollView>
+      {onOrder && shop.items.some((i) => i.in_stock) ? (
+        <TouchableOpacity style={[styles.order, { backgroundColor: colors.primary }]} onPress={onOrder}>
+          <Text style={[styles.orderText, { color: colors.white }]}>Order from this shop</Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 }
@@ -47,4 +52,6 @@ const styles = StyleSheet.create({
   priceRow: { flexDirection: "row", alignItems: "baseline", gap: 6 },
   price: { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm },
   mrp: { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs, textDecorationLine: "line-through" },
+  order: { marginTop: 10, borderRadius: 10, paddingVertical: 10, alignItems: "center" },
+  orderText: { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.sm },
 });

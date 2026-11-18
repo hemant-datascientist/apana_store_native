@@ -65,3 +65,49 @@ export function startNetworkSearch(input: { lat: number; lng: number; pincode?: 
 export function networkResults(txn: string) {
   return call<NetworkResults>(`/ondc/search/${encodeURIComponent(txn)}`);
 }
+
+// ── Phase 2: ordering from one network shop ─────────────────
+// The app sends ids and quantities only. The server takes the shop's address,
+// names and prices from its own stored search results.
+
+export type NetworkOrderStatus = "selecting" | "quoted" | "initializing" | "initialized" | "confirming" | "confirmed" | "failed";
+
+export interface NetworkOrder {
+  id: string;
+  status: NetworkOrderStatus;
+  error: string | null;
+  shop_name: string;
+  bpp_id: string;
+  items: Array<{ id: string; qty: number; name: string; price_paise: number }>;
+  total_paise: number | null;
+  /** The seller app's own bill lines (items, delivery, packing, tax), exactly as sent. */
+  breakup: Array<{ title: string | null; type: string | null; paise: number | null }>;
+  paid: boolean;
+  ondc_order_id: string | null;
+  ondc_state: string | null;
+}
+
+export function startNetworkOrder(input: {
+  search_txn: string; bpp_id: string; provider_id: string; items: Array<{ id: string; qty: number }>;
+  lat: number; lng: number; pincode?: string;
+}) {
+  return call<NetworkOrder>("/ondc/orders", { method: "POST", body: JSON.stringify(input) });
+}
+
+export function getNetworkOrder(id: string) {
+  return call<NetworkOrder>(`/ondc/orders/${encodeURIComponent(id)}`);
+}
+
+export function initNetworkOrder(id: string, addressId: string) {
+  return call<NetworkOrder>(`/ondc/orders/${encodeURIComponent(id)}/init`, { method: "POST", body: JSON.stringify({ address_id: addressId }) });
+}
+
+export function payNetworkOrder(id: string) {
+  return call<{ provider_order_id: string; public_key: string; amount_paise: number; is_live: boolean }>(
+    `/ondc/orders/${encodeURIComponent(id)}/pay`, { method: "POST" },
+  );
+}
+
+export function confirmNetworkOrder(id: string, paid: { provider_order_id: string; provider_payment_id: string; signature: string }) {
+  return call<NetworkOrder>(`/ondc/orders/${encodeURIComponent(id)}/confirm`, { method: "POST", body: JSON.stringify(paid) });
+}
