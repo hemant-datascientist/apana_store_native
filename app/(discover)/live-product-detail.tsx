@@ -25,6 +25,9 @@ import DetailTabs from "../../components/live-products/detail/DetailTabs";
 import DetailClassification from "../../components/live-products/detail/DetailClassification";
 import DetailReviews from "../../components/live-products/detail/DetailReviews";
 import DetailMoreRail from "../../components/live-products/detail/DetailMoreRail";
+import TopReasonsToBuyGrid from "../../components/live-products/detail/TopReasonsToBuyGrid";
+import BentoVisualSpecs from "../../components/live-products/detail/BentoVisualSpecs";
+import DetailFAQ from "../../components/live-products/detail/DetailFAQ";
 import { buildTabs } from "../../components/live-products/detail/buildTabs";
 import VariantPicker from "../../components/live-products/detail/VariantPicker";
 import DetailBuyBar from "../../components/live-products/detail/DetailBuyBar";
@@ -306,8 +309,17 @@ export default function LiveProductDetailScreen() {
           {/* ── Ratings & reviews (real, buyer-gated) ── */}
           <DetailReviews productId={p.id} initialRating={detail?.rating ?? 0} initialCount={detail?.reviewCount ?? 0} />
 
+          {/* ── Big Tech Merchandising: Top Reasons to Buy (3×3 Feature Matrix) ── */}
+          <TopReasonsToBuyGrid attributes={p.attributes} />
+
+          {/* ── From the Manufacturer (brand-entered only) ── */}
+          <BentoVisualSpecs attributes={p.attributes} />
+
           {/* ── Tabbed spec cards ── */}
           <DetailTabs tabs={buildTabs(detail!)} />
+
+          {/* ── Brand FAQ (brand-entered only) ── */}
+          <DetailFAQ attributes={p.attributes} />
 
           {/* ── Suggestions ── */}
           <DetailMoreRail excludeId={p.id} />

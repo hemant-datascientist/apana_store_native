@@ -14,6 +14,7 @@
 
 import createClient, { type Middleware } from "openapi-fetch";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { rewriteUrl } from "../../lib/backendOverride";
 
 import type { paths } from "../../types/api";
 
@@ -48,6 +49,14 @@ const TOKEN_KEY = "apana_access_token";
 
 const authMiddleware: Middleware = {
   async onRequest({ request }) {
+    // Judge the URL AFTER the connect-QR rewrite: a release APK whose baked
+    // origin is localhost but which scanned a backend QR is perfectly usable.
+    const effective = rewriteUrl(API_BASE_URL);
+    if (!__DEV__ && (effective.includes("localhost") || effective.includes("127.0.0.1"))) {
+      throw new Error(
+        "CRITICAL: Release build cannot connect to localhost mock server. Set EXPO_PUBLIC_API_MODE=prod or EXPO_PUBLIC_BE_BASE_URL."
+      );
+    }
     const token = await AsyncStorage.getItem(TOKEN_KEY);
     if (token) {
       request.headers.set("Authorization", `Bearer ${token}`);
