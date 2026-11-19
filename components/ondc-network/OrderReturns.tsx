@@ -15,9 +15,9 @@ const STATE: Record<string, string> = {
   Liquidated: "Accepted (no pickup needed)", Return_Failed: "Return failed", failed: "Could not be sent",
 };
 
-interface OrderReturnsProps { order: NetworkOrder }
+interface OrderReturnsProps { order: NetworkOrder; canReturn: boolean }
 
-export default function OrderReturns({ order }: OrderReturnsProps) {
+export default function OrderReturns({ order, canReturn }: OrderReturnsProps) {
   const { colors } = useTheme();
   const [returns, setReturns] = useState<NetworkReturn[]>([]);
   const [reasons, setReasons] = useState<Array<{ id: string; label: string }>>([]);
@@ -63,10 +63,12 @@ export default function OrderReturns({ order }: OrderReturnsProps) {
         const name = order.items.find((i) => i.id === r.item_id)?.name ?? r.item_id;
         return (
           <View key={r.id} style={[styles.ret, { borderColor: colors.border }]}>
-            <Text style={[styles.line, { color: colors.text }]}>Return: {r.qty} × {name}</Text>
-            <Text style={[styles.small, { color: r.state === "failed" || r.state === "Return_Rejected" ? colors.danger : colors.subText }]}>
-              {STATE[r.state] ?? r.state}{r.error ? ` — ${r.error}` : ""}
-            </Text>
+            <Text style={[styles.line, { color: colors.text }]}>{r.kind === "part_cancel" ? "Cancelled by the shop" : "Return"}: {r.qty} × {name}</Text>
+            {r.kind === "return" ? (
+              <Text style={[styles.small, { color: r.state === "failed" || r.state === "Return_Rejected" ? colors.danger : colors.subText }]}>
+                {STATE[r.state] ?? r.state}{r.error ? ` — ${r.error}` : ""}
+              </Text>
+            ) : null}
             {r.refund ? (
               <Text style={[styles.small, { color: colors.success }]}>
                 {r.refund.refunded_at ? `Refunded ${rupees(r.refund.paise)}` : r.refund.note?.includes("shop's app") ? `${rupees(r.refund.paise)} refund from the shop's app` : `Refund of ${rupees(r.refund.paise)} is being processed`}
@@ -76,7 +78,7 @@ export default function OrderReturns({ order }: OrderReturnsProps) {
         );
       })}
 
-      {returnable.length === 0 ? (
+      {!canReturn ? null : returnable.length === 0 ? (
         <Text style={[styles.small, { color: colors.subText }]}>The shop does not accept returns on these items. Use Report a problem if something arrived damaged or wrong.</Text>
       ) : !open ? (
         <TouchableOpacity onPress={() => setOpen(true)} style={[styles.btn, { borderColor: colors.border }]}>

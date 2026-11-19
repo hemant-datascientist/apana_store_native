@@ -38,6 +38,7 @@ export default function OrderAfterSale({ order, busy, onCancel, onRefresh }: {
             : text(order.refund.note && order.payment.collected_by === "BPP" ? order.refund.note : "No refund is due for this order.", colors.subText)
           : null}
         {order.refund?.note && order.refund.due_paise !== (order.total_paise ?? 0) ? text(order.refund.note, colors.subText) : null}
+        <OrderReturns order={order} canReturn={false} />
         {order.paid ? report : null}
       </View>
     );
@@ -75,7 +76,7 @@ export default function OrderAfterSale({ order, busy, onCancel, onRefresh }: {
       {order.refund && order.refund.due_paise > 0
         ? text(order.refund.refunded_at ? `Refunded ${rupees(order.refund.due_paise)} after your complaint.` : `Refund of ${rupees(order.refund.due_paise)} is being processed.`, colors.success)
         : null}
-      {order.status === "confirmed" && order.delivered_at ? <OrderReturns order={order} /> : null}
+      {order.status === "confirmed" ? <OrderReturns order={order} canReturn={!!order.delivered_at} /> : null}
       {order.status === "confirmed" ? report : null}
     </View>
   );

@@ -168,6 +168,8 @@ export function issueCodes() {
 }
 export interface NetworkReturn {
   id: string;
+  /** return = the customer's; part_cancel = the shop's app cancelled these items. */
+  kind: "return" | "part_cancel";
   item_id: string;
   qty: number;
   reason_id: string;
