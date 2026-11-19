@@ -13,7 +13,7 @@ import { goBackOr } from "../../lib/goBack";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import {
-  acceptIssueResolution, closeIssue, getIssue, issueCodes, listOrderIssues, raiseIssue, replyToIssue, type NetworkIssue,
+  acceptIssueResolution, closeIssue, escalateIssue, getIssue, issueCodes, listOrderIssues, raiseIssue, rejectIssueResolution, replyToIssue, type NetworkIssue,
 } from "../../services/ondcNetworkService";
 
 const POLL_MS = 4000;
@@ -89,9 +89,17 @@ export default function OndcIssueScreen() {
             {issue.status !== "CLOSED" && !issue.accepted_resolution_id ? issue.resolutions.map((r) => (
               <View key={r.id} style={[styles.choice, { borderColor: colors.border, backgroundColor: colors.card }]}>
                 <Text style={[styles.text, { color: colors.text }]}>{r.text ?? r.code}{r.refund_paise ? ` (₹${(r.refund_paise / 100).toFixed(2)})` : ""}</Text>
-                {btn("Accept", () => void run(() => acceptIssueResolution(issue.id, r.id)))}
+                <View style={styles.row}>
+                  <View style={{ flex: 1 }}>{btn("Accept", () => void run(() => acceptIssueResolution(issue.id, r.id)))}</View>
+                  <View style={{ flex: 1 }}>{btn("Reject", () => void run(() => rejectIssueResolution(issue.id, r.id, text)), colors.danger)}</View>
+                </View>
               </View>
             )) : null}
+            {/* Not sorted at the shop's level: escalate once to the shop app's grievance officer. */}
+            {issue.status !== "CLOSED" && issue.level !== "GRIEVANCE" && issue.actions.length > 2
+              ? btn("Escalate to the grievance officer", () => void run(() => escalateIssue(issue.id, text)), colors.warning)
+              : null}
+            {issue.level === "GRIEVANCE" && issue.status !== "CLOSED" ? <Text style={[styles.small, { color: colors.subText }]}>Escalated: the shop app's grievance officer is handling it.</Text> : null}
             {issue.status !== "CLOSED" ? (
               <View style={styles.row}>
                 <View style={{ flex: 1 }}>{btn("Close: resolved", () => void run(() => closeIssue(issue.id, "THUMBS_UP")), colors.success)}</View>

@@ -168,6 +168,8 @@ export interface NetworkIssue {
   resolutions: Array<{ id: string; code: string | null; text: string | null; refund_paise: number | null }>;
   accepted_resolution_id: string | null;
   rating: "THUMBS_UP" | "THUMBS_DOWN" | null;
+  /** ISSUE, or GRIEVANCE once escalated to the shop app's grievance officer. */
+  level: "ISSUE" | "GRIEVANCE";
 }
 
 export function issueCodes() {
@@ -212,6 +214,12 @@ export function replyToIssue(id: string, text: string) {
 }
 export function acceptIssueResolution(id: string, resolutionId: string) {
   return call<NetworkIssue>(`/ondc/issues/${encodeURIComponent(id)}/accept`, { method: "POST", body: JSON.stringify({ resolution_id: resolutionId }) });
+}
+export function rejectIssueResolution(id: string, resolutionId: string, reason: string) {
+  return call<NetworkIssue>(`/ondc/issues/${encodeURIComponent(id)}/reject`, { method: "POST", body: JSON.stringify({ resolution_id: resolutionId, reason }) });
+}
+export function escalateIssue(id: string, reason: string) {
+  return call<NetworkIssue>(`/ondc/issues/${encodeURIComponent(id)}/escalate`, { method: "POST", body: JSON.stringify({ reason }) });
 }
 export function closeIssue(id: string, rating: "THUMBS_UP" | "THUMBS_DOWN") {
   return call<NetworkIssue>(`/ondc/issues/${encodeURIComponent(id)}/close`, { method: "POST", body: JSON.stringify({ rating }) });
