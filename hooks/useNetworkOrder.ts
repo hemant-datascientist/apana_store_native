@@ -2,6 +2,7 @@
 // Each step sends one message to that shop's app and waits (polls) for its answer:
 // price (select) -> final bill (init) -> pay -> confirm.
 import { useCallback, useRef, useState } from "react";
+import { Linking } from "react-native";
 import {
   cancelNetworkOrder, confirmNetworkOrder, getNetworkOrder, initNetworkOrder, payNetworkOrder, refreshNetworkOrder, startNetworkOrder,
   type NetworkOrder, type NetworkOrderStatus,
@@ -51,11 +52,18 @@ export function useNetworkOrder() {
   const getPrice = (input: Parameters<typeof startNetworkOrder>[0]) => run(() => startNetworkOrder(input));
   const getFinalBill = (addressId: string) => order && run(() => initNetworkOrder(order.id, addressId));
   const payAndConfirm = () => order && run(async () => {
-    const intent = await payNetworkOrder(order.id);
+    const step = await payNetworkOrder(order.id);
+    if (step.collected_by === "BPP") {
+      // ONDC: the shop's app collects. Apana confirms without taking money, then opens the
+      // shop's own payment page (or the customer pays on delivery when there is no link).
+      const confirmed = await confirmNetworkOrder(order.id, {});
+      if (step.payment_uri && /^https:\/\//i.test(step.payment_uri)) void Linking.openURL(step.payment_uri);
+      return confirmed;
+    }
     // A live gateway needs its payment sheet, which this screen does not have yet:
     // say so rather than report a payment that never happened.
-    if (intent.is_live) throw new Error("Online payment for ONDC shops is not available yet.");
-    const gateway = await mockGatewayPay(intent.provider_order_id);
+    if (step.is_live) throw new Error("Online payment for ONDC shops is not available yet.");
+    const gateway = await mockGatewayPay(step.provider_order_id);
     return confirmNetworkOrder(order.id, gateway);
   });
 

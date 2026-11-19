@@ -91,6 +91,8 @@ export interface NetworkOrder {
   cancelled_by: "buyer" | "seller" | "apana" | null;
   /** Set once the order is cancelled: what Apana owes back and whether it has been paid. */
   refund: { due_paise: number; note: string | null; refunded_at: string | null } | null;
+  /** Who takes the money (ONDC: the shop's app decides) and, when the shop does, its own payment link. */
+  payment: { collected_by: "BAP" | "BPP"; type: string | null; uri: string | null; status: string | null };
 }
 
 export function startNetworkOrder(input: {
@@ -108,13 +110,17 @@ export function initNetworkOrder(id: string, addressId: string) {
   return call<NetworkOrder>(`/ondc/orders/${encodeURIComponent(id)}/init`, { method: "POST", body: JSON.stringify({ address_id: addressId }) });
 }
 
+export type PayStep =
+  | { collected_by: "BAP"; provider_order_id: string; public_key: string; amount_paise: number; is_live: boolean }
+  | { collected_by: "BPP"; payment_type: string | null; payment_uri: string | null; amount_paise: number };
+
 export function payNetworkOrder(id: string) {
-  return call<{ provider_order_id: string; public_key: string; amount_paise: number; is_live: boolean }>(
+  return call<PayStep>(
     `/ondc/orders/${encodeURIComponent(id)}/pay`, { method: "POST" },
   );
 }
 
-export function confirmNetworkOrder(id: string, paid: { provider_order_id: string; provider_payment_id: string; signature: string }) {
+export function confirmNetworkOrder(id: string, paid: { provider_order_id: string; provider_payment_id: string; signature: string } | Record<string, never>) {
   return call<NetworkOrder>(`/ondc/orders/${encodeURIComponent(id)}/confirm`, { method: "POST", body: JSON.stringify(paid) });
 }
 

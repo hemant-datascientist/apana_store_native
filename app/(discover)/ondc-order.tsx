@@ -80,10 +80,11 @@ export default function OndcOrderScreen() {
           <>
             {/* Refund policy, shown before payment (Consumer Protection (E-Commerce) Rules 2020). */}
             <Text style={[styles.note, { color: colors.subText }]}>
-              Refunds: if this order is cancelled, Apana refunds you within 24 hours. If you cannot be reached or do not accept the
-              delivery, perishable items (fruit and vegetables, dairy, bakery, eggs, meat and fish, frozen food, sweets) are not refunded.
+              {order.payment.collected_by === "BPP"
+                ? "This shop's app takes the payment itself: you pay on its page (or on delivery), and any refund comes from the shop's app."
+                : "Refunds: if this order is cancelled, Apana refunds you within 24 hours. If you cannot be reached or do not accept the delivery, perishable items (fruit and vegetables, dairy, bakery, eggs, meat and fish, frozen food, sweets) are not refunded."}
             </Text>
-            {btn(`Pay ₹${(order.total_paise / 100).toFixed(2)}`, () => void payAndConfirm())}
+            {btn(order.payment.collected_by === "BPP" ? "Place order" : `Pay ₹${(order.total_paise / 100).toFixed(2)}`, () => void payAndConfirm())}
           </>
         ) : null}
         {order?.status === "confirmed" && !id ? (

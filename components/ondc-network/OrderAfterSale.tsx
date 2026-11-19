@@ -1,6 +1,6 @@
 // A placed ONDC order: where it is, cancelling it, and the refund Apana owes.
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Linking } from "react-native";
 import { useRouter } from "expo-router";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
@@ -34,7 +34,7 @@ export default function OrderAfterSale({ order, busy, onCancel, onRefresh }: {
         {order.refund
           ? order.refund.due_paise > 0
             ? text(order.refund.refunded_at ? `Refunded ${rupees(order.refund.due_paise)}.` : `Refund of ${rupees(order.refund.due_paise)} is being processed.`, colors.success)
-            : text("No refund is due for this order.", colors.subText)
+            : text(order.refund.note && order.payment.collected_by === "BPP" ? order.refund.note : "No refund is due for this order.", colors.subText)
           : null}
         {order.refund?.note && order.refund.due_paise !== (order.total_paise ?? 0) ? text(order.refund.note, colors.subText) : null}
         {order.paid ? report : null}
@@ -60,6 +60,13 @@ export default function OrderAfterSale({ order, busy, onCancel, onRefresh }: {
           <Text style={[styles.btnText, { color: colors.text }]}>{r.label}</Text>
         </TouchableOpacity>
       )) : null}
+      {/* The shop's app collects: its own payment page, until it reports the order paid. */}
+      {order.payment.collected_by === "BPP" && order.payment.status !== "PAID" && order.payment.uri ? (
+        <TouchableOpacity onPress={() => void Linking.openURL(order.payment.uri!)} style={[styles.btn, { borderColor: colors.border }]}>
+          <Text style={[styles.btnText, { color: colors.primary }]}>Pay the shop</Text>
+        </TouchableOpacity>
+      ) : null}
+      {order.payment.collected_by === "BPP" && !order.payment.uri && order.payment.status !== "PAID" ? text("Pay the shop on delivery.", colors.subText) : null}
       {/* A refund agreed in a complaint, on an order that was delivered rather than cancelled. */}
       {order.refund && order.refund.due_paise > 0
         ? text(order.refund.refunded_at ? `Refunded ${rupees(order.refund.due_paise)} after your complaint.` : `Refund of ${rupees(order.refund.due_paise)} is being processed.`, colors.success)
