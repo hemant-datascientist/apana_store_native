@@ -70,7 +70,7 @@ export function networkResults(txn: string) {
 // The app sends ids and quantities only. The server takes the shop's address,
 // names and prices from its own stored search results.
 
-export type NetworkOrderStatus = "selecting" | "quoted" | "initializing" | "initialized" | "confirming" | "confirmed" | "cancelling" | "cancelled" | "failed";
+export type NetworkOrderStatus = "selecting" | "quoted" | "short" | "initializing" | "initialized" | "confirming" | "confirmed" | "cancelling" | "cancelled" | "failed";
 
 export interface NetworkOrder {
   id: string;
@@ -81,6 +81,8 @@ export interface NetworkOrder {
   /** returnable / return_window are the shop app's own terms; null when it did not say. */
   items: Array<{ id: string; qty: number; name: string; price_paise: number; returnable?: boolean | null; return_window?: string | null }>;
   total_paise: number | null;
+  /** Status "short" (ONDC 40002): per item, asked vs what the shop's app can supply (null = it did not say). */
+  shortfall: Array<{ id: string; name: string; asked: number; available: number | null }> | null;
   /** The seller app's own bill lines (items, delivery, packing, tax), exactly as sent. */
   breakup: Array<{ title: string | null; type: string | null; paise: number | null }>;
   paid: boolean;
@@ -107,6 +109,11 @@ export function startNetworkOrder(input: {
 
 export function getNetworkOrder(id: string) {
   return call<NetworkOrder>(`/ondc/orders/${encodeURIComponent(id)}`);
+}
+
+/** New quantities, same shop, same ONDC transaction (after a shortfall, or to change a quote). */
+export function reselectNetworkOrder(id: string, items: Array<{ id: string; qty: number }>, searchTxn?: string) {
+  return call<NetworkOrder>(`/ondc/orders/${encodeURIComponent(id)}/select`, { method: "POST", body: JSON.stringify({ items, ...(searchTxn ? { search_txn: searchTxn } : {}) }) });
 }
 
 export function initNetworkOrder(id: string, addressId: string) {

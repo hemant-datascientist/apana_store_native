@@ -27,7 +27,9 @@ export default function OndcOrderScreen() {
   const { addresses, deviceCoords, selectedAddress } = useLocation();
   const [shop, setShop] = useState<NetworkShop | null>(null);
   const [qty, setQty] = useState<Record<string, number>>({});
-  const { order, busy, error, getPrice, getFinalBill, payAndConfirm, load, cancel, refresh, stop } = useNetworkOrder();
+  const { order, busy, error, getPrice, getFinalBill, takeAvailable, swapItems, payAndConfirm, load, cancel, refresh, stop } = useNetworkOrder();
+  // After a shortfall: picking other items from the same shop, on the same order.
+  const [swapping, setSwapping] = useState(false);
   const address = addresses.find((a) => a.isDefault) ?? addresses[0];
   const point = deviceCoords ?? (selectedAddress.lat != null && selectedAddress.lng != null ? { lat: selectedAddress.lat, lng: selectedAddress.lng } : null);
 
@@ -38,7 +40,7 @@ export default function OndcOrderScreen() {
   }, [txn, bpp_id, provider_id, id]);
 
   const chosen = Object.entries(qty).filter(([, n]) => n > 0).map(([id, n]) => ({ id, qty: n }));
-  const step = order?.status ?? "choose";
+  const step = swapping && order?.status === "short" ? "choose" : order?.status ?? "choose";
   const btn = (label: string, onPress: () => void, disabled = false) => (
     <TouchableOpacity style={[styles.btn, { backgroundColor: colors.primary, opacity: busy || disabled ? 0.5 : 1 }]} disabled={busy || disabled} onPress={onPress}>
       {busy ? <ActivityIndicator color={colors.white} /> : <Text style={[styles.btnText, { color: colors.white }]}>{label}</Text>}
@@ -63,10 +65,26 @@ export default function OndcOrderScreen() {
             </View>
           </View>
         )) : null}
-        {shop && step === "choose" ? btn("Get the shop's price", () => point && txn && void getPrice({ search_txn: txn, bpp_id: shop.bpp_id, provider_id: shop.provider_id, items: chosen, ...point }), chosen.length === 0 || !point) : null}
+        {shop && step === "choose" ? btn("Get the shop's price", () => {
+          if (swapping && order && txn) { setSwapping(false); void swapItems(chosen, txn); return; }
+          if (point && txn) void getPrice({ search_txn: txn, bpp_id: shop.bpp_id, provider_id: shop.provider_id, items: chosen, ...point });
+        }, chosen.length === 0 || (!swapping && !point)) : null}
 
         {order && ["quoted", "initialized", "confirmed", "cancelling", "cancelled"].includes(order.status) ? (
           <OrderBill order={order} label={order.status === "quoted" ? "The shop's price" : "The shop's final bill"} />
+        ) : null}
+        {order?.status === "short" ? (
+          <>
+            {/* ONDC 40002: the shop cannot supply everything; offer what it has, same order. */}
+            <Text style={[styles.note, { color: colors.danger }]}>{order.error ?? "Some items are not available in the quantity asked."}</Text>
+            {order.shortfall?.some((s) => s.available == null)
+              ? null
+              : order.items.some((i) => { const s = order.shortfall?.find((x) => x.id === i.id); return (s ? s.available ?? 0 : i.qty) > 0; })
+                ? btn("Order what's available", () => void takeAvailable())
+                : shop && txn
+                  ? btn("Choose other items from this shop", () => { setQty({}); setSwapping(true); })
+                  : <Text style={[styles.note, { color: colors.subText }]}>Nothing you chose is in stock here. Go back and search for another shop.</Text>}
+          </>
         ) : null}
         {order?.status === "quoted" ? (
           address

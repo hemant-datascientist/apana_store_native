@@ -4,7 +4,7 @@
 import { useCallback, useRef, useState } from "react";
 import { Linking } from "react-native";
 import {
-  cancelNetworkOrder, confirmNetworkOrder, getNetworkOrder, initNetworkOrder, payNetworkOrder, refreshNetworkOrder, startNetworkOrder,
+  cancelNetworkOrder, confirmNetworkOrder, getNetworkOrder, initNetworkOrder, payNetworkOrder, refreshNetworkOrder, reselectNetworkOrder, startNetworkOrder,
   type NetworkOrder, type NetworkOrderStatus,
 } from "../services/ondcNetworkService";
 import { mockGatewayPay } from "../services/paymentsService";
@@ -51,6 +51,18 @@ export function useNetworkOrder() {
 
   const getPrice = (input: Parameters<typeof startNetworkOrder>[0]) => run(() => startNetworkOrder(input));
   const getFinalBill = (addressId: string) => order && run(() => initNetworkOrder(order.id, addressId));
+  // After a shortfall: ask again for only what the shop said it has.
+  const takeAvailable = () => {
+    if (!order?.shortfall) return;
+    const left = order.items
+      .map((i) => { const s = order.shortfall!.find((x) => x.id === i.id); return { id: i.id, qty: s ? s.available ?? 0 : i.qty }; })
+      .filter((i) => i.qty > 0);
+    if (!left.length) { setError("Nothing you chose is in stock at this shop. Search again for another shop."); return; }
+    return run(() => reselectNetworkOrder(order.id, left));
+  };
+  // Swap in other items from the same shop (its still-valid search results), same order.
+  const swapItems = (items: Array<{ id: string; qty: number }>, searchTxn: string) =>
+    order && run(() => reselectNetworkOrder(order.id, items, searchTxn));
   const payAndConfirm = () => order && run(async () => {
     const step = await payNetworkOrder(order.id);
     if (step.collected_by === "BPP") {
@@ -88,5 +100,5 @@ export function useNetworkOrder() {
     }
   };
 
-  return { order, busy, error, getPrice, getFinalBill, payAndConfirm, load, cancel, refresh, stop: () => { cancelled.current = true; } };
+  return { order, busy, error, getPrice, getFinalBill, takeAvailable, swapItems, payAndConfirm, load, cancel, refresh, stop: () => { cancelled.current = true; } };
 }
