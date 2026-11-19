@@ -78,7 +78,8 @@ export interface NetworkOrder {
   error: string | null;
   shop_name: string;
   bpp_id: string;
-  items: Array<{ id: string; qty: number; name: string; price_paise: number }>;
+  /** returnable / return_window are the shop app's own terms; null when it did not say. */
+  items: Array<{ id: string; qty: number; name: string; price_paise: number; returnable?: boolean | null; return_window?: string | null }>;
   total_paise: number | null;
   /** The seller app's own bill lines (items, delivery, packing, tax), exactly as sent. */
   breakup: Array<{ title: string | null; type: string | null; paise: number | null }>;
@@ -87,6 +88,8 @@ export interface NetworkOrder {
   ondc_state: string | null;
   /** The shop's own delivery state, e.g. "Agent-assigned", "Out-for-delivery", "Order-delivered". */
   fulfillment_state: string | null;
+  /** First time the shop's app reported the delivery: return windows count from here. */
+  delivered_at: string | null;
   cancel_reason_id: string | null;
   cancelled_by: "buyer" | "seller" | "apana" | null;
   /** Set once the order is cancelled: what Apana owes back and whether it has been paid. */
@@ -163,6 +166,29 @@ export interface NetworkIssue {
 export function issueCodes() {
   return call<{ items: Array<{ code: string; label: string }> }>("/ondc/issue-codes");
 }
+export interface NetworkReturn {
+  id: string;
+  item_id: string;
+  qty: number;
+  reason_id: string;
+  reason: string | null;
+  /** "requested", the shop app's Return state (Return_Approved, Return_Picked, Liquidated, ...) or "failed". */
+  state: string;
+  error: string | null;
+  refund: { paise: number; note: string | null; refunded_at: string | null } | null;
+  created_at: string;
+}
+
+export function returnReasons() {
+  return call<{ items: Array<{ id: string; label: string }> }>("/ondc/return-reasons");
+}
+export function listReturns(orderId: string) {
+  return call<{ items: NetworkReturn[] }>(`/ondc/orders/${encodeURIComponent(orderId)}/returns`);
+}
+export function requestReturn(orderId: string, input: { item_id: string; qty: number; reason_id: string }) {
+  return call<NetworkReturn>(`/ondc/orders/${encodeURIComponent(orderId)}/returns`, { method: "POST", body: JSON.stringify(input) });
+}
+
 export function listOrderIssues(orderId: string) {
   return call<{ items: NetworkIssue[] }>(`/ondc/issues?order_id=${encodeURIComponent(orderId)}`);
 }

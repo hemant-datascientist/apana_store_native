@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { cancelReasons, type NetworkOrder } from "../../services/ondcNetworkService";
+import OrderReturns from "./OrderReturns";
 
 const rupees = (p: number) => `₹${(p / 100).toFixed(2)}`;
 const BY: Record<string, string> = { buyer: "you", seller: "the shop", apana: "Apana (the shop never confirmed)" };
@@ -50,9 +51,12 @@ export default function OrderAfterSale({ order, busy, onCancel, onRefresh }: {
           <TouchableOpacity disabled={busy} onPress={onRefresh} style={[styles.btn, { borderColor: colors.border }]}>
             {busy ? <ActivityIndicator color={colors.primary} /> : <Text style={[styles.btnText, { color: colors.primary }]}>Check status</Text>}
           </TouchableOpacity>
-          <TouchableOpacity disabled={busy} onPress={() => setAsking((a) => !a)} style={[styles.btn, { borderColor: colors.border }]}>
-            <Text style={[styles.btnText, { color: colors.danger }]}>Cancel order</Text>
-          </TouchableOpacity>
+          {/* Once delivered the goods are here: a return, not a cancellation. */}
+          {!order.delivered_at ? (
+            <TouchableOpacity disabled={busy} onPress={() => setAsking((a) => !a)} style={[styles.btn, { borderColor: colors.border }]}>
+              <Text style={[styles.btnText, { color: colors.danger }]}>Cancel order</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       ) : null}
       {asking && order.status === "confirmed" ? reasons.map((r) => (
@@ -71,6 +75,7 @@ export default function OrderAfterSale({ order, busy, onCancel, onRefresh }: {
       {order.refund && order.refund.due_paise > 0
         ? text(order.refund.refunded_at ? `Refunded ${rupees(order.refund.due_paise)} after your complaint.` : `Refund of ${rupees(order.refund.due_paise)} is being processed.`, colors.success)
         : null}
+      {order.status === "confirmed" && order.delivered_at ? <OrderReturns order={order} /> : null}
       {order.status === "confirmed" ? report : null}
     </View>
   );
