@@ -80,15 +80,6 @@ export default function OrderQrCode({ orderId, mode, modeColor, qrLabel, handove
           </View>
         )}
 
-        {/* Brightness hint */}
-        {scannable && !bright && (
-          <View style={[styles.brightHint, { backgroundColor: modeColor + "18" }]}>
-            <Ionicons name="sunny-outline" size={12} color={modeColor} />
-            <Text style={[styles.brightText, { color: modeColor, fontFamily: typography.fontFamily.regular, fontSize: typography.size.ss }]}>
-              Tap to brighten
-            </Text>
-          </View>
-        )}
       </TouchableOpacity>
 
       {/* ── QR label ── */}

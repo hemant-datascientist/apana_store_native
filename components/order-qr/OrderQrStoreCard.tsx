@@ -22,6 +22,7 @@ import { CartItem } from "../../data/cartData";
 import { StoreOrderResult } from "../../services/checkoutService";
 import QRShareButton from "../qr/QRShareButton";
 import type { HandoverState } from "../../hooks/useHandoverCodes";
+import { rupees } from "../../lib/money";
 
 const { width: SW } = Dimensions.get("window");
 const QR_SIZE = SW * 0.46;   // smaller than the full-screen QR
@@ -77,17 +78,21 @@ export default function OrderQrStoreCard({
                 {storeOrder.storeType}
               </Text>
             </View>
-            <View style={styles.etaChip}>
-              <Ionicons name="time-outline" size={11} color={colors.subText} />
-              <Text style={[styles.etaText, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.ss }]}>
-                ~{storeOrder.estimatedMins} min
-              </Text>
-            </View>
+            {/* Shown only when the shop's time is known; 0 means "not known", never "ready now". */}
+            {storeOrder.estimatedMins > 0 ? (
+              <View style={styles.etaChip}>
+                <Ionicons name="time-outline" size={11} color={colors.subText} />
+                <Text style={[styles.etaText, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.ss }]}>
+                  ~{storeOrder.estimatedMins} min
+                </Text>
+              </View>
+            ) : null}
           </View>
         </View>
         {/* Subtotal */}
         <Text style={[styles.subtotal, { color: modeColor, fontFamily: typography.fontFamily.bold, fontSize: typography.size.md }]}>
-          ₹{itemTotal}
+          {/* The order's own amount: the cart is emptied once the order is placed (it showed ₹0). */}
+          {rupees(storeOrder.subtotal || itemTotal)}
         </Text>
       </View>
 
@@ -144,14 +149,6 @@ export default function OrderQrStoreCard({
               <Ionicons name="time-outline" size={28} color={colors.subText} />
               <Text style={{ color: colors.subText, fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs, textAlign: "center", marginTop: 8 }}>
                 {waitText}
-              </Text>
-            </View>
-          )}
-          {scannable && !bright && (
-            <View style={[styles.brightHint, { backgroundColor: modeColor + "18" }]}>
-              <Ionicons name="sunny-outline" size={11} color={modeColor} />
-              <Text style={[styles.brightHintText, { color: modeColor, fontFamily: typography.fontFamily.regular, fontSize: typography.size.ss }]}>
-                Tap to brighten
               </Text>
             </View>
           )}

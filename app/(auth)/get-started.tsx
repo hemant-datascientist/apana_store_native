@@ -50,7 +50,7 @@ export default function GetStartedScreen() {
   }
 
   function handleGetStarted() {
-    router.push("/login");
+    router.push("/login?new=1" as never);
   }
 
   return (

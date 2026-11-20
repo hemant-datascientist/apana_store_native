@@ -23,6 +23,7 @@ import { Order, ACTIVE_STATUSES } from "../../data/orderHistoryData";
 import OrderStatusBadge   from "./OrderStatusBadge";
 import DeliveryCodeCard   from "./DeliveryCodeCard";
 import AcceptCountdown    from "./AcceptCountdown";
+import { rupees } from "../../lib/money";
 
 interface OrderCardProps {
   /** Open the conversation with this shop about this order. */
@@ -79,11 +80,12 @@ export default function OrderCard({ order, onTrack, onReorder, onRate, onMessage
             fontFamily: typography.fontFamily.regular,
             fontSize:   typography.size.xs,
           }]}>
-            {order.storeCategory}  ·  {order.date}
+            {/* no category → no leading " · " */}
+            {[order.storeCategory, order.date].filter(Boolean).join("  ·  ")}
           </Text>
         </View>
 
-        <OrderStatusBadge status={order.status} small />
+        <OrderStatusBadge status={order.status} readyToCollect={order.readyToCollect} collected={order.mode === "pickup"} small />
       </View>
 
       {/* ── Divider ── */}
@@ -116,7 +118,7 @@ export default function OrderCard({ order, onTrack, onReorder, onRate, onMessage
             fontFamily: typography.fontFamily.bold,
             fontSize:   typography.size.sm,
           }]}>
-            ₹{order.total.toLocaleString("en-IN")}
+            {rupees(order.total)}
           </Text>
           <Text style={[styles.payment, {
             color:      colors.subText,
@@ -156,17 +158,19 @@ export default function OrderCard({ order, onTrack, onReorder, onRate, onMessage
 
       {/* ── Action row ── */}
       <View style={[styles.actionRow, { borderTopColor: colors.border }]}>
-        {/* Address chip */}
-        <View style={styles.addressChip}>
-          <Ionicons name="location-outline" size={12} color={colors.subText} />
-          <Text style={[styles.addressText, {
-            color:      colors.subText,
-            fontFamily: typography.fontFamily.regular,
-            fontSize:   typography.size.xs,
-          }]} numberOfLines={1}>
-            {order.deliveryAddress}
-          </Text>
-        </View>
+        {/* Address chip — its own line; none for pickup (it was a pin with nothing beside it) */}
+        {order.deliveryAddress ? (
+          <View style={styles.addressChip}>
+            <Ionicons name="location-outline" size={12} color={colors.subText} />
+            <Text style={[styles.addressText, {
+              color:      colors.subText,
+              fontFamily: typography.fontFamily.regular,
+              fontSize:   typography.size.xs,
+            }]} numberOfLines={1}>
+              {order.deliveryAddress}
+            </Text>
+          </View>
+        ) : null}
 
         {/* Message the shop about THIS order.
             🔴 On every order, not only live ones. The shop can write at any
@@ -325,6 +329,7 @@ const styles = StyleSheet.create({
   // ── Action row ──
   actionRow: {
     flexDirection:     "row",
+    flexWrap:          "wrap", // four+ buttons ran off the card edge and could not be reached
     alignItems:        "center",
     paddingHorizontal: 14,
     paddingVertical:   10,
@@ -332,7 +337,7 @@ const styles = StyleSheet.create({
     gap:               8,
   },
   addressChip: {
-    flex:          1,
+    flexBasis:     "100%",
     flexDirection: "row",
     alignItems:    "center",
     gap:           4,

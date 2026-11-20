@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { FulfillmentMode, FULFILLMENT_CONFIG } from "../../data/cartData";
+import { rupees } from "../../lib/money";
 
 // ── One group = all stores sharing the same fulfillment mode ──
 
@@ -24,6 +25,10 @@ export interface FulfillmentGroup {
   storeCount: number;
   itemCount:  number;
   total:      number | null; // null while a delivery fee is still unpriced
+  /** Why this mode cannot be ordered now (no rider near the shop, another
+   *  city) — the button is shown greyed with the reason instead of leading
+   *  to a checkout that will refuse. */
+  blocked?:   string | null;
 }
 
 interface CartCheckoutBarProps {
@@ -46,9 +51,10 @@ export default function CartCheckoutBar({ groups, onCheckout }: CartCheckoutBarP
           return (
             <TouchableOpacity
               key={group.mode}
+              disabled={!!group.blocked}
               style={[
                 styles.btn,
-                { backgroundColor: cfg.color },
+                { backgroundColor: group.blocked ? colors.subText : cfg.color },
                 // subtle top separator between stacked buttons
                 idx > 0 && { marginTop: 8 },
               ]}
@@ -60,12 +66,14 @@ export default function CartCheckoutBar({ groups, onCheckout }: CartCheckoutBarP
                 <View style={[styles.modeIcon, { backgroundColor: "rgba(255,255,255,0.2)" }]}>
                   <Ionicons name={cfg.icon as any} size={16} color="#fff" />
                 </View>
-                <View>
+                <View style={{ flexShrink: 1 }}>
                   <Text style={[styles.modeLabel, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
                     {cfg.label} Order
                   </Text>
-                  <Text style={[styles.modeMeta, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-                    {group.storeCount} store{group.storeCount > 1 ? "s" : ""} · {group.itemCount} item{group.itemCount > 1 ? "s" : ""}
+                  <Text style={[styles.modeMeta, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]} numberOfLines={2}>
+                    {group.blocked
+                      ? group.blocked
+                      : `${group.storeCount} store${group.storeCount > 1 ? "s" : ""} · ${group.itemCount} item${group.itemCount > 1 ? "s" : ""}`}
                   </Text>
                 </View>
               </View>
@@ -73,7 +81,7 @@ export default function CartCheckoutBar({ groups, onCheckout }: CartCheckoutBarP
               {/* Right: total + arrow */}
               <View style={styles.btnRight}>
                 <Text style={[styles.btnTotal, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.md }]}>
-                  {group.total == null ? "—" : `₹${group.total}`}
+                  {group.total == null ? "—" : rupees(group.total)}
                 </Text>
                 <Ionicons name="arrow-forward-circle" size={22} color="#fff" />
               </View>
@@ -108,9 +116,11 @@ const styles = StyleSheet.create({
   },
 
   btnLeft: {
+    flex:          1, // a long block reason must wrap, not push the total off
     flexDirection: "row",
     alignItems:    "center",
     gap:           10,
+    marginRight:   8,
   },
   modeIcon: {
     width:          36,

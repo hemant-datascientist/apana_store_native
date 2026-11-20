@@ -164,7 +164,8 @@ export default function AddressBookScreen() {
                   numberOfLines={1}
                   style={[styles.addrLine, { fontFamily: typography.fontFamily.regular, color: colors.subText }]}
                 >
-                  {addr.line1}, {addr.line2}
+                  {/* Door first: at the end of the line it was cut off by the ellipsis. */}
+                  {[addr.door || addr.line2, addr.line1].filter(Boolean).join(", ")}
                 </Text>
 
                 <Text
@@ -206,12 +207,14 @@ export default function AddressBookScreen() {
           );
         })}
 
-        {/* ── OR divider ── */}
-        <View style={styles.orRow}>
-          <View style={[styles.orLine, { backgroundColor: colors.border }]} />
-          <Text style={[styles.orText, { fontFamily: typography.fontFamily.medium, color: colors.subText }]}>OR</Text>
-          <View style={[styles.orLine, { backgroundColor: colors.border }]} />
-        </View>
+        {/* ── OR divider — only between a list and the add button ── */}
+        {addresses.length > 0 ? (
+          <View style={styles.orRow}>
+            <View style={[styles.orLine, { backgroundColor: colors.border }]} />
+            <Text style={[styles.orText, { fontFamily: typography.fontFamily.medium, color: colors.subText }]}>OR</Text>
+            <View style={[styles.orLine, { backgroundColor: colors.border }]} />
+          </View>
+        ) : null}
 
         {/* ── Add New Address ── */}
         {/* primaryLight gives a faint brand wash that adapts to theme */}

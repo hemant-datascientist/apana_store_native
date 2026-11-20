@@ -156,7 +156,7 @@ export default function LiveProductDetailScreen() {
   }
 
   function handleAdd() {
-    if (p == null || needsChoice || shownStock <= 0) return;
+    if (p == null || needsChoice || shownStock <= 0 || !p.store.isOpen) return;
     const tint = storeTint(p.store.id);
     addItem({
       storeId: p.store.id,
@@ -220,6 +220,24 @@ export default function LiveProductDetailScreen() {
           {/* key resets the carousel to photo 1 when the colour changes */}
           <DetailHero key={heroImages.join("|")} images={heroImages} isIndia={isIndia} />
           <DetailHeader name={p.name} brand={p.brand} verified={detail?.enrichment?.verified ?? false} gtin={detail?.enrichment?.gtin ?? null} />
+          {/* Who sells it, and whether they are open now — the page never named the shop. */}
+          <TouchableOpacity
+            style={styles.sellerRow}
+            onPress={() => router.push(`/store-detail?id=${p.store.id}` as never)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="storefront-outline" size={14} color={colors.primary} />
+            <Text style={[styles.sellerName, { color: colors.primary, fontFamily: typography.fontFamily.semiBold }]} numberOfLines={1}>
+              Sold by {p.store.name}
+            </Text>
+            <Text style={[styles.sellerState, {
+              color: p.store.isOpen ? colors.success : colors.danger,
+              fontFamily: typography.fontFamily.medium,
+            }]}>
+              {p.store.isOpen ? "Open now" : (p.store.closedLabel ?? "Closed")}
+            </Text>
+          </TouchableOpacity>
+
           {/* 0177 — the shop's own label is the shop's word, not a brand's. Only
               said when the shop said it; nothing is shown for "brand"/"none"/unanswered. */}
           {detail?.labelOwner === "own" || detail?.labelOwner === "made_here" ? (
@@ -335,6 +353,7 @@ export default function LiveProductDetailScreen() {
           inCartQty={inCartQty}
           onAdd={handleAdd}
           onGoToCart={() => router.push("/cart")}
+          closedLabel={p.store.isOpen ? null : (p.store.closedLabel ?? "Shop closed")}
         />
       )}
 
@@ -373,6 +392,9 @@ const styles = StyleSheet.create({
   vegDot: { width: 7, height: 7, borderRadius: 4 },
   availLine: { fontSize: typography.size.sm, marginTop: 8 },
   labelLine: { fontSize: typography.size.sm, marginTop: 4 },
+  sellerRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 6 },
+  sellerName: { fontSize: typography.size.sm, flexShrink: 1 },
+  sellerState: { fontSize: typography.size.xs },
   ratingChip: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 8 },
   ratingChipTxt: { fontSize: typography.size.sm },
   ratingChipSub: { fontSize: typography.size.xs },

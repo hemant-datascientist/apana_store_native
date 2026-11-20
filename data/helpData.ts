@@ -123,12 +123,12 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
       {
         id: "p3",
         question: "How do refunds work?",
-        answer:   "Refunds are credited back to your original payment method within 5–7 business days after the return/cancellation is approved. UPI refunds are usually instant.",
+        answer:   "Refunds go back the way you paid: a cash order is refunded by the shop, and an online payment goes back to the method you paid with once the return or cancellation is approved.",
       },
       {
         id: "p4",
         question: "Is my payment information stored securely?",
-        answer:   "Apana Store does not store your card details. All payments are processed through PCI-DSS compliant payment gateways.",
+        answer:   "Apana never stores your card number or CVV. When paying online, card details are entered on the payment gateway's own page, not in Apana.",
       },
     ],
   },

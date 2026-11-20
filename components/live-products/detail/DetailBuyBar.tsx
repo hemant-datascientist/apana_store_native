@@ -21,18 +21,23 @@ interface DetailBuyBarProps {
   inCartQty: number;
   onAdd: () => void;
   onGoToCart: () => void;
+  /** "Closed · opens 09:00" when the shop is shut. Checkout would refuse the
+   *  order, so it is said here, before the cart, not at the payment step. */
+  closedLabel?: string | null;
 }
 
 export default function DetailBuyBar({
-  price, mrp, needsChoice, stock, inCartQty, onAdd, onGoToCart,
+  price, mrp, needsChoice, stock, inCartQty, onAdd, onGoToCart, closedLabel,
 }: DetailBuyBarProps) {
   const { colors } = useTheme();
 
   const soldOut = stock <= 0;
   const atCeiling = inCartQty > 0 && inCartQty >= stock;
-  const disabled = needsChoice || soldOut || atCeiling;
+  const disabled = !!closedLabel || needsChoice || soldOut || atCeiling;
 
-  const label = needsChoice
+  const label = closedLabel
+    ? closedLabel
+    : needsChoice
     ? "Choose an option"
     : soldOut
       ? "Out of stock"

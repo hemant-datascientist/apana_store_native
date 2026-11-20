@@ -8,7 +8,7 @@
 // a size). Theme + typography tokens only.
 // ============================================================
 
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
@@ -30,6 +30,9 @@ function rupee(n: number): string {
 
 export default function ApcGridCard({ product, qty, onOpen, onAdd, onInc, onDec }: Props) {
   const { colors } = useTheme();
+  // A photo URL that fails to load (moved, or the server unreachable) left an
+  // empty box; fall back to the same icon as a product with no photo.
+  const [imgFailed, setImgFailed] = useState(false);
   const hasVariants = product.variants.length > 0;
   const outOfStock = product.stockQty <= 0;
   const lowStock = product.stockQty > 0 && product.stockQty <= 5;
@@ -38,8 +41,8 @@ export default function ApcGridCard({ product, qty, onOpen, onAdd, onInc, onDec 
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
       {/* Media — tap opens detail */}
       <TouchableOpacity activeOpacity={0.85} onPress={onOpen} style={[styles.media, { backgroundColor: colors.background }]}>
-        {product.image ? (
-          <Image source={{ uri: product.image }} style={styles.image} resizeMode="contain" />
+        {product.image && !imgFailed ? (
+          <Image source={{ uri: product.image }} style={styles.image} resizeMode="contain" onError={() => setImgFailed(true)} />
         ) : (
           <Ionicons name="cube-outline" size={34} color={colors.subText} />
         )}
@@ -77,6 +80,13 @@ export default function ApcGridCard({ product, qty, onOpen, onAdd, onInc, onDec 
         <View style={styles.priceRow}>
           <Text style={[styles.price, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>
             {rupee(product.price)}
+            {/* "₹72" for apples sold by the dozen read as one apple; say the unit
+                whenever it isn't a single piece. */}
+            {product.unit && product.unit !== "piece" ? (
+              <Text style={[styles.perUnit, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>
+                /{product.unit}
+              </Text>
+            ) : null}
           </Text>
           {product.mrp != null && product.mrp > product.price && (
             <Text style={[styles.mrp, { color: colors.subText, fontFamily: typography.fontFamily.regular }]}>
@@ -133,6 +143,13 @@ export default function ApcGridCard({ product, qty, onOpen, onAdd, onInc, onDec 
               <Ionicons name="add" size={16} color={colors.white} />
             </TouchableOpacity>
           </View>
+        ) : !product.store.isOpen ? (
+          // A closed shop cannot take the order (checkout refuses), so say so here
+          // instead of letting it into the cart. Variants/loose open the detail page,
+          // which shows the same state.
+          <View style={[styles.addBtn, { borderColor: colors.border }]}>
+            <Text style={[styles.oosText, { color: colors.subText, fontFamily: typography.fontFamily.semiBold }]}>Shop closed</Text>
+          </View>
         ) : (
           <TouchableOpacity activeOpacity={0.85} onPress={onAdd} style={[styles.addBtn, { borderColor: colors.primary }]}>
             <Text style={[styles.addText, { color: colors.primary, fontFamily: typography.fontFamily.bold }]}>ADD</Text>
@@ -166,6 +183,7 @@ const styles = StyleSheet.create({
   name: { fontSize: typography.size.sm, lineHeight: 18, minHeight: 36 },
   priceRow: { flexDirection: "row", alignItems: "baseline", gap: 5, marginTop: 2 },
   price: { fontSize: typography.size.md },
+  perUnit: { fontSize: typography.size.xs },
   mrp: { fontSize: typography.size.xs, textDecorationLine: "line-through" },
   storeRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
   store: { fontSize: typography.size.xs, flex: 1 },

@@ -13,6 +13,7 @@ import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { FulfillmentMode } from "../../data/cartData";
 import { TRACKING_MODE_CONFIG } from "../../data/orderTrackingData";
+import { rupees } from "../../lib/money";
 
 interface TrackingEtaCardProps {
   mode:      FulfillmentMode;
@@ -66,9 +67,12 @@ export default function TrackingEtaCard({ mode, minutes, label, orderId, total }
           {minutes ?? ""}
         </Text>
         <View style={styles.etaRight}>
-          <Text style={[styles.etaUnit, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.sm }]}>
-            min
-          </Text>
+          {/* "min" only beside a number; with no estimate the status line stands alone. */}
+          {minutes != null ? (
+            <Text style={[styles.etaUnit, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.sm }]}>
+              min
+            </Text>
+          ) : null}
           <Text style={[styles.etaLabel, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
             {label}
           </Text>
@@ -81,7 +85,7 @@ export default function TrackingEtaCard({ mode, minutes, label, orderId, total }
           {orderId}
         </Text>
         <Text style={[styles.metaText, { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
-          ₹{total}
+          {rupees(total)}
         </Text>
       </View>
     </View>

@@ -30,10 +30,22 @@ const COLS          = 4;
 const CELL_W        = Math.floor((SW - H_PAD * 2 - COL_GAP * (COLS - 1)) / COLS);
 const IMG_H         = Math.floor(CELL_W * 0.90);
 
+// Indian calendar: Mar–May summer · Jun–Sep monsoon · Oct–Nov festive · Dec–Feb winter.
+function seasonForMonth(m: number): string {
+  if (m >= 2 && m <= 4) return "summer";
+  if (m >= 5 && m <= 8) return "monsoon";
+  if (m >= 9 && m <= 10) return "festive";
+  return "winter";
+}
+
 export default function SeasonalCategorySection({ seasons }: SeasonalCategorySectionProps) {
   const { colors } = useTheme();
   const router = useRouter();
-  const [idx, setIdx] = useState(0);
+  // Open on the season India is in now — "Summer Picks" in November read as stale.
+  const [idx, setIdx] = useState(() => {
+    const i = seasons.findIndex((x) => x.key === seasonForMonth(new Date().getMonth()));
+    return i >= 0 ? i : 0;
+  });
 
   const n = seasons.length;
   // Wrap around both ends so the carousel never dead-ends.
@@ -109,6 +121,9 @@ export default function SeasonalCategorySection({ seasons }: SeasonalCategorySec
 
             <Text
               numberOfLines={2}
+              // shrink rather than break a long word ("Firecracker/s")
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
               style={[styles.label, { fontFamily: typography.fontFamily.semiBold, color: colors.text }]}
             >
               {cat.label}

@@ -23,6 +23,11 @@ import { useLocation } from "../context/LocationContext";
 const cache = new Map<string, LiveProduct[]>();
 const inflight = new Map<string, Promise<LiveProduct[]>>();
 
+/** Pull-to-refresh: drop the shelf so the next mount asks the server again. */
+export function clearLiveProductsCache(): void {
+  cache.clear();
+}
+
 // 3dp ≈ 110 m. Finer than that is noise from a drifting GPS fix and would
 // miss the cache on every reading.
 function keyFor(lat: number, lng: number): string {

@@ -45,12 +45,12 @@ export default function SearchEmptyState({ query, onSuggestion }: SearchEmptySta
       <Text style={[styles.sub, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.sm }]}>
         {isBlank
           ? "Search across products, stores, and categories."
-          : "Try a shorter or different keyword, or browse popular searches below."}
+          : "Try a shorter or different keyword, or try one of these."}
       </Text>
 
       {/* ── Popular suggestions ── */}
       <Text style={[styles.sectionLabel, { color: colors.subText, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
-        POPULAR SEARCHES
+        TRY SEARCHING FOR
       </Text>
       <View style={styles.chips}>
         {POPULAR_SUGGESTIONS.map(s => (

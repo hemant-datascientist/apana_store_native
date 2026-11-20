@@ -10,11 +10,14 @@ import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
+import { rupees } from "../../lib/money";
 
 interface CheckoutPriceBreakdownProps {
   subtotal:      number;
   /** null = not priced yet (no delivery pin) — shown as "—", never guessed. */
   deliveryTotal: number | null;
+  /** False when every shop is pickup: there is no delivery to price (it read "FREE"). */
+  hasDelivery?: boolean;
   platformFee:   number;     // ₹5 per shop order, from the server
   /** GST on Apana's delivery + platform fee (₹); null = not priced yet. */
   gst?:          number | null;
@@ -24,7 +27,7 @@ interface CheckoutPriceBreakdownProps {
 }
 
 export default function CheckoutPriceBreakdown({
-  subtotal, deliveryTotal, platformFee, gst = null, discountAmt = 0, appliedPromo = null, total,
+  subtotal, deliveryTotal, hasDelivery = true, platformFee, gst = null, discountAmt = 0, appliedPromo = null, total,
 }: CheckoutPriceBreakdownProps) {
   const { colors } = useTheme();
 
@@ -46,22 +49,22 @@ export default function CheckoutPriceBreakdown({
 
         <PriceRow
           label="Item Subtotal"
-          value={`₹${subtotal}`}
+          value={rupees(subtotal)}
           textColor={colors.text}
           valueColor={colors.subText}
         />
 
-        <PriceRow
+        {hasDelivery ? <PriceRow
           label="Delivery Charges"
-          value={deliveryTotal == null ? "—" : deliveryTotal === 0 ? "FREE" : `₹${deliveryTotal}`}
+          value={deliveryTotal == null ? "—" : deliveryTotal === 0 ? "FREE" : rupees(deliveryTotal)}
           textColor={colors.text}
           valueColor={deliveryTotal === 0 ? "#16A34A" : colors.subText}
-        />
+        /> : null}
 
         {/* ₹5 per shop order — Apana's fee, charged to the customer */}
         <PriceRow
           label="Platform Fee"
-          value={`₹${platformFee}`}
+          value={rupees(platformFee)}
           textColor={colors.text}
           valueColor={colors.subText}
         />
@@ -70,7 +73,7 @@ export default function CheckoutPriceBreakdown({
         {gst != null && gst > 0 && (
           <PriceRow
             label="GST on delivery & platform fee"
-            value={`₹${gst}`}
+            value={rupees(gst)}
             textColor={colors.text}
             valueColor={colors.subText}
           />
@@ -80,7 +83,7 @@ export default function CheckoutPriceBreakdown({
         {discountAmt > 0 && appliedPromo && (
           <PriceRow
             label={`Promo (${appliedPromo})`}
-            value={`−₹${discountAmt}`}
+            value={"−" + rupees(discountAmt)}
             textColor={colors.text}
             valueColor="#16A34A"
           />
@@ -95,7 +98,7 @@ export default function CheckoutPriceBreakdown({
           Total Payable
         </Text>
         <Text style={[styles.totalValue, { color: colors.primary, fontFamily: typography.fontFamily.bold, fontSize: typography.size.xl }]}>
-          {total == null ? "—" : `₹${total}`}
+          {total == null ? "—" : rupees(total)}
         </Text>
       </View>
 
@@ -104,7 +107,7 @@ export default function CheckoutPriceBreakdown({
         <View style={[styles.savingsBadge, { backgroundColor: "#DCFCE7" }]}>
           <Ionicons name="happy-outline" size={14} color="#15803D" />
           <Text style={[styles.savingsText, { color: "#15803D", fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
-            You're saving ₹{discountAmt} on this order!
+            You're saving {rupees(discountAmt)} on this order!
           </Text>
         </View>
       )}

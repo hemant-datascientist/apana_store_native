@@ -10,7 +10,12 @@ import { View, Text, StyleSheet } from "react-native";
 import useTheme       from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 
-export default function WelcomeBlock() {
+interface WelcomeBlockProps {
+  /** Came from "Get Started": a new customer, not a returning one. */
+  isNew?: boolean;
+}
+
+export default function WelcomeBlock({ isNew = false }: WelcomeBlockProps) {
   const { colors } = useTheme();
 
   return (
@@ -21,7 +26,7 @@ export default function WelcomeBlock() {
         fontFamily: typography.fontFamily.bold,
         fontSize:   typography.size.xxl + 2,
       }]}>
-        Welcome Back 👋
+        {isNew ? "Let's get you started" : "Welcome Back 👋"}
       </Text>
 
       {/* ── Supporting subtitle ── */}
@@ -30,7 +35,9 @@ export default function WelcomeBlock() {
         fontFamily: typography.fontFamily.regular,
         fontSize:   typography.size.sm,
       }]}>
-        Sign in to order from local stores near you
+        {isNew
+          ? "Enter your number. New or returning, one code signs you in."
+          : "Sign in to order from local stores near you"}
       </Text>
     </View>
   );

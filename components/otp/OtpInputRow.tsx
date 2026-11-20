@@ -90,5 +90,11 @@ const styles = StyleSheet.create({
     height:       56,
     borderRadius: 12,
     borderWidth:  1.5,
+    // Android's default input padding + Poppins' tall line box overflowed 56
+    // and cut the digit; zero it and centre the glyph instead.
+    paddingVertical:    0,
+    paddingHorizontal:  0,
+    includeFontPadding: false,
+    textAlignVertical:  "center",
   },
 });

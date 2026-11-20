@@ -15,10 +15,21 @@ import { typography } from "../../theme/typography";
 
 interface InputHintProps {
   method: "phone" | "email";
+  /** Why the typed value cannot be used — shown instead of the hint, so a
+   *  greyed-out button is never left unexplained. */
+  problem?: string | null;
 }
 
-export default function InputHint({ method }: InputHintProps) {
+export default function InputHint({ method, problem }: InputHintProps) {
   const { colors } = useTheme();
+
+  if (problem) {
+    return (
+      <Text style={[styles.hint, { color: colors.danger, fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
+        {problem}
+      </Text>
+    );
+  }
 
   return (
     <Text style={[styles.hint, {

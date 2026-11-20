@@ -17,6 +17,7 @@ import { resolveStoreDiscount, isItemUnlocked } from "../../lib/discount";
 import CartFulfillmentSelector from "./CartFulfillmentSelector";
 import CartDiscountBar         from "./CartDiscountBar";
 import CartItemRow             from "./CartItemRow";
+import { rupees } from "../../lib/money";
 
 interface CartStoreCardProps {
   store:           CartStore;
@@ -59,15 +60,15 @@ export default function CartStoreCard({
         {disc.charged < subtotal ? (
           <View style={styles.priceCol}>
             <Text style={[styles.strike, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-              ₹{subtotal}
+              {rupees(subtotal)}
             </Text>
             <Text style={[styles.subtotal, { color: "#15803D", fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-              ₹{disc.charged}
+              {rupees(disc.charged)}
             </Text>
           </View>
         ) : (
           <Text style={[styles.subtotal, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-            ₹{subtotal}
+            {rupees(subtotal)}
           </Text>
         )}
       </View>

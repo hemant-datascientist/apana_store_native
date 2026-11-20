@@ -22,7 +22,7 @@ export const ONBOARDING_SLIDES: OnboardingSlide[] = [
   {
     icon:  "storefront-outline",
     title: "Shop from Nearby Stores",
-    body:  "Discover hundreds of local shops, kirana stores, and brands right in your neighbourhood.",
+    body:  "Order from local shops and kirana stores right in your neighbourhood.",
     bg:    "#EFF6FF",
     color: "#0F4C81",
   },

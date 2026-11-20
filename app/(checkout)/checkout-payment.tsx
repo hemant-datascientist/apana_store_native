@@ -380,8 +380,9 @@ export default function CheckoutPaymentScreen() {
           </View>
         )}
 
-        {/* ── Security assurance ── */}
-        <View style={[styles.securityCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        {/* ── Security assurance ── only for an online payment: with cash these were claims
+             about a card gateway the order never touches. */}
+        {!isCod ? <View style={[styles.securityCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           {[
             { icon: "shield-checkmark-outline", color: "#16A34A", text: "256-bit SSL encrypted transaction" },
             { icon: "lock-closed-outline",      color: "#F59E0B", text: "CVV and card data never stored"   },
@@ -394,7 +395,7 @@ export default function CheckoutPaymentScreen() {
               </Text>
             </View>
           ))}
-        </View>
+        </View> : null}
 
         <View style={{ height: 100 }} />
       </ScrollView>

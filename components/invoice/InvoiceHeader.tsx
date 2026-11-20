@@ -35,6 +35,8 @@ export default function InvoiceHeader({
   gstNo, fssaiNo, customerCare, isTaxInvoice = false,
 }: InvoiceHeaderProps) {
   const { colors } = useTheme();
+  const place      = [storeCity, storeState].filter(Boolean).join(", ");
+  const placeLine  = storePincode ? `${place}${place ? " — " : ""}${storePincode}` : place;
 
   return (
     <View style={styles.container}>
@@ -50,23 +52,30 @@ export default function InvoiceHeader({
       </Text>
 
       {/* ── Address ── */}
-      <Text style={[styles.address, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-        {storeAddress}
-      </Text>
-      <Text style={[styles.address, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-        {storeCity}, {storeState} — {storePincode}
-      </Text>
+      {/* Only the parts that exist: an empty field rendered "Jalgaon, —". */}
+      {storeAddress ? (
+        <Text style={[styles.address, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+          {storeAddress}
+        </Text>
+      ) : null}
+      {placeLine ? (
+        <Text style={[styles.address, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+          {placeLine}
+        </Text>
+      ) : null}
 
       {/* ── GST + FSSAI ── */}
       <View style={styles.regRow}>
-        <View style={[styles.regPill, { backgroundColor: colors.background, borderColor: colors.border }]}>
-          <Text style={[styles.regLabel, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.ss }]}>
-            GST
-          </Text>
-          <Text style={[styles.regValue, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.ss }]}>
-            {gstNo}
-          </Text>
-        </View>
+        {gstNo !== "" && (
+          <View style={[styles.regPill, { backgroundColor: colors.background, borderColor: colors.border }]}>
+            <Text style={[styles.regLabel, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.ss }]}>
+              GST
+            </Text>
+            <Text style={[styles.regValue, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.ss }]}>
+              {gstNo}
+            </Text>
+          </View>
+        )}
 
         {fssaiNo !== "" && (
           <View style={[styles.regPill, { backgroundColor: colors.background, borderColor: colors.border }]}>

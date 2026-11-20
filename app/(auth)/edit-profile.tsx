@@ -104,7 +104,7 @@ export default function EditProfileScreen() {
       {loading ? (
         <ActivityIndicator size="small" color={colors.white} />
       ) : (
-        <Text style={[styles.headerSave, {
+        <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.headerSave, {
           color:      colors.white,
           fontFamily: typography.fontFamily.semiBold,
           fontSize:   typography.size.md - 1,

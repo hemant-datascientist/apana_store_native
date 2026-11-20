@@ -39,6 +39,7 @@ import OtpInputRow         from "../../components/otp/OtpInputRow";
 import TimerResend         from "../../components/otp/TimerResend";
 import VerifyButton        from "../../components/otp/VerifyButton";
 import WrongContactLink    from "../../components/otp/WrongContactLink";
+import { friendlyError } from "../../lib/friendlyError";
 
 const OTP_LENGTH      = 6;
 const RESEND_COOLDOWN = 60;
@@ -213,7 +214,7 @@ export default function OtpScreen() {
     } catch (e) {
       // Surface the server's own words — "Too many codes requested. Try again
       // in 12 min." tells the person what to do; "Invalid OTP" does not.
-      Alert.alert("Could not sign in", e instanceof Error ? e.message : "Please try again.");
+      Alert.alert("Could not sign in", friendlyError(e));
       setDigits(Array(OTP_LENGTH).fill(""));
       inputRefs.current[0]?.focus();
     } finally {
@@ -235,7 +236,7 @@ export default function OtpScreen() {
     } catch (e) {
       // The rate limiter refuses after 5 codes in 15 minutes and says how long
       // to wait — much more useful than a generic failure.
-      Alert.alert("Could not resend", e instanceof Error ? e.message : "Please try again.");
+      Alert.alert("Could not resend", friendlyError(e));
     } finally {
       setResending(false);
     }

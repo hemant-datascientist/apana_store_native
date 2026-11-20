@@ -118,7 +118,7 @@ export default function OrderHistoryScreen() {
       storeId:        order.storeId,
       storeName:      order.storeName,
       subtotal:       order.total,
-      estimatedMins:  15,
+      estimatedMins:  0, // not known here; 0 hides the time rather than inventing one
     }];
     const so = encodeURIComponent(JSON.stringify(storeOrders));
     router.push(
@@ -307,7 +307,7 @@ export default function OrderHistoryScreen() {
               fontFamily: typography.fontFamily.regular,
               fontSize:   typography.size.xs,
             }]}>
-              {orders.length} orders
+              {orders.length} {orders.length === 1 ? "order" : "orders"}
             </Text>
           )}
         </View>

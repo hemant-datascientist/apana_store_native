@@ -26,7 +26,7 @@ export default function InvoiceMeta({ billNo, cashierName, placedAt, counter }: 
     { label: "User",     value: cashierName },
     { label: "Date",     value: formatInvoiceDate(placedAt) },
     { label: "Counter",  value: counter     },
-  ];
+  ].filter((r) => r.value); // a blank "User" / "Counter" row read as a failed load
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>

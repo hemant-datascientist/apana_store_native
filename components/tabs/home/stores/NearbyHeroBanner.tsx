@@ -105,19 +105,22 @@ export default function NearbyHeroBanner({ stores, onPress }: NearbyHeroBannerPr
                 >
                   {store.name}
                 </Text>
-                <View style={styles.ratingPill}>
-                  <Ionicons name="star" size={11} color="#FFD700" />
-                  <Text style={[styles.ratingTxt, { fontFamily: typography.fontFamily.semiBold, fontSize: 11 }]}>
-                    {store.rating}
-                  </Text>
-                </View>
+                {/* No pill for a shop nobody has reviewed — "★ 0" read as a zero-star shop. */}
+                {store.rating > 0 ? (
+                  <View style={styles.ratingPill}>
+                    <Ionicons name="star" size={11} color="#FFD700" />
+                    <Text style={[styles.ratingTxt, { fontFamily: typography.fontFamily.semiBold, fontSize: 11 }]}>
+                      {store.rating}
+                    </Text>
+                  </View>
+                ) : null}
               </View>
 
               {/* Categories — vertical bullet list */}
               <View style={styles.catRow}>
                 {store.categories.map((cat, i) => (
                   <View key={i} style={styles.catItemRow}>
-                    <Text style={styles.bullet}>•</Text>
+                    {store.categories.length > 1 ? <Text style={styles.bullet}>•</Text> : null}
                     <Text style={[styles.catTxt, { fontFamily: typography.fontFamily.regular, fontSize: 11.5 }]}>
                       {cat}
                     </Text>

@@ -139,7 +139,7 @@ function toOrder(w: WireOrder): Order {
       && !["cancelled", "rejected", "delivered"].includes(w.status),
     paymentMethod:
       w.payment_mode === "cod"
-        ? "Cash on Delivery"
+        ? (w.fulfillment === "pickup" ? "Pay at the shop" : "Cash on Delivery")
         : w.payment_status === "paid" ? "Paid online" : "Online (unpaid)",
   };
 }

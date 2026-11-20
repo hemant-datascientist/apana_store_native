@@ -22,6 +22,7 @@ export default function InvoiceItemsTable({
   items, totalUniqueItems, totalQty,
 }: InvoiceItemsTableProps) {
   const { colors } = useTheme();
+  const showMrp    = items.some((i) => i.mrp > i.rate);
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -34,9 +35,11 @@ export default function InvoiceItemsTable({
         <Text style={[styles.colNum, styles.colHead, { color: colors.primary, fontFamily: typography.fontFamily.bold, fontSize: typography.size.xs }]}>
           Qty
         </Text>
-        <Text style={[styles.colNum, styles.colHead, { color: colors.primary, fontFamily: typography.fontFamily.bold, fontSize: typography.size.xs }]}>
-          MRP
-        </Text>
+        {showMrp ? (
+          <Text style={[styles.colNum, styles.colHead, { color: colors.primary, fontFamily: typography.fontFamily.bold, fontSize: typography.size.xs }]}>
+            MRP
+          </Text>
+        ) : null}
         <Text style={[styles.colNum, styles.colHead, { color: colors.primary, fontFamily: typography.fontFamily.bold, fontSize: typography.size.xs }]}>
           Rate
         </Text>
@@ -73,19 +76,24 @@ export default function InvoiceItemsTable({
                 HSN {item.hsn}
               </Text>
             ) : null}
-            <View style={[styles.gstBadge, { backgroundColor: colors.primary + "14" }]}>
-              <Text style={[styles.gstText, { color: colors.primary, fontFamily: typography.fontFamily.regular, fontSize: typography.size.ss }]}>
-                GST {item.gstPercent}%
-              </Text>
-            </View>
+            {/* Undeclared rate → no badge. "GST 0%" would claim zero-rated goods. */}
+            {item.gstPercent != null ? (
+              <View style={[styles.gstBadge, { backgroundColor: colors.primary + "14" }]}>
+                <Text style={[styles.gstText, { color: colors.primary, fontFamily: typography.fontFamily.regular, fontSize: typography.size.ss }]}>
+                  GST {item.gstPercent}%
+                </Text>
+              </View>
+            ) : null}
           </View>
 
           <Text style={[styles.colNum, { color: colors.text, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
             {item.qty}
           </Text>
-          <Text style={[styles.colNum, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs, textDecorationLine: item.mrp > item.rate ? "line-through" : "none" }]}>
-            {item.mrp.toFixed(2)}
-          </Text>
+          {showMrp ? (
+            <Text style={[styles.colNum, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs, textDecorationLine: item.mrp > item.rate ? "line-through" : "none" }]}>
+              {item.mrp.toFixed(2)}
+            </Text>
+          ) : null}
           <Text style={[styles.colNum, { color: colors.text, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
             {item.rate.toFixed(2)}
           </Text>
@@ -101,7 +109,7 @@ export default function InvoiceItemsTable({
           Tot Items/Qty:
         </Text>
         <Text style={[styles.totalsValue, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
-          {totalUniqueItems} / {totalQty.toFixed(3)}
+          {totalUniqueItems} / {totalQty}
         </Text>
       </View>
     </View>
@@ -125,7 +133,7 @@ const styles = StyleSheet.create({
   colHead:        {},
   colParticulars: { flex: 2.8 },
   colNum: {
-    flex:      1,
+    flex:      1.2,
     textAlign: "center",
   },
   colRight: { textAlign: "right" },

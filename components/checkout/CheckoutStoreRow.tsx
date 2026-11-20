@@ -17,6 +17,7 @@ import { typography } from "../../theme/typography";
 import { CartStore } from "../../data/cartData";
 import { FULFILLMENT_DISPLAY, ETA_CONFIG } from "../../data/checkoutData";
 import { useDeliveryEta } from "../../hooks/useDeliveryEta";
+import { rupees } from "../../lib/money";
 
 interface CheckoutStoreRowProps {
   store: CartStore;
@@ -43,9 +44,8 @@ export default function CheckoutStoreRow({ store, dropLat, dropLng, deliveryFee 
   // formatEta() returned a constant — the same "25–45 min" for a shop 400 m
   // away and one 9 km away — shown as a customer commits.
   const etaCfg        = ETA_CONFIG[store.fulfillment];
-  const etaText       = eta
-    ? `${etaCfg.label} ${eta.min_minutes}–${eta.max_minutes} min`
-    : etaCfg.label;
+  // No routed window → no chip ("Ready in" with nothing after it read as broken).
+  const etaText       = eta ? `${etaCfg.label} ${eta.min_minutes}–${eta.max_minutes} min` : null;
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -77,7 +77,7 @@ export default function CheckoutStoreRow({ store, dropLat, dropLng, deliveryFee 
         {/* Subtotal + expand toggle */}
         <View style={styles.headerRight}>
           <Text style={[styles.subtotal, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-            ₹{subtotal}
+            {rupees(subtotal)}
           </Text>
           <Ionicons
             name={expanded ? "chevron-up" : "chevron-down"}
@@ -99,12 +99,14 @@ export default function CheckoutStoreRow({ store, dropLat, dropLng, deliveryFee 
         </View>
 
         {/* ETA chip */}
-        <View style={[styles.etaChip, { backgroundColor: colors.background }]}>
-          <Ionicons name="time-outline" size={12} color={colors.primary} />
-          <Text style={[styles.etaText, { color: colors.primary, fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
-            {etaText}
-          </Text>
-        </View>
+        {etaText ? (
+          <View style={[styles.etaChip, { backgroundColor: colors.background }]}>
+            <Ionicons name="time-outline" size={12} color={colors.primary} />
+            <Text style={[styles.etaText, { color: colors.primary, fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
+              {etaText}
+            </Text>
+          </View>
+        ) : null}
 
         {/* Item count */}
         <Text style={[styles.itemCount, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
@@ -112,9 +114,10 @@ export default function CheckoutStoreRow({ store, dropLat, dropLng, deliveryFee 
         </Text>
 
         {/* Delivery fee */}
-        {deliveryFee == null ? null : deliveryFee > 0 ? (
+        {/* Pickup has no delivery at all, so nothing is "free". */}
+        {deliveryFee == null || store.fulfillment === "pickup" ? null : deliveryFee > 0 ? (
           <Text style={[styles.fee, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-            +₹{deliveryFee} delivery
+            +{rupees(deliveryFee)} delivery
           </Text>
         ) : (
           <Text style={[styles.fee, { color: "#16A34A", fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
@@ -156,7 +159,7 @@ export default function CheckoutStoreRow({ store, dropLat, dropLng, deliveryFee 
                   ×{item.qty}
                 </Text>
                 <Text style={[styles.itemPrice, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.xs }]}>
-                  ₹{item.price * item.qty}
+                  {rupees(item.price * item.qty)}
                 </Text>
               </View>
             </View>

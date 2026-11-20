@@ -25,6 +25,7 @@ import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { StoreOrderResult } from "../../services/checkoutService";
+import { rupees } from "../../lib/money";
 
 interface PickupStoreListProps {
   // Stores in their current visit sequence (already ordered)
@@ -102,7 +103,7 @@ export default function PickupStoreList({
                 {store.storeName}
               </Text>
               <Text style={[styles.metaText, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-                ₹{store.subtotal} · ready in {store.estimatedMins} min
+                {rupees(store.subtotal)}{store.estimatedMins > 0 ? ` · ready in ${store.estimatedMins} min` : ""}
               </Text>
             </View>
 

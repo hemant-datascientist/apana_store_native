@@ -40,8 +40,8 @@ export function useOfferings({ varietyCode, familyCode, classCode, excludeProduc
     const filter: OfferingsFilter | null =
       varietyCode ? { variety: varietyCode }
       : familyCode ? { family: familyCode }
-      : classCode ? { class: classCode }
-      : null;
+      : null; // a class is many different products — never "the same product"
+    void classCode;
     if (!filter) { setOfferings([]); return; }
 
     let cancelled = false;

@@ -28,28 +28,37 @@ function getInitials(name: string): string {
 
 export default function ProfileHeader({ user, onEdit }: ProfileHeaderProps) {
   const { colors } = useTheme();
+  // No name given yet → the name slot held the phone, so it showed twice and the
+  // avatar's "initial" was "+". Show the number once and invite a name instead.
+  const hasName = !!user.name && user.name !== user.phone && /\p{L}/u.test(user.name);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
 
       {/* Avatar */}
       <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-        <Text style={[styles.initials, { color: "#fff", fontFamily: typography.fontFamily.bold }]}>
-          {getInitials(user.name)}
-        </Text>
+        {hasName ? (
+          <Text style={[styles.initials, { color: "#fff", fontFamily: typography.fontFamily.bold }]}>
+            {getInitials(user.name)}
+          </Text>
+        ) : (
+          <Ionicons name="person" size={30} color="#fff" />
+        )}
       </View>
 
       {/* Name + contact */}
       <View style={styles.info}>
         <Text style={[styles.name, { color: colors.text, fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg }]}>
-          {user.name}
+          {hasName ? user.name : user.phone}
         </Text>
         <Text style={[styles.sub, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-          {user.phone}
+          {hasName ? user.phone : "Tap Edit to add your name"}
         </Text>
-        <Text style={[styles.sub, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-          {user.email}
-        </Text>
+        {user.email ? (
+          <Text style={[styles.sub, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+            {user.email}
+          </Text>
+        ) : null}
       </View>
 
       {/* Edit button */}

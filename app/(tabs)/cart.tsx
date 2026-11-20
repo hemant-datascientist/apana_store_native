@@ -62,6 +62,7 @@ export default function CartScreen() {
     ? { lat: selectedAddress.lat, lng: selectedAddress.lng } : null;
   const fees            = useCartFees(cart, dropPin);
   const deliveryTotal   = fees.deliveryTotal;
+  const hasDeliveryStore = cart.some((st) => st.fulfillment !== "pickup");
   const total           = deliveryTotal == null || fees.gstTotal == null ? null : chargedSubtotal + deliveryTotal + fees.platformTotal + fees.gstTotal;
   const totalItems      = cart.reduce((s, st) => s + st.items.reduce((si, i) => si + i.qty, 0), 0);
 
@@ -70,15 +71,19 @@ export default function CartScreen() {
     const map = new Map<FulfillmentMode, FulfillmentGroup>();
     cart.forEach(store => {
       const f        = fees.feeOf(store.id);
-      const sub      = f && f.delivery != null ? storeCharged(store) + f.delivery + f.platform : null;
+      // The same parts as Total Payable, GST included, or the bar and the breakdown disagree.
+      const sub      = f && f.delivery != null ? storeCharged(store) + f.delivery + f.platform + (f.gst ?? 0) : null;
       const items    = store.items.reduce((s, i) => s + i.qty, 0);
       const existing = map.get(store.fulfillment);
+      // Pickup is never blocked; delivery carries the server's reason (deliverability.ts).
+      const block    = store.fulfillment !== "pickup" ? (f?.block ?? null) : null;
       if (existing) {
+        existing.blocked = existing.blocked ?? block;
         existing.storeCount++;
         existing.itemCount += items;
         existing.total      = existing.total == null || sub == null ? null : existing.total + sub;
       } else {
-        map.set(store.fulfillment, { mode: store.fulfillment, storeCount: 1, itemCount: items, total: sub });
+        map.set(store.fulfillment, { mode: store.fulfillment, storeCount: 1, itemCount: items, total: sub, blocked: block });
       }
     });
     return Array.from(map.values());
@@ -168,6 +173,7 @@ export default function CartScreen() {
           bulkSavings={bulkSavings}
           brandSavings={brandSavings}
           deliveryTotal={deliveryTotal}
+          hasDelivery={hasDeliveryStore}
           platformFee={fees.platformTotal}
           gst={fees.gstTotal}
           total={total}

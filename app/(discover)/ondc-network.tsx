@@ -61,7 +61,7 @@ export default function OndcNetworkScreen() {
           </>
         ) : null}
         {error ? (
-          <StateView variant="error" title="Could not search the ONDC network" message={error} actionLabel="Try again" onAction={() => void retry()} />
+          <StateView variant="error" title="Could not search the ONDC network" message={__DEV__ ? error : "Shops on other ONDC apps could not be reached. Try again in a minute."} actionLabel="Try again" onAction={() => void retry()} />
         ) : null}
         {!searching && !error && shops.length === 0 ? (
           <StateView variant="empty" title="No ONDC shops answered" message="No shop on the ONDC network serves your location right now." />

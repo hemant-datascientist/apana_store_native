@@ -78,20 +78,22 @@ export default function InvoiceScreen() {
       `  • ${item.name}  ×${item.qty}  ₹${item.amount.toFixed(2)}`
     ).join("\n");
 
+    const place = [invoice.storeAddress, invoice.storeCity].filter(Boolean).join(", ");
     return (
-      `TAX INVOICE — ${invoice.storeName}\n` +
-      `${invoice.storeAddress}, ${invoice.storeCity}\n` +
-      `GST: ${invoice.gstNo}\n` +
+      `${invoice.isTaxInvoice ? "TAX INVOICE" : "RECEIPT"} — ${invoice.storeName}\n` +
+      (place ? `${place}\n` : "") +
+      (invoice.gstNo ? `GST: ${invoice.gstNo}\n` : "") +
       `─────────────────────────\n` +
       `Bill No : ${invoice.billNo}\n` +
       `Date    : ${formatInvoiceDate(invoice.placedAt)}\n` +
-      `Counter : ${invoice.counter}\n` +
+      (invoice.counter ? `Counter : ${invoice.counter}\n` : "") +
       `─────────────────────────\n` +
       `${itemLines}\n` +
       `─────────────────────────\n` +
       `Net Amount : ₹${invoice.netAmount.toFixed(2)}\n` +
-      `CGST       : ₹${invoice.netCGST.toFixed(2)}\n` +
-      `SGST       : ₹${invoice.netSGST.toFixed(2)}\n` +
+      (invoice.gstBreakup.length > 0
+        ? `CGST       : ₹${invoice.netCGST.toFixed(2)}\n` + `SGST       : ₹${invoice.netSGST.toFixed(2)}\n`
+        : "") +
       (invoice.savedAmount > 0 ? `You Saved  : ₹${invoice.savedAmount.toFixed(2)}\n` : "") +
       `─────────────────────────\n` +
       `Powered by Apana Store — Curated Precision`
@@ -125,7 +127,7 @@ export default function InvoiceScreen() {
           </View>
 
           {/* Paid badge — success tokens flip with theme */}
-          {invoice ? (
+          {invoice && (invoice.paymentStatus == null || invoice.paymentStatus === "paid") ? (
             <View style={[styles.verifiedPill, { backgroundColor: colors.successLight, borderColor: colors.success + "70" }]}>
               <Ionicons name="checkmark-circle" size={12} color={colors.success} />
               <Text style={[styles.verifiedText, { color: colors.success, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.ss }]}>
@@ -239,17 +241,21 @@ export default function InvoiceScreen() {
 
             <View style={[styles.dashes, { borderColor: colors.border }]} />
 
-            {/* GST breakup table */}
-            <InvoiceGSTBreakup
-              rows={invoice.gstBreakup}
-              netTaxableValue={invoice.netTaxableValue}
-              netCGST={invoice.netCGST}
-              netSGST={invoice.netSGST}
-              netCSEE={invoice.netCSEE}
-              netTotal={invoice.netAmount}
-            />
-
-            <View style={[styles.dashes, { borderColor: colors.border }]} />
+            {/* GST breakup — only when the server computed slabs (a shop that may
+                show tax and declared rates). An all-zero table is a tax claim. */}
+            {invoice.gstBreakup.length > 0 ? (
+              <>
+                <InvoiceGSTBreakup
+                  rows={invoice.gstBreakup}
+                  netTaxableValue={invoice.netTaxableValue}
+                  netCGST={invoice.netCGST}
+                  netSGST={invoice.netSGST}
+                  netCSEE={invoice.netCSEE}
+                  netTotal={invoice.netAmount}
+                />
+                <View style={[styles.dashes, { borderColor: colors.border }]} />
+              </>
+            ) : null}
 
             {/* Footer: thank you + share */}
             <InvoiceFooter

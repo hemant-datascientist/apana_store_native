@@ -29,7 +29,7 @@ function getInitials(name: string): string {
     .slice(0, 2)
     .map(w => w[0] ?? "")
     .join("")
-    .toUpperCase() || "?";
+    .toUpperCase();
 }
 
 export default function AvatarSection({ name, onCamera }: AvatarSectionProps) {
@@ -48,6 +48,8 @@ export default function AvatarSection({ name, onCamera }: AvatarSectionProps) {
           }]}>
             {getInitials(name)}
           </Text>
+          {/* No name yet → a person, not a "?" (which read as an error). */}
+          {getInitials(name) === "" ? <Ionicons name="person" size={44} color={colors.white} style={{ position: "absolute" }} /> : null}
         </View>
 
         {/* Camera badge — only when a photo can actually be uploaded */}

@@ -10,6 +10,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
+import { rupees } from "../../lib/money";
 
 interface CartPriceBreakdownProps {
   subtotal:      number;
@@ -17,6 +18,8 @@ interface CartPriceBreakdownProps {
   brandSavings?: number; // brand-funded markdowns (brand pays, seller kept whole)
   /** null = not priced yet (no delivery pin) — shown as "—", never guessed. */
   deliveryTotal: number | null;
+  /** False when every shop is pickup: there is no delivery to price (it read "FREE"). */
+  hasDelivery?: boolean;
   platformFee:   number;     // ₹5 per shop order, from the server
   /** GST on Apana's delivery + platform fee (₹); null = not priced yet. */
   gst?:          number | null;
@@ -26,7 +29,7 @@ interface CartPriceBreakdownProps {
 }
 
 export default function CartPriceBreakdown({
-  subtotal, bulkSavings = 0, brandSavings = 0, deliveryTotal, platformFee, gst = null, discountAmt = 0, appliedPromo = null, total,
+  subtotal, bulkSavings = 0, brandSavings = 0, deliveryTotal, hasDelivery = true, platformFee, gst = null, discountAmt = 0, appliedPromo = null, total,
 }: CartPriceBreakdownProps) {
   const { colors } = useTheme();
   const totalSaved = bulkSavings + brandSavings + discountAmt;
@@ -40,11 +43,11 @@ export default function CartPriceBreakdown({
       <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
       {/* Line items */}
-      <PriceRow label="Item Subtotal"    value={`₹${subtotal}`}          labelColor={colors.text} valueColor={colors.subText} />
+      <PriceRow label="Item Subtotal"    value={rupees(subtotal)}          labelColor={colors.text} valueColor={colors.subText} />
       {bulkSavings > 0 && (
         <PriceRow
           label="Bulk price savings"
-          value={`−₹${bulkSavings}`}
+          value={"−" + rupees(bulkSavings)}
           labelColor={colors.text}
           valueColor="#16A34A"
         />
@@ -52,26 +55,26 @@ export default function CartPriceBreakdown({
       {brandSavings > 0 && (
         <PriceRow
           label="Brand-funded savings"
-          value={`−₹${brandSavings}`}
+          value={"−" + rupees(brandSavings)}
           labelColor={colors.text}
           valueColor="#0F4C81"
         />
       )}
-      <PriceRow
+      {hasDelivery ? <PriceRow
         label="Delivery Charges"
-        value={deliveryTotal == null ? "—" : deliveryTotal === 0 ? "FREE" : `₹${deliveryTotal}`}
+        value={deliveryTotal == null ? "—" : deliveryTotal === 0 ? "FREE" : rupees(deliveryTotal)}
         labelColor={colors.text}
         valueColor={deliveryTotal === 0 ? "#16A34A" : colors.subText}
-      />
-      <PriceRow label="Platform Fee" value={`₹${platformFee}`} labelColor={colors.text} valueColor={colors.subText} />
+      /> : null}
+      <PriceRow label="Platform Fee" value={rupees(platformFee)} labelColor={colors.text} valueColor={colors.subText} />
       {/* GST on Apana's delivery + platform fee — its own line, added on top (0154) */}
       {gst != null && gst > 0 && (
-        <PriceRow label="GST on delivery & platform fee" value={`₹${gst}`} labelColor={colors.text} valueColor={colors.subText} />
+        <PriceRow label="GST on delivery & platform fee" value={rupees(gst)} labelColor={colors.text} valueColor={colors.subText} />
       )}
       {discountAmt > 0 && appliedPromo && (
         <PriceRow
           label={`Promo (${appliedPromo})`}
-          value={`−₹${discountAmt}`}
+          value={"−" + rupees(discountAmt)}
           labelColor={colors.text}
           valueColor="#16A34A"
         />
@@ -85,7 +88,7 @@ export default function CartPriceBreakdown({
           Total Payable
         </Text>
         <Text style={[styles.totalValue, { color: colors.primary, fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg }]}>
-          {total == null ? "—" : `₹${total}`}
+          {total == null ? "—" : rupees(total)}
         </Text>
       </View>
 
@@ -94,7 +97,7 @@ export default function CartPriceBreakdown({
         <View style={[styles.savingsBadge, { backgroundColor: "#DCFCE7" }]}>
           <Ionicons name="happy-outline" size={14} color="#15803D" />
           <Text style={[styles.savingsText, { color: "#15803D", fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
-            You're saving ₹{totalSaved} on this order!
+            You're saving {rupees(totalSaved)} on this order!
           </Text>
         </View>
       )}

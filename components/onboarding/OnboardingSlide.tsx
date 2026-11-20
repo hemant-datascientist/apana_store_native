@@ -28,7 +28,7 @@ export default function OnboardingSlideCard({ slide, width }: OnboardingSlidePro
     <View style={[styles.slide, { width }]}>
       {/* ── Icon in colored rounded square ── */}
       <View style={[styles.iconWrap, { backgroundColor: slide.bg }]}>
-        <Ionicons name={slide.icon as any} size={64} color={slide.color} />
+        <Ionicons name={slide.icon as any} size={48} color={slide.color} />
       </View>
 
       {/* ── Slide title — uses slide's accent color ── */}
@@ -57,18 +57,18 @@ const styles = StyleSheet.create({
     alignItems:        "center",
     justifyContent:    "center",
     paddingHorizontal: 36,
-    gap:               18,
-    paddingTop:        24,
+    gap:               12, // smaller: on a 6.5in phone the body's 2nd line and the icon top were cut
+    paddingTop:        8,
   },
 
   // ── Icon wrapper ────────────────────────────────────────────
   iconWrap: {
-    width:          130,
-    height:         130,
-    borderRadius:   40,
+    width:          96,
+    height:         96,
+    borderRadius:   30,
     alignItems:     "center",
     justifyContent: "center",
-    marginBottom:   8,
+    marginBottom:   4,
   },
 
   // ── Text ────────────────────────────────────────────────────

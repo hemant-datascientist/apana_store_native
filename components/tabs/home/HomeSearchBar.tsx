@@ -49,7 +49,8 @@ export default function HomeSearchBar({
   const inputRef = useRef<TextInput>(null);
 
   const placeholder =
-    mode === "products" ? "Search for products" : "Search for stores";
+    // Short: the pill is narrow, and with large system text "Search for products" was cut off.
+    mode === "products" ? "Search products" : "Search stores";
 
   return (
     <View style={styles.row}>

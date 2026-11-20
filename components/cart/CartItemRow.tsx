@@ -14,6 +14,7 @@ import { typography } from "../../theme/typography";
 import type { CartItem } from "../../data/cartData";
 import { resolveLine } from "../../lib/discount";
 import { formatMeasure, isLooseItem } from "../../lib/measure";
+import { rupees } from "../../lib/money";
 
 interface CartItemRowProps {
   item:       CartItem;
@@ -80,10 +81,10 @@ export default function CartItemRow({ item, storeId, isLast, unlocked, onUpdateQ
           <>
             <View style={styles.priceRow}>
               <Text style={[styles.strike, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-                ₹{everydayTot}
+                {rupees(everydayTot)}
               </Text>
               <Text style={[styles.price, { color: dealColor, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-                ₹{chargedTot}
+                {rupees(chargedTot)}
               </Text>
             </View>
             {isBrand && (
@@ -97,7 +98,7 @@ export default function CartItemRow({ item, storeId, isLast, unlocked, onUpdateQ
           </>
         ) : (
           <Text style={[styles.price, { color: colors.primary, fontFamily: typography.fontFamily.bold, fontSize: typography.size.sm }]}>
-            ₹{everydayTot}
+            {rupees(everydayTot)}
           </Text>
         )}
       </View>

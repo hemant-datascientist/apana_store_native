@@ -50,6 +50,9 @@ export interface BucketStore {
   /** null for non-proximity buckets — NOT 0, which would read as "next door". */
   distance_m: number | null;
   is_live: boolean;
+  /** Trading now (older backend: absent → treated as open). */
+  is_open?: boolean;
+  closed_label?: string | null;
   rating: number;
   review_count: number;
   /** 0162 - the shop pays delivery from this basket (₹ cents; 0 = always); null/absent = customer pays. */
@@ -73,6 +76,8 @@ export interface BucketResult {
 // looks like a kirana in every feed.
 export interface StoreCardData {
   id: string;
+  isOpen?: boolean;
+  closedLabel?: string | null;
   name: string;
   type: string;        // display label, e.g. "Kirana" / "Wholesale"
   typeColor: string;
@@ -122,6 +127,8 @@ export function toCardData(s: BucketStore): StoreCardData {
     icon: st?.icon ?? FALLBACK.icon,
     city: s.city,
     verificationPending: s.verification_pending ?? false,
+    isOpen: s.is_open ?? true,
+    closedLabel: s.closed_label ?? null,
     freeDeliveryAbove: s.free_delivery_above_cents == null ? null : s.free_delivery_above_cents / 100,
     // Carried, not dropped: the server has always returned these, and the card
     // discarding them is why every feed Directions button said "coming soon".

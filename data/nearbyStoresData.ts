@@ -44,6 +44,9 @@ export interface NearbyStore {
   // without coords; the nearby list always provides them for sorting.
   city?:      string;     // store city (banner bottom-left)
   verificationPending?: boolean;
+  /** Trading right now; false shows a CLOSED badge instead of OPEN. */
+  isOpen?: boolean;
+  closedLabel?: string | null;
   freeDeliveryAbove?: number | null; // ₹ basket from which the shop pays delivery (0 = always); null = customer pays
   lat?:       number;
   lng?:       number;

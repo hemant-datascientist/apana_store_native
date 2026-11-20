@@ -27,6 +27,8 @@ export interface UserAddress {
   // The address checkout preselects. The server keeps exactly one per customer
   // and always leaves one standing, so the app never has to reconcile it.
   isDefault?:         boolean;
+  /** The typed door ("Flat 402") on a pin address — what the rider reads at the gate. */
+  door?:              string | null;
 }
 
 // Shown before the customer has set a location, and after they skip that

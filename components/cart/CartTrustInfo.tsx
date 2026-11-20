@@ -15,9 +15,11 @@ export default function CartTrustInfo() {
   const { colors } = useTheme();
 
   const TIPS = [
-    { icon: "shield-checkmark-outline", color: "#16A34A",     text: "All stores are verified & LIVE" },
-    { icon: "time-outline",             color: colors.primary, text: "Estimated time shown at checkout" },
-    { icon: "lock-closed-outline",      color: "#F59E0B",     text: "Secure payment — UPI, Card, COD" },
+    // Only what is true for every order: shops are not KYC-verified yet, and how you can pay
+    // depends on the shop (shown at payment), so neither "verified" nor "UPI, Card" is claimed.
+    { icon: "storefront-outline",       color: "#16A34A",     text: "Ordered straight from shops near you" },
+    { icon: "time-outline",             color: colors.primary, text: "Time shown at checkout when the shop's is known" },
+    { icon: "wallet-outline",           color: "#F59E0B",     text: "How you can pay is shown at payment" },
   ] as const;
 
   return (

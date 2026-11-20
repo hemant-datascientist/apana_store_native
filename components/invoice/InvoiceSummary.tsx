@@ -31,8 +31,10 @@ export default function InvoiceSummary({
 
   // Only show payment modes that are non-zero
   const paymentRows = [
-    { label: "Cash Received", value: payment.cashReceived, show: payment.cashReceived > 0 },
-    { label: "Cash Return",   value: payment.cashReturn,   show: payment.cashReceived > 0 },
+    // Apana records that the order was paid in cash, not what was handed over or
+    // the change given — so "Cash Return ₹0.00" was an invented figure.
+    { label: "Paid in Cash",  value: payment.cashReceived, show: payment.cashReceived > 0 },
+    { label: "Cash Return",   value: payment.cashReturn,   show: payment.cashReturn   > 0 },
     { label: "Bill Amount",   value: payment.billAmount,   show: true                     },
     { label: "Card",          value: payment.cardAmount,   show: payment.cardAmount > 0   },
     { label: "UPI",           value: payment.upiAmount,    show: payment.upiAmount  > 0   },
@@ -46,9 +48,10 @@ export default function InvoiceSummary({
 
         <View style={[styles.amtRow, { borderBottomColor: colors.border }]}>
           <Text style={[styles.amtLabel, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-            Amount In MRP
+            {/* Struck through only when something was actually saved — otherwise it reads as a fake discount. */}
+            {savedAmount > 0 ? "Amount In MRP" : "Items Total"}
           </Text>
-          <Text style={[styles.amtValue, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs, textDecorationLine: "line-through" }]}>
+          <Text style={[styles.amtValue, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs, textDecorationLine: savedAmount > 0 ? "line-through" : "none" }]}>
             ₹{amountInMRP.toFixed(2)}
           </Text>
         </View>

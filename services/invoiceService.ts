@@ -106,7 +106,7 @@ export async function fetchInvoice(params: FetchInvoiceParams): Promise<Invoice>
     // because the column this feeds is a number. The distinction is kept where
     // it matters — the slab table below excludes undeclared lines rather than
     // showing them at 0%.
-    gstPercent: i.gst_rate_bp != null ? i.gst_rate_bp / 100 : 0,
+    gstPercent: i.gst_rate_bp != null ? i.gst_rate_bp / 100 : null,
   }));
   const isUpi = r.payment_mode !== "cod";
   const total = rupees(r.total_cents);

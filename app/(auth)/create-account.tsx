@@ -36,6 +36,7 @@ import CreateAccountButton      from "../../components/auth/CreateAccountButton"
 import SignInLink               from "../../components/auth/SignInLink";
 import AuthTerms                from "../../components/auth/AuthTerms";
 import { sendOtp, toE164 }      from "../../services/authService";
+import { friendlyError } from "../../lib/friendlyError";
 
 function isValidPhone(v: string) { return /^[6-9]\d{9}$/.test(v.replace(/\s/g, "")); }
 function isValidEmail(v: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
@@ -90,7 +91,7 @@ export default function CreateAccountScreen() {
     } catch (e) {
       // The server's own words are the useful ones — "Too many codes requested.
       // Try again in 12 min." tells them what to do; "Error" does not.
-      Alert.alert("Could not send code", e instanceof Error ? e.message : "Please try again.");
+      Alert.alert("Could not send code", friendlyError(e));
     } finally {
       setLoading(false);
     }

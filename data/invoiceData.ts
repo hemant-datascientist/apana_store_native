@@ -28,7 +28,7 @@ export interface InvoiceItem {
   mrp:         number;    // maximum retail price per unit
   rate:        number;    // actual selling rate per unit
   amount:      number;    // qty × rate
-  gstPercent:  number;    // 0 | 5 | 12 | 18 | 28
+  gstPercent:  number | null;    // 0 | 5 | 12 | 18 | 28 · null = the shop declared no rate (NOT 0%)
 }
 
 // ── GST breakup row (one per GST slab) ───────────────────
@@ -124,7 +124,7 @@ export function formatInvoiceDate(iso: string): string {
   const dd   = String(d.getDate()).padStart(2, "0");
   const mm   = String(d.getMonth() + 1).padStart(2, "0");
   const yy   = String(d.getFullYear()).slice(2);
-  const hh   = String(d.getHours()).padStart(2, "0");
+  const hh   = String(d.getHours() % 12 || 12).padStart(2, "0");
   const min  = String(d.getMinutes()).padStart(2, "0");
   const ss   = String(d.getSeconds()).padStart(2, "0");
   const ampm = d.getHours() < 12 ? "AM" : "PM";

@@ -34,6 +34,7 @@ import HandshakeHero    from "../../components/order-collected/HandshakeHero";
 import HandshakeDetails from "../../components/order-collected/HandshakeDetails";
 import HandshakeRating  from "../../components/order-collected/HandshakeRating";
 import { submitStoreReview, submitRiderRating } from "../../services/reviewService";
+import { rupees } from "../../lib/money";
 
 export default function OrderCollectedScreen() {
   const { colors, isDark } = useTheme();
@@ -200,7 +201,7 @@ export default function OrderCollectedScreen() {
               Total paid
             </Text>
             <Text style={[styles.totalAmt, { color: cfg.heroColor, fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg }]}>
-              ₹{totalAmt}
+              {rupees(totalAmt)}
             </Text>
           </View>
         )}

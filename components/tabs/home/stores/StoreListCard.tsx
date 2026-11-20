@@ -43,12 +43,13 @@ export default function StoreListCard({ store, onPress, onDirection, onViewItems
         style={styles.cardPressable}
       >
 
-      {/* LIVE badge — absolute top-right */}
+      {/* Open / closed badge — absolute top-right. "LIVE" only meant listed, so a
+          closed shop showed a green LIVE while its product page said Closed. */}
       {store.isLive && (
-        <View style={styles.liveBadge}>
-          <View style={styles.liveDot} />
-          <Text style={[styles.liveText, { fontFamily: typography.fontFamily.bold, fontSize: 9 }]}>
-            LIVE
+        <View style={[styles.liveBadge, store.isOpen === false && { backgroundColor: colors.border }]}>
+          <View style={[styles.liveDot, store.isOpen === false && { backgroundColor: colors.subText }]} />
+          <Text style={[styles.liveText, { fontFamily: typography.fontFamily.bold, fontSize: 9 }, store.isOpen === false && { color: colors.subText }]}>
+            {store.isOpen === false ? "CLOSED" : "OPEN"}
           </Text>
         </View>
       )}
@@ -84,13 +85,22 @@ export default function StoreListCard({ store, onPress, onDirection, onViewItems
 
           {/* Rating · Reviews · Distance */}
           <View style={styles.metaRow}>
-            <Ionicons name="star" size={11} color="#F59E0B" />
-            <Text style={[styles.meta, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
-              {store.rating}
-            </Text>
-            <Text style={[styles.metaDim, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
-              {store.reviews.toLocaleString("en-IN")} reviews
-            </Text>
+            {/* "★ 0  0 reviews" read as a zero-star shop; a new shop simply has none yet. */}
+            {store.reviews > 0 ? (
+              <>
+                <Ionicons name="star" size={11} color="#F59E0B" />
+                <Text style={[styles.meta, { color: colors.text, fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
+                  {store.rating}
+                </Text>
+                <Text style={[styles.metaDim, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+                  {store.reviews.toLocaleString("en-IN")} {store.reviews === 1 ? "review" : "reviews"}
+                </Text>
+              </>
+            ) : (
+              <Text style={[styles.metaDim, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
+                No reviews yet
+              </Text>
+            )}
             <View style={[styles.metaDot, { backgroundColor: colors.border }]} />
             <Ionicons name="location-outline" size={11} color={colors.subText} />
             <Text style={[styles.metaDim, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>

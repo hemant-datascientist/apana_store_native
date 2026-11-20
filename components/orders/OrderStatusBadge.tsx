@@ -19,11 +19,20 @@ import { OrderStatus, ORDER_STATUS_META } from "../../data/orderHistoryData";
 interface OrderStatusBadgeProps {
   status: OrderStatus;
   small?: boolean;
+  /** A pickup the shop has packed: "Ready to collect", not "Preparing". */
+  readyToCollect?: boolean;
+  /** A pickup order: "delivered" means the customer collected it. */
+  collected?: boolean;
 }
 
-export default function OrderStatusBadge({ status, small }: OrderStatusBadgeProps) {
+const READY_TO_COLLECT = { label: "Ready to collect", colorKey: "success", icon: "bag-handle-outline" } as const;
+const COLLECTED        = { label: "Collected",        colorKey: "success", icon: "bag-check-outline"  } as const;
+
+export default function OrderStatusBadge({ status, small, readyToCollect, collected }: OrderStatusBadgeProps) {
   const { colors } = useTheme();
-  const meta       = ORDER_STATUS_META[status];
+  const meta       = readyToCollect ? READY_TO_COLLECT
+                   : collected && status === "delivered" ? COLLECTED
+                   : ORDER_STATUS_META[status];
 
   // Map colorKey to a real color from theme
   const colorMap: Record<string, string> = {

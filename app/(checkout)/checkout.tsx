@@ -49,6 +49,7 @@ import CheckoutStoreRow       from "../../components/checkout/CheckoutStoreRow";
 import CheckoutPriceBreakdown from "../../components/checkout/CheckoutPriceBreakdown";
 import LiveBanners from "../../components/tabs/home/LiveBanners";
 import { openLegal, PRIVACY_URL, TERMS_URL } from "../../lib/legalLinks";
+import { rupees } from "../../lib/money";
 
 export default function CheckoutScreen() {
   const { colors, isDark } = useTheme();
@@ -108,6 +109,7 @@ export default function CheckoutScreen() {
     totalItems: cart.reduce((s, st) => s + st.items.reduce((si, i) => si + i.qty, 0), 0),
   }), [cart]);
   const deliveryTotal = fees.deliveryTotal;
+  const hasDeliveryStore = cart.some((st) => st.fulfillment !== "pickup");
   const total = deliveryTotal == null || fees.gstTotal == null ? null : subtotal + deliveryTotal + fees.platformTotal + fees.gstTotal;
 
   // ── Progress: "checkout" step is active ──────────────────
@@ -348,6 +350,7 @@ export default function CheckoutScreen() {
         <CheckoutPriceBreakdown
           subtotal={subtotal}
           deliveryTotal={deliveryTotal}
+          hasDelivery={hasDeliveryStore}
           platformFee={fees.platformTotal}
           gst={fees.gstTotal}
           discountAmt={coupon?.discount ?? 0}
@@ -388,7 +391,7 @@ export default function CheckoutScreen() {
         <View style={styles.ctaContent}>
           <View>
             <Text style={[styles.ctaTotal, { fontFamily: typography.fontFamily.bold, fontSize: typography.size.lg }]}>
-              {total == null ? "—" : `₹${total}`}
+              {total == null ? "—" : rupees(total)}
             </Text>
             <Text style={[styles.ctaSub, { fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
               {modeCfg.label} · {cart.length} store{cart.length > 1 ? "s" : ""}

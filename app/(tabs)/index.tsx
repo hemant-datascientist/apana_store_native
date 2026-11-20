@@ -15,7 +15,7 @@
 
 import React, { useState, useRef } from "react";
 import {
-  View, ScrollView, StyleSheet, StatusBar, Alert,
+  View, ScrollView, StyleSheet, StatusBar, Alert, RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter }    from "expo-router";
@@ -63,6 +63,7 @@ import NearbyStoresFeed    from "../../components/tabs/home/stores/NearbyStoresF
 import WholesaleStoresFeed from "../../components/tabs/home/stores/WholesaleStoresFeed";
 import B2CStoresFeed       from "../../components/tabs/home/stores/B2CStoresFeed";
 import ServiceStoresFeed   from "../../components/tabs/home/stores/ServiceStoresFeed";
+import { clearLiveProductsCache } from "../../hooks/useLiveProducts";
 
 export default function HomeScreen() {
   const { colors, setCategoryPrimary } = useTheme();
@@ -111,6 +112,19 @@ export default function HomeScreen() {
 
   // Search-bar map button → full-screen Map screen (/map).
   const scrollRef = useRef<ScrollView>(null);
+
+  // Pull to refresh. The feeds load once and cache by location, so a shop that
+  // listed something new never appeared until the app restarted. Clearing the
+  // cache and remounting the feed (new key) makes every section ask again.
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  function handleRefresh() {
+    setRefreshing(true);
+    clearLiveProductsCache();
+    setRefreshKey((k) => k + 1);
+    // The feeds show their own loading state; the spinner only acknowledges the pull.
+    setTimeout(() => setRefreshing(false), 600);
+  }
   function openMapView() {
     router.push("/map");
   }
@@ -163,6 +177,7 @@ export default function HomeScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
       >
 
         {/* ── Hero — scrolls with the page ── */}
@@ -215,14 +230,16 @@ export default function HomeScreen() {
 
         {/* ── Products feed — one component per category ── */}
         {/* Admin-published banners for this area (renders nothing if none). */}
-        {mode === "products" && <LiveBanners />}
-        {mode === "products" && renderCategoryFeed()}
+        <View key={refreshKey}>
+          {mode === "products" && <LiveBanners />}
+          {mode === "products" && renderCategoryFeed()}
 
-        {/* ── Store feeds ── */}
-        {mode === "stores" && storeTab === "nearby"        && <NearbyStoresFeed />}
-        {mode === "stores" && storeTab === "wholesale"     && <WholesaleStoresFeed />}
-        {mode === "stores" && storeTab === "b2c"           && <B2CStoresFeed />}
-        {mode === "stores" && storeTab === "service_based" && <ServiceStoresFeed />}
+          {/* ── Store feeds ── */}
+          {mode === "stores" && storeTab === "nearby"        && <NearbyStoresFeed />}
+          {mode === "stores" && storeTab === "wholesale"     && <WholesaleStoresFeed />}
+          {mode === "stores" && storeTab === "b2c"           && <B2CStoresFeed />}
+          {mode === "stores" && storeTab === "service_based" && <ServiceStoresFeed />}
+        </View>
 
       </ScrollView>
 

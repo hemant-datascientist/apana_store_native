@@ -22,7 +22,7 @@ import {
   StyleSheet, StatusBar, Alert,
   TextInput,
 } from "react-native";
-import { useRouter }        from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { goBackOr }         from "../../lib/goBack";
 import useTheme             from "../../theme/useTheme";
 import { useAuth }          from "../../context/AuthContext";
@@ -39,11 +39,23 @@ import CreateAccountLink    from "../../components/auth/CreateAccountLink";
 import OrDivider            from "../../components/shared/OrDivider";
 import AuthTerms            from "../../components/auth/AuthTerms";
 import BackendScanLink      from "../../components/auth/BackendScanLink";
+import { friendlyError } from "../../lib/friendlyError";
 
 type Method = "phone" | "email";
 
 function isValidPhone(v: string) { return /^[6-9]\d{9}$/.test(v.replace(/\s/g, "")); }
 function isValidEmail(v: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+// Why a typed number cannot be used — only once it is clearly wrong, never
+// while the customer is still half-way through typing a good one.
+function phoneProblem(v: string): string | null {
+  const d = v.replace(/\s/g, "");
+  if (d.length === 0) return null;
+  if (/\D/.test(d)) return "Use digits only.";
+  if (/^[0-5]/.test(d)) return "Indian mobile numbers start with 6, 7, 8 or 9.";
+  if (d.length > 10) return "A mobile number has 10 digits.";
+  return null;
+}
 
 export default function LoginScreen() {
   const router          = useRouter();
@@ -65,6 +77,7 @@ export default function LoginScreen() {
   const isPhone  = method === "phone";
   const value    = isPhone ? phone : email;
   const isValid  = isPhone ? isValidPhone(value) : isValidEmail(value);
+  const isNew    = useLocalSearchParams<{ new?: string }>().new === "1";
 
   // ── Switch method + auto-focus the relevant input ─────────────
   function switchMethod(m: Method) {
@@ -100,7 +113,7 @@ export default function LoginScreen() {
       setUnreachable(e instanceof TypeError || (e as Error)?.name === "AbortError");
       // STAY on this screen. Pushing to the code boxes after a failed send
       // leaves someone waiting for a code that does not exist.
-      Alert.alert("Could not send code", e instanceof Error ? e.message : "Please try again.");
+      Alert.alert("Could not send code", friendlyError(e));
     } finally {
       setLoading(false);
     }
@@ -127,7 +140,7 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <WelcomeBlock />
+        <WelcomeBlock isNew={isNew} />
 
         {/* ── Method toggle (Phone / Email) ── */}
         <MethodToggle method={method} onChange={switchMethod} />
@@ -151,7 +164,7 @@ export default function LoginScreen() {
           />
         )}
 
-        <InputHint method={method} />
+        <InputHint method={method} problem={isPhone ? phoneProblem(value) : null} />
 
         {/* ── Primary CTA ── */}
         <SendOtpButton isValid={isValid} loading={loading} onPress={handleSendOtp} />

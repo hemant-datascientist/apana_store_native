@@ -13,8 +13,8 @@ import { typography } from "../../theme/typography";
 
 const TIPS = [
   { icon: "storefront-outline",       text: "Shop from multiple stores" },
-  { icon: "bicycle-outline",          text: "Choose Pickup, Delivery or Ride" },
-  { icon: "shield-checkmark-outline", text: "Safe & verified local stores" },
+  { icon: "bicycle-outline",          text: "Pick up yourself or get it delivered" },
+  { icon: "location-outline",         text: "Shops near you, on real maps" },
 ] as const;
 
 export default function CartEmptyState() {
