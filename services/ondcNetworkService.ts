@@ -31,6 +31,8 @@ export interface NetworkShop {
   logo: string | null;
   distance_m: number | null;
   items: NetworkItem[];
+  /** False when the shop's app has closed or disabled the shop: shown, but not ordered from. */
+  open: boolean;
 }
 
 export interface NetworkResults {

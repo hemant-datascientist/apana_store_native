@@ -18,6 +18,7 @@ export default function NetworkShopCard({ shop, onOrder }: { shop: NetworkShop; 
         {away ? <Text style={[styles.meta, { color: colors.subText }]}>{away} away</Text> : null}
       </View>
       <Text style={[styles.meta, { color: colors.subText }]}>On ONDC · {shop.bpp_id}</Text>
+      {shop.open === false ? <Text style={[styles.meta, { color: colors.danger }]}>Closed now</Text> : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.rail} contentContainerStyle={{ gap: 10 }}>
         {shop.items.map((i) => (
           <View key={i.id} style={[styles.item, { borderColor: colors.border, opacity: i.in_stock ? 1 : 0.5 }]}>
@@ -31,7 +32,7 @@ export default function NetworkShopCard({ shop, onOrder }: { shop: NetworkShop; 
           </View>
         ))}
       </ScrollView>
-      {onOrder && shop.items.some((i) => i.in_stock) ? (
+      {onOrder && shop.open !== false && shop.items.some((i) => i.in_stock) ? (
         <TouchableOpacity style={[styles.order, { backgroundColor: colors.primary }]} onPress={onOrder}>
           <Text style={[styles.orderText, { color: colors.white }]}>Order from this shop</Text>
         </TouchableOpacity>
