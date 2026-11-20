@@ -183,6 +183,8 @@ export interface NetworkReturn {
   id: string;
   /** return = the customer's; part_cancel = the shop's app cancelled these items. */
   kind: "return" | "part_cancel";
+  /** The customer asked for a new item instead of money. */
+  replace: boolean;
   item_id: string;
   qty: number;
   reason_id: string;
@@ -200,7 +202,7 @@ export function returnReasons() {
 export function listReturns(orderId: string) {
   return call<{ items: NetworkReturn[] }>(`/ondc/orders/${encodeURIComponent(orderId)}/returns`);
 }
-export function requestReturn(orderId: string, input: { item_id: string; qty: number; reason_id: string }) {
+export function requestReturn(orderId: string, input: { item_id: string; qty: number; reason_id: string; replace?: boolean }) {
   return call<NetworkReturn>(`/ondc/orders/${encodeURIComponent(orderId)}/returns`, { method: "POST", body: JSON.stringify(input) });
 }
 

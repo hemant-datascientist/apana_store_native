@@ -8,11 +8,13 @@ import { listReturns, requestReturn, returnReasons, type NetworkOrder, type Netw
 
 const POLL_MS = 5000;
 const rupees = (p: number) => `₹${(p / 100).toFixed(2)}`;
-const DONE = new Set(["Return_Delivered", "Liquidated", "Return_Rejected", "Return_Failed", "failed"]);
+const DONE = new Set(["Return_Delivered", "Liquidated", "Return_Rejected", "Return_Failed", "failed", "Order-delivered"]);
 const STATE: Record<string, string> = {
   requested: "Sent to the shop", Return_Initiated: "The shop is reviewing it", Return_Approved: "Approved — pickup coming",
   Return_Rejected: "The shop refused the return", Return_Picked: "Picked up", Return_Delivered: "Back at the shop",
   Liquidated: "Accepted (no pickup needed)", Return_Failed: "Return failed", failed: "Could not be sent",
+  // A replacement: the shop's app moves the new item's delivery on this same leg.
+  Packed: "Replacement packed", "Order-picked-up": "Replacement on its way", "Out-for-delivery": "Replacement out for delivery", "Order-delivered": "Replacement delivered",
 };
 
 interface OrderReturnsProps { order: NetworkOrder; canReturn: boolean }
@@ -25,6 +27,7 @@ export default function OrderReturns({ order, canReturn }: OrderReturnsProps) {
   const [itemId, setItemId] = useState<string | null>(null);
   const [qty, setQty] = useState(1);
   const [reasonId, setReasonId] = useState<string | null>(null);
+  const [replace, setReplace] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,8 +48,8 @@ export default function OrderReturns({ order, canReturn }: OrderReturnsProps) {
     if (!item || !reasonId) return;
     setBusy(true); setError(null);
     try {
-      await requestReturn(order.id, { item_id: item.id, qty, reason_id: reasonId });
-      setOpen(false); setItemId(null); setReasonId(null); setQty(1);
+      await requestReturn(order.id, { item_id: item.id, qty, reason_id: reasonId, replace });
+      setOpen(false); setItemId(null); setReasonId(null); setQty(1); setReplace(false);
       await load();
     } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   };
@@ -63,13 +66,15 @@ export default function OrderReturns({ order, canReturn }: OrderReturnsProps) {
         const name = order.items.find((i) => i.id === r.item_id)?.name ?? r.item_id;
         return (
           <View key={r.id} style={[styles.ret, { borderColor: colors.border }]}>
-            <Text style={[styles.line, { color: colors.text }]}>{r.kind === "part_cancel" ? "Cancelled by the shop" : "Return"}: {r.qty} × {name}</Text>
+            <Text style={[styles.line, { color: colors.text }]}>{r.kind === "part_cancel" ? "Cancelled by the shop" : r.replace ? "Replacement" : "Return"}: {r.qty} × {name}</Text>
             {r.kind === "return" ? (
               <Text style={[styles.small, { color: r.state === "failed" || r.state === "Return_Rejected" ? colors.danger : colors.subText }]}>
                 {STATE[r.state] ?? r.state}{r.error ? ` — ${r.error}` : ""}
               </Text>
             ) : null}
-            {r.refund ? (
+            {r.refund && r.replace && r.refund.paise === 0 ? (
+              <Text style={[styles.small, { color: colors.subText }]}>A new one is on its way, so there is no refund</Text>
+            ) : r.refund ? (
               <Text style={[styles.small, { color: colors.success }]}>
                 {r.refund.refunded_at ? `Refunded ${rupees(r.refund.paise)}` : r.refund.note?.includes("shop's app") ? `${rupees(r.refund.paise)} refund from the shop's app` : `Refund of ${rupees(r.refund.paise)} is being processed`}
               </Text>
@@ -95,9 +100,13 @@ export default function OrderReturns({ order, canReturn }: OrderReturnsProps) {
             </View>
           ) : null}
           <View style={styles.chips}>{reasons.map((r) => chip(r.label, r.id === reasonId, () => setReasonId(r.id)))}</View>
+          <View style={styles.chips}>
+            {chip("Money back", !replace, () => setReplace(false))}
+            {chip("Send a replacement", replace, () => setReplace(true))}
+          </View>
           <TouchableOpacity disabled={busy || !item || !reasonId} onPress={() => void submit()}
             style={[styles.btn, { borderColor: colors.border, opacity: busy || !item || !reasonId ? 0.5 : 1 }]}>
-            {busy ? <ActivityIndicator color={colors.primary} /> : <Text style={[styles.btnText, { color: colors.primary }]}>Send return request</Text>}
+            {busy ? <ActivityIndicator color={colors.primary} /> : <Text style={[styles.btnText, { color: colors.primary }]}>{replace ? "Ask for a replacement" : "Send return request"}</Text>}
           </TouchableOpacity>
         </View>
       )}
