@@ -6,6 +6,7 @@ import useTheme from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
 import { cancelReasons, type NetworkOrder } from "../../services/ondcNetworkService";
 import OrderReturns from "./OrderReturns";
+import DeliveryNotes from "./DeliveryNotes";
 
 const rupees = (p: number) => `₹${(p / 100).toFixed(2)}`;
 const BY: Record<string, string> = { buyer: "you", seller: "the shop", apana: "Apana (the shop never confirmed)" };
@@ -65,6 +66,8 @@ export default function OrderAfterSale({ order, busy, onCancel, onRefresh }: {
           ) : null}
         </View>
       ) : null}
+      {/* Before delivery, on a delivered (not collected) order: the delivery code and instructions. */}
+      {order.status === "confirmed" && !order.delivered_at && order.fulfillments.some((f) => f.type === "Delivery") ? <DeliveryNotes order={order} /> : null}
       {asking && order.status === "confirmed" ? reasons.map((r) => (
         <TouchableOpacity key={r.id} disabled={busy} onPress={() => { setAsking(false); onCancel(r.id); }} style={[styles.reason, { borderColor: colors.border }]}>
           <Text style={[styles.btnText, { color: colors.text }]}>{r.label}</Text>

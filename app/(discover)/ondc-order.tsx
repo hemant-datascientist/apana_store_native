@@ -19,6 +19,7 @@ import { networkResults, type NetworkShop } from "../../services/ondcNetworkServ
 import { useNetworkOrder } from "../../hooks/useNetworkOrder";
 import OrderBill from "../../components/ondc-network/OrderBill";
 import OrderAfterSale from "../../components/ondc-network/OrderAfterSale";
+import FulfillmentChoice, { chosenLeg } from "../../components/ondc-network/FulfillmentChoice";
 
 export default function OndcOrderScreen() {
   const { colors } = useTheme();
@@ -30,6 +31,10 @@ export default function OndcOrderScreen() {
   const { order, busy, error, getPrice, getFinalBill, takeAvailable, swapItems, payAndConfirm, load, cancel, refresh, stop } = useNetworkOrder();
   // After a shortfall: picking other items from the same shop, on the same order.
   const [swapping, setSwapping] = useState(false);
+  // Delivery, a delivery slot, or pickup — one of the legs the shop offered.
+  const [legId, setLegId] = useState<string | null>(null);
+  const leg = order ? chosenLeg(order, legId) : null;
+  const pickup = leg?.type === "Self-Pickup";
   const address = addresses.find((a) => a.isDefault) ?? addresses[0];
   const point = deviceCoords ?? (selectedAddress.lat != null && selectedAddress.lng != null ? { lat: selectedAddress.lat, lng: selectedAddress.lng } : null);
 
@@ -89,8 +94,11 @@ export default function OndcOrderScreen() {
         {order?.status === "quoted" ? (
           address
             ? <>
-                <Text style={[styles.note, { color: colors.subText }]}>Deliver to: {address.label} · {address.line1}, {address.city}</Text>
-                {btn("Get the final bill", () => void getFinalBill(address.id))}
+                <FulfillmentChoice order={order} chosenId={legId} onChange={setLegId} />
+                <Text style={[styles.note, { color: colors.subText }]}>
+                  {pickup ? `You collect it from the shop. Bill to: ${address.label}` : `Deliver to: ${address.label} · ${address.line1}, ${address.city}`}
+                </Text>
+                {btn("Get the final bill", () => void getFinalBill(address.id, leg?.id))}
               </>
             : <Text style={[styles.note, { color: colors.danger }]}>Add a pinned delivery address first.</Text>
         ) : null}

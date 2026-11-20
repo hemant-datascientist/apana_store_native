@@ -50,7 +50,7 @@ export function useNetworkOrder() {
   }, [settle]);
 
   const getPrice = (input: Parameters<typeof startNetworkOrder>[0]) => run(() => startNetworkOrder(input));
-  const getFinalBill = (addressId: string) => order && run(() => initNetworkOrder(order.id, addressId));
+  const getFinalBill = (addressId: string, fulfillmentId?: string | null) => order && run(() => initNetworkOrder(order.id, addressId, fulfillmentId));
   // After a shortfall: ask again for only what the shop said it has.
   const takeAvailable = () => {
     if (!order?.shortfall) return;

@@ -90,6 +90,10 @@ export interface NetworkOrder {
   paid: boolean;
   ondc_order_id: string | null;
   ondc_state: string | null;
+  /** What the shop's app offered (Delivery and/or Self-Pickup) before the final bill; the chosen leg after. */
+  fulfillments: Array<{ id: string | null; type: string | null; category: string | null; tat: string | null; slot: { start: string; end: string } | null }>;
+  /** The code to give the delivery person, when the shop's app set one; null otherwise. */
+  delivery_code: string | null;
   /** The shop's own delivery state, e.g. "Agent-assigned", "Out-for-delivery", "Order-delivered". */
   fulfillment_state: string | null;
   /** First time the shop's app reported the delivery: return windows count from here. */
@@ -120,8 +124,13 @@ export function reselectNetworkOrder(id: string, items: Array<{ id: string; qty:
   return call<NetworkOrder>(`/ondc/orders/${encodeURIComponent(id)}/select`, { method: "POST", body: JSON.stringify({ items, ...(searchTxn ? { search_txn: searchTxn } : {}) }) });
 }
 
-export function initNetworkOrder(id: string, addressId: string) {
-  return call<NetworkOrder>(`/ondc/orders/${encodeURIComponent(id)}/init`, { method: "POST", body: JSON.stringify({ address_id: addressId }) });
+/** Delivery instructions and/or a new saved address, before delivery (ONDC update). */
+export function updateNetworkDelivery(id: string, change: { instructions?: string; address_id?: string }) {
+  return call<NetworkOrder>(`/ondc/orders/${encodeURIComponent(id)}/delivery`, { method: "POST", body: JSON.stringify(change) });
+}
+
+export function initNetworkOrder(id: string, addressId: string, fulfillmentId?: string | null) {
+  return call<NetworkOrder>(`/ondc/orders/${encodeURIComponent(id)}/init`, { method: "POST", body: JSON.stringify({ address_id: addressId, ...(fulfillmentId ? { fulfillment_id: fulfillmentId } : {}) }) });
 }
 
 export type PayStep =
