@@ -92,6 +92,8 @@ export interface NetworkOrder {
   fulfillment_state: string | null;
   /** First time the shop's app reported the delivery: return windows count from here. */
   delivered_at: string | null;
+  /** The shop's app did not answer the cancel in time: "Cancel anyway" forces it (ONDC force=yes). */
+  can_force_cancel: boolean;
   cancel_reason_id: string | null;
   cancelled_by: "buyer" | "seller" | "apana" | null;
   /** Set once the order is cancelled: what Apana owes back and whether it has been paid. */

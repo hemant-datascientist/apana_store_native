@@ -47,6 +47,11 @@ export default function OrderAfterSale({ order, busy, onCancel, onRefresh }: {
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
       {text(order.status === "cancelling" ? "Cancelling — waiting for the shop's app." : `Status: ${order.fulfillment_state ?? order.ondc_state ?? "placed"}`, colors.text, true)}
+      {order.status === "cancelling" && order.can_force_cancel ? (
+        <TouchableOpacity disabled={busy} onPress={() => onCancel(order.cancel_reason_id ?? "052")} style={[styles.btn, { borderColor: colors.border }]}>
+          <Text style={[styles.btnText, { color: colors.danger }]}>The shop has not answered — Cancel anyway</Text>
+        </TouchableOpacity>
+      ) : null}
       {order.status === "confirmed" ? (
         <View style={styles.row}>
           <TouchableOpacity disabled={busy} onPress={onRefresh} style={[styles.btn, { borderColor: colors.border }]}>
