@@ -148,9 +148,11 @@ export default function SearchResultsScreen() {
     router.push(`/store-detail?id=${id}` as any);
   }, [router]);
 
-  const handleAddCart = useCallback(() => {
-    Alert.alert("Added", "Item added to cart.");
-  }, []);
+  // 🔴 This said "Item added to cart" and added nothing. A search hit carries no stock or
+  // size, so it opens the product page, where Add knows both (a sized item needs its size).
+  const handleAddCart = useCallback((id: string) => {
+    router.push(`/live-product-detail?id=${id}` as any);
+  }, [router]);
 
   // Real Mappls navigation. This said "coming soon" while the store page one
   // tap away had a working deep link — now both call the same helper, so
@@ -272,7 +274,7 @@ export default function SearchResultsScreen() {
                   <SearchProductCard
                     product={p}
                     onPress={() => { recordPromotedTap(p.promotionId ?? null); handleProductPress(p.id); }}
-                    onAddCart={handleAddCart}
+                    onAddCart={() => handleAddCart(p.id)}
                   />
                 </View>
               ))}

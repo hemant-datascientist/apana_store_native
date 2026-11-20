@@ -130,9 +130,9 @@ export default function SearchProductCard({ product, onPress, onAddCart }: Searc
           onPress={(e) => { e.stopPropagation?.(); onAddCart(); }}
           activeOpacity={0.8}
         >
-          <Ionicons name="add" size={14} color="#fff" />
+          <Ionicons name="bag-add-outline" size={14} color="#fff" />
           <Text style={[styles.addText, { fontFamily: typography.fontFamily.semiBold, fontSize: typography.size.xs }]}>
-            Add
+            Buy
           </Text>
         </TouchableOpacity>
       </View>
