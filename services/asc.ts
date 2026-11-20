@@ -17,7 +17,7 @@ const TOWER_IP = process.env.EXPO_PUBLIC_TOWER_IP ?? "10.153.78.94";
 export const getAscBaseUrl = (): string =>
   process.env.EXPO_PUBLIC_ASC_API_URL ??
   (API_MODE === "prod"
-    ? "https://api.apana.in/api/asc"
+    ? `${(process.env.EXPO_PUBLIC_BE_BASE_URL ?? "").replace(/\/+$/, "")}/api/asc`
     : `${effectiveOrigin() || (process.env.EXPO_PUBLIC_BE_BASE_URL ?? "").replace(/\/+$/, "") || `http://${TOWER_IP}:8000`}/api/asc`);
 
 export const ASC_BASE_URL = getAscBaseUrl();

@@ -22,7 +22,8 @@ import {
 import { useRouter }    from "expo-router";
 import { goBackOr }     from "../../lib/goBack";
 import useTheme         from "../../theme/useTheme";
-import { useCustomerProfile } from "../../hooks/useCustomerProfile";
+import { deleteMyAccount, useCustomerProfile } from "../../hooks/useCustomerProfile";
+import { useAuth }      from "../../context/AuthContext";
 import { typography }   from "../../theme/typography";
 import AuthHeader       from "../../components/auth/AuthHeader";
 import AvatarSection    from "../../components/tabs/profile/AvatarSection";
@@ -40,6 +41,7 @@ export default function EditProfileScreen() {
   // THIS person's saved details, not MOCK_USER. Empty until they load — and
   // empty is correct for someone who has never given a name.
   const { profile, save } = useCustomerProfile();
+  const { logout } = useAuth();
   const [name,    setName]    = useState("");
   const [email,   setEmail]   = useState("");
   // Seed once the profile arrives, without clobbering anything already typed.
@@ -176,8 +178,11 @@ export default function EditProfileScreen() {
         <SaveButton canSave={canSave} loading={loading} onPress={handleSave} />
 
         {/* ── Danger zone ── */}
-        <DangerZone onDelete={() => {
-          // TODO: DELETE /customer/account → logout → get-started
+        <DangerZone onDelete={async () => {
+          const r = await deleteMyAccount();
+          if (!r.ok) { Alert.alert("Account not deleted", r.message ?? "Try again."); return; }
+          await logout();
+          router.replace("/get-started");
         }} />
       </ScrollView>
     </KeyboardAvoidingView>

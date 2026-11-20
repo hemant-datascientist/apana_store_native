@@ -29,7 +29,7 @@ const BE_ORIGIN =
 
 export const API_BASE_URL =
   API_MODE === "prod"
-    ? "https://api.apana.in/api/customer"
+    ? `${(process.env.EXPO_PUBLIC_BE_BASE_URL ?? "").replace(/\/+$/, "")}/api/customer`
     : API_MODE === "local"
       ? `${BE_ORIGIN}/api/customer`
       : "http://localhost:4010"; // Prism mock

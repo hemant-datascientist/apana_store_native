@@ -23,7 +23,7 @@ const TOWER_IP = process.env.EXPO_PUBLIC_TOWER_IP ?? "10.153.78.94";
 export const APC_BASE_URL =
   process.env.EXPO_PUBLIC_APC_API_URL ??
   (API_MODE === "prod"
-    ? "https://api.apana.in/api/apc"
+    ? `${(process.env.EXPO_PUBLIC_BE_BASE_URL ?? "").replace(/\/+$/, "")}/api/apc`
     : `${(process.env.EXPO_PUBLIC_BE_BASE_URL ?? "").replace(/\/+$/, "") || `http://${TOWER_IP}:8000`}/api/apc`);
 
 // ── Tree node shapes (snake_case — matches BE payload) ──────

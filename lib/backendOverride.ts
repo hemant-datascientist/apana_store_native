@@ -94,19 +94,48 @@ export function parseConnectPayload(raw: string): string | null {
   return null;
 }
 
+// Where AuthContext keeps the signed-in customer's token.
+const TOKEN_KEY = "apana_access_token";
+
+/** True for a request to Apana's own API (baked or scanned origin), never a third party. */
+function isApanaApi(url: string): boolean {
+  const origin = effectiveOrigin();
+  return !!origin && url.startsWith(`${origin}/api/`);
+}
+
 // Install the global.fetch rewrite once. No-op while override is null.
+//
+// 🔴 It also signs every request to Apana's own API with the customer's token. Many services
+// only sent `?customer_id=<phone>`, which the backend accepts on a dev box and REFUSES in
+// production (anyone could name any phone). Doing it here, once, covers every service —
+// orders, checkout, addresses, chat, returns, profile — and a header a caller already set wins.
 let installed = false;
 export function installFetchOverride(): void {
   if (installed) return;
   installed = true;
   const orig = (globalThis as any).fetch;
-  (globalThis as any).fetch = ((input: any, init?: any) => {
+  (globalThis as any).fetch = (async (input: any, init?: any) => {
     try {
       if (typeof input === "string") {
         input = rewriteUrl(input);
       } else if (input && typeof input.url === "string") {
         const next = rewriteUrl(input.url);
         if (next !== input.url) input = new Request(next, input);
+      }
+      const url: string = typeof input === "string" ? input : input?.url ?? "";
+      if (isApanaApi(url)) {
+        const token = await AsyncStorage.getItem(TOKEN_KEY).catch(() => null);
+        if (token) {
+          if (typeof input === "string") {
+            const headers = new Headers(init?.headers ?? {});
+            if (!headers.has("Authorization")) {
+              headers.set("Authorization", `Bearer ${token}`);
+              init = { ...(init ?? {}), headers };
+            }
+          } else if (input && !input.headers?.has?.("Authorization")) {
+            input = new Request(input, { headers: (() => { const h = new Headers(input.headers); h.set("Authorization", `Bearer ${token}`); return h; })() });
+          }
+        }
       }
     } catch { /* never let the patch break a request */ }
     return orig(input, init);

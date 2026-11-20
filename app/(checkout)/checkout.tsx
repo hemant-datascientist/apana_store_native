@@ -48,6 +48,7 @@ import CheckoutAddressPicker  from "../../components/checkout/CheckoutAddressPic
 import CheckoutStoreRow       from "../../components/checkout/CheckoutStoreRow";
 import CheckoutPriceBreakdown from "../../components/checkout/CheckoutPriceBreakdown";
 import LiveBanners from "../../components/tabs/home/LiveBanners";
+import { openLegal, PRIVACY_URL, TERMS_URL } from "../../lib/legalLinks";
 
 export default function CheckoutScreen() {
   const { colors, isDark } = useTheme();
@@ -372,8 +373,8 @@ export default function CheckoutScreen() {
 
         <Text style={[styles.terms, { color: colors.subText, fontFamily: typography.fontFamily.regular, fontSize: typography.size.xs }]}>
           By placing this order you agree to Apana Store's{" "}
-          <Text style={{ color: colors.primary }}>Terms of Service</Text> and{" "}
-          <Text style={{ color: colors.primary }}>Privacy Policy</Text>.
+          <Text style={{ color: colors.primary }} onPress={TERMS_URL ? () => openLegal(TERMS_URL) : undefined}>Terms of Service</Text> and{" "}
+          <Text style={{ color: colors.primary }} onPress={PRIVACY_URL ? () => openLegal(PRIVACY_URL) : undefined}>Privacy Policy</Text>.
         </Text>
 
         <View style={{ height: 100 }} />

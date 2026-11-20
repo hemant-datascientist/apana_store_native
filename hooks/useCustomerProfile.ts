@@ -22,7 +22,7 @@ const TOWER_IP = process.env.EXPO_PUBLIC_TOWER_IP ?? "10.153.78.94";
 const IS_LIVE = API_MODE === "local" || API_MODE === "prod";
 const BASE_URL =
   API_MODE === "prod"
-    ? "https://api.apana.in/api/customer"
+    ? `${(process.env.EXPO_PUBLIC_BE_BASE_URL ?? "").replace(/\/+$/, "")}/api/customer`
     : `${(process.env.EXPO_PUBLIC_BE_BASE_URL ?? "").replace(/\/+$/, "") || `http://${TOWER_IP}:8000`}/api/customer`;
 
 export interface CustomerProfile {
@@ -78,6 +78,22 @@ export async function saveCustomerProfile(
     return res.ok;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Delete the signed-in customer's account (DELETE /customer/me — the token says who).
+ * Refused with a reason while an order or refund is still in progress.
+ */
+export async function deleteMyAccount(): Promise<{ ok: boolean; message: string | null }> {
+  if (!IS_LIVE) return { ok: false, message: "Account deletion needs the Apana server." };
+  try {
+    const res = await fetch(`${BASE_URL}/me`, { method: "DELETE" });
+    if (res.ok) return { ok: true, message: null };
+    const body = (await res.json().catch(() => null)) as { message?: string } | null;
+    return { ok: false, message: body?.message ?? `Could not delete the account (${res.status}).` };
+  } catch {
+    return { ok: false, message: "Could not reach the server. Try again." };
   }
 }
 

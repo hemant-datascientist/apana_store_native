@@ -22,34 +22,17 @@ export interface QuickAction {
   target:   string;        // phone / email / URL
 }
 
+// 🔴 Real contacts only, set at build time. These were a placeholder WhatsApp number, a
+// 1800 number nobody answers and an email on an unverified domain — each with a promised
+// response time. A contact that is not set is not shown.
+const SUPPORT_WHATSAPP = (process.env.EXPO_PUBLIC_SUPPORT_WHATSAPP ?? "").replace(/\D/g, ""); // e.g. 919800000000
+const SUPPORT_PHONE = (process.env.EXPO_PUBLIC_SUPPORT_PHONE ?? "").trim();                       // e.g. +919800000000
+export const SUPPORT_EMAIL = (process.env.EXPO_PUBLIC_SUPPORT_EMAIL ?? "").trim();               // e.g. help@<your domain>
+
 export const QUICK_ACTIONS: QuickAction[] = [
-  {
-    key:    "whatsapp",
-    label:  "Chat on WhatsApp",
-    sub:    "Usually replies in minutes",
-    icon:   "logo-whatsapp",
-    color:  "#25D366",
-    action: "whatsapp",
-    target: "919876543210",   // TODO: replace with real support number
-  },
-  {
-    key:    "call",
-    label:  "Call Us",
-    sub:    "Mon – Sat, 9 AM – 7 PM",
-    icon:   "call-outline",
-    color:  "#3B82F6",
-    action: "call",
-    target: "tel:+911800123456",  // TODO: replace with real helpline
-  },
-  {
-    key:    "email",
-    label:  "Email Support",
-    sub:    "Response within 24 hours",
-    icon:   "mail-outline",
-    color:  "#F59E0B",
-    action: "email",
-    target: "mailto:support@apanastore.in",
-  },
+  ...(SUPPORT_WHATSAPP ? [{ key: "whatsapp", label: "Chat on WhatsApp", sub: "Message our support team", icon: "logo-whatsapp", color: "#25D366", action: "whatsapp" as const, target: SUPPORT_WHATSAPP }] : []),
+  ...(SUPPORT_PHONE ? [{ key: "call", label: "Call Us", sub: "Talk to our support team", icon: "call-outline", color: "#3B82F6", action: "call" as const, target: `tel:${SUPPORT_PHONE}` }] : []),
+  ...(SUPPORT_EMAIL ? [{ key: "email", label: "Email Support", sub: "Write to our support team", icon: "mail-outline", color: "#F59E0B", action: "email" as const, target: `mailto:${SUPPORT_EMAIL}` }] : []),
 ];
 
 // ── FAQ ───────────────────────────────────────────────────────

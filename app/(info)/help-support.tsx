@@ -29,6 +29,7 @@ import useTheme         from "../../theme/useTheme";
 import { typography }   from "../../theme/typography";
 import {
   QUICK_ACTIONS,
+  SUPPORT_EMAIL,
   FAQ_CATEGORIES,
   FaqCategory,
 } from "../../data/helpData";
@@ -75,7 +76,7 @@ export default function HelpSupportScreen() {
 
   // ── "Still need help?" footer email CTA ──────────────────────
   async function handleEmailCta() {
-    const url = "mailto:support@apanastore.in?subject=Help%20Request";
+    const url = `mailto:${SUPPORT_EMAIL}?subject=Help%20Request`;
     const ok  = await Linking.canOpenURL(url);
     if (ok) Linking.openURL(url);
     else    Alert.alert("Unavailable", "No email app found on this device.");
@@ -120,7 +121,7 @@ export default function HelpSupportScreen() {
         />
 
         {/* ── Quick contact tiles ── */}
-        {!query && (
+        {!query && QUICK_ACTIONS.length > 0 && (
           <>
             <Text style={[styles.sectionLabel, {
               color:      colors.subText,
@@ -178,8 +179,8 @@ export default function HelpSupportScreen() {
           )
         }
 
-        {/* ── "Still need help?" footer CTA ── */}
-        <TouchableOpacity
+        {/* ── "Still need help?" footer CTA (only with a real support email) ── */}
+        {SUPPORT_EMAIL ? <TouchableOpacity
           style={[styles.ctaCard, {
             backgroundColor: colors.primary + "12",
             borderColor:     colors.primary + "30",
@@ -204,12 +205,12 @@ export default function HelpSupportScreen() {
               fontFamily: typography.fontFamily.regular,
               fontSize:   typography.size.xs,
             }]}>
-              Email us and we'll get back within 24 hours.
+              Email our support team.
             </Text>
           </View>
 
           <Ionicons name="chevron-forward" size={18} color={colors.primary} />
-        </TouchableOpacity>
+        </TouchableOpacity> : null}
 
       </ScrollView>
     </SafeAreaView>

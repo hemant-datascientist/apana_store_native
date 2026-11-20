@@ -14,6 +14,7 @@ import React from "react";
 import { Text, StyleSheet } from "react-native";
 import useTheme       from "../../theme/useTheme";
 import { typography } from "../../theme/typography";
+import { openLegal, PRIVACY_URL, TERMS_URL } from "../../lib/legalLinks";
 
 interface AuthTermsProps {
   action?: "signing in" | "creating an account";
@@ -32,14 +33,14 @@ export default function AuthTerms({ action = "signing in" }: AuthTermsProps) {
       By {action}, you agree to our{" "}
 
       {/* Terms link */}
-      <Text style={[styles.link, { color: colors.primary }]}>
+      <Text style={[styles.link, { color: colors.primary }]} onPress={TERMS_URL ? () => openLegal(TERMS_URL) : undefined}>
         Terms of Service
       </Text>
 
       {" "}and{" "}
 
       {/* Privacy link */}
-      <Text style={[styles.link, { color: colors.primary }]}>
+      <Text style={[styles.link, { color: colors.primary }]} onPress={PRIVACY_URL ? () => openLegal(PRIVACY_URL) : undefined}>
         Privacy Policy
       </Text>
     </Text>
