@@ -26,10 +26,12 @@ interface CartStoreCardProps {
   onSetFulfillment:(storeId: string, mode: FulfillmentMode) => void;
   /** Server's reason delivery is refused for this shop right now; null = fine. */
   deliveryBlock?:  string | null;
+  /** An ONDC delivery partner carries this shop's order (no Apana rider near it). */
+  outsidePartner?: string | null;
 }
 
 export default function CartStoreCard({
-  store, onUpdateQty, onRemoveItem, onSetFulfillment, deliveryBlock,
+  store, onUpdateQty, onRemoveItem, onSetFulfillment, deliveryBlock, outsidePartner,
 }: CartStoreCardProps) {
   const { colors } = useTheme();
   const subtotal   = storeSubtotal(store);
@@ -79,6 +81,16 @@ export default function CartStoreCard({
         fulfillment={store.fulfillment}
         onSelect={onSetFulfillment}
       />
+
+      {/* ── No Apana rider near: an ONDC partner delivers, paid online only ── */}
+      {outsidePartner && !deliveryBlock && store.fulfillment !== "pickup" ? (
+        <View style={[styles.block, { backgroundColor: colors.background, borderColor: colors.border }]}>
+          <Ionicons name="globe-outline" size={16} color={colors.primary} />
+          <Text style={[styles.blockText, { color: colors.text, fontFamily: typography.fontFamily.medium, fontSize: typography.size.xs }]}>
+            No Apana rider nearby, so {outsidePartner} (ONDC) delivers this. Online payment only.
+          </Text>
+        </View>
+      ) : null}
 
       {/* ── Delivery not possible right now (no rider near the shop) ── */}
       {deliveryBlock && store.fulfillment !== "pickup" ? (

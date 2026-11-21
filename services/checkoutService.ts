@@ -329,6 +329,11 @@ export interface StoreFees {
   onlineAllowed: boolean;
   /** True when the shop pays this delivery: `delivery` and `gst` already exclude it. */
   free?: boolean;
+  /**
+   * No Apana rider near the shop: an ONDC delivery partner instead (0206). ready = its
+   * quote IS `delivery` and the order must be paid online; pending = still asking.
+   */
+  outside?: { status: "ready" | "pending" | "none"; provider: string | null; etaMinutes: number | null } | null;
 }
 
 // Why a bulky basket's delivery costs more (backend 0167): the fee follows the vehicle it needs.
@@ -347,7 +352,7 @@ const VEHICLE_NOTE: Record<string, string> = {
 export async function fetchBasketFees(
   productIds: string[],
   mode: FulfillmentMode,
-  pin: { lat: number; lng: number } | null,
+  pin: { lat: number; lng: number; pincode?: string } | null,
 ): Promise<Record<string, StoreFees>> {
   if (!IS_LIVE) throw new Error("Fees need a live connection.");
   const res = await fetch(`${BASE_URL}/cart/resolve`, {
@@ -357,13 +362,15 @@ export async function fetchBasketFees(
       items: productIds.map((product_id) => ({ product_id, qty: 1 })),
       fulfillment: FULFILLMENT[mode],
       ...(pin ? { lat: pin.lat, lng: pin.lng } : {}),
+      // Lets the server ask an ONDC delivery partner when no Apana rider is near the shop.
+      ...(pin?.pincode && /^\d{6}$/.test(pin.pincode) ? { pincode: pin.pincode } : {}),
     }),
   });
   if (!res.ok) throw new Error(`Could not price this order (${res.status})`);
   const body = (await res.json()) as {
     delivery_note?: string | null;
     required_vehicle?: string;
-    sellers: { online_allowed?: boolean; seller_id: string; delivery_fee_cents: number | null; platform_fee_cents: number; delivery_gst_cents?: number | null; platform_gst_cents?: number; delivery_block?: { message: string } | null; free_delivery_above_cents?: number | null }[];
+    sellers: { outside_delivery?: { status: "ready" | "pending" | "none"; provider_name: string | null; eta_minutes: number | null } | null; online_allowed?: boolean; seller_id: string; delivery_fee_cents: number | null; platform_fee_cents: number; delivery_gst_cents?: number | null; platform_gst_cents?: number; delivery_block?: { message: string } | null; free_delivery_above_cents?: number | null }[];
   };
   return Object.fromEntries(body.sellers.map((s) => [s.seller_id, {
     delivery: s.delivery_fee_cents == null ? null : s.delivery_fee_cents / 100,
@@ -375,6 +382,9 @@ export async function fetchBasketFees(
     deliveryGst: s.delivery_gst_cents == null ? null : s.delivery_gst_cents / 100,
     freeAbove: s.free_delivery_above_cents == null ? null : s.free_delivery_above_cents / 100,
     onlineAllowed: s.online_allowed ?? true,
+    outside: s.outside_delivery
+      ? { status: s.outside_delivery.status, provider: s.outside_delivery.provider_name, etaMinutes: s.outside_delivery.eta_minutes }
+      : null,
   }]));
 }
 

@@ -59,7 +59,7 @@ export default function CartScreen() {
   // the delivery address the header shows. Unknown until priced → "—".
   const { selectedAddress } = useLocation();
   const dropPin = selectedAddress.lat != null && selectedAddress.lng != null
-    ? { lat: selectedAddress.lat, lng: selectedAddress.lng } : null;
+    ? { lat: selectedAddress.lat, lng: selectedAddress.lng, pincode: selectedAddress.pincode } : null;
   const fees            = useCartFees(cart, dropPin);
   const deliveryTotal   = fees.deliveryTotal;
   const hasDeliveryStore = cart.some((st) => st.fulfillment !== "pickup");
@@ -165,6 +165,7 @@ export default function CartScreen() {
             onRemoveItem={handleRemoveItem}
             onSetFulfillment={setFulfillment}
             deliveryBlock={fees.feeOf(store.id)?.block ?? null}
+            outsidePartner={fees.feeOf(store.id)?.outside?.status === "ready" ? (fees.feeOf(store.id)?.outside?.provider || "a delivery partner") : null}
           />
         ))}
 

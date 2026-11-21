@@ -101,7 +101,7 @@ export default function CheckoutScreen() {
   // Fees priced by the server to THIS address — the same function checkout
   // charges with, so what is shown here is what the order will carry.
   const dropPin = selectedAddress?.lat != null && selectedAddress?.lng != null
-    ? { lat: selectedAddress.lat, lng: selectedAddress.lng } : null;
+    ? { lat: selectedAddress.lat, lng: selectedAddress.lng, pincode: selectedAddress.pincode } : null;
   const fees = useCartFees(cart, needsAddress ? dropPin : null);
   const { subtotal, totalItems } = useMemo(() => ({
     // Charged prices (deal floors applied), as the server will charge them.

@@ -37,6 +37,7 @@ import { CHECKOUT_STEPS }    from "../../data/checkoutData";
 import { PAY_AT_SHOP, PAYMENT_METHODS } from "../../data/paymentData";
 import { useCart }           from "../../context/CartContext";
 import { useAuth }           from "../../context/AuthContext";
+import { useLocation }       from "../../context/LocationContext";
 import {
   fetchBasketFees, placeOrder, PlaceOrderRequest, StoreOrderInput, StoreOrderResult, StockShortError,
 } from "../../services/checkoutService";
@@ -54,10 +55,13 @@ import { offerStockShort } from "../../lib/stockShort";
 // an unsupported option.
 //
 // A basket with a shop still being verified is cash only (founder, 2026-11-06).
-function getEligibleMethods(mode: FulfillmentMode, onlineAllowed: boolean) {
+// An order an ONDC delivery partner carries is online only (founder, 2026-11-21): the
+// partner is not asked to collect cash. Both at once cannot be paid — checkout says why.
+function getEligibleMethods(mode: FulfillmentMode, onlineAllowed: boolean, cashAllowed: boolean) {
   if (mode === "pickup" || mode === "ride") {
     return onlineAllowed ? PAYMENT_METHODS.filter(m => m.type !== "cod") : [PAY_AT_SHOP];
   }
+  if (!cashAllowed && onlineAllowed) return PAYMENT_METHODS.filter(m => m.type !== "cod");
   return onlineAllowed ? PAYMENT_METHODS : PAYMENT_METHODS.filter(m => m.type === "cod");
 }
 
@@ -107,17 +111,28 @@ export default function CheckoutPaymentScreen() {
 
   // ── Payment method state ──────────────────────────────────────
   const [onlineAllowed, setOnlineAllowed] = useState(true);
+  const [cashAllowed, setCashAllowed] = useState(true);
+  const { selectedAddress } = useLocation();
+  const dropLat = selectedAddress.lat;
+  const dropLng = selectedAddress.lng;
+  const dropPincode = selectedAddress.pincode;
   useEffect(() => {
     const ids = cart.flatMap(s => s.items.map(i => i.productId)).filter((id): id is string => !!id);
     if (ids.length === 0) return;
     let live = true;
+    // The drop pin lets the answer include an ONDC delivery partner (online payment only).
+    const pin = mode === "delivery" && dropLat != null && dropLng != null ? { lat: dropLat, lng: dropLng, pincode: dropPincode } : null;
     // If this fails the option stays on screen and the server still refuses it, with its reason.
-    fetchBasketFees(ids, mode, null)
-      .then(fees => { if (live) setOnlineAllowed(Object.values(fees).every(f => f.onlineAllowed)); })
+    fetchBasketFees(ids, mode, pin)
+      .then(fees => {
+        if (!live) return;
+        setOnlineAllowed(Object.values(fees).every(f => f.onlineAllowed));
+        setCashAllowed(!Object.values(fees).some(f => f.outside?.status === "ready"));
+      })
       .catch(() => {});
     return () => { live = false; };
-  }, [cart, mode]);
-  const eligibleMethods = useMemo(() => getEligibleMethods(mode, onlineAllowed), [mode, onlineAllowed]);
+  }, [cart, mode, dropLat, dropLng, dropPincode]);
+  const eligibleMethods = useMemo(() => getEligibleMethods(mode, onlineAllowed, cashAllowed), [mode, onlineAllowed, cashAllowed]);
   const [selectedId, setSelectedId] = useState(eligibleMethods[0].id);
   const selectedPayment = eligibleMethods.find(m => m.id === selectedId) ?? eligibleMethods[0];
   const isCod = selectedPayment.type === "cod";
